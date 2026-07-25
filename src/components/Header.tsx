@@ -1,9 +1,9 @@
 "use client";
 
-import { Menu, Search, X } from "lucide-react";
-import { useMemo, useState } from "react";
+import { Search, X } from "lucide-react";
+import { useMemo, useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
-const navItems = ["Visas", "Destinations", "Pricing", "Help"];
 const destinations = ["Dubai", "Abu Dhabi", "Sharjah", "Ras Al Khaimah"];
 
 type HeaderProps = {
@@ -11,9 +11,41 @@ type HeaderProps = {
 };
 
 export function Header({ onStart }: HeaderProps) {
-  const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [placeholderIndex, setPlaceholderIndex] = useState(0);
+  const [isVisible, setIsVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+
+  const placeholderWords = ["countries", "cities"];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setPlaceholderIndex((prev) => (prev + 1) % placeholderWords.length);
+    }, 2500);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      const threshold = 500;
+
+      if (currentScrollY > threshold) {
+        if (currentScrollY > lastScrollY) {
+          setIsVisible(false);
+        } else {
+          setIsVisible(true);
+        }
+      } else {
+        setIsVisible(true);
+      }
+      setLastScrollY(currentScrollY);
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [lastScrollY]);
 
   const filtered = useMemo(
     () =>
@@ -25,9 +57,12 @@ export function Header({ onStart }: HeaderProps) {
 
   return (
     <>
-      <header className="sticky top-0 z-50 border-b border-[var(--border)] bg-white/90 backdrop-blur">
+      <header className={`sticky top-0 z-50 border-b border-[var(--border)] bg-white/90 backdrop-blur transition-transform duration-350 ease-in-out ${
+        isVisible ? "translate-y-0" : "-translate-y-full"
+      }`}>
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 md:px-6">
-          <a href="#" className="flex items-center gap-2">
+          {/* Logo */}
+          <a href="#" className="flex items-center gap-2 flex-shrink-0">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--primary)] text-sm font-bold text-white">
               VC
             </div>
@@ -36,107 +71,44 @@ export function Header({ onStart }: HeaderProps) {
             </span>
           </a>
 
-          <nav className="hidden items-center gap-6 text-sm text-[var(--muted)] lg:flex">
-            {navItems.map((item) => (
-              <a
-                key={item}
-                href={item === "Pricing" ? "#pricing" : "#"}
-                className="hover:text-[var(--foreground)]"
-              >
-                {item}
-              </a>
-            ))}
-          </nav>
-
-          <div className="hidden items-center gap-2 lg:flex">
+          {/* Search Pill & Login */}
+          <div className="flex items-center gap-4">
+            {/* Search Pill */}
             <button
               type="button"
               onClick={() => setSearchOpen(true)}
-              className="rounded-lg border border-[var(--border)] p-2 text-[var(--muted)] hover:bg-[#f8f8fc]"
-              aria-label="Open destination search"
+              className="relative flex items-center justify-between w-48 sm:w-56 md:w-64 rounded-full border border-slate-200 bg-slate-50/40 py-2 px-4 text-left text-sm text-[var(--muted)] hover:bg-[#f8f8fc] hover:border-slate-300 transition duration-200 cursor-pointer"
             >
-              <Search className="h-4 w-4" />
+              <div className="flex items-center text-slate-400">
+                <span>Search </span>
+                <div className="relative h-5 overflow-hidden w-20 ml-1 flex items-center">
+                  <AnimatePresence mode="wait">
+                    <motion.span
+                      key={placeholderIndex}
+                      initial={{ y: 15, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      exit={{ y: -15, opacity: 0 }}
+                      transition={{ duration: 0.25, ease: "easeOut" }}
+                      className="absolute left-0 text-slate-400 font-medium"
+                    >
+                      {placeholderWords[placeholderIndex]}
+                    </motion.span>
+                  </AnimatePresence>
+                </div>
+              </div>
+              <Search className="h-4 w-4 text-slate-400 flex-shrink-0" />
             </button>
-            <button
-              type="button"
-              className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-semibold text-[var(--foreground)]"
-            >
-              India
-            </button>
-            <a href="#application-flow" className="px-2 text-sm text-[var(--muted)]">
-              Login / My Applications
-            </a>
-            {onStart ? (
-              <button
-                type="button"
-                onClick={onStart}
-                className="rounded-xl bg-[var(--primary)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--primary-hover)] cursor-pointer"
-              >
-                Start Application
-              </button>
-            ) : (
-              <a
-                href="#application-flow"
-                className="rounded-xl bg-[var(--primary)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--primary-hover)]"
-              >
-                Start Application
-              </a>
-            )}
-          </div>
 
-          <button
-            type="button"
-            className="rounded-lg border border-[var(--border)] p-2 lg:hidden"
-            onClick={() => setMenuOpen((prev) => !prev)}
-            aria-label="Toggle mobile menu"
-          >
-            {menuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
-          </button>
-        </div>
-        {menuOpen && (
-          <div className="border-t border-[var(--border)] bg-white px-4 py-4 lg:hidden">
-            <div className="mb-3 flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setSearchOpen(true)}
-                className="rounded-lg border border-[var(--border)] p-2"
-                aria-label="Search destinations"
-              >
-                <Search className="h-4 w-4" />
-              </button>
-              <span className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-semibold">
-                India
-              </span>
-            </div>
-            <div className="flex flex-col gap-3 text-sm text-[var(--foreground)]">
-              {navItems.map((item) => (
-                <a key={item} href={item === "Pricing" ? "#pricing" : "#"}>
-                  {item}
-                </a>
-              ))}
-              <a href="#application-flow">Login / My Applications</a>
-              {onStart ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMenuOpen(false);
-                    onStart();
-                  }}
-                  className="rounded-xl bg-[var(--primary)] px-4 py-3 text-center font-semibold text-white cursor-pointer"
-                >
-                  Start Application
-                </button>
-              ) : (
-                <a
-                  href="#application-flow"
-                  className="rounded-xl bg-[var(--primary)] px-4 py-3 text-center font-semibold text-white"
-                >
-                  Start Application
-                </a>
-              )}
-            </div>
+            {/* Login Link */}
+            <a
+              href="#application-flow"
+              className="text-xs sm:text-sm font-semibold text-[var(--foreground)] hover:text-[var(--primary)] transition duration-200 whitespace-nowrap"
+            >
+              <span className="hidden sm:inline">Login / My Applications</span>
+              <span className="sm:hidden">Login</span>
+            </a>
           </div>
-        )}
+        </div>
       </header>
 
       {searchOpen && (
@@ -156,6 +128,7 @@ export function Header({ onStart }: HeaderProps) {
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Search Dubai, Abu Dhabi..."
               className="mb-3 w-full rounded-xl border border-[var(--border)] px-4 py-3 text-sm"
+              autoFocus
             />
             <ul className="space-y-2">
               {filtered.length ? (

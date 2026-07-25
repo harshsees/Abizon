@@ -11,6 +11,7 @@ import { RequirementChecklist } from "@/components/RequirementChecklist";
 import { TopHero } from "@/components/TopHero";
 import { TravelPlanModal } from "@/components/TravelPlanModal";
 import { DatePickerModal } from "@/components/DatePickerModal";
+import { VerticalNavbar } from "@/components/VerticalNavbar";
 
 
 export default function Home() {
@@ -42,15 +43,24 @@ export default function Home() {
     <div className="flex flex-1 flex-col bg-[var(--background)]">
       <Header onStart={handleStartApplication} />
       <main className="flex-1">
-        <TopHero onStart={handleStartApplication} />
+        <div id="destinations" className="scroll-mt-28">
+          <TopHero onStart={handleStartApplication} />
+        </div>
 
         {/* Responsive Grid Layout containing the entire page below TopHero */}
         <div className="mx-auto w-full max-w-7xl px-4 py-8 md:px-6 md:py-10">
-          <div className="grid grid-cols-1 md:grid-cols-[1.08fr_0.92fr] gap-8 md:gap-12 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-[170px_1fr_360px] md:grid-cols-[1.1fr_0.9fr] gap-8 lg:gap-10 items-start">
             
-            {/* Left Column: Scrollable Content */}
+            {/* Left Column (Desktop Only): Vertical Navbar */}
+            <div className="hidden lg:block sticky top-[100px] self-start z-30">
+              <VerticalNavbar />
+            </div>
+
+            {/* Middle Column: Scrollable Content */}
             <div className="space-y-4 md:space-y-6">
-              <VisaInfoAndPlans selectedPlan={selectedPlan} onSelectPlan={setSelectedPlan} />
+              <div id="visas" className="scroll-mt-28">
+                <VisaInfoAndPlans selectedPlan={selectedPlan} onSelectPlan={setSelectedPlan} />
+              </div>
 
               {/* Mobile/Tablet Application Card (stacks in natural order) */}
               <div className="md:hidden mt-6">
@@ -65,16 +75,13 @@ export default function Home() {
               <RequirementChecklist className="w-full py-8 md:py-10 border-t border-slate-200/50 mt-10" />
               
 
-
-
-
               <div className="border-t border-slate-200/50 pt-6">
                 <FAQAccordion className="w-full py-4" />
               </div>
             </div>
 
             {/* Right Column: Sticky Application Card (Desktop) */}
-            <div className="sticky top-[80px] hidden md:block self-start w-full pr-1">
+            <div id="pricing" className="sticky top-[100px] hidden md:block self-start w-full pr-1 scroll-mt-28 z-30">
               <ApplicationCard
                 selectedPlan={selectedPlan}
                 onSelectPlan={setSelectedPlan}
