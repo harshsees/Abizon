@@ -49,7 +49,7 @@ export default function Home() {
 
         {/* Responsive Grid Layout containing the entire page below TopHero */}
         <div className="mx-auto w-full max-w-7xl px-4 py-8 md:px-6 md:py-10">
-          <div className="grid grid-cols-1 lg:grid-cols-[170px_1fr_360px] md:grid-cols-[1.1fr_0.9fr] gap-8 lg:gap-10 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-[48px_1.08fr_0.92fr] md:grid-cols-[1.08fr_0.92fr] gap-8 md:gap-12 items-start">
             
             {/* Left Column (Desktop Only): Vertical Navbar */}
             <div className="hidden lg:block sticky top-[100px] self-start z-30">
