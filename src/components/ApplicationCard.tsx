@@ -139,10 +139,10 @@ export function ApplicationCard({
         {/* Card Body with Glassmorphism, animated border & shadow based on selected option */}
         <motion.div
           animate={shouldReduceMotion ? {} : {
-            borderColor: selectedPlan === 0 ? "rgba(99, 102, 241, 0.7)" : "rgba(245, 158, 11, 0.7)",
+            borderColor: selectedPlan === 0 ? "rgba(217, 119, 6, 0.7)" : "rgba(22, 163, 74, 0.7)",
             boxShadow: selectedPlan === 0 
-              ? "0 20px 50px rgba(99, 102, 241, 0.05), 0 1px 3px rgba(99, 102, 241, 0.01)" 
-              : "0 20px 50px rgba(245, 158, 11, 0.05), 0 1px 3px rgba(245, 158, 11, 0.01)"
+              ? "0 20px 50px rgba(217, 119, 6, 0.05), 0 1px 3px rgba(217, 119, 6, 0.01)" 
+              : "0 20px 50px rgba(22, 163, 74, 0.05), 0 1px 3px rgba(22, 163, 74, 0.01)"
           }}
           transition={{ duration: 0.4, ease: "easeInOut" as const }}
           className="w-full rounded-[28px] border bg-white/95 backdrop-blur-md p-3.5 md:p-4 transition-colors duration-300"
@@ -157,20 +157,20 @@ export function ApplicationCard({
                 type="button"
                 onClick={() => onSelectPlan(0)}
                 className={`relative z-10 flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2 px-3 text-xs font-bold transition duration-300 cursor-pointer ${
-                  selectedPlan === 0 ? "text-indigo-600" : "text-slate-500 hover:text-slate-700"
+                  selectedPlan === 0 ? "text-amber-600" : "text-slate-500 hover:text-slate-700"
                 }`}
               >
                 {selectedPlan === 0 && (
                   <motion.div
                     layoutId="activeStatusTab"
                     animate={{
-                      borderColor: "rgba(99, 102, 241, 0.75)"
+                      borderColor: "rgba(217, 119, 6, 0.75)"
                     }}
                     className="absolute inset-0 bg-white rounded-xl shadow-sm border-2 -z-10"
                     transition={{ type: "spring", stiffness: 380, damping: 30 }}
                   />
                 )}
-                {selectedPlan === 0 && <ShieldCheck className="h-3.5 w-3.5 text-indigo-600 flex-shrink-0 animate-fade-in" />}
+                {selectedPlan === 0 && <ShieldCheck className="h-3.5 w-3.5 text-amber-600 flex-shrink-0 animate-fade-in" />}
                 <span>
                   {selectedPlan === 0 
                     ? `Guaranteed by ${getFormattedDate(2)}, 07:33 pm` 
@@ -184,21 +184,21 @@ export function ApplicationCard({
                 type="button"
                 onClick={() => onSelectPlan(1)}
                 className={`relative z-10 flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2 px-3 text-xs font-bold transition duration-300 cursor-pointer ${
-                  selectedPlan === 1 ? "text-indigo-600" : "text-slate-800 hover:text-slate-900"
+                  selectedPlan === 1 ? "text-emerald-600" : "text-slate-800 hover:text-slate-900"
                 }`}
               >
                 {selectedPlan === 1 && (
                   <motion.div
                     layoutId="activeStatusTab"
                     animate={{
-                      borderColor: "rgba(245, 158, 11, 0.75)"
+                      borderColor: "rgba(22, 163, 74, 0.75)"
                     }}
                     className="absolute inset-0 bg-white rounded-xl shadow-sm border-2 -z-10"
                     transition={{ type: "spring", stiffness: 380, damping: 30 }}
                   />
                 )}
                 <Zap className={`h-3.5 w-3.5 flex-shrink-0 ${
-                  selectedPlan === 1 ? "text-indigo-600 fill-indigo-600" : "text-slate-900 fill-slate-900"
+                  selectedPlan === 1 ? "text-emerald-600 fill-emerald-600" : "text-slate-900 fill-slate-900"
                 }`} />
                 <span>
                   {selectedPlan === 1 
