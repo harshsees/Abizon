@@ -40,8 +40,14 @@ export default function Home() {
   };
 
   return (
-    <div className="flex flex-1 flex-col bg-[var(--background)]">
+    <div className="flex flex-1 flex-col bg-[var(--background)] relative">
       <Header onStart={handleStartApplication} />
+      
+      {/* Floating Vertical Navbar on the leftmost side of the viewport (Desktop Only) */}
+      <div className="hidden lg:block fixed left-6 top-[220px] z-50">
+        <VerticalNavbar />
+      </div>
+
       <main className="flex-1">
         <div id="destinations" className="scroll-mt-28">
           <TopHero onStart={handleStartApplication} />
@@ -49,14 +55,9 @@ export default function Home() {
 
         {/* Responsive Grid Layout containing the entire page below TopHero */}
         <div className="mx-auto w-full max-w-7xl px-4 py-8 md:px-6 md:py-10">
-          <div className="grid grid-cols-1 lg:grid-cols-[48px_1.08fr_0.92fr] md:grid-cols-[1.08fr_0.92fr] gap-8 md:gap-12 items-start">
+          <div className="grid grid-cols-1 md:grid-cols-[1.08fr_0.92fr] gap-8 md:gap-12 items-start">
             
-            {/* Left Column (Desktop Only): Vertical Navbar */}
-            <div className="hidden lg:block sticky top-[100px] self-start z-30">
-              <VerticalNavbar />
-            </div>
-
-            {/* Middle Column: Scrollable Content */}
+            {/* Left Column: Scrollable Content */}
             <div className="space-y-4 md:space-y-6">
               <div id="visas" className="scroll-mt-28">
                 <VisaInfoAndPlans selectedPlan={selectedPlan} onSelectPlan={setSelectedPlan} />
