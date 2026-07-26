@@ -161,7 +161,7 @@ function ApplyPageContent() {
                     value={currentName}
                     onChange={(e) => setCurrentName(e.target.value.toUpperCase())}
                     placeholder="Enter traveler's first name"
-                    className="w-3/4 md:w-1/2 text-center text-xl md:text-2xl tracking-widest bg-transparent border-b-2 border-dashed border-slate-300 focus:border-slate-800 pb-3 transition-colors outline-none placeholder:text-slate-300 placeholder:tracking-normal placeholder:normal-case placeholder:text-lg"
+                    className="w-3/4 md:w-1/2 text-center text-xl md:text-2xl tracking-widest bg-transparent border-b-2 border-dashed border-slate-300 focus:border-slate-800 pb-3 transition-colors outline-none placeholder:text-slate-300 placeholder:tracking-normal placeholder:normal-case placeholder:text-lg focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0"
                     autoFocus
                   />
                   
