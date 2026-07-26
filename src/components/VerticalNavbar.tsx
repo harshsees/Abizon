@@ -4,12 +4,13 @@ import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 
 export function VerticalNavbar() {
-  const [activeSection, setActiveSection] = useState<string>("visas");
+  const [activeSection, setActiveSection] = useState<string>("visa-info");
   const [isVisible, setIsVisible] = useState(false);
 
   const items = [
-    { name: "Visas", href: "#visas", id: "visas" },
-    { name: "Process", href: "#process-section", id: "process" },
+    { name: "Visa Info", href: "#visa-info-section", id: "visa-info" },
+    { name: "Documents", href: "#requirements-section", id: "documents" },
+    { name: "Visa Process", href: "#process-section", id: "process" },
     { name: "Reviews", href: "#reviews", id: "reviews" },
     { name: "FAQs", href: "#faq", id: "faqs" },
   ];
@@ -28,11 +29,11 @@ export function VerticalNavbar() {
       // 2. Scroll-spy detection logic
       const offset = 220; // Offset from top of viewport
 
-      const visasEl = document.getElementById("visa-info-section");
+      const requirementsEl = document.getElementById("requirements-section");
       const processEl = document.getElementById("process-section");
       const faqEl = document.getElementById("faq");
 
-      let currentActive = "visas";
+      let currentActive = "visa-info";
 
       if (faqEl) {
         const rect = faqEl.getBoundingClientRect();
@@ -41,17 +42,17 @@ export function VerticalNavbar() {
         }
       }
       
-      if (currentActive !== "faqs" && processEl) {
+      if (currentActive === "visa-info" && processEl) {
         const rect = processEl.getBoundingClientRect();
         if (rect.top <= offset) {
           currentActive = "process";
         }
       }
 
-      if (currentActive !== "faqs" && currentActive !== "process" && visasEl) {
-        const rect = visasEl.getBoundingClientRect();
+      if (currentActive === "visa-info" && requirementsEl) {
+        const rect = requirementsEl.getBoundingClientRect();
         if (rect.top <= offset) {
-          currentActive = "visas";
+          currentActive = "documents";
         }
       }
 
@@ -65,7 +66,7 @@ export function VerticalNavbar() {
 
   return (
     <nav
-      className={`flex flex-col gap-6 items-start py-4 pl-3 transition-all duration-500 ease-in-out ${
+      className={`flex flex-col gap-5 items-start py-4 pl-3 transition-all duration-500 ease-in-out ${
         isVisible ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-8 pointer-events-none"
       }`}
     >
@@ -75,8 +76,10 @@ export function VerticalNavbar() {
           <a
             key={item.name}
             href={item.href}
-            className={`group relative pb-1 text-[11px] font-black tracking-widest uppercase transition-colors duration-300 select-none ${
-              isActive ? "text-slate-900" : "text-slate-400 hover:text-slate-700"
+            className={`group relative pb-1 text-sm transition-all duration-300 select-none ${
+              isActive 
+                ? "text-slate-900 font-bold" 
+                : "text-slate-500 hover:text-slate-800 font-medium"
             }`}
           >
             <span>{item.name}</span>
