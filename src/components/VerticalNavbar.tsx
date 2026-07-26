@@ -76,7 +76,7 @@ export function VerticalNavbar() {
           <a
             key={item.name}
             href={item.href}
-            className={`group relative pb-1 text-sm transition-all duration-300 select-none ${
+            className={`group relative pb-1 text-xs transition-all duration-300 select-none ${
               isActive 
                 ? "text-slate-900 font-bold" 
                 : "text-slate-500 hover:text-slate-800 font-medium"
