@@ -159,7 +159,7 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan }: VisaInfoAndPlan
   return (
     <div className="space-y-8 md:space-y-10">
       <div>
-        <h1 className="text-2xl font-bold text-[var(--foreground)]">
+        <h1 id="visa-info-section" className="text-2xl font-bold text-[var(--foreground)] scroll-mt-28">
           Dubai visa information
         </h1>
         {/* Scaled up borderless visa info details aligned in a column grid */}
@@ -281,7 +281,7 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan }: VisaInfoAndPlan
             <span className="relative z-10 flex h-3 w-3 items-center justify-center rounded-full bg-[var(--primary)]">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75"></span>
             </span>
-            <h1 className="text-2xl font-bold text-[var(--foreground)]">
+            <h1 id="guaranteed-visa-section" className="text-2xl font-bold text-[var(--foreground)] scroll-mt-28">
               Get a Guaranteed Visa on
             </h1>
           </div>
@@ -382,7 +382,7 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan }: VisaInfoAndPlan
       <div className="pt-8 border-t border-slate-200/50">
         <div className="space-y-6">
           <div>
-            <h2 className="text-2xl font-bold text-[var(--foreground)] tracking-tight">
+            <h2 id="emirates-section" className="text-2xl font-bold text-[var(--foreground)] tracking-tight scroll-mt-28">
               All 7 Emirates with 1 Visa
             </h2>
           </div>
@@ -468,7 +468,7 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan }: VisaInfoAndPlan
       {/* Dubai Visa Requirements Section */}
       <div className="pt-8 border-t border-slate-200/50 space-y-5">
         <div>
-          <h2 className="text-2xl font-bold text-[var(--foreground)] tracking-tight">
+          <h2 id="requirements-section" className="text-2xl font-bold text-[var(--foreground)] tracking-tight scroll-mt-28">
             Dubai Visa Requirements
           </h2>
         </div>
@@ -483,7 +483,7 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan }: VisaInfoAndPlan
       {/* Partners We Work With Section */}
       <div className="pt-8 border-t border-slate-200/50 space-y-5">
         <div>
-          <h2 className="text-2xl font-bold text-[var(--foreground)] tracking-tight">
+          <h2 id="partners-section" className="text-2xl font-bold text-[var(--foreground)] tracking-tight scroll-mt-28">
             Partners We Work With
           </h2>
         </div>
@@ -537,7 +537,7 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan }: VisaInfoAndPlan
       {/* How Process Works Section */}
       <div className="pt-8 border-t border-slate-200/50 space-y-6">
         <div>
-          <h2 className="text-2xl font-bold text-[var(--foreground)] tracking-tight">
+          <h2 id="process-section" className="text-2xl font-bold text-[var(--foreground)] tracking-tight scroll-mt-28">
             How Process Works
           </h2>
         </div>
@@ -666,7 +666,7 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan }: VisaInfoAndPlan
       {/* Chances of Approval Section */}
       <div className="pt-8 border-t border-slate-200/50 space-y-6 font-sans">
         <div>
-          <h2 className="text-2xl font-bold text-[var(--foreground)] tracking-tight">
+          <h2 id="approval-section" className="text-2xl font-bold text-[var(--foreground)] tracking-tight scroll-mt-28">
             Want to know if your will be approved?
           </h2>
         </div>
@@ -873,7 +873,7 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan }: VisaInfoAndPlan
       {/* Statistics Section */}
       <div className="pt-8 border-t border-slate-200/50 space-y-6 font-sans">
         <div className="relative inline-block">
-          <h2 className="text-2xl font-bold text-[var(--foreground)] tracking-tight">
+          <h2 id="statistics-section" className="text-2xl font-bold text-[var(--foreground)] tracking-tight scroll-mt-28">
             Statistics on
           </h2>
           <div className="absolute left-0 bottom-0 h-0.5 w-12 bg-[#d97706]" />
