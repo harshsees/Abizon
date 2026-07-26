@@ -40,3 +40,10 @@ textarea {
   outline: 2px solid var(--primary);
   outline-offset: 2px;
 }
+
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
