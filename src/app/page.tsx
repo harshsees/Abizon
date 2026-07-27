@@ -198,9 +198,12 @@ export default function Home() {
               />
             </div>
 
-            {/* Profile Avatar Button */}
-            <button className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-slate-50 hover:bg-slate-100 transition-colors shadow-sm cursor-pointer">
-              <User className="w-4.5 h-4.5 text-slate-600" />
+            {/* Profile Avatar Button (Matches 2nd Screenshot with Theme Colors) */}
+            <button 
+              onClick={() => router.push("/profile")}
+              className="flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--primary)] bg-[var(--primary)]/8 text-[var(--primary)] hover:bg-[var(--primary)]/15 transition-all shadow-sm cursor-pointer"
+            >
+              <User className="w-5 h-5 text-[var(--primary)]" />
             </button>
           </div>
         </div>
