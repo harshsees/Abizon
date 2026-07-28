@@ -61,9 +61,7 @@ export default function DubaiPage() {
         </div>
 
         {/* Horizontal Sub-Navbar below the first div (hero banner) */}
-        <div className="w-full h-[53px] relative z-40">
-          <SubNavbar isSticky={scrolledPastHero} />
-        </div>
+        <SubNavbar isSticky={scrolledPastHero} />
 
         {/* Responsive Grid Layout containing the entire page below TopHero */}
         <div className="mx-auto w-full max-w-7xl px-4 py-8 md:px-6 md:py-10">

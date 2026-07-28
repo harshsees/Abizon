@@ -30,7 +30,7 @@ const requirements = [
 
 export function RequirementChecklist({ className }: { className?: string }) {
   return (
-    <section id="requirements" className={className || "mx-auto w-full max-w-7xl px-4 py-14 md:px-6"}>
+    <section id="requirements" className={`${className || "mx-auto w-full max-w-7xl px-4 py-14 md:px-6"} scroll-mt-20`}>
       <h2 className="text-3xl font-bold text-[var(--foreground)]">
         Visa requirements
       </h2>

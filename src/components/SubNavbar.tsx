@@ -20,42 +20,29 @@ export function SubNavbar({ isSticky = false }: SubNavbarProps) {
 
   useEffect(() => {
     const handleScroll = () => {
-      const offset = 120; // Height of sticky sub-navbar plus spacing
+      const offset = 140; // Spacing threshold below header to activate a section
+      const scrollPosition = window.scrollY + offset;
+
       const visasEl = document.getElementById("visas");
       const requirementsEl = document.getElementById("requirements");
       const faqEl = document.getElementById("faq");
 
       let currentActive = "visa-info";
 
-      // Detect active section based on scroll offset from top of viewport
-      if (visasEl) {
-        const rect = visasEl.getBoundingClientRect();
-        if (rect.top <= offset) {
-          currentActive = "visa-info";
-        }
-      }
-
-      if (requirementsEl) {
-        const rect = requirementsEl.getBoundingClientRect();
-        if (rect.top <= offset) {
-          // If we scrolled past requirements, both 'documents' and 'process' are relevant
-          currentActive = "documents";
-        }
-      }
-
-      if (faqEl) {
-        const rect = faqEl.getBoundingClientRect();
-        if (rect.top <= offset) {
-          // If we scrolled past faq, both 'reviews' and 'faqs' are relevant
-          currentActive = "faqs";
-        }
+      // Precise offsetTop scroll-spy checks to prevent frame lag or flickering
+      if (faqEl && scrollPosition >= faqEl.offsetTop) {
+        currentActive = "faqs";
+      } else if (requirementsEl && scrollPosition >= requirementsEl.offsetTop) {
+        currentActive = "documents";
+      } else if (visasEl && scrollPosition >= visasEl.offsetTop) {
+        currentActive = "visa-info";
       }
 
       setActiveSection(currentActive);
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
-    handleScroll(); // Run initially
+    handleScroll(); // Initial run
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
@@ -63,7 +50,7 @@ export function SubNavbar({ isSticky = false }: SubNavbarProps) {
     e.preventDefault();
     const targetEl = document.querySelector(href);
     if (targetEl) {
-      const offset = 70; // Height of sticky bar
+      const offset = 65; // Height of sticky sub-navbar plus gutter
       const bodyRect = document.body.getBoundingClientRect().top;
       const elementRect = targetEl.getBoundingClientRect().top;
       const elementPosition = elementRect - bodyRect;
@@ -78,11 +65,8 @@ export function SubNavbar({ isSticky = false }: SubNavbarProps) {
 
   return (
     <nav
-      className={`w-full border-b border-slate-200 bg-white transition-all duration-300 ${
-        isSticky 
-          ? "fixed top-0 inset-x-0 z-50 shadow-md py-3.5" 
-          : "relative py-4"
-      }`}
+      style={{ top: isSticky ? "0px" : "57px" }}
+      className="sticky inset-x-0 w-full z-40 border-b border-slate-200/60 bg-white/95 backdrop-blur-sm py-3 transition-all duration-300 ease-in-out select-none"
     >
       <div className="mx-auto max-w-7xl px-4 md:px-6 flex justify-center items-center gap-8 md:gap-12">
         {items.map((item) => {
@@ -92,21 +76,21 @@ export function SubNavbar({ isSticky = false }: SubNavbarProps) {
               key={item.name}
               href={item.href}
               onClick={(e) => handleClick(e, item.href)}
-              className={`group relative pb-1 text-sm transition-all duration-300 font-sans tracking-wide ${
+              className={`group relative pb-2.5 text-[13px] font-sans tracking-wide transition-colors duration-200 ${
                 isActive 
-                  ? "text-slate-950 font-bold" 
-                  : "text-slate-500 hover:text-slate-900 font-semibold"
+                  ? "text-slate-950 font-black" 
+                  : "text-slate-400 hover:text-slate-700 font-semibold"
               }`}
             >
               <span>{item.name}</span>
               {isActive ? (
                 <motion.div
                   layoutId="activeSubSection"
-                  className="absolute left-0 right-0 bottom-0 h-0.75 bg-[var(--primary)]"
+                  className="absolute left-0 right-0 bottom-0 h-[3px] bg-[var(--primary)] rounded-full"
                   transition={{ type: "spring", stiffness: 350, damping: 30 }}
                 />
               ) : (
-                <div className="absolute left-0 right-0 bottom-0 h-0.75 bg-transparent group-hover:bg-slate-200/60 transition-colors" />
+                <div className="absolute left-0 right-0 bottom-0 h-[3px] bg-transparent group-hover:bg-slate-100 transition-colors" />
               )}
             </a>
           );
