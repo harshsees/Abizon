@@ -25,7 +25,7 @@ import {
 } from "lucide-react";
 import { countriesData, Country } from "@/data/countries";
 import { CountryCard } from "@/components/CountryCard";
-import { Header } from "@/components/Header";
+import { NewHeader } from "@/components/NewHeader";
 
 export default function Home() {
   const router = useRouter();
@@ -149,7 +149,7 @@ export default function Home() {
     <div className="min-h-screen bg-[#f7f7fa] flex flex-col font-sans antialiased text-slate-800 pb-20 relative">
       
       {/* 1. HEADER */}
-      <Header
+      <NewHeader
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
         activeTab={activeTab}
