@@ -66,7 +66,11 @@ export function SubNavbar({ isSticky = false }: SubNavbarProps) {
   return (
     <nav
       style={{ top: isSticky ? "0px" : "57px" }}
-      className="sticky inset-x-0 w-full z-40 border-b border-slate-200/60 bg-white/95 backdrop-blur-sm py-3 transition-all duration-300 ease-in-out select-none"
+      className={`sticky inset-x-0 w-full z-40 border-b border-slate-200/60 transition-all duration-300 ease-in-out select-none ${
+        isSticky 
+          ? "bg-white/95 backdrop-blur-sm py-3 shadow-sm mt-0" 
+          : "bg-transparent py-2.5 mt-8"
+      }`}
     >
       <div className="mx-auto max-w-7xl px-4 md:px-6 flex justify-center items-center gap-8 md:gap-12">
         {items.map((item) => {

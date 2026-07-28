@@ -64,7 +64,7 @@ export default function DubaiPage() {
         <SubNavbar isSticky={scrolledPastHero} />
 
         {/* Responsive Grid Layout containing the entire page below TopHero */}
-        <div className="mx-auto w-full max-w-7xl px-4 py-8 md:px-6 md:py-10">
+        <div className="mx-auto w-full max-w-7xl px-4 pt-4 pb-8 md:px-6 md:pt-6 md:pb-10">
           <div className="grid grid-cols-1 md:grid-cols-[1.08fr_0.92fr] gap-8 md:gap-12 items-start">
             
             {/* Left Column: Scrollable Content */}
