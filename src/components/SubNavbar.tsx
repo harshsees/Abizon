@@ -68,11 +68,11 @@ export function SubNavbar({ isSticky = false }: SubNavbarProps) {
       style={{ top: isSticky ? "0px" : "57px" }}
       className={`sticky inset-x-0 w-full z-40 border-b border-slate-200/60 transition-all duration-300 ease-in-out select-none ${
         isSticky 
-          ? "bg-white/95 backdrop-blur-sm py-3 shadow-sm mt-0" 
+          ? "bg-white/95 backdrop-blur-sm py-3 mt-0" 
           : "bg-transparent py-2.5 mt-8"
       }`}
     >
-      <div className="mx-auto max-w-7xl px-4 md:px-6 flex justify-center items-center gap-8 md:gap-12">
+      <div className="mx-auto max-w-7xl px-4 md:px-6 flex justify-center items-center gap-12 md:gap-18">
         {items.map((item) => {
           const isActive = activeSection === item.id;
           return (
