@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { FAQAccordion } from "@/components/FAQAccordion";
 import { Footer } from "@/components/Footer";
@@ -11,13 +11,26 @@ import { RequirementChecklist } from "@/components/RequirementChecklist";
 import { TopHero } from "@/components/TopHero";
 import { TravelPlanModal } from "@/components/TravelPlanModal";
 import { DatePickerModal } from "@/components/DatePickerModal";
-import { VerticalNavbar } from "@/components/VerticalNavbar";
+import { SubNavbar } from "@/components/SubNavbar";
 
 export default function DubaiPage() {
   const router = useRouter();
   const [selectedPlan, setSelectedPlan] = useState<number>(0);
   const [isTravelPlanOpen, setIsTravelPlanOpen] = useState<boolean>(false);
   const [isDatePickerOpen, setIsDatePickerOpen] = useState<boolean>(false);
+  const [scrolledPastHero, setScrolledPastHero] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const heroEl = document.getElementById("destinations");
+      if (heroEl) {
+        const heroHeight = heroEl.offsetHeight;
+        setScrolledPastHero(window.scrollY > heroHeight - 55);
+      }
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const handleStartApplication = () => {
     setIsTravelPlanOpen(true);
@@ -40,16 +53,16 @@ export default function DubaiPage() {
 
   return (
     <div className="flex flex-1 flex-col bg-[var(--background)] relative">
-      <Header />
-      
-      {/* Floating Vertical Navbar on the leftmost side of the viewport (Desktop Only) */}
-      <div className="hidden lg:block fixed left-6 top-[220px] z-50">
-        <VerticalNavbar />
-      </div>
+      <Header forceHide={scrolledPastHero} />
 
       <main className="flex-1">
         <div id="destinations" className="scroll-mt-28">
           <TopHero onStart={handleStartApplication} />
+        </div>
+
+        {/* Horizontal Sub-Navbar below the first div (hero banner) */}
+        <div className="w-full h-[53px] relative z-40">
+          <SubNavbar isSticky={scrolledPastHero} />
         </div>
 
         {/* Responsive Grid Layout containing the entire page below TopHero */}
