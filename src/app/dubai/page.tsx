@@ -86,8 +86,6 @@ export default function DubaiPage() {
 
               <RequirementChecklist className="w-full py-8 md:py-10 border-t border-slate-200/50 mt-10" />
               
-              <Reviews countryName="Dubai" />
-
               <div className="border-t border-slate-200/50 pt-6">
                 <FAQAccordion className="w-full py-4" />
               </div>
@@ -104,6 +102,11 @@ export default function DubaiPage() {
             </div>
 
           </div>
+        </div>
+
+        {/* Full-width Reviews Section outside the grid layout */}
+        <div className="mx-auto w-full max-w-7xl px-4 md:px-6">
+          <Reviews countryName="Dubai" />
         </div>
 
       </main>
