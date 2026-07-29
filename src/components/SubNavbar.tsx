@@ -12,7 +12,7 @@ export function SubNavbar({ isSticky = false }: SubNavbarProps) {
 
   const items = [
     { name: "Visa Info", href: "#visas", id: "visa-info" },
-    { name: "Documents", href: "#requirements", id: "documents" },
+    { name: "Documents", href: "#requirements-section", id: "documents" },
     { name: "Visa Process", href: "#process-section", id: "process" },
     { name: "Reviews", href: "#reviews", id: "reviews" },
     { name: "FAQs", href: "#faq", id: "faqs" },
@@ -24,7 +24,7 @@ export function SubNavbar({ isSticky = false }: SubNavbarProps) {
       const scrollPosition = window.scrollY + offset;
 
       const visasEl = document.getElementById("visas");
-      const requirementsEl = document.getElementById("requirements");
+      const requirementsEl = document.getElementById("requirements-section");
       const processEl = document.getElementById("process-section");
       const reviewsEl = document.getElementById("reviews");
       const faqEl = document.getElementById("faq");

@@ -7,7 +7,6 @@ import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { VisaInfoAndPlans } from "@/components/VisaInfoAndPlans";
 import { ApplicationCard } from "@/components/ApplicationCard";
-import { RequirementChecklist } from "@/components/RequirementChecklist";
 import { TopHero } from "@/components/TopHero";
 import { TravelPlanModal } from "@/components/TravelPlanModal";
 import { DatePickerModal } from "@/components/DatePickerModal";
@@ -113,11 +112,6 @@ export default function CountryPage({ params }: PageProps) {
                 />
               </div>
 
-              <RequirementChecklist className="w-full py-8 md:py-10 border-t border-slate-200/50 mt-10" />
-              
-              <div className="border-t border-slate-200/50 pt-6">
-                <FAQAccordion className="w-full py-4" countryName={displayName} />
-              </div>
             </div>
 
             {/* Right Column: Sticky Application Card (Desktop) */}
@@ -137,6 +131,11 @@ export default function CountryPage({ params }: PageProps) {
         {/* Full-width Reviews Section outside the grid layout */}
         <div className="mx-auto w-full max-w-7xl px-4 md:px-6">
           <Reviews countryName={displayName} />
+        </div>
+
+        {/* Full-width FAQs Section outside the grid layout */}
+        <div className="mx-auto w-full max-w-7xl px-4 md:px-6 mt-6 pt-6 border-t border-slate-200/50">
+          <FAQAccordion className="w-full py-4" countryName={displayName} />
         </div>
 
       </main>
