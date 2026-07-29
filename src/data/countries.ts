@@ -227,3 +227,8 @@ export const countriesData: Country[] = rawCountries.map((country, idx) => ({
   ...country,
   imageUrl: getUnsplashUrl(country.code, idx)
 }));
+
+export const getCountrySlug = (countryName: string): string => {
+  if (countryName === "United Arab Emirates") return "dubai";
+  return countryName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+};

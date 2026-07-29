@@ -38,14 +38,21 @@ const faqs = [
   },
 ];
 
-export function FAQAccordion({ className }: { className?: string }) {
+export function FAQAccordion({ className, countryName = "Dubai" }: { className?: string; countryName?: string }) {
   const [open, setOpen] = useState<number | null>(0);
+
+  const formattedFaqs = faqs.map((faq) => {
+    return {
+      q: faq.q.replace(/Dubai/g, countryName).replace(/UAE/g, countryName),
+      a: faq.a.replace(/Dubai/g, countryName).replace(/UAE/g, countryName),
+    };
+  });
 
   return (
     <section id="faq" className={`${className || "mx-auto w-full max-w-4xl px-4 py-14 md:px-6"} scroll-mt-20`}>
       <h2 className="text-3xl font-bold text-[var(--foreground)]">FAQs</h2>
       <div className="mt-6 space-y-3">
-        {faqs.map((item, index) => {
+        {formattedFaqs.map((item, index) => {
           const isOpen = open === index;
           return (
             <article key={item.q} className="rounded-2xl border border-[var(--border)] bg-white p-4">

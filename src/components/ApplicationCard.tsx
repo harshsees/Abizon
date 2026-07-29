@@ -14,11 +14,14 @@ import {
   Zap,
 } from "lucide-react";
 
+import { Country } from "@/data/countries";
+
 type ApplicationCardProps = {
   onStart?: () => void;
   selectedPlan: number;
   onSelectPlan: (index: number) => void;
   className?: string;
+  country?: Country;
 };
 
 // Helper function to get the date dynamically (e.g. 2 days ahead)
@@ -40,11 +43,24 @@ const getFormattedDate = (daysAhead: number) => {
   return `${day}${getOrdinal(day)} ${month}`;
 };
 
+const defaultCountry: Country = {
+  id: 2,
+  name: "United Arab Emirates",
+  code: "ae",
+  visaType: "E-Visa",
+  validity: "60 Days",
+  fees: "₹8,099",
+  deliveryDays: 1,
+  documents: "Passport Only",
+  imageUrl: "",
+};
+
 export function ApplicationCard({
   onStart,
   selectedPlan,
   onSelectPlan,
   className,
+  country = defaultCountry,
 }: ApplicationCardProps) {
   const shouldReduceMotion = useReducedMotion();
 
@@ -53,33 +69,25 @@ export function ApplicationCard({
   const [travellers, setTravellers] = useState<number>(1);
 
   // Derived state directly from hoisted parent state (avoids useEffect cascading renders)
-  const validity = selectedPlan === 0 ? "30 Days" : "60 Days";
-
-  // Sync right-side validity selection back to left-side plans
-  const handleValidityChange = (val: "30 Days" | "60 Days") => {
-    if (val === "30 Days") {
-      onSelectPlan(0);
-    } else {
-      onSelectPlan(1);
-    }
-  };
+  const validity = country.validity;
 
   // Pricing calculation matching the user's plan options
-  const getBaseFees = (type: "Tourism" | "Business", val: "30 Days" | "60 Days") => {
-    if (type === "Business") {
-      return {
-        gov: val === "60 Days" ? 17000 : 13500,
-        service: 999,
-      };
-    }
-    // Tourism
+  const getBaseFees = (type: "Tourism" | "Business", planIndex: number) => {
+    const baseFee = country.fees === "Free" || country.fees === "0" ? 0 : parseInt(country.fees.replace(/[^0-9]/g, '')) || 5000;
+    
+    // Business visa is typically more expensive
+    const govFee = type === "Business" ? Math.round(baseFee * 1.5) : baseFee;
+    
+    // Service fee: 499 for standard (planIndex === 0), 1999 for express (planIndex === 1)
+    const serviceFee = planIndex === 1 ? 1999 : 499;
+    
     return {
-      gov: val === "60 Days" ? 12000 : 7000,
-      service: 499,
+      gov: govFee,
+      service: serviceFee,
     };
   };
 
-  const baseFees = getBaseFees(visaType, validity);
+  const baseFees = getBaseFees(visaType, selectedPlan);
   const payNowAmount = baseFees.gov * travellers;
   const payOnApprovalAmount = baseFees.service * travellers;
   const totalAmount = payNowAmount + payOnApprovalAmount;
@@ -232,19 +240,19 @@ export function ApplicationCard({
                 </div>
               </div>
 
-              {/* Validity Selector */}
+              {/* Processing Selector */}
               <div className="relative group/field px-3 py-2 text-left">
                 <label className="block text-[10px] uppercase font-extrabold tracking-wider text-slate-400">
-                  Validity
+                  Processing
                 </label>
                 <div className="relative mt-0.5 flex items-center">
                   <select
-                    value={validity}
-                    onChange={(e) => handleValidityChange(e.target.value as "30 Days" | "60 Days")}
+                    value={selectedPlan === 0 ? "Standard" : "Express"}
+                    onChange={(e) => onSelectPlan(e.target.value === "Standard" ? 0 : 1)}
                     className="w-full bg-transparent border-0 p-0 text-sm font-semibold text-slate-800 focus:ring-0 focus:outline-none cursor-pointer appearance-none pr-5 z-10"
                   >
-                    <option value="30 Days">30 Days Single</option>
-                    <option value="60 Days">60 Days Single</option>
+                    <option value="Standard">Standard ({country.validity})</option>
+                    <option value="Express">Express ({country.validity})</option>
                   </select>
                   <ChevronDown className="absolute right-0.5 h-3.5 w-3.5 text-slate-400 pointer-events-none transition-transform group-hover/field:translate-y-0.5" />
                 </div>

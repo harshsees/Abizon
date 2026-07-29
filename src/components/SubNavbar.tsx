@@ -13,8 +13,8 @@ export function SubNavbar({ isSticky = false }: SubNavbarProps) {
   const items = [
     { name: "Visa Info", href: "#visas", id: "visa-info" },
     { name: "Documents", href: "#requirements", id: "documents" },
-    { name: "Visa Process", href: "#requirements", id: "process" }, // Map to requirements as placeholder
-    { name: "Reviews", href: "#faq", id: "reviews" }, // Map to faq as reviews placeholder
+    { name: "Visa Process", href: "#process-section", id: "process" },
+    { name: "Reviews", href: "#reviews", id: "reviews" },
     { name: "FAQs", href: "#faq", id: "faqs" },
   ];
 
@@ -25,6 +25,8 @@ export function SubNavbar({ isSticky = false }: SubNavbarProps) {
 
       const visasEl = document.getElementById("visas");
       const requirementsEl = document.getElementById("requirements");
+      const processEl = document.getElementById("process-section");
+      const reviewsEl = document.getElementById("reviews");
       const faqEl = document.getElementById("faq");
 
       let currentActive = "visa-info";
@@ -32,6 +34,10 @@ export function SubNavbar({ isSticky = false }: SubNavbarProps) {
       // Precise offsetTop scroll-spy checks to prevent frame lag or flickering
       if (faqEl && scrollPosition >= faqEl.offsetTop) {
         currentActive = "faqs";
+      } else if (reviewsEl && scrollPosition >= reviewsEl.offsetTop) {
+        currentActive = "reviews";
+      } else if (processEl && scrollPosition >= processEl.offsetTop) {
+        currentActive = "process";
       } else if (requirementsEl && scrollPosition >= requirementsEl.offsetTop) {
         currentActive = "documents";
       } else if (visasEl && scrollPosition >= visasEl.offsetTop) {

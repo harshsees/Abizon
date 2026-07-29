@@ -20,12 +20,62 @@ const plans = [
   },
 ];
 
+import { Country } from "@/data/countries";
+
 type VisaInfoAndPlansProps = {
   selectedPlan: number;
   onSelectPlan: (index: number) => void;
+  country?: Country;
 };
 
-export function VisaInfoAndPlans({ selectedPlan, onSelectPlan }: VisaInfoAndPlansProps) {
+const defaultCountry: Country = {
+  id: 2,
+  name: "United Arab Emirates",
+  code: "ae",
+  visaType: "E-Visa",
+  validity: "60 Days",
+  fees: "₹8,099",
+  deliveryDays: 1,
+  documents: "Passport Only",
+  imageUrl: "",
+};
+
+const getFormattedDate = (daysAhead: number) => {
+  const date = new Date();
+  date.setDate(date.getDate() + daysAhead);
+  
+  const day = date.getDate();
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const month = months[date.getMonth()];
+  
+  const getOrdinal = (n: number) => {
+    const s = ["th", "st", "nd", "rd"];
+    const v = n % 100;
+    return s[(v - 20) % 10] || s[v] || s[0];
+  };
+  
+  return `${day}${getOrdinal(day)} ${month}`;
+};
+
+export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = defaultCountry }: VisaInfoAndPlansProps) {
+  const displayName = country.name === "United Arab Emirates" ? "Dubai" : country.name;
+  const entryType = country.visaType === "Sticker Visa" ? "Single/Multiple" : "Single";
+  const methodType = country.visaType === "E-Visa" ? "Paperless" : country.visaType === "Visa on Arrival" ? "On Arrival" : "Consulate/VFS";
+
+  const dynamicPlans = [
+    {
+      title: `Tourist visa - ${country.validity}`,
+      price: country.fees,
+      timing: `${getFormattedDate(country.deliveryDays)} at 03:33 PM`,
+      badge: "Guaranteed",
+    },
+    {
+      title: `Express visa - ${country.validity}`,
+      price: country.fees === "Free" || country.fees === "0" ? "Free" : `₹${(parseInt(country.fees.replace(/[^0-9]/g, '')) + 1500).toLocaleString("en-IN")}`,
+      timing: `${getFormattedDate(Math.max(1, country.deliveryDays - 1))} at 11:33 AM`,
+      badge: `${country.deliveryDays > 1 ? "1 day faster" : "Priority Processing"}`,
+    },
+  ];
   // Chances of Approval Section State & Logic
   const quizQuestions = [
     {
@@ -37,7 +87,7 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan }: VisaInfoAndPlan
     {
       id: 2,
       num: "02",
-      question: "Have you travelled to AE before?",
+      question: `Have you travelled to ${displayName} before?`,
       options: ["Yes", "No"]
     },
     {
@@ -160,7 +210,7 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan }: VisaInfoAndPlan
     <div className="space-y-8 md:space-y-10">
       <div>
         <h1 id="visa-info-section" className="text-2xl font-bold text-[var(--foreground)] scroll-mt-28">
-          Dubai visa information
+          {displayName} visa information
         </h1>
         {/* Scaled up borderless visa info details aligned in a column grid */}
         <div className="mt-5 space-y-5">
@@ -173,7 +223,7 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan }: VisaInfoAndPlan
               </div>
               <div>
                 <p className="text-xs md:text-sm font-medium text-[var(--muted)]">Visa Type:</p>
-                <p className="text-base md:text-lg font-extrabold text-[var(--foreground)] mt-0.5">E-Visa</p>
+                <p className="text-base md:text-lg font-extrabold text-[var(--foreground)] mt-0.5">{country.visaType}</p>
               </div>
             </div>
 
@@ -186,13 +236,13 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan }: VisaInfoAndPlan
                 <p className="text-xs md:text-sm font-medium text-[var(--muted)]">Length of Stay:</p>
                 <div className="relative group inline-block mt-0.5">
                   <span className="text-base md:text-lg font-extrabold text-[var(--foreground)] underline decoration-slate-400 decoration-dotted underline-offset-4 cursor-pointer">
-                    30 days
+                    {country.validity}
                   </span>
                   {/* Tooltip Box */}
                   <div className="absolute top-full left-0 mt-2.5 hidden group-hover:block w-[280px] bg-white border border-slate-200/80 rounded-2xl p-4 shadow-[0_12px_32px_rgba(15,23,42,0.08)] z-30 pointer-events-none">
-                    <p className="text-sm font-bold text-slate-900">Length of Stay: 30 days</p>
+                    <p className="text-sm font-bold text-slate-900">Length of Stay: {country.validity}</p>
                     <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
-                      {"The maximum duration that you are allowed to remain in a country after entering with that particular visa."}
+                      {`The maximum duration that you are allowed to remain in ${displayName} after entering with that particular visa.`}
                     </p>
                   </div>
                 </div>
@@ -208,13 +258,13 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan }: VisaInfoAndPlan
                 <p className="text-xs md:text-sm font-medium text-[var(--muted)]">Validity:</p>
                 <div className="relative group inline-block mt-0.5">
                   <span className="text-base md:text-lg font-extrabold text-[var(--foreground)] underline decoration-slate-400 decoration-dotted underline-offset-4 cursor-pointer">
-                    60 days
+                    {country.validity}
                   </span>
                   {/* Tooltip Box */}
                   <div className="absolute top-full left-0 mt-2.5 hidden group-hover:block w-[280px] bg-white border border-slate-200/80 rounded-2xl p-4 shadow-[0_12px_32px_rgba(15,23,42,0.08)] z-30 pointer-events-none">
-                    <p className="text-sm font-bold text-slate-900">Validity Period: 60 days</p>
+                    <p className="text-sm font-bold text-slate-900">Validity Period: {country.validity}</p>
                     <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
-                      {"The number of days your visa is active after the date of issuance. We ensure your visa is valid based on your travel dates."}
+                      {`The number of days your visa is active after the date of issuance. We ensure your visa is valid based on your travel dates.`}
                     </p>
                   </div>
                 </div>
@@ -233,13 +283,13 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan }: VisaInfoAndPlan
                 <p className="text-xs md:text-sm font-medium text-[var(--muted)]">Entry:</p>
                 <div className="relative group inline-block mt-0.5">
                   <span className="text-base md:text-lg font-extrabold text-[var(--foreground)] underline decoration-slate-400 decoration-dotted underline-offset-4 cursor-pointer">
-                    Single
+                    {entryType}
                   </span>
                   {/* Tooltip Box */}
                   <div className="absolute top-full left-0 mt-2.5 hidden group-hover:block w-[280px] bg-white border border-slate-200/80 rounded-2xl p-4 shadow-[0_12px_32px_rgba(15,23,42,0.08)] z-30 pointer-events-none">
-                    <p className="text-sm font-bold text-slate-900">Entry: Single</p>
+                    <p className="text-sm font-bold text-slate-900">Entry: {entryType}</p>
                     <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
-                      {"You can enter the country only once during the visa's validity period and cannot re-enter using the same visa once you've exited."}
+                      {`You can enter the country only once during the visa's validity period and cannot re-enter using the same visa once you've exited.`}
                     </p>
                   </div>
                 </div>
@@ -255,13 +305,13 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan }: VisaInfoAndPlan
                 <p className="text-xs md:text-sm font-medium text-[var(--muted)]">Method:</p>
                 <div className="relative group inline-block mt-0.5">
                   <span className="text-base md:text-lg font-extrabold text-[var(--foreground)] underline decoration-slate-400 decoration-dotted underline-offset-4 cursor-pointer">
-                    Paperless
+                    {methodType}
                   </span>
                   {/* Tooltip Box */}
                   <div className="absolute top-full left-0 mt-2.5 hidden group-hover:block w-[280px] bg-white border border-slate-200/80 rounded-2xl p-4 shadow-[0_12px_32px_rgba(15,23,42,0.08)] z-30 pointer-events-none">
-                    <p className="text-sm font-bold text-slate-900">Method: Paperless</p>
+                    <p className="text-sm font-bold text-slate-900">Method: {methodType}</p>
                     <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
-                      {"Apply and receive your visa fully online. No paperwork needed."}
+                      {`Apply and receive your visa fully online. No paperwork needed.`}
                     </p>
                   </div>
                 </div>
@@ -288,7 +338,7 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan }: VisaInfoAndPlan
 
           {/* Indented branching container (restored original spacing) */}
           <div className="mt-6.5 space-y-5.5">
-            {plans.map((plan, index) => {
+            {dynamicPlans.map((plan, index) => {
               const active = selectedPlan === index;
               return (
                 <div key={plan.title} className="relative pl-7">
@@ -379,8 +429,9 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan }: VisaInfoAndPlan
           </div>
         </div>
       </div>      {/* All 7 Emirates with 1 Visa Section */}
-      <div className="pt-8 border-t border-slate-200/50">
-        <div className="space-y-6">
+      {country.name === "United Arab Emirates" && (
+        <div className="pt-8 border-t border-slate-200/50">
+          <div className="space-y-6">
           <div>
             <h2 id="emirates-section" className="text-2xl font-bold text-[var(--foreground)] tracking-tight scroll-mt-28">
               All 7 Emirates with 1 Visa
@@ -464,19 +515,26 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan }: VisaInfoAndPlan
           </div>
         </div>
       </div>
+      )}
 
-      {/* Dubai Visa Requirements Section */}
+      {/* Visa Requirements Section */}
       <div className="pt-8 border-t border-slate-200/50 space-y-5">
         <div>
           <h2 id="requirements-section" className="text-2xl font-bold text-[var(--foreground)] tracking-tight scroll-mt-28">
-            Dubai Visa Requirements
+            {displayName} Visa Requirements
           </h2>
         </div>
         <div className="flex flex-wrap gap-3">
           <div className="inline-flex items-center gap-2 px-4.5 py-2.5 bg-slate-50 border border-slate-200/60 rounded-2xl font-bold text-sm text-[var(--foreground)] shadow-sm cursor-pointer hover:bg-slate-100/50 transition">
             <Scan className="h-4.5 w-4.5 text-slate-700" />
-            Passport
+            Passport Scan
           </div>
+          {country.documents === "Photo + Passport" && (
+            <div className="inline-flex items-center gap-2 px-4.5 py-2.5 bg-slate-50 border border-slate-200/60 rounded-2xl font-bold text-sm text-[var(--foreground)] shadow-sm cursor-pointer hover:bg-slate-100/50 transition">
+              <FileText className="h-4.5 w-4.5 text-slate-700" />
+              Photograph (White Background)
+            </div>
+          )}
         </div>
       </div>
 

@@ -23,7 +23,7 @@ import {
   Sparkles,
   FileText
 } from "lucide-react";
-import { countriesData, Country } from "@/data/countries";
+import { countriesData, Country, getCountrySlug } from "@/data/countries";
 import { CountryCard } from "@/components/CountryCard";
 import { NewHeader } from "@/components/NewHeader";
 
@@ -120,7 +120,7 @@ export default function Home() {
     if (country.code === "ae" || country.name.toLowerCase() === "dubai" || country.name === "United Arab Emirates") {
       router.push("/dubai");
     } else {
-      setSelectedCountry(country);
+      router.push(`/${getCountrySlug(country.name)}`);
     }
   };
 

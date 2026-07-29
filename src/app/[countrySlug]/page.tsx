@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import React, { use, useState, useEffect } from "react";
+import { useRouter, notFound } from "next/navigation";
 import { FAQAccordion } from "@/components/FAQAccordion";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
@@ -13,9 +13,26 @@ import { TravelPlanModal } from "@/components/TravelPlanModal";
 import { DatePickerModal } from "@/components/DatePickerModal";
 import { SubNavbar } from "@/components/SubNavbar";
 import { Reviews } from "@/components/Reviews";
+import { countriesData, getCountrySlug } from "@/data/countries";
 
-export default function DubaiPage() {
+type PageProps = {
+  params: Promise<{ countrySlug: string }>;
+};
+
+export default function CountryPage({ params }: PageProps) {
   const router = useRouter();
+  const { countrySlug } = use(params);
+
+  // Find matching country
+  const country = countriesData.find(
+    (c) => getCountrySlug(c.name) === countrySlug
+  );
+
+  // If no matching country, trigger 404
+  if (!country) {
+    notFound();
+  }
+
   const [selectedPlan, setSelectedPlan] = useState<number>(0);
   const [isTravelPlanOpen, setIsTravelPlanOpen] = useState<boolean>(false);
   const [isDatePickerOpen, setIsDatePickerOpen] = useState<boolean>(false);
@@ -40,7 +57,7 @@ export default function DubaiPage() {
   const handleSelectTravelOption = (option: "before" | "after") => {
     setIsTravelPlanOpen(false);
     if (option === "before") {
-      router.push("/apply?option=before&country=United Arab Emirates");
+      router.push(`/apply?option=before&country=${encodeURIComponent(country.name)}`);
     } else {
       setIsDatePickerOpen(true);
     }
@@ -49,8 +66,10 @@ export default function DubaiPage() {
   const handleSelectDate = (date: Date) => {
     setIsDatePickerOpen(false);
     const dateStr = date.toISOString().split("T")[0];
-    router.push(`/apply?option=after&date=${dateStr}&country=United Arab Emirates`);
+    router.push(`/apply?option=after&date=${dateStr}&country=${encodeURIComponent(country.name)}`);
   };
+
+  const displayName = country.name === "United Arab Emirates" ? "Dubai" : country.name;
 
   return (
     <div className="flex flex-1 flex-col bg-[var(--background)] relative">
@@ -58,7 +77,12 @@ export default function DubaiPage() {
 
       <main className="flex-1">
         <div id="destinations" className="scroll-mt-28">
-          <TopHero onStart={handleStartApplication} />
+          <TopHero 
+            onStart={handleStartApplication} 
+            countryName={displayName} 
+            deliveryDays={country.deliveryDays}
+            imageUrl={country.imageUrl}
+          />
         </div>
 
         {/* Horizontal Sub-Navbar below the first div (hero banner) */}
@@ -71,7 +95,11 @@ export default function DubaiPage() {
             {/* Left Column: Scrollable Content */}
             <div className="space-y-4 md:space-y-6">
               <div id="visas" className="scroll-mt-28">
-                <VisaInfoAndPlans selectedPlan={selectedPlan} onSelectPlan={setSelectedPlan} />
+                <VisaInfoAndPlans 
+                  selectedPlan={selectedPlan} 
+                  onSelectPlan={setSelectedPlan} 
+                  country={country}
+                />
               </div>
 
               {/* Mobile/Tablet Application Card (stacks in natural order) */}
@@ -81,15 +109,16 @@ export default function DubaiPage() {
                   onSelectPlan={setSelectedPlan}
                   onStart={handleStartApplication}
                   className="w-full max-w-md mx-auto py-4 select-none"
+                  country={country}
                 />
               </div>
 
               <RequirementChecklist className="w-full py-8 md:py-10 border-t border-slate-200/50 mt-10" />
               
-              <Reviews countryName="Dubai" />
+              <Reviews countryName={displayName} />
 
               <div className="border-t border-slate-200/50 pt-6">
-                <FAQAccordion className="w-full py-4" />
+                <FAQAccordion className="w-full py-4" countryName={displayName} />
               </div>
             </div>
 
@@ -100,6 +129,7 @@ export default function DubaiPage() {
                 onSelectPlan={setSelectedPlan}
                 onStart={handleStartApplication}
                 className="w-full select-none"
+                country={country}
               />
             </div>
 
