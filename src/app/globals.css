@@ -74,3 +74,6 @@ textarea:focus-visible {
   animation: marquee-right 45s linear infinite;
 }
 
+.marquee-row:hover .marquee-track {
+  animation-play-state: paused !important;
+}

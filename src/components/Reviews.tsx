@@ -237,8 +237,8 @@ export function Reviews({ countryName = "Dubai" }: ReviewsProps) {
       <div className="w-full overflow-hidden flex flex-col gap-5 py-2 relative after:pointer-events-none before:pointer-events-none before:absolute before:left-0 before:top-0 before:bottom-0 before:w-16 sm:before:w-28 before:bg-gradient-to-r before:from-[#f7f7fa] before:to-transparent before:z-10 after:absolute after:right-0 after:top-0 after:bottom-0 after:w-16 sm:after:w-28 after:bg-gradient-to-l after:from-[#f7f7fa] after:to-transparent after:z-10">
         
         {/* Row 1: Right-to-Left (animate-marquee-left) */}
-        <div className="flex w-full group/row1">
-          <div className="flex gap-4.5 animate-marquee-left group-hover/row1:[animation-play-state:paused] pr-4.5">
+        <div className="flex w-full marquee-row">
+          <div className="flex gap-4.5 animate-marquee-left marquee-track pr-4.5">
             {/* Original Items */}
             {row1.map((review, i) => (
               <ReviewCard key={`r1-orig-${i}`} {...review} />
@@ -251,8 +251,8 @@ export function Reviews({ countryName = "Dubai" }: ReviewsProps) {
         </div>
 
         {/* Row 2: Left-to-Right (animate-marquee-right) */}
-        <div className="flex w-full group/row2">
-          <div className="flex gap-4.5 animate-marquee-right group-hover/row2:[animation-play-state:paused] pr-4.5">
+        <div className="flex w-full marquee-row">
+          <div className="flex gap-4.5 animate-marquee-right marquee-track pr-4.5">
             {/* Original Items */}
             {row2.map((review, i) => (
               <ReviewCard key={`r2-orig-${i}`} {...review} />

@@ -72,13 +72,13 @@ export function SubNavbar({ isSticky = false }: SubNavbarProps) {
   return (
     <nav
       style={{ top: isSticky ? "0px" : "57px" }}
-      className={`sticky inset-x-0 w-full z-40 transition-all duration-300 ease-in-out select-none ${
+      className={`sticky inset-x-0 w-full z-40 transition-all duration-300 ease-in-out select-none border-b border-slate-200/40 bg-white/95 backdrop-blur-sm ${
         isSticky 
-          ? "bg-white/95 backdrop-blur-sm py-3 mt-0" 
-          : "bg-transparent py-2.5 mt-8"
+          ? "mt-0 shadow-sm" 
+          : "mt-8"
       }`}
     >
-      <div className="mx-auto max-w-7xl px-4 md:px-6 flex justify-center items-center gap-12 md:gap-18">
+      <div className="mx-auto max-w-7xl px-4 md:px-6 flex justify-center items-center gap-12 md:gap-18 h-16 md:h-18">
         {items.map((item) => {
           const isActive = activeSection === item.id;
           return (
@@ -86,21 +86,21 @@ export function SubNavbar({ isSticky = false }: SubNavbarProps) {
               key={item.name}
               href={item.href}
               onClick={(e) => handleClick(e, item.href)}
-              className={`group relative pb-2.5 text-[13px] font-sans tracking-wide transition-colors duration-200 ${
+              className={`group relative h-full flex items-center text-[13px] font-sans tracking-wide transition-colors duration-200 ${
                 isActive 
                   ? "text-slate-950 font-black" 
                   : "text-slate-400 hover:text-slate-700 font-semibold"
               }`}
             >
-              <span>{item.name}</span>
+              <span className="relative z-10 py-1">{item.name}</span>
               {isActive ? (
                 <motion.div
                   layoutId="activeSubSection"
-                  className="absolute left-0 right-0 bottom-0 h-[3px] bg-[var(--primary)] rounded-full"
+                  className="absolute left-0 right-0 bottom-0 h-[3.5px] bg-[var(--primary)] rounded-full z-10"
                   transition={{ type: "spring", stiffness: 350, damping: 30 }}
                 />
               ) : (
-                <div className="absolute left-0 right-0 bottom-0 h-[3px] bg-transparent group-hover:bg-slate-100 transition-colors" />
+                <div className="absolute left-0 right-0 bottom-0 h-[3.5px] bg-transparent group-hover:bg-slate-100 transition-colors z-10" />
               )}
             </a>
           );

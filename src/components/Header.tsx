@@ -17,8 +17,7 @@ export function Header({ onStart, forceHide = false }: HeaderProps) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
-  const [isVisible, setIsVisible] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
+  const [isAtTop, setIsAtTop] = useState(true);
 
   const placeholderWords = ["countries", "cities"];
 
@@ -31,24 +30,13 @@ export function Header({ onStart, forceHide = false }: HeaderProps) {
 
   useEffect(() => {
     const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      const threshold = 500;
-
-      if (currentScrollY > threshold) {
-        if (currentScrollY > lastScrollY) {
-          setIsVisible(false);
-        } else {
-          setIsVisible(true);
-        }
-      } else {
-        setIsVisible(true);
-      }
-      setLastScrollY(currentScrollY);
+      setIsAtTop(window.scrollY < 80);
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [lastScrollY]);
+  }, []);
 
   const filtered = useMemo(
     () =>
@@ -60,8 +48,8 @@ export function Header({ onStart, forceHide = false }: HeaderProps) {
 
   return (
     <>
-      <header className={`sticky top-0 z-50 bg-white/90 backdrop-blur transition-transform duration-350 ease-in-out ${
-        (isVisible && !forceHide) ? "translate-y-0" : "-translate-y-full"
+      <header className={`sticky top-0 z-50 bg-white/90 backdrop-blur transition-transform duration-300 ease-in-out ${
+        (isAtTop && !forceHide) ? "translate-y-0" : "-translate-y-full"
       }`}>
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 md:px-6">
           {/* Logo */}
