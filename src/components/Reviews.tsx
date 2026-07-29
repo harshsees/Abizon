@@ -12,20 +12,20 @@ interface ReviewCardProps {
 }
 
 const ReviewCard = ({ name, avatarLetter, avatarBg, rating, time, text }: ReviewCardProps) => (
-  <div className="w-[310px] sm:w-[350px] md:w-[380px] shrink-0 rounded-2xl border border-slate-200/70 bg-white p-5 shadow-[0_8px_24px_rgba(15,23,42,0.02)] flex flex-col justify-between select-none">
+  <div className="w-[280px] sm:w-[310px] md:w-[340px] shrink-0 rounded-2xl border border-slate-200/70 bg-white p-4.5 shadow-[0_8px_24px_rgba(15,23,42,0.02)] flex flex-col justify-between select-none">
     <div>
-      <div className="flex items-center justify-between mb-3.5">
-        <div className="flex items-center gap-3">
-          <div className={`flex h-10 w-10 items-center justify-center rounded-full text-white font-bold text-sm ${avatarBg}`}>
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2.5">
+          <div className={`flex h-9.5 w-9.5 items-center justify-center rounded-full text-white font-bold text-xs ${avatarBg}`}>
             {avatarLetter}
           </div>
           <div>
-            <h4 className="text-sm font-bold text-slate-800 leading-tight">{name}</h4>
-            <p className="text-[10px] text-slate-400 mt-0.5">{time}</p>
+            <h4 className="text-xs sm:text-sm font-bold text-slate-800 leading-tight">{name}</h4>
+            <p className="text-[9.5px] text-slate-400 mt-0.5">{time}</p>
           </div>
         </div>
         {/* Google G Logo SVG */}
-        <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <svg className="w-4.5 h-4.5 shrink-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
           <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
           <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/>
@@ -34,7 +34,7 @@ const ReviewCard = ({ name, avatarLetter, avatarBg, rating, time, text }: Review
       </div>
 
       {/* Stars */}
-      <div className="flex gap-0.5 mb-2.5">
+      <div className="flex gap-0.5 mb-2">
         {[...Array(rating)].map((_, i) => (
           <svg key={i} className="w-4 h-4 text-amber-400 fill-current" viewBox="0 0 20 20">
             <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
@@ -43,13 +43,13 @@ const ReviewCard = ({ name, avatarLetter, avatarBg, rating, time, text }: Review
       </div>
 
       {/* Review text */}
-      <p className="text-[12px] leading-relaxed text-slate-500 font-medium line-clamp-3">
+      <p className="text-[11.5px] leading-relaxed text-slate-500 font-medium line-clamp-3">
         {text}
       </p>
     </div>
 
     {/* Verification Footer */}
-    <div className="mt-4 pt-3.5 border-t border-slate-100 flex items-center gap-1.5 text-[9px] text-slate-400 font-bold uppercase tracking-wider">
+    <div className="mt-3.5 pt-3 border-t border-slate-100 flex items-center gap-1.5 text-[8.5px] text-slate-400 font-bold uppercase tracking-wider">
       <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
       Google Review
     </div>
@@ -61,7 +61,7 @@ interface ReviewsProps {
 }
 
 export function Reviews({ countryName = "Dubai" }: ReviewsProps) {
-  // Raw review templates to replace [Country] dynamically
+  // Raw review templates to replace [Country] dynamically (9 unique reviews per row)
   const row1Templates = [
     {
       name: "Aditya Sharma",
@@ -102,6 +102,38 @@ export function Reviews({ countryName = "Dubai" }: ReviewsProps) {
       rating: 5,
       time: "2 weeks ago",
       text: "Keyrise service is gold standard. Highly structured, zero confusion. Got my [Country] visa on time as promised."
+    },
+    {
+      name: "Karan Malhotra",
+      avatarLetter: "K",
+      avatarBg: "bg-teal-500",
+      rating: 5,
+      time: "4 days ago",
+      text: "Incredibly fast service. Got my [Country] visa in less than 48 hours. Keyrise is brilliant and totally stress-free!"
+    },
+    {
+      name: "Ritu Sen",
+      avatarLetter: "R",
+      avatarBg: "bg-purple-500",
+      rating: 5,
+      time: "1 week ago",
+      text: "Completely paperless and super simple. I highly recommend Keyrise for any international travel visa. Exceptional user interface."
+    },
+    {
+      name: "Rajesh Patel",
+      avatarLetter: "R",
+      avatarBg: "bg-cyan-500",
+      rating: 5,
+      time: "3 days ago",
+      text: "Very transparent tracking. I was updated via WhatsApp and email at every step of my [Country] application process."
+    },
+    {
+      name: "Divya Rao",
+      avatarLetter: "D",
+      avatarBg: "bg-pink-500",
+      rating: 5,
+      time: "5 days ago",
+      text: "Customer support is top-notch. They helped me correct a passport scanning mistake in minutes. Approved next day!"
     }
   ];
 
@@ -145,6 +177,38 @@ export function Reviews({ countryName = "Dubai" }: ReviewsProps) {
       rating: 5,
       time: "1 month ago",
       text: "Their live timelines are so helpful. I could see exactly where my [Country] visa application was at each stage. Very transparent."
+    },
+    {
+      name: "Abhinav Mishra",
+      avatarLetter: "A",
+      avatarBg: "bg-amber-600",
+      rating: 5,
+      time: "2 days ago",
+      text: "Outstanding experience. The on-time guarantee gave me so much confidence. Got my [Country] visa early without issues."
+    },
+    {
+      name: "Pooja Hegde",
+      avatarLetter: "P",
+      avatarBg: "bg-emerald-600",
+      rating: 5,
+      time: "1 week ago",
+      text: "Applied for 4 family members at once. The checkout was seamless. Got all [Country] visas on time, perfectly organized."
+    },
+    {
+      name: "Sandeep Reddy",
+      avatarLetter: "S",
+      avatarBg: "bg-blue-600",
+      rating: 5,
+      time: "6 days ago",
+      text: "The best visa platform. No hidden consulate charges. Completely verified Google review experience. Highly structured."
+    },
+    {
+      name: "Tanvi Bhatia",
+      avatarLetter: "T",
+      avatarBg: "bg-rose-600",
+      rating: 5,
+      time: "3 days ago",
+      text: "Smooth experience. Applied for a tourist visa to [Country] and got the approval notice on my email in 3 days. Excellent!"
     }
   ];
 
@@ -174,7 +238,7 @@ export function Reviews({ countryName = "Dubai" }: ReviewsProps) {
         
         {/* Row 1: Right-to-Left (animate-marquee-left) */}
         <div className="flex w-full group/row1">
-          <div className="flex gap-5 animate-marquee-left hover:[animation-play-state:paused] pr-5">
+          <div className="flex gap-4.5 animate-marquee-left group-hover/row1:[animation-play-state:paused] pr-4.5">
             {/* Original Items */}
             {row1.map((review, i) => (
               <ReviewCard key={`r1-orig-${i}`} {...review} />
@@ -188,7 +252,7 @@ export function Reviews({ countryName = "Dubai" }: ReviewsProps) {
 
         {/* Row 2: Left-to-Right (animate-marquee-right) */}
         <div className="flex w-full group/row2">
-          <div className="flex gap-5 animate-marquee-right hover:[animation-play-state:paused] pr-5">
+          <div className="flex gap-4.5 animate-marquee-right group-hover/row2:[animation-play-state:paused] pr-4.5">
             {/* Original Items */}
             {row2.map((review, i) => (
               <ReviewCard key={`r2-orig-${i}`} {...review} />
