@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 
 type StepType = "travelers" | "docs" | "checkout";
-type CameraState = "idle" | "initiating" | "noface" | "closer" | "hold" | 3 | 2 | 1 | "scanning" | "confirm";
+type CameraState = "idle" | "initiating" | "analyzing" | 3 | 2 | 1 | "scanning" | "confirm";
 type DocUploadView = "list" | "camera" | "upload" | "qr";
 
 interface Traveler {
@@ -55,7 +55,35 @@ function ApplyPageContent() {
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [cameraError, setCameraError] = useState<string | null>(null);
 
+  // Interactive Frame Analysis & Beep utilities
+  const [analysisText, setAnalysisText] = useState<string>("Align your face in the circle");
+  const animationFrameId = useRef<number | null>(null);
+
+  const playBeep = (freq = 800, duration = 0.15) => {
+    try {
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.08, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + duration);
+    } catch (e) {
+      console.warn("AudioContext beep failed:", e);
+    }
+  };
+
   const stopCamera = () => {
+    if (animationFrameId.current) {
+      cancelAnimationFrame(animationFrameId.current);
+      animationFrameId.current = null;
+    }
     if (videoStreamRef.current) {
       videoStreamRef.current.getTracks().forEach((track) => track.stop());
       videoStreamRef.current = null;
@@ -83,6 +111,127 @@ function ApplyPageContent() {
         setCapturedImage(dataUrl);
       }
     }
+  };
+
+  const startAnalysisLoop = () => {
+    if (!videoRef.current) return;
+    const video = videoRef.current;
+
+    // Create a scaled canvas to analyze frames efficiently
+    const canvas = document.createElement("canvas");
+    canvas.width = 80;
+    canvas.height = 80;
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    
+    let perfectCount = 0;
+
+    const analyze = () => {
+      if (!videoStreamRef.current) return;
+
+      if (video.readyState === video.HAVE_ENOUGH_DATA && ctx) {
+        ctx.drawImage(video, 0, 0, 80, 80);
+        const frameData = ctx.getImageData(0, 0, 80, 80);
+        const data = frameData.data;
+
+        let totalBrightness = 0;
+        let skinPixels = 0;
+        let centralPixels = 0;
+
+        for (let y = 0; y < 80; y++) {
+          for (let x = 0; x < 80; x++) {
+            const idx = (y * 80 + x) * 4;
+            const r = data[idx];
+            const g = data[idx + 1];
+            const b = data[idx + 2];
+
+            // Luminance
+            const brightness = 0.299 * r + 0.587 * g + 0.114 * b;
+            totalBrightness += brightness;
+
+            // Central crop box
+            if (x >= 20 && x < 60 && y >= 20 && y < 60) {
+              centralPixels++;
+              // Skin color heuristic
+              const isSkin = r > 95 && g > 40 && b > 20 && r > g && r > b && Math.abs(r - g) > 15;
+              if (isSkin) {
+                skinPixels++;
+              }
+            }
+          }
+        }
+
+        const avgBrightness = totalBrightness / 6400;
+        const skinRatio = skinPixels / centralPixels;
+
+        let currentStatus = "Align your face in the circle";
+        if (avgBrightness < 45) {
+          currentStatus = "Too Dark. Please turn on lights.";
+        } else if (skinRatio < 0.12) {
+          currentStatus = "No Face Detected";
+        } else if (skinRatio >= 0.12 && skinRatio < 0.22) {
+          currentStatus = "Come Closer";
+        } else if (skinRatio > 0.48) {
+          currentStatus = "Step Back";
+        } else if (skinRatio >= 0.22 && skinRatio <= 0.48) {
+          currentStatus = "Perfect! Hold Still";
+        }
+
+        setAnalysisText(currentStatus);
+
+        if (currentStatus === "Perfect! Hold Still") {
+          perfectCount++;
+          if (perfectCount >= 6) { // ~900ms of stable hold
+            startCountdown();
+            return;
+          }
+        } else {
+          perfectCount = 0;
+        }
+      }
+
+      // Throttle the next frame check to roughly 150ms intervals (low CPU load)
+      setTimeout(() => {
+        if (videoStreamRef.current) {
+          animationFrameId.current = requestAnimationFrame(analyze);
+        }
+      }, 150);
+    };
+
+    animationFrameId.current = requestAnimationFrame(analyze);
+  };
+
+  const startCountdown = () => {
+    if (animationFrameId.current) {
+      cancelAnimationFrame(animationFrameId.current);
+      animationFrameId.current = null;
+    }
+
+    setCameraState(3);
+    playBeep(800, 0.12);
+
+    const t2 = setTimeout(() => {
+      setCameraState(2);
+      playBeep(800, 0.12);
+    }, 1000);
+
+    const t1 = setTimeout(() => {
+      setCameraState(1);
+      playBeep(800, 0.12);
+    }, 2000);
+
+    const tScan = setTimeout(() => {
+      setCameraState("scanning");
+      playBeep(1200, 0.25);
+      capturePhoto();
+      
+      const tConfirm = setTimeout(() => {
+        setCameraState("confirm");
+        stopCamera();
+      }, 1800);
+      timeoutsRef.current.push(tConfirm);
+    }, 3000);
+
+    timeoutsRef.current.push(t2, t1, tScan);
   };
 
   const videoRefCallback = (node: HTMLVideoElement | null) => {
@@ -139,7 +288,12 @@ function ApplyPageContent() {
     setCameraState("initiating");
     setCameraError(null);
     setCapturedImage(null);
+    setAnalysisText("Accessing camera...");
     clearCameraTimeouts();
+    if (animationFrameId.current) {
+      cancelAnimationFrame(animationFrameId.current);
+      animationFrameId.current = null;
+    }
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -155,24 +309,12 @@ function ApplyPageContent() {
         videoRef.current.srcObject = stream;
       }
 
-      timeoutsRef.current.push(setTimeout(() => setCameraState("noface"), 1500));
-      timeoutsRef.current.push(setTimeout(() => setCameraState("closer"), 2500));
-      timeoutsRef.current.push(setTimeout(() => setCameraState("hold"), 3500));
-      timeoutsRef.current.push(setTimeout(() => setCameraState(3), 4500));
-      timeoutsRef.current.push(setTimeout(() => setCameraState(2), 5500));
-      timeoutsRef.current.push(setTimeout(() => setCameraState(1), 6500));
-      timeoutsRef.current.push(
-        setTimeout(() => {
-          setCameraState("scanning");
-          capturePhoto();
-        }, 7500)
-      );
-      timeoutsRef.current.push(
-        setTimeout(() => {
-          setCameraState("confirm");
-          stopCamera();
-        }, 9500)
-      );
+      setCameraState("analyzing");
+      setTimeout(() => {
+        if (videoStreamRef.current) {
+          startAnalysisLoop();
+        }
+      }, 500);
     } catch (err: any) {
       console.error("Camera access error:", err);
       setCameraError("Camera access denied or unavailable. Please check permission settings.");
@@ -352,13 +494,36 @@ function ApplyPageContent() {
                   </>
                 )}
 
-                {/* CAMERA VIEW MOCK */}
+                {/* CAMERA VIEW */}
                 {docView === "camera" && (
                   <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center justify-center w-full max-w-2xl mt-4">
-                    <h2 className="text-2xl md:text-4xl font-extrabold text-slate-900 mb-2">Look ahead,</h2>
-                    <h2 className="text-2xl md:text-4xl font-extrabold text-indigo-600 mb-8">straight at the camera</h2>
+                    <h2 className="text-2xl md:text-4xl font-extrabold text-slate-900 mb-2">
+                      {cameraState === "analyzing" ? "Face Verification" : 
+                       typeof cameraState === "number" ? "Capturing in..." :
+                       cameraState === "scanning" ? "Scanning Photo" :
+                       cameraState === "confirm" ? "Confirm Photo" : "Look ahead,"}
+                    </h2>
+                    <h2 className="text-2xl md:text-4xl font-extrabold text-indigo-600 mb-8 min-h-[40px] text-center">
+                      {cameraState === "analyzing" ? (
+                        <span className="text-indigo-600 animate-pulse">{analysisText}</span>
+                      ) : typeof cameraState === "number" ? (
+                        <span className="text-amber-500">Hold still...</span>
+                      ) : cameraState === "scanning" ? (
+                        <span className="text-green-500">Analyzing face match...</span>
+                      ) : cameraState === "confirm" ? (
+                        <span className="text-emerald-600">Verification Complete</span>
+                      ) : (
+                        "straight at the camera"
+                      )}
+                    </h2>
                     
-                    <div className="relative w-72 h-72 md:w-96 md:h-96 rounded-full border-[6px] border-white shadow-2xl bg-black overflow-hidden flex items-center justify-center">
+                    <motion.div 
+                      animate={{
+                        borderRadius: cameraState === "confirm" ? "1.5rem" : "100%"
+                      }}
+                      transition={{ duration: 0.8, ease: [0.4, 0, 0.2, 1] }}
+                      className="relative w-72 h-72 md:w-96 md:h-96 border-[6px] border-white shadow-2xl bg-black overflow-hidden flex items-center justify-center animate-once"
+                    >
                       
                       {/* Live Camera Stream */}
                       {docView === "camera" && cameraState !== "idle" && cameraState !== "confirm" && (
@@ -382,30 +547,53 @@ function ApplyPageContent() {
 
                       {cameraState === "initiating" && <div className="z-10 h-8 w-8 border-4 border-white/30 border-t-white rounded-full animate-spin" />}
                       
-                      {/* Overlays during capture */}
-                      {(cameraState === "noface" || cameraState === "closer" || cameraState === "hold" || cameraState === "scanning") && (
-                        <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex justify-center z-20">
-                          <span className="bg-black/60 text-white text-xs font-bold px-3 py-1.5 rounded uppercase tracking-wider backdrop-blur-sm">
-                            {cameraState === "noface" && "No Face Detected"}
-                            {cameraState === "closer" && "Come Closer"}
-                            {cameraState === "hold" && "Hold Still"}
-                            {cameraState === "scanning" && "Scanning"}
+                      {/* Real-time feedback overlay banner */}
+                      {cameraState === "analyzing" && (
+                        <div className="absolute bottom-6 inset-x-0 flex justify-center z-20">
+                          <span className="bg-black/60 text-white text-xs font-bold px-3 py-1.5 rounded uppercase tracking-wider backdrop-blur-sm shadow border border-white/10">
+                            {analysisText}
                           </span>
                         </div>
                       )}
 
-                      {/* Countdown */}
-                      {typeof cameraState === "number" && (
-                        <span className="z-20 text-white text-8xl font-black drop-shadow-lg">{cameraState}</span>
+                      {/* Countdown with dynamic Framer Motion timeline animation */}
+                      <AnimatePresence mode="wait">
+                        {typeof cameraState === "number" && (
+                          <motion.span
+                            key={cameraState}
+                            initial={{ scale: 3, opacity: 0, rotate: -15 }}
+                            animate={{ scale: 1, opacity: 1, rotate: 0 }}
+                            exit={{ scale: 0.2, opacity: 0, rotate: 15 }}
+                            transition={{ duration: 0.6, ease: "easeOut" }}
+                            className="z-25 text-white text-9xl font-black drop-shadow-[0_4px_20px_rgba(0,0,0,0.6)] absolute"
+                          >
+                            {cameraState}
+                          </motion.span>
+                        )}
+                      </AnimatePresence>
+
+                      {/* Matrix Grid Effect during scan */}
+                      {cameraState === "scanning" && (
+                        <motion.div 
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 0.25 }}
+                          className="absolute inset-0 bg-[linear-gradient(rgba(34,197,94,0.15)_1px,transparent_1px),linear-gradient(90deg,rgba(34,197,94,0.15)_1px,transparent_1px)] bg-[size:16px_16px] z-20 pointer-events-none"
+                        />
                       )}
 
                       {/* Scanning Line */}
                       {cameraState === "scanning" && (
                         <motion.div 
-                          initial={{ top: "0%" }} 
-                          animate={{ top: "100%" }} 
-                          transition={{ duration: 1.5, ease: "linear" }}
-                          className="absolute left-0 right-0 h-1 bg-green-500 shadow-[0_0_15px_rgba(34,197,94,0.8)] z-30"
+                          initial={{ top: "0%", opacity: 0 }} 
+                          animate={{ 
+                            top: ["0%", "100%", "0%"], 
+                            opacity: [1, 1, 1] 
+                          }} 
+                          transition={{ 
+                            duration: 1.8, 
+                            ease: "easeInOut"
+                          }}
+                          className="absolute left-0 right-0 h-1 bg-green-400 shadow-[0_0_20px_rgba(74,222,128,1),0_0_10px_rgba(74,222,128,0.8)] z-30 pointer-events-none"
                         />
                       )}
 
@@ -418,15 +606,22 @@ function ApplyPageContent() {
                         </div>
                       )}
 
-                      {/* Final Result Image */}
+                      {/* Final Result Image (Square-cropped) */}
                       {cameraState === "confirm" && (
                          capturedImage ? (
-                           <img src={capturedImage} alt="Captured face" className="absolute inset-0 w-full h-full object-cover z-10" />
+                           <motion.img 
+                             initial={{ scale: 1.1, opacity: 0 }}
+                             animate={{ scale: 1, opacity: 1 }}
+                             transition={{ duration: 0.5, ease: "easeOut" }}
+                             src={capturedImage} 
+                             alt="Captured face" 
+                             className="absolute inset-0 w-full h-full object-cover z-10" 
+                           />
                          ) : (
                            <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="Scanned face" className="absolute inset-0 w-full h-full object-cover z-10" />
                          )
                       )}
-                    </div>
+                    </motion.div>
 
                     {/* Camera Actions */}
                     {cameraState === "confirm" && (
