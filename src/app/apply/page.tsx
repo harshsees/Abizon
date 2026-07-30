@@ -42,13 +42,62 @@ function ApplyPageContent() {
   const [currentName, setCurrentName] = useState("");
   
   // Step 2: Docs State
-  const [uploadedDocs, setUploadedDocs] = useState<Record<string, boolean>>({});
+  const [uploadedDocs, setUploadedDocs] = useState<Record<string, boolean | string>>({});
   const [activeTravelerId, setActiveTravelerId] = useState<string | null>(null);
   const [activeDocType, setActiveDocType] = useState<"Photo" | "Passport" | null>(null);
   const [docView, setDocView] = useState<DocUploadView>("list");
   
-  // Camera Mock State
+  // Camera State
   const [cameraState, setCameraState] = useState<CameraState>("idle");
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const videoStreamRef = useRef<MediaStream | null>(null);
+  const timeoutsRef = useRef<NodeJS.Timeout[]>([]);
+  const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [cameraError, setCameraError] = useState<string | null>(null);
+
+  const stopCamera = () => {
+    if (videoStreamRef.current) {
+      videoStreamRef.current.getTracks().forEach((track) => track.stop());
+      videoStreamRef.current = null;
+    }
+  };
+
+  const clearCameraTimeouts = () => {
+    timeoutsRef.current.forEach((t) => clearTimeout(t));
+    timeoutsRef.current = [];
+  };
+
+  const capturePhoto = () => {
+    if (videoRef.current) {
+      const video = videoRef.current;
+      const canvas = document.createElement("canvas");
+      canvas.width = video.videoWidth || 640;
+      canvas.height = video.videoHeight || 640;
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        // Mirror the captured photo to match mirrored preview
+        ctx.translate(canvas.width, 0);
+        ctx.scale(-1, 1);
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.95);
+        setCapturedImage(dataUrl);
+      }
+    }
+  };
+
+  const videoRefCallback = (node: HTMLVideoElement | null) => {
+    videoRef.current = node;
+    if (node && videoStreamRef.current) {
+      node.srcObject = videoStreamRef.current;
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      stopCamera();
+      clearCameraTimeouts();
+    };
+  }, []);
 
   // Progress
   const getProgressPercentage = () => {
@@ -62,6 +111,8 @@ function ApplyPageContent() {
     if (docView !== "list") {
       setDocView("list");
       setCameraState("idle");
+      stopCamera();
+      clearCameraTimeouts();
       return;
     }
     if (currentStep === "docs") setCurrentStep("travelers");
@@ -83,30 +134,63 @@ function ApplyPageContent() {
     }
   };
 
-  const startCameraSequence = () => {
+  const startCameraSequence = async () => {
     setDocView("camera");
     setCameraState("initiating");
-    
-    // Mock the sequence seen in the video
-    setTimeout(() => setCameraState("noface"), 1500);
-    setTimeout(() => setCameraState("closer"), 2500);
-    setTimeout(() => setCameraState("hold"), 3500);
-    setTimeout(() => setCameraState(3), 4500);
-    setTimeout(() => setCameraState(2), 5500);
-    setTimeout(() => setCameraState(1), 6500);
-    setTimeout(() => setCameraState("scanning"), 7500);
-    setTimeout(() => setCameraState("confirm"), 9500);
+    setCameraError(null);
+    setCapturedImage(null);
+    clearCameraTimeouts();
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: "user",
+          width: { ideal: 640 },
+          height: { ideal: 640 },
+        },
+        audio: false,
+      });
+      videoStreamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+
+      timeoutsRef.current.push(setTimeout(() => setCameraState("noface"), 1500));
+      timeoutsRef.current.push(setTimeout(() => setCameraState("closer"), 2500));
+      timeoutsRef.current.push(setTimeout(() => setCameraState("hold"), 3500));
+      timeoutsRef.current.push(setTimeout(() => setCameraState(3), 4500));
+      timeoutsRef.current.push(setTimeout(() => setCameraState(2), 5500));
+      timeoutsRef.current.push(setTimeout(() => setCameraState(1), 6500));
+      timeoutsRef.current.push(
+        setTimeout(() => {
+          setCameraState("scanning");
+          capturePhoto();
+        }, 7500)
+      );
+      timeoutsRef.current.push(
+        setTimeout(() => {
+          setCameraState("confirm");
+          stopCamera();
+        }, 9500)
+      );
+    } catch (err: any) {
+      console.error("Camera access error:", err);
+      setCameraError("Camera access denied or unavailable. Please check permission settings.");
+      setCameraState("idle");
+    }
   };
 
   const confirmUpload = () => {
     if (activeTravelerId && activeDocType) {
       setUploadedDocs(prev => ({
         ...prev,
-        [`${activeTravelerId}-${activeDocType}`]: true
+        [`${activeTravelerId}-${activeDocType}`]: capturedImage || true
       }));
     }
     setDocView("list");
     setCameraState("idle");
+    stopCamera();
+    clearCameraTimeouts();
   };
 
   return (
@@ -201,9 +285,17 @@ function ApplyPageContent() {
                           <motion.div layout initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} key={t.id} className="bg-white rounded-[2rem] p-6 shadow-sm border border-slate-100 w-full max-w-[340px] flex flex-col">
                             {/* Card Header */}
                             <div className="flex items-center gap-4 mb-6">
-                              <div className="h-12 w-12 rounded-full bg-[#E5D5D5] flex items-center justify-center text-slate-700 font-bold text-lg shrink-0">
-                                {t.firstName.substring(0, 2)}
-                              </div>
+                              {photoUploaded && typeof photoUploaded === "string" && photoUploaded.startsWith("data:") ? (
+                                <img
+                                  src={photoUploaded}
+                                  alt={`${t.firstName}'s photo`}
+                                  className="h-12 w-12 rounded-full object-cover border border-slate-200 shrink-0"
+                                />
+                              ) : (
+                                <div className="h-12 w-12 rounded-full bg-[#E5D5D5] flex items-center justify-center text-slate-700 font-bold text-lg shrink-0">
+                                  {t.firstName.substring(0, 2)}
+                                </div>
+                              )}
                               <div>
                                 <h3 className="font-bold text-lg">{t.firstName}</h3>
                                 <p className="text-xs text-slate-400 font-semibold">{uploadedCount}/2 docs uploaded</p>
@@ -216,7 +308,15 @@ function ApplyPageContent() {
                                 onClick={() => { setActiveTravelerId(t.id); setActiveDocType("Photo"); setDocView(photoUploaded ? "upload" : "camera"); }}
                                 className="w-full bg-[#f4f6fb] hover:bg-[#ebf0f7] p-4 rounded-2xl flex items-center gap-3 transition"
                               >
-                                {photoUploaded ? <CheckCircle className="h-5 w-5 text-emerald-500" /> : <Camera className="h-5 w-5 text-indigo-500" />}
+                                {photoUploaded ? (
+                                  typeof photoUploaded === "string" && photoUploaded.startsWith("data:") ? (
+                                    <img src={photoUploaded} alt="Captured thumbnail" className="h-5 w-5 rounded-full object-cover border border-slate-200" />
+                                  ) : (
+                                    <CheckCircle className="h-5 w-5 text-emerald-500" />
+                                  )
+                                ) : (
+                                  <Camera className="h-5 w-5 text-indigo-500" />
+                                )}
                                 <span className="font-semibold text-sm">Photo</span>
                               </button>
                               
@@ -260,8 +360,19 @@ function ApplyPageContent() {
                     
                     <div className="relative w-72 h-72 md:w-96 md:h-96 rounded-full border-[6px] border-white shadow-2xl bg-black overflow-hidden flex items-center justify-center">
                       
+                      {/* Live Camera Stream */}
+                      {docView === "camera" && cameraState !== "idle" && cameraState !== "confirm" && (
+                        <video
+                          ref={videoRefCallback}
+                          autoPlay
+                          playsInline
+                          muted
+                          className="absolute inset-0 w-full h-full object-cover z-0 scale-x-[-1]"
+                        />
+                      )}
+
                       {/* Abstract Background for "Camera Feed" */}
-                      <div className="absolute inset-0 bg-slate-800 opacity-50" />
+                      <div className="absolute inset-0 bg-slate-800 opacity-50 z-0" />
                       
                       {cameraState === "idle" && (
                         <button onClick={startCameraSequence} className="z-10 bg-white text-slate-900 px-6 py-2 rounded-full font-bold text-sm shadow-lg hover:scale-105 transition">
@@ -298,9 +409,22 @@ function ApplyPageContent() {
                         />
                       )}
 
-                      {/* Final Result Image Mock */}
+                      {/* Camera Permission/Device Error */}
+                      {cameraError && (
+                        <div className="absolute inset-x-0 px-4 text-center z-25">
+                          <span className="bg-red-600/90 text-white text-xs font-semibold px-3 py-2 rounded-lg shadow backdrop-blur-sm">
+                            {cameraError}
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Final Result Image */}
                       {cameraState === "confirm" && (
-                         <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="Scanned face" className="absolute inset-0 w-full h-full object-cover z-10" />
+                         capturedImage ? (
+                           <img src={capturedImage} alt="Captured face" className="absolute inset-0 w-full h-full object-cover z-10" />
+                         ) : (
+                           <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="Scanned face" className="absolute inset-0 w-full h-full object-cover z-10" />
+                         )
                       )}
                     </div>
 
