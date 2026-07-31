@@ -472,42 +472,44 @@ function ApplyPageContent() {
                         return (
                           <motion.div layout initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} key={t.id} className="relative bg-white rounded-[2rem] p-6 shadow-sm border border-slate-100 w-full max-w-[340px] min-h-[250px] flex flex-col justify-between">
                             {isNewTravelerNoName ? (
-                              <div className="flex flex-col justify-between flex-1 py-1">
-                                <div>
-                                  <span className="text-[10px] text-slate-400 font-bold tracking-widest block mb-3">NEW TRAVELER</span>
-                                  <div className="flex items-center gap-2">
-                                    <input
-                                      type="text"
-                                      id={`input-name-${t.id}`}
-                                      placeholder="Enter first name"
-                                      className="flex-1 text-base font-bold border-b border-dashed border-slate-300 focus:border-indigo-500 pb-1.5 transition-colors outline-none placeholder:text-slate-300 placeholder:normal-case placeholder:text-sm focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0"
-                                      autoFocus
-                                      onKeyDown={(e) => {
-                                        if (e.key === "Enter") {
-                                          const val = (e.target as HTMLInputElement).value.trim().toUpperCase();
-                                          if (val) {
-                                            setTravelers(prev => prev.map(trav => trav.id === t.id ? { ...trav, firstName: val } : trav));
-                                          }
-                                        }
-                                      }}
-                                    />
-                                    <button
-                                      onClick={() => {
-                                        const inputEl = document.getElementById(`input-name-${t.id}`) as HTMLInputElement;
-                                        const val = inputEl?.value.trim().toUpperCase();
+                              <div className="flex flex-col justify-between items-center text-center flex-1 py-4">
+                                <span className="text-[10px] text-slate-400 font-bold tracking-widest uppercase">NEW TRAVELER</span>
+                                
+                                <div className="w-full flex flex-col items-center gap-4 my-auto">
+                                  <input
+                                    type="text"
+                                    id={`input-name-${t.id}`}
+                                    placeholder="Enter first name"
+                                    className="w-4/5 text-center text-xl tracking-widest bg-transparent border-b-2 border-dashed border-slate-300 focus:border-slate-800 pb-2 transition-colors outline-none placeholder:text-slate-300 placeholder:tracking-normal placeholder:normal-case placeholder:text-sm focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0"
+                                    autoFocus
+                                    onKeyDown={(e) => {
+                                      if (e.key === "Enter") {
+                                        const val = (e.target as HTMLInputElement).value.trim().toUpperCase();
                                         if (val) {
                                           setTravelers(prev => prev.map(trav => trav.id === t.id ? { ...trav, firstName: val } : trav));
-                                        } else {
-                                          setTravelers(prev => prev.filter(trav => trav.id !== t.id));
                                         }
-                                      }}
-                                      className="p-1.5 bg-indigo-50 text-indigo-600 rounded-full hover:bg-indigo-100 transition shrink-0"
-                                    >
-                                      <CheckCircle className="h-4 w-4" />
-                                    </button>
-                                  </div>
+                                      }
+                                    }}
+                                  />
+                                  <button
+                                    onClick={() => {
+                                      const inputEl = document.getElementById(`input-name-${t.id}`) as HTMLInputElement;
+                                      const val = inputEl?.value.trim().toUpperCase();
+                                      if (val) {
+                                        setTravelers(prev => prev.map(trav => trav.id === t.id ? { ...trav, firstName: val } : trav));
+                                      } else {
+                                        setTravelers(prev => prev.filter(trav => trav.id !== t.id));
+                                      }
+                                    }}
+                                    className="px-4 py-2 bg-indigo-50 text-indigo-600 text-xs font-bold rounded-full hover:bg-indigo-100 transition flex items-center gap-1.5 shadow-sm shrink-0"
+                                  >
+                                    <CheckCircle className="h-3.5 w-3.5" /> Save Name
+                                  </button>
                                 </div>
-                                <p className="text-[11px] text-slate-400 font-semibold mt-4">Provide traveler name to start document upload.</p>
+                                
+                                <p className="text-[10px] text-slate-400 font-semibold max-w-[200px]">
+                                  Press Enter or click Save to start uploading documents.
+                                </p>
                               </div>
                             ) : (
                               <>
