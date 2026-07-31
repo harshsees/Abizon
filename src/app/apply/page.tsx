@@ -383,36 +383,91 @@ function ApplyPageContent() {
     <div className="min-h-screen bg-[#f8f9fa] flex flex-col font-sans text-slate-900">
       
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-[#f8f9fa] px-4 md:px-8 py-4 flex items-center justify-between">
-        <button onClick={handleBack} className="flex items-center gap-1.5 text-slate-700 font-semibold text-sm hover:opacity-70 transition">
-          <ArrowLeft className="h-4 w-4" /> Back
-        </button>
-        <div className="flex-1 text-center">
-          <span className="text-[10px] font-bold text-slate-400 tracking-widest uppercase">
-            {getProgressPercentage()}% Completed
-          </span>
+      <header className="sticky top-0 z-40 bg-[#f8f9fa] border-b border-slate-100/80">
+        <div className="max-w-[1400px] mx-auto px-4 md:px-8 py-4 flex items-center justify-between w-full">
+          <button onClick={handleBack} className="flex items-center gap-1.5 text-slate-700 font-semibold text-sm hover:opacity-70 transition">
+            <ArrowLeft className="h-4 w-4" /> Back
+          </button>
+          <div className="flex-1 text-center">
+            <span className="text-[10px] font-bold text-slate-400 tracking-widest uppercase">
+              {getProgressPercentage()}% Completed
+            </span>
+          </div>
+          <button onClick={() => router.push("/")} className="p-2 text-slate-700 hover:bg-slate-200 rounded-full transition">
+            <Home className="h-5 w-5" />
+          </button>
         </div>
-        <button onClick={() => router.push("/")} className="p-2 text-slate-700 hover:bg-slate-200 rounded-full transition">
-          <Home className="h-5 w-5" />
-        </button>
       </header>
 
-      <div className="flex-1 flex flex-col md:flex-row w-full max-w-[1400px] mx-auto px-4 py-8">
+      <div className="flex-1 flex flex-col md:flex-row w-full max-w-[1400px] mx-auto px-4 md:px-8 py-8">
         
         {/* Sidebar */}
-        <aside className="hidden md:flex flex-col gap-8 w-24 shrink-0 items-center pt-12">
-          <div className={`flex flex-col items-center gap-2 ${currentStep === "travelers" ? "text-indigo-600" : "text-slate-400"}`}>
-            <User className="h-6 w-6" />
-            <span className="text-[10px] font-bold">Travelers</span>
+        <aside className="hidden md:flex flex-col gap-6 w-36 shrink-0 items-start pt-12 pr-4 relative">
+          
+          {/* Travelers Step */}
+          <div 
+            onClick={() => {
+              if (currentStep !== "travelers") setCurrentStep("travelers");
+            }}
+            className={`group relative w-full px-4 py-3 rounded-2xl flex flex-col items-start gap-1 cursor-pointer transition-colors select-none ${
+              currentStep === "travelers" ? "text-indigo-600 font-semibold" : "text-slate-400 hover:text-slate-600"
+            }`}
+          >
+            {currentStep === "travelers" && (
+              <motion.div
+                layoutId="activeStepFrame"
+                className="absolute inset-0 border border-indigo-100/55 bg-indigo-50/40 rounded-2xl"
+                transition={{ type: "spring", stiffness: 350, damping: 28 }}
+              />
+            )}
+            <User className="h-5 w-5 relative z-10" />
+            <span className="text-[10px] font-bold tracking-widest uppercase relative z-10">Travelers</span>
           </div>
-          <div className={`flex flex-col items-center gap-2 ${currentStep === "docs" ? "text-indigo-600" : "text-slate-400"}`}>
-            <FileText className="h-6 w-6" />
-            <span className="text-[10px] font-bold">Docs</span>
+
+          {/* Docs Step */}
+          <div 
+            onClick={() => {
+              if (travelers.length > 0) {
+                setCurrentStep("docs");
+              }
+            }}
+            className={`group relative w-full px-4 py-3 rounded-2xl flex flex-col items-start gap-1 cursor-pointer transition-colors select-none ${
+              currentStep === "docs" ? "text-indigo-600 font-semibold" : "text-slate-400 hover:text-slate-600"
+            }`}
+          >
+            {currentStep === "docs" && (
+              <motion.div
+                layoutId="activeStepFrame"
+                className="absolute inset-0 border border-indigo-100/55 bg-indigo-50/40 rounded-2xl"
+                transition={{ type: "spring", stiffness: 350, damping: 28 }}
+              />
+            )}
+            <FileText className="h-5 w-5 relative z-10" />
+            <span className="text-[10px] font-bold tracking-widest uppercase relative z-10">Docs</span>
           </div>
-          <div className={`flex flex-col items-center gap-2 ${currentStep === "checkout" ? "text-indigo-600" : "text-slate-400"}`}>
-            <ShoppingCart className="h-6 w-6" />
-            <span className="text-[10px] font-bold">Checkout</span>
+
+          {/* Checkout Step */}
+          <div 
+            onClick={() => {
+              if (travelers.length > 0) {
+                setCurrentStep("checkout");
+              }
+            }}
+            className={`group relative w-full px-4 py-3 rounded-2xl flex flex-col items-start gap-1 cursor-pointer transition-colors select-none ${
+              currentStep === "checkout" ? "text-indigo-600 font-semibold" : "text-slate-400 hover:text-slate-600"
+            }`}
+          >
+            {currentStep === "checkout" && (
+              <motion.div
+                layoutId="activeStepFrame"
+                className="absolute inset-0 border border-indigo-100/55 bg-indigo-50/40 rounded-2xl"
+                transition={{ type: "spring", stiffness: 350, damping: 28 }}
+              />
+            )}
+            <ShoppingCart className="h-5 w-5 relative z-10" />
+            <span className="text-[10px] font-bold tracking-widest uppercase relative z-10">Checkout</span>
           </div>
+
         </aside>
 
         {/* Main Content Area */}
