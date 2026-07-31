@@ -318,6 +318,15 @@ function ApplyPageContent() {
     }
   };
 
+  const addTravelerDirect = () => {
+    const newTraveler: Traveler = {
+      id: Math.random().toString(36).substring(2, 9),
+      firstName: "", // empty signals inline name input
+      lastName: "",
+    };
+    setTravelers([...travelers, newTraveler]);
+  };
+
   const startCameraSequence = async () => {
     setDocView("camera");
     setCameraState("initiating");
@@ -458,118 +467,162 @@ function ApplyPageContent() {
                         const passportUploaded = uploadedDocs[`${t.id}-Passport`];
                         const uploadedCount = (photoUploaded ? 1 : 0) + (passportUploaded ? 1 : 0);
 
+                        const isNewTravelerNoName = t.firstName === "";
+
                         return (
-                          <motion.div layout initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} key={t.id} className="relative bg-white rounded-[2rem] p-6 shadow-sm border border-slate-100 w-full max-w-[340px] flex flex-col">
-                            {/* Card Header */}
-                            <div className="flex items-center justify-between mb-6">
-                              <div className="flex items-center gap-4">
-                                {photoUploaded && typeof photoUploaded === "string" && photoUploaded.startsWith("data:") ? (
-                                  <div className="h-12 w-12 rounded-full border border-dashed border-[#96a98f] p-[2px] flex items-center justify-center shrink-0">
-                                    <img
-                                      src={photoUploaded}
-                                      alt={`${t.firstName}'s photo`}
-                                      className="h-full w-full rounded-full object-cover"
+                          <motion.div layout initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} key={t.id} className="relative bg-white rounded-[2rem] p-6 shadow-sm border border-slate-100 w-full max-w-[340px] min-h-[250px] flex flex-col justify-between">
+                            {isNewTravelerNoName ? (
+                              <div className="flex flex-col justify-between flex-1 py-1">
+                                <div>
+                                  <span className="text-[10px] text-slate-400 font-bold tracking-widest block mb-3">NEW TRAVELER</span>
+                                  <div className="flex items-center gap-2">
+                                    <input
+                                      type="text"
+                                      id={`input-name-${t.id}`}
+                                      placeholder="Enter first name"
+                                      className="flex-1 text-base font-bold border-b border-dashed border-slate-300 focus:border-indigo-500 pb-1.5 transition-colors outline-none placeholder:text-slate-300 placeholder:normal-case placeholder:text-sm focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0"
+                                      autoFocus
+                                      onKeyDown={(e) => {
+                                        if (e.key === "Enter") {
+                                          const val = (e.target as HTMLInputElement).value.trim().toUpperCase();
+                                          if (val) {
+                                            setTravelers(prev => prev.map(trav => trav.id === t.id ? { ...trav, firstName: val } : trav));
+                                          }
+                                        }
+                                      }}
                                     />
+                                    <button
+                                      onClick={() => {
+                                        const inputEl = document.getElementById(`input-name-${t.id}`) as HTMLInputElement;
+                                        const val = inputEl?.value.trim().toUpperCase();
+                                        if (val) {
+                                          setTravelers(prev => prev.map(trav => trav.id === t.id ? { ...trav, firstName: val } : trav));
+                                        } else {
+                                          setTravelers(prev => prev.filter(trav => trav.id !== t.id));
+                                        }
+                                      }}
+                                      className="p-1.5 bg-indigo-50 text-indigo-600 rounded-full hover:bg-indigo-100 transition shrink-0"
+                                    >
+                                      <CheckCircle className="h-4 w-4" />
+                                    </button>
                                   </div>
-                                ) : (
-                                  <div className="h-12 w-12 rounded-full border border-dashed border-[#96a98f] p-[2px] flex items-center justify-center shrink-0">
-                                    <div className="h-full w-full rounded-full bg-[#96a98f] flex items-center justify-center text-white font-bold text-sm">
-                                      {getInitials(t.firstName, index)}
+                                </div>
+                                <p className="text-[11px] text-slate-400 font-semibold mt-4">Provide traveler name to start document upload.</p>
+                              </div>
+                            ) : (
+                              <>
+                                {/* Card Header */}
+                                <div className="flex items-center justify-between mb-6">
+                                  <div className="flex items-center gap-4">
+                                    {photoUploaded && typeof photoUploaded === "string" && photoUploaded.startsWith("data:") ? (
+                                      <div className="h-12 w-12 rounded-full border border-dashed border-[#96a98f] p-[2px] flex items-center justify-center shrink-0">
+                                        <img
+                                          src={photoUploaded}
+                                          alt={`${t.firstName}'s photo`}
+                                          className="h-full w-full rounded-full object-cover"
+                                        />
+                                      </div>
+                                    ) : (
+                                      <div className="h-12 w-12 rounded-full border border-dashed border-[#96a98f] p-[2px] flex items-center justify-center shrink-0">
+                                        <div className="h-full w-full rounded-full bg-[#96a98f] flex items-center justify-center text-white font-bold text-sm">
+                                          {getInitials(t.firstName, index)}
+                                        </div>
+                                      </div>
+                                    )}
+                                    <div>
+                                      <h3 className="font-bold text-lg border-b border-dotted border-slate-400 pb-0.5 inline-block leading-tight">
+                                        {t.firstName}
+                                      </h3>
+                                      <p className="text-xs text-slate-400 font-semibold mt-1">{uploadedCount}/2 docs uploaded</p>
                                     </div>
                                   </div>
-                                )}
-                                <div>
-                                  <h3 className="font-bold text-lg border-b border-dotted border-slate-400 pb-0.5 inline-block leading-tight">
-                                    {t.firstName}
-                                  </h3>
-                                  <p className="text-xs text-slate-400 font-semibold mt-1">{uploadedCount}/2 docs uploaded</p>
-                                </div>
-                              </div>
 
-                              {/* 3-dot dropdown menu option for subsequent travelers */}
-                              {index > 0 && (
-                                <div className="relative">
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setOpenMenuTravelerId(openMenuTravelerId === t.id ? null : t.id);
-                                    }}
-                                    className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-full transition"
-                                  >
-                                    <MoreVertical className="h-5 w-5" />
-                                  </button>
-                                  {openMenuTravelerId === t.id && (
-                                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-slate-100 py-1.5 z-30">
+                                  {/* 3-dot dropdown menu option for subsequent travelers */}
+                                  {index > 0 && (
+                                    <div className="relative">
                                       <button
                                         onClick={(e) => {
                                           e.stopPropagation();
-                                          const link = `${window.location.origin}/apply?traveler=${t.id}`;
-                                          navigator.clipboard.writeText(link);
-                                          showToast("Share link copied to clipboard!");
-                                          setOpenMenuTravelerId(null);
+                                          setOpenMenuTravelerId(openMenuTravelerId === t.id ? null : t.id);
                                         }}
-                                        className="w-full text-left px-4 py-2 text-xs font-bold text-slate-500 hover:bg-slate-50 flex items-center gap-2 transition"
+                                        className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-full transition"
                                       >
-                                        <Share2 className="h-4 w-4 text-indigo-500" />
-                                        Share upload link
+                                        <MoreVertical className="h-5 w-5" />
                                       </button>
-                                      <button
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          setTravelers(prev => prev.filter(item => item.id !== t.id));
-                                          setUploadedDocs(prev => {
-                                            const next = { ...prev };
-                                            delete next[`${t.id}-Photo`];
-                                            delete next[`${t.id}-Passport`];
-                                            return next;
-                                          });
-                                          showToast(`Traveler ${t.firstName} deleted`);
-                                          setOpenMenuTravelerId(null);
-                                        }}
-                                        className="w-full text-left px-4 py-2 text-xs font-bold text-red-600 hover:bg-red-50 flex items-center gap-2 transition border-t border-slate-100"
-                                      >
-                                        <Trash2 className="h-4 w-4 text-red-500" />
-                                        Delete traveler
-                                      </button>
+                                      {openMenuTravelerId === t.id && (
+                                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-slate-100 py-1.5 z-30">
+                                          <button
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              const link = `${window.location.origin}/apply?traveler=${t.id}`;
+                                              navigator.clipboard.writeText(link);
+                                              showToast("Share link copied to clipboard!");
+                                              setOpenMenuTravelerId(null);
+                                            }}
+                                            className="w-full text-left px-4 py-2 text-xs font-bold text-slate-500 hover:bg-slate-50 flex items-center gap-2 transition"
+                                          >
+                                            <Share2 className="h-4 w-4 text-indigo-500" />
+                                            Share upload link
+                                          </button>
+                                          <button
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              setTravelers(prev => prev.filter(item => item.id !== t.id));
+                                              setUploadedDocs(prev => {
+                                                const next = { ...prev };
+                                                delete next[`${t.id}-Photo`];
+                                                delete next[`${t.id}-Passport`];
+                                                return next;
+                                              });
+                                              showToast(`Traveler ${t.firstName} deleted`);
+                                              setOpenMenuTravelerId(null);
+                                            }}
+                                            className="w-full text-left px-4 py-2 text-xs font-bold text-red-600 hover:bg-red-50 flex items-center gap-2 transition border-t border-slate-100"
+                                          >
+                                            <Trash2 className="h-4 w-4 text-red-500" />
+                                            Delete traveler
+                                          </button>
+                                        </div>
+                                      )}
                                     </div>
                                   )}
                                 </div>
-                              )}
-                            </div>
 
-                            {/* Buttons */}
-                            <div className="space-y-3">
-                              <button 
-                                onClick={() => { setActiveTravelerId(t.id); setActiveDocType("Photo"); startCameraSequence(); }}
-                                className="w-full bg-[#f4f6fb] hover:bg-[#ebf0f7] p-4 rounded-2xl flex items-center gap-3 transition"
-                              >
-                                {photoUploaded ? (
-                                  typeof photoUploaded === "string" && photoUploaded.startsWith("data:") ? (
-                                    <img src={photoUploaded} alt="Captured thumbnail" className="h-5 w-5 rounded-full object-cover border border-slate-200" />
-                                  ) : (
-                                    <CheckCircle className="h-5 w-5 text-emerald-500" />
-                                  )
-                                ) : (
-                                  <Camera className="h-5 w-5 text-indigo-500" />
-                                )}
-                                <span className="font-semibold text-sm">Photo</span>
-                              </button>
-                              
-                              <button 
-                                onClick={() => { setActiveTravelerId(t.id); setActiveDocType("Passport"); setDocView("upload"); }}
-                                className="w-full bg-[#f4f6fb] hover:bg-[#ebf0f7] p-4 rounded-2xl flex items-center gap-3 transition"
-                              >
-                                {passportUploaded ? <CheckCircle className="h-5 w-5 text-emerald-500" /> : <FileText className="h-5 w-5 text-indigo-500" />}
-                                <span className="font-semibold text-sm">Passport</span>
-                              </button>
-                            </div>
+                                {/* Buttons */}
+                                <div className="space-y-3">
+                                  <button 
+                                    onClick={() => { setActiveTravelerId(t.id); setActiveDocType("Photo"); startCameraSequence(); }}
+                                    className="w-full bg-[#f4f6fb] hover:bg-[#ebf0f7] p-4 rounded-2xl flex items-center gap-3 transition"
+                                  >
+                                    {photoUploaded ? (
+                                      typeof photoUploaded === "string" && photoUploaded.startsWith("data:") ? (
+                                        <img src={photoUploaded} alt="Captured thumbnail" className="h-5 w-5 rounded-full object-cover border border-slate-200" />
+                                      ) : (
+                                        <CheckCircle className="h-5 w-5 text-emerald-500" />
+                                      )
+                                    ) : (
+                                      <Camera className="h-5 w-5 text-indigo-500" />
+                                    )}
+                                    <span className="font-semibold text-sm">Photo</span>
+                                  </button>
+                                  
+                                  <button 
+                                    onClick={() => { setActiveTravelerId(t.id); setActiveDocType("Passport"); setDocView("upload"); }}
+                                    className="w-full bg-[#f4f6fb] hover:bg-[#ebf0f7] p-4 rounded-2xl flex items-center gap-3 transition"
+                                  >
+                                    {passportUploaded ? <CheckCircle className="h-5 w-5 text-emerald-500" /> : <FileText className="h-5 w-5 text-indigo-500" />}
+                                    <span className="font-semibold text-sm">Passport</span>
+                                  </button>
+                                </div>
 
-                            <div className="mt-6 flex flex-col items-center">
-                              <span className="text-[10px] text-slate-400 font-bold mb-3">OR</span>
-                              <button onClick={() => setDocView("qr")} className="text-xs text-indigo-600 font-bold flex items-center gap-1.5 hover:underline">
-                                <Maximize className="h-3.5 w-3.5" /> Upload from phone
-                              </button>
-                            </div>
+                                <div className="mt-6 flex flex-col items-center">
+                                  <span className="text-[10px] text-slate-400 font-bold mb-3">OR</span>
+                                  <button onClick={() => setDocView("qr")} className="text-xs text-indigo-600 font-bold flex items-center gap-1.5 hover:underline">
+                                    <Maximize className="h-3.5 w-3.5" /> Upload from phone
+                                  </button>
+                                </div>
+                              </>
+                            )}
                           </motion.div>
                         );
                       })}
@@ -577,7 +630,7 @@ function ApplyPageContent() {
 
                     {/* Footer Actions */}
                     <div className="mt-12 flex flex-col sm:flex-row items-center gap-4">
-                      <button onClick={() => setCurrentStep("travelers")} className="px-6 py-3.5 rounded-full bg-white border border-slate-200 shadow-sm text-indigo-600 font-semibold text-sm flex items-center gap-2 hover:bg-slate-50 transition">
+                      <button onClick={addTravelerDirect} className="px-6 py-3.5 rounded-full bg-white border border-slate-200 shadow-sm text-indigo-600 font-semibold text-sm flex items-center gap-2 hover:bg-slate-50 transition">
                         <Plus className="h-4 w-4" /> Add travelers
                       </button>
                       <button onClick={() => setCurrentStep("checkout")} className="px-6 py-3.5 rounded-full bg-[#f3f4f6] text-slate-400 font-semibold text-sm flex items-center gap-2 cursor-not-allowed">
@@ -653,16 +706,35 @@ function ApplyPageContent() {
                       {/* Countdown with dynamic Framer Motion timeline animation */}
                       <AnimatePresence mode="wait">
                         {typeof cameraState === "number" && (
-                          <motion.span
-                            key={cameraState}
-                            initial={{ scale: 3, opacity: 0, rotate: -15 }}
-                            animate={{ scale: 1, opacity: 1, rotate: 0 }}
-                            exit={{ scale: 0.2, opacity: 0, rotate: 15 }}
-                            transition={{ duration: 0.6, ease: "easeOut" }}
-                            className="z-25 text-white text-9xl font-black drop-shadow-[0_4px_20px_rgba(0,0,0,0.6)] absolute"
-                          >
-                            {cameraState}
-                          </motion.span>
+                          <div className="z-25 absolute inset-0 flex items-center justify-center pointer-events-none">
+                            {/* Glowing animated background circle */}
+                            <motion.div
+                              initial={{ scale: 0.6, opacity: 0 }}
+                              animate={{ scale: [1, 1.5], opacity: [0.4, 0] }}
+                              transition={{ duration: 0.9, repeat: Infinity, ease: "easeOut" }}
+                              className="absolute w-48 h-48 rounded-full border-4 border-amber-400/80 shadow-[0_0_30px_rgba(251,191,36,0.6)]"
+                            />
+                            {/* The numbering card */}
+                            <motion.div
+                              key={cameraState}
+                              initial={{ scale: 0.3, rotate: -90, opacity: 0 }}
+                              animate={{ scale: [1.3, 1], rotate: 0, opacity: 1 }}
+                              exit={{ scale: 2.5, rotate: 45, opacity: 0 }}
+                              transition={{ 
+                                type: "spring",
+                                stiffness: 220,
+                                damping: 14,
+                                duration: 0.45 
+                              }}
+                              className={`w-32 h-32 rounded-full flex items-center justify-center text-7xl font-black shadow-[0_10px_40px_rgba(0,0,0,0.4)] backdrop-blur-md border border-white/30
+                                ${cameraState === 3 ? "bg-red-500/90 text-white border-red-400" : ""}
+                                ${cameraState === 2 ? "bg-amber-500/90 text-white border-amber-400" : ""}
+                                ${cameraState === 1 ? "bg-emerald-500/90 text-white border-emerald-400" : ""}
+                              `}
+                            >
+                              {cameraState}
+                            </motion.div>
+                          </div>
                         )}
                       </AnimatePresence>
 
