@@ -294,6 +294,10 @@ function ApplyPageContent() {
     return 100;
   };
 
+  const allDocsUploaded = travelers.length > 0 && travelers.every(
+    (t) => uploadedDocs[`${t.id}-Photo`] && uploadedDocs[`${t.id}-Passport`]
+  );
+
   // Handlers
   const handleBack = () => {
     if (docView !== "list") {
@@ -387,13 +391,21 @@ function ApplyPageContent() {
     <div className="min-h-screen bg-[#f8f9fa] flex flex-col font-sans text-slate-900">
       
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-[#f8f9fa] border-b border-slate-100/80">
-        <div className="max-w-[1400px] mx-auto px-4 md:px-8 py-4 flex items-center justify-between w-full">
+      <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-200/80">
+        {/* Progress Bar Line */}
+        <div className="absolute top-0 left-0 w-full h-[3px] bg-slate-100/80">
+          <div 
+            className="h-full bg-gradient-to-r from-amber-500 to-amber-600 transition-all duration-500 ease-out" 
+            style={{ width: `${getProgressPercentage()}%` }}
+          />
+        </div>
+        
+        <div className="max-w-[1400px] mx-auto px-4 md:px-8 py-4 flex items-center justify-between w-full relative z-10">
           <button onClick={handleBack} className="flex items-center gap-1.5 text-slate-700 font-semibold text-sm hover:opacity-70 transition">
             <ArrowLeft className="h-4 w-4" /> Back
           </button>
           <div className="flex-1 text-center">
-            <span className="text-[10px] font-bold text-slate-400 tracking-widest uppercase">
+            <span className="text-[10px] font-bold text-slate-500 tracking-widest uppercase">
               {getProgressPercentage()}% Completed
             </span>
           </div>
@@ -498,7 +510,7 @@ function ApplyPageContent() {
                     type="submit"
                     disabled={!currentName.trim()}
                     className={`mt-12 rounded-full py-3.5 px-8 text-sm font-semibold flex items-center justify-center gap-2 transition duration-300 w-48 ${
-                      currentName.trim() ? "bg-[#384152] hover:bg-[#2a313e] text-white shadow-lg" : "bg-slate-300 text-white cursor-not-allowed"
+                      currentName.trim() ? "bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-white shadow-lg shadow-amber-600/10" : "bg-slate-300 text-white cursor-not-allowed"
                     }`}
                   >
                     <span>Continue</span>
@@ -573,10 +585,10 @@ function ApplyPageContent() {
                             ) : (
                               <>
                                 {/* Card Header */}
-                                <div className="flex items-center justify-between mb-6">
+                                 <div className="flex items-center justify-between mb-6">
                                   <div className="flex items-center gap-4">
                                     {photoUploaded && typeof photoUploaded === "string" && photoUploaded.startsWith("data:") ? (
-                                      <div className="h-12 w-12 rounded-full border border-dashed border-[#96a98f] p-[2px] flex items-center justify-center shrink-0">
+                                      <div className="h-12 w-12 rounded-full border border-dashed border-amber-200 p-[2px] flex items-center justify-center shrink-0">
                                         <img
                                           src={photoUploaded}
                                           alt={`${t.firstName}'s photo`}
@@ -584,14 +596,14 @@ function ApplyPageContent() {
                                         />
                                       </div>
                                     ) : (
-                                      <div className="h-12 w-12 rounded-full border border-dashed border-[#96a98f] p-[2px] flex items-center justify-center shrink-0">
-                                        <div className="h-full w-full rounded-full bg-[#96a98f] flex items-center justify-center text-white font-bold text-sm">
+                                      <div className="h-12 w-12 rounded-full border border-dashed border-amber-200 p-[2px] flex items-center justify-center shrink-0">
+                                        <div className="h-full w-full rounded-full bg-amber-50 flex items-center justify-center text-amber-700 font-bold text-sm">
                                           {getInitials(t.firstName, index)}
                                         </div>
                                       </div>
                                     )}
                                     <div>
-                                      <h3 className="font-bold text-lg border-b border-dotted border-slate-400 pb-0.5 inline-block leading-tight">
+                                      <h3 className="font-bold text-lg border-b border-dotted border-amber-500/20 pb-0.5 inline-block leading-tight">
                                         {t.firstName}
                                       </h3>
                                       <p className="text-xs text-slate-400 font-semibold mt-1">{uploadedCount}/2 docs uploaded</p>
@@ -701,7 +713,17 @@ function ApplyPageContent() {
                       <button onClick={addTravelerDirect} className="px-6 py-3.5 rounded-full bg-white border border-slate-200 shadow-sm text-amber-600 font-semibold text-sm flex items-center gap-2 hover:bg-slate-50 transition">
                         <Plus className="h-4 w-4" /> Add travelers
                       </button>
-                      <button onClick={() => setCurrentStep("checkout")} className="px-6 py-3.5 rounded-full bg-[#f3f4f6] text-slate-400 font-semibold text-sm flex items-center gap-2 cursor-not-allowed">
+                      <button 
+                        onClick={() => {
+                          if (allDocsUploaded) setCurrentStep("checkout");
+                        }} 
+                        disabled={!allDocsUploaded}
+                        className={`px-6 py-3.5 rounded-full font-semibold text-sm flex items-center gap-2 transition duration-300 ${
+                          allDocsUploaded 
+                            ? "bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-white shadow-lg shadow-amber-600/10 cursor-pointer" 
+                            : "bg-[#f3f4f6] text-slate-400 cursor-not-allowed"
+                        }`}
+                      >
                         <Lock className="h-4 w-4" /> Proceed to checkout
                       </button>
                     </div>
@@ -857,11 +879,11 @@ function ApplyPageContent() {
                       )}
                     </motion.div>
 
-                    {/* Camera Actions */}
+                     {/* Camera Actions */}
                     {cameraState === "confirm" && (
                       <div className="mt-8 flex gap-4">
                         <button onClick={startCameraSequence} className="px-8 py-3 rounded-full bg-white border border-slate-200 font-bold text-sm hover:bg-slate-50 transition">Retake</button>
-                        <button onClick={confirmUpload} className="px-8 py-3 rounded-full bg-[#384152] text-white font-bold text-sm hover:bg-[#2a313e] transition">Confirm</button>
+                        <button onClick={confirmUpload} className="px-8 py-3 rounded-full bg-[var(--primary)] text-white font-bold text-sm hover:bg-[var(--primary-hover)] transition shadow-lg shadow-amber-600/10">Confirm</button>
                       </div>
                     )}
                   </motion.div>
