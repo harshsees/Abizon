@@ -73,6 +73,10 @@ function ApplyPageContent() {
   const [openMenuTravelerId, setOpenMenuTravelerId] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+  // Phone Upload Modal State
+  const [phoneUploadModalOpen, setPhoneUploadModalOpen] = useState(false);
+  const [phoneUploadStep, setPhoneUploadStep] = useState<"info" | "qr">("info");
+
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => {
@@ -674,7 +678,14 @@ function ApplyPageContent() {
 
                                 <div className="mt-6 flex flex-col items-center">
                                   <span className="text-[10px] text-slate-400 font-bold mb-3">OR</span>
-                                  <button onClick={() => setDocView("qr")} className="text-xs text-indigo-600 font-bold flex items-center gap-1.5 hover:underline">
+                                  <button 
+                                    onClick={() => {
+                                      setActiveTravelerId(t.id);
+                                      setPhoneUploadModalOpen(true);
+                                      setPhoneUploadStep("info");
+                                    }} 
+                                    className="text-xs text-indigo-600 font-bold flex items-center gap-1.5 hover:underline"
+                                  >
                                     <Maximize className="h-3.5 w-3.5" /> Upload from phone
                                   </button>
                                 </div>
@@ -876,25 +887,20 @@ function ApplyPageContent() {
                     <div className="flex bg-white rounded-full p-1 border border-slate-200 shadow-sm">
                       <button onClick={() => startCameraSequence()} className="px-4 py-2 rounded-full text-xs font-bold text-slate-500 flex items-center gap-1.5 hover:text-slate-900"><Camera className="h-3.5 w-3.5"/> Live Capture</button>
                       <button className="px-4 py-2 rounded-full text-xs font-bold text-slate-900 bg-slate-100 flex items-center gap-1.5"><Upload className="h-3.5 w-3.5"/> Upload from device</button>
-                      <button onClick={() => setDocView("qr")} className="px-4 py-2 rounded-full text-xs font-bold text-slate-500 flex items-center gap-1.5 hover:text-slate-900"><Maximize className="h-3.5 w-3.5"/> Scan from phone</button>
+                      <button 
+                        onClick={() => {
+                          setPhoneUploadModalOpen(true);
+                          setPhoneUploadStep("info");
+                        }} 
+                        className="px-4 py-2 rounded-full text-xs font-bold text-slate-500 flex items-center gap-1.5 hover:text-slate-900"
+                      >
+                        <Maximize className="h-3.5 w-3.5"/> Scan from phone
+                      </button>
                     </div>
                   </motion.div>
                 )}
 
-                {/* QR CODE VIEW */}
-                {docView === "qr" && (
-                  <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center justify-center w-full max-w-3xl mt-4">
-                     <h2 className="text-3xl font-extrabold text-slate-900 mb-8">Upload via Phone</h2>
-                     <div className="bg-white w-full max-w-md rounded-3xl border border-slate-100 shadow-sm flex flex-col items-center justify-center p-8 text-center">
-                        <p className="text-sm font-semibold text-slate-600 mb-6">Scan with your phone camera. We'll automatically reflect it here the moment it's captured.</p>
-                        <div className="w-48 h-48 bg-slate-100 rounded-xl mb-4 flex items-center justify-center">
-                          {/* Mock QR SVG */}
-                          <svg className="w-40 h-40 opacity-50" viewBox="0 0 24 24" fill="currentColor"><path d="M3 3h8v8H3V3zm2 2v4h4V5H5zm8-2h8v8h-8V3zm2 2v4h4V5h-4zM3 13h8v8H3v-8zm2 2v4h4v-4H5zm13-2h3v2h-3v-2zm-3 0h2v2h-2v-2zm3 3h3v2h-3v-2zm-3 0h2v2h-2v-2zm3 3h3v2h-3v-2zm-3 0h2v2h-2v-2z"/></svg>
-                        </div>
-                        <span className="text-xs font-bold text-emerald-600 flex items-center gap-1"><CheckCircle className="h-3 w-3"/> 100% Encrypted</span>
-                     </div>
-                  </motion.div>
-                )}
+                {/* Old QR Code page-view has been replaced by the Phone Upload modal overlay */}
 
               </motion.div>
             )}
@@ -923,6 +929,192 @@ function ApplyPageContent() {
             <CheckCircle className="h-4 w-4 text-emerald-400" />
             {toastMessage}
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Phone Upload Modal Overlay */}
+      <AnimatePresence>
+        {phoneUploadModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setPhoneUploadModalOpen(false)}
+              className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+            />
+
+            {/* Modal Box */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="bg-white rounded-[2rem] p-6 md:p-10 shadow-2xl w-full max-w-3xl relative z-10 flex flex-col items-center"
+            >
+              {/* Close Button */}
+              <button
+                onClick={() => setPhoneUploadModalOpen(false)}
+                className="absolute top-4 right-4 md:top-6 md:right-6 p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition"
+              >
+                <X className="h-5 w-5" />
+              </button>
+
+              {phoneUploadStep === "info" ? (
+                <div className="flex flex-col items-center w-full">
+                  {/* Top Phone Icon */}
+                  <div className="flex items-center justify-center text-indigo-600 mb-6">
+                    <svg className="w-12 h-12 text-indigo-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
+                      <path d="M12 18h.01" />
+                      <path d="M2 9a9 9 0 0 1 0 6" />
+                      <path d="M22 9a9 9 0 0 0 0 6" />
+                    </svg>
+                  </div>
+
+                  {/* Title & Subtitle */}
+                  <h2 className="text-2xl md:text-3xl font-extrabold text-[#0f172a] text-center mb-2">
+                    Upload documents using your phone
+                  </h2>
+                  <p className="text-slate-500 text-sm md:text-base text-center max-w-md mb-8">
+                    Scan, connect, and securely upload your documents in real time
+                  </p>
+
+                  {/* Step Indicators */}
+                  <div className="flex items-center justify-between w-full max-w-md mb-10">
+                    <div className="w-8 h-8 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center text-xs font-bold border border-indigo-100 shadow-sm shrink-0">1</div>
+                    <div className="flex-1 border-t border-dashed border-indigo-100 mx-2"></div>
+                    <div className="w-2.5 h-2.5 rounded-full bg-indigo-200 shrink-0"></div>
+                    <div className="flex-1 border-t border-dashed border-indigo-100 mx-2"></div>
+                    <div className="w-8 h-8 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center text-xs font-bold border border-indigo-100 shadow-sm shrink-0">2</div>
+                    <div className="flex-1 border-t border-dashed border-indigo-100 mx-2"></div>
+                    <div className="w-2.5 h-2.5 rounded-full bg-indigo-200 shrink-0"></div>
+                    <div className="flex-1 border-t border-dashed border-indigo-100 mx-2"></div>
+                    <div className="w-8 h-8 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center text-xs font-bold border border-indigo-100 shadow-sm shrink-0">3</div>
+                  </div>
+
+                  {/* 3 Columns Walkthrough */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full">
+                    {/* Step 1 */}
+                    <div className="flex flex-col items-center text-center">
+                      <div className="h-24 flex items-center justify-center">
+                        <svg className="w-24 h-24 text-indigo-600" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="2">
+                          <rect x="35" y="15" width="30" height="60" rx="6" stroke="currentColor" fill="white" />
+                          <line x1="45" y1="20" x2="55" y2="20" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+                          <rect x="42" y="27" width="16" height="16" stroke="currentColor" strokeWidth="1.5" />
+                          <rect x="45" y="30" width="4" height="4" fill="currentColor" />
+                          <rect x="51" y="30" width="4" height="4" fill="currentColor" />
+                          <rect x="45" y="36" width="4" height="4" fill="currentColor" />
+                          <rect x="51" y="36" width="4" height="4" fill="currentColor" />
+                          <path d="M28,25 L28,18 L35,18" stroke="#3b82f6" strokeWidth="2.5" strokeLinecap="round" />
+                          <path d="M72,25 L72,18 L65,18" stroke="#3b82f6" strokeWidth="2.5" strokeLinecap="round" />
+                          <path d="M28,65 L28,72 L35,72" stroke="#3b82f6" strokeWidth="2.5" strokeLinecap="round" />
+                          <path d="M72,65 L72,72 L65,72" stroke="#3b82f6" strokeWidth="2.5" strokeLinecap="round" />
+                          <path d="M25,45 A15,15 0 0,1 25,35" stroke="#3b82f6" strokeWidth="2" strokeLinecap="round" />
+                          <path d="M75,45 A15,15 0 0,0 75,35" stroke="#3b82f6" strokeWidth="2" strokeLinecap="round" />
+                        </svg>
+                      </div>
+                      <p className="text-xs text-slate-500 font-medium max-w-[200px] leading-relaxed mt-4">
+                        Scan the QR code to securely connect your phone
+                      </p>
+                    </div>
+
+                    {/* Step 2 */}
+                    <div className="flex flex-col items-center text-center">
+                      <div className="h-24 flex items-center justify-center">
+                        <svg className="w-28 h-24 text-indigo-600" viewBox="0 0 120 100" fill="none" stroke="currentColor" strokeWidth="2">
+                          <rect x="15" y="25" width="45" height="30" rx="3" fill="white" />
+                          <line x1="10" y1="55" x2="65" y2="55" stroke="currentColor" strokeWidth="3" />
+                          <circle cx="37" cy="40" r="4" fill="currentColor" />
+                          <rect x="25" y="47" width="25" height="2" fill="currentColor" />
+                          <rect x="75" y="30" width="20" height="40" rx="4" fill="white" />
+                          <line x1="82" y1="34" x2="88" y2="34" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                          <circle cx="85" cy="50" r="3" fill="currentColor" />
+                          <path d="M45,20 C60,5 75,10 82,25" stroke="#3b82f6" strokeWidth="2" strokeDasharray="4,4" strokeLinecap="round" />
+                          <rect x="53" y="45" width="14" height="14" rx="2" fill="#4f46e5" stroke="none" />
+                          <path d="M56,45 L56,41 A4,4 0 0,1 64,41 L64,45" stroke="#4f46e5" strokeWidth="1.5" fill="none" />
+                          <circle cx="60" cy="52" r="1.5" fill="white" stroke="none" />
+                        </svg>
+                      </div>
+                      <p className="text-xs text-slate-500 font-medium max-w-[200px] leading-relaxed mt-4">
+                        Your phone can now be used as an additional upload device
+                      </p>
+                    </div>
+
+                    {/* Step 3 */}
+                    <div className="flex flex-col items-center text-center">
+                      <div className="h-24 flex items-center justify-center">
+                        <svg className="w-28 h-24 text-indigo-600" viewBox="0 0 120 100" fill="none" stroke="currentColor" strokeWidth="2">
+                          <rect x="15" y="25" width="24" height="48" rx="5" fill="white" />
+                          <line x1="23" y1="29" x2="31" y2="29" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                          <rect x="20" y="37" width="14" height="18" rx="1" fill="none" />
+                          <path d="M27,50 L27,42 M24,45 L27,42 L30,45" stroke="#3b82f6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                          <rect x="65" y="25" width="40" height="48" rx="4" fill="white" />
+                          <line x1="70" y1="35" x2="85" y2="35" stroke="currentColor" strokeWidth="1.5" />
+                          <circle cx="95" cy="35" r="3.5" fill="#10b981" stroke="none" />
+                          <path d="M93,35 L94.5,36.5 L97,33.5" stroke="white" strokeWidth="1" strokeLinecap="round" />
+                          
+                          <line x1="70" y1="47" x2="85" y2="47" stroke="currentColor" strokeWidth="1.5" />
+                          <circle cx="95" cy="47" r="3.5" fill="#10b981" stroke="none" />
+                          <path d="M93,47 L94.5,48.5 L97,45.5" stroke="white" strokeWidth="1" strokeLinecap="round" />
+
+                          <line x1="70" y1="59" x2="85" y2="59" stroke="currentColor" strokeWidth="1.5" />
+                          <circle cx="95" cy="59" r="3.5" fill="#10b981" stroke="none" />
+                          <path d="M93,59 L94.5,60.5 L97,57.5" stroke="white" strokeWidth="1" strokeLinecap="round" />
+                          <path d="M43,45 C50,42 58,42 62,45" stroke="#3b82f6" strokeWidth="1.5" strokeDasharray="3,3" />
+                        </svg>
+                      </div>
+                      <p className="text-xs text-slate-500 font-medium max-w-[200px] leading-relaxed mt-4">
+                        Your uploaded documents get synced in real-time
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Action Button */}
+                  <button
+                    onClick={() => setPhoneUploadStep("qr")}
+                    className="w-full max-w-md py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-bold text-sm transition shadow-lg shadow-indigo-600/20 text-center cursor-pointer mt-12 mb-4"
+                  >
+                    Continue on phone
+                  </button>
+
+                  {/* Encryption Note */}
+                  <div className="flex items-center gap-1.5 text-xs text-slate-400 font-semibold">
+                    <Lock className="h-3.5 w-3.5" />
+                    <span>Protected with industry-standard AES-256 encryption</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center text-center w-full max-w-md py-4">
+                  <h2 className="text-2xl font-extrabold text-slate-900 mb-2">Scan QR Code</h2>
+                  <p className="text-slate-500 text-sm mb-8">Scan this code with your phone camera to securely sync and upload your files.</p>
+                  
+                  {/* QR Code Container */}
+                  <div className="relative w-56 h-56 bg-slate-50 rounded-3xl border border-slate-100 p-4 shadow-inner flex items-center justify-center mb-6">
+                    <div className="absolute top-3 left-3 w-6 h-6 border-t-4 border-l-4 border-indigo-600 rounded-tl-lg"></div>
+                    <div className="absolute top-3 right-3 w-6 h-6 border-t-4 border-r-4 border-indigo-600 rounded-tr-lg"></div>
+                    <div className="absolute bottom-3 left-3 w-6 h-6 border-b-4 border-l-4 border-indigo-600 rounded-bl-lg"></div>
+                    <div className="absolute bottom-3 right-3 w-6 h-6 border-b-4 border-r-4 border-indigo-600 rounded-br-lg"></div>
+                    
+                    <svg className="w-40 h-40 text-slate-850" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M3 3h8v8H3V3zm2 2v4h4V5H5zm8-2h8v8h-8V3zm2 2v4h4V5h-4zM3 13h8v8H3v-8zm2 2v4h4v-4H5zm13-2h3v2h-3v-2zm-3 0h2v2h-2v-2zm3 3h3v2h-3v-2zm-3 0h2v2h-2v-2zm3 3h3v2h-3v-2zm-3 0h2v2h-2v-2z"/>
+                    </svg>
+                  </div>
+
+                  <span className="text-xs font-bold text-emerald-600 flex items-center gap-1 mb-8">
+                    <CheckCircle className="h-3.5 w-3.5" /> 100% Encrypted & Safe
+                  </span>
+
+                  <button
+                    onClick={() => setPhoneUploadStep("info")}
+                    className="text-xs text-indigo-600 font-bold hover:underline flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <ArrowLeft className="h-3.5 w-3.5" /> Back to instructions
+                  </button>
+                </div>
+              )}
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
     </div>
