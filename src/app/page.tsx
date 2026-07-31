@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
@@ -26,9 +26,11 @@ import {
 import { countriesData, Country, getCountrySlug } from "@/data/countries";
 import { CountryCard } from "@/components/CountryCard";
 import { NewHeader } from "@/components/NewHeader";
+import { useSectionReveal, useMagneticHover } from "@/hooks/usePremiumMotion";
 
 export default function Home() {
   const router = useRouter();
+  const pageContainerRef = useRef<HTMLDivElement>(null);
 
   // Search & Filter State
   const [searchQuery, setSearchQuery] = useState("");
@@ -46,6 +48,10 @@ export default function Home() {
 
   // Selected Country for Drawer
   const [selectedCountry, setSelectedCountry] = useState<Country | null>(null);
+
+  // Wire up page animations
+  useSectionReveal(pageContainerRef, ".js-country-card-wrapper");
+  useMagneticHover(pageContainerRef, ".js-magnetic-btn");
 
   // Close dropdowns on click outside
   useEffect(() => {
@@ -146,7 +152,7 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f7f7fa] flex flex-col font-sans antialiased text-slate-800 pb-20 relative">
+    <div ref={pageContainerRef} className="min-h-screen bg-[#f7f7fa] flex flex-col font-sans antialiased text-slate-800 pb-20 relative">
       
       {/* 1. HEADER */}
       <NewHeader
@@ -389,6 +395,7 @@ export default function Home() {
                       <motion.div
                         layout
                         key={country.id}
+                        className="js-country-card-wrapper"
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.95 }}

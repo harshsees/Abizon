@@ -1,6 +1,6 @@
 "use client";
 
-import React, { use, useState, useEffect } from "react";
+import React, { use, useState, useEffect, useRef } from "react";
 import { useRouter, notFound } from "next/navigation";
 import { FAQAccordion } from "@/components/FAQAccordion";
 import { Footer } from "@/components/Footer";
@@ -13,6 +13,7 @@ import { DatePickerModal } from "@/components/DatePickerModal";
 import { SubNavbar } from "@/components/SubNavbar";
 import { Reviews } from "@/components/Reviews";
 import { countriesData, getCountrySlug } from "@/data/countries";
+import { useHeadingReveal, useMagneticHover, useSectionReveal } from "@/hooks/usePremiumMotion";
 
 type PageProps = {
   params: Promise<{ countrySlug: string }>;
@@ -36,6 +37,15 @@ export default function CountryPage({ params }: PageProps) {
   const [isTravelPlanOpen, setIsTravelPlanOpen] = useState<boolean>(false);
   const [isDatePickerOpen, setIsDatePickerOpen] = useState<boolean>(false);
   const [scrolledPastHero, setScrolledPastHero] = useState(false);
+
+  // Animation refs
+  const pageContainerRef = useRef<HTMLDivElement>(null);
+  const heroRef = useRef<HTMLElement>(null);
+
+  // Connect scroll animations
+  useHeadingReveal(pageContainerRef, ".js-reveal-heading");
+  useMagneticHover(pageContainerRef, ".js-magnetic-btn");
+  useSectionReveal(pageContainerRef, ".js-info-item, .js-plan-card, .js-checklist-item, .js-review-card, .js-faq-item");
 
   useEffect(() => {
     const handleScroll = () => {
@@ -71,12 +81,13 @@ export default function CountryPage({ params }: PageProps) {
   const displayName = country.name === "United Arab Emirates" ? "Dubai" : country.name;
 
   return (
-    <div className="flex flex-1 flex-col bg-[var(--background)] relative">
+    <div ref={pageContainerRef} className="flex flex-1 flex-col bg-[var(--background)] relative">
       <Header forceHide={scrolledPastHero} />
 
       <main className="flex-1">
         <div id="destinations" className="scroll-mt-28">
           <TopHero 
+            ref={heroRef}
             onStart={handleStartApplication} 
             countryName={displayName} 
             deliveryDays={country.deliveryDays}

@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import { Search, ShieldCheck, Compass, Ticket, User } from "lucide-react";
@@ -21,6 +21,30 @@ export function NewHeader({
   const router = useRouter();
   const pathname = usePathname();
 
+  const [isAtTop, setIsAtTop] = useState(true);
+  const [isVisible, setIsVisible] = useState(true);
+  const lastScrollY = useRef(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      setIsAtTop(currentScrollY < 50);
+
+      if (currentScrollY < 100) {
+        setIsVisible(true);
+      } else if (currentScrollY > lastScrollY.current) {
+        setIsVisible(false);
+      } else {
+        setIsVisible(true);
+      }
+      lastScrollY.current = currentScrollY;
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     if (setSearchQuery && pathname === "/") {
@@ -39,7 +63,13 @@ export function NewHeader({
   };
 
   return (
-    <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/80 backdrop-blur-md">
+    <header className={`sticky top-0 z-50 transition-all duration-500 ease-out border-b ${
+      isVisible ? "translate-y-0" : "-translate-y-full"
+    } ${
+      isAtTop 
+        ? "bg-transparent border-transparent" 
+        : "bg-white/80 backdrop-blur-md border-slate-200/60 shadow-sm"
+    }`}>
       <div className="mx-auto max-w-7xl flex items-center justify-between px-4 py-3 md:px-6">
         
         {/* Left section: Logo & Shield Badge */}

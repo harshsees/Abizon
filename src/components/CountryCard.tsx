@@ -38,16 +38,16 @@ export function CountryCard({ country, onClick }: CountryCardProps) {
     >
       {/* Outer Card Container */}
       <motion.div
-        whileHover={{ y: -6, scale: 1.02 }}
-        transition={{ duration: 0.3, ease: [0.25, 0.8, 0.25, 1] }}
-        className="relative aspect-[3/4.4] w-full overflow-hidden rounded-[32px] bg-slate-900 shadow-lg border border-slate-200/10 group-hover:shadow-xl transition-shadow duration-300"
+        whileHover={{ y: -8, scale: 1.03, rotate: 1.5 }}
+        transition={{ duration: 0.45, ease: [0.25, 1, 0.5, 1] }}
+        className="relative aspect-[3/4.4] w-full overflow-hidden rounded-[32px] bg-slate-900 shadow-lg border border-slate-200/10 hover:shadow-[0_30px_60px_-15px_rgba(15,23,42,0.35)] transition-shadow duration-500"
       >
         {/* Country Landscape Background Image */}
         <img
           src={country.imageUrl}
           alt={`${country.name} scenery`}
           loading="lazy"
-          className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-108"
+          className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
         />
 
         {/* Ambient Dark Gradient Overlays (Top and Bottom) */}
@@ -58,7 +58,7 @@ export function CountryCard({ country, onClick }: CountryCardProps) {
         <div className="absolute inset-0 flex flex-col justify-end p-3">
           
           {/* Circular Flag Icon */}
-          <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full border-2 border-white/60 bg-white/20 shadow-md backdrop-blur-sm overflow-hidden">
+          <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full border-2 border-white/60 bg-white/20 shadow-md backdrop-blur-sm overflow-hidden transition-transform duration-500 group-hover:scale-112">
             <img
               src={`https://flagcdn.com/w80/${country.code}.png`}
               alt={`${country.name} flag`}
@@ -68,12 +68,12 @@ export function CountryCard({ country, onClick }: CountryCardProps) {
           </div>
 
           {/* Uppercase Country Name */}
-          <h3 className="mb-4 text-center font-serif text-lg font-bold tracking-widest text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] px-2 leading-tight uppercase font-sans">
+          <h3 className="mb-4 text-center font-serif text-lg font-bold tracking-widest text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] px-2 leading-tight uppercase font-sans transition-transform duration-500 group-hover:scale-103">
             {country.name}
           </h3>
 
           {/* Details Drawer (Glassmorphic Box) */}
-          <div className="w-full rounded-2xl border border-white/12 bg-black/35 p-3 backdrop-blur-lg">
+          <div className="w-full rounded-2xl border border-white/12 bg-black/35 p-3 backdrop-blur-lg transition-transform duration-500 group-hover:translate-y-[-2px] group-hover:bg-black/45">
             <div className="grid grid-cols-3 gap-1 divide-x divide-white/10 text-center">
               {/* Type Column */}
               <div className="flex flex-col items-center justify-center px-1">

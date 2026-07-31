@@ -209,7 +209,7 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
   return (
     <div className="space-y-8 md:space-y-10">
       <div>
-        <h1 id="visa-info-section" className="text-2xl font-bold text-[var(--foreground)] scroll-mt-28">
+        <h1 id="visa-info-section" className="text-2xl font-bold text-[var(--foreground)] scroll-mt-28 js-reveal-heading">
           {displayName} visa information
         </h1>
         {/* Scaled up borderless visa info details aligned in a column grid */}
@@ -217,7 +217,7 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
           {/* Row 1: 3 components scaled up */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 border-b border-slate-200/50 pb-5">
             {/* 1. Visa Type */}
-            <div className="flex items-center gap-3.5">
+            <div className="flex items-center gap-3.5 js-info-item">
               <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
                 <Smartphone className="h-5.5 w-5.5" />
               </div>
@@ -228,7 +228,7 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
             </div>
 
             {/* 2. Length of Stay */}
-            <div className="flex items-center gap-3.5">
+            <div className="flex items-center gap-3.5 js-info-item">
               <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-sky-50 text-sky-600">
                 <CalendarDays className="h-5.5 w-5.5" />
               </div>
@@ -250,7 +250,7 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
             </div>
 
             {/* 3. Validity */}
-            <div className="flex items-center gap-3.5">
+            <div className="flex items-center gap-3.5 js-info-item">
               <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
                 <Clock3 className="h-5.5 w-5.5" />
               </div>
@@ -275,7 +275,7 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
           {/* Row 2: remaining 2 components scaled up and aligned */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-1">
             {/* 4. Entry */}
-            <div className="flex items-center gap-3.5">
+            <div className="flex items-center gap-3.5 js-info-item">
               <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-violet-50 text-violet-600">
                 <FileText className="h-5.5 w-5.5" />
               </div>
@@ -297,7 +297,7 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
             </div>
 
             {/* 5. Method */}
-            <div className="flex items-center gap-3.5">
+            <div className="flex items-center gap-3.5 js-info-item">
               <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
                 <FolderOpen className="h-5.5 w-5.5" />
               </div>
@@ -331,7 +331,7 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
             <span className="relative z-10 flex h-3 w-3 items-center justify-center rounded-full bg-[var(--primary)]">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75"></span>
             </span>
-            <h1 id="guaranteed-visa-section" className="text-2xl font-bold text-[var(--foreground)] scroll-mt-28">
+            <h1 id="guaranteed-visa-section" className="text-2xl font-bold text-[var(--foreground)] scroll-mt-28 js-reveal-heading">
               Get a Guaranteed Visa on
             </h1>
           </div>
@@ -341,7 +341,7 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
             {dynamicPlans.map((plan, index) => {
               const active = selectedPlan === index;
               return (
-                <div key={plan.title} className="relative pl-7">
+                <div key={plan.title} className="relative pl-7 js-plan-card">
                   {/* Curved branch line shown only to the selected plan (restored branch sizes) */}
                   {selectedPlan === 0 && index === 0 && (
                     <motion.div
@@ -520,17 +520,17 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
       {/* Visa Requirements Section */}
       <div className="pt-8 border-t border-slate-200/50 space-y-5">
         <div>
-          <h2 id="requirements-section" className="text-2xl font-bold text-[var(--foreground)] tracking-tight scroll-mt-28">
+          <h2 id="requirements-section" className="text-2xl font-bold text-[var(--foreground)] tracking-tight scroll-mt-28 js-reveal-heading">
             {displayName} Visa Requirements
           </h2>
         </div>
         <div className="flex flex-wrap gap-3">
-          <div className="inline-flex items-center gap-2 px-4.5 py-2.5 bg-slate-50 border border-slate-200/60 rounded-2xl font-bold text-sm text-[var(--foreground)] shadow-sm cursor-pointer hover:bg-slate-100/50 transition">
+          <div className="inline-flex items-center gap-2 px-4.5 py-2.5 bg-slate-50 border border-slate-200/60 rounded-2xl font-bold text-sm text-[var(--foreground)] shadow-sm cursor-pointer hover:bg-slate-100/50 transition js-checklist-item">
             <Scan className="h-4.5 w-4.5 text-slate-700" />
             Passport Scan
           </div>
           {country.documents === "Photo + Passport" && (
-            <div className="inline-flex items-center gap-2 px-4.5 py-2.5 bg-slate-50 border border-slate-200/60 rounded-2xl font-bold text-sm text-[var(--foreground)] shadow-sm cursor-pointer hover:bg-slate-100/50 transition">
+            <div className="inline-flex items-center gap-2 px-4.5 py-2.5 bg-slate-50 border border-slate-200/60 rounded-2xl font-bold text-sm text-[var(--foreground)] shadow-sm cursor-pointer hover:bg-slate-100/50 transition js-checklist-item">
               <FileText className="h-4.5 w-4.5 text-slate-700" />
               Photograph (White Background)
             </div>
@@ -541,7 +541,7 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
       {/* Partners We Work With Section */}
       <div className="pt-8 border-t border-slate-200/50 space-y-5">
         <div>
-          <h2 id="partners-section" className="text-2xl font-bold text-[var(--foreground)] tracking-tight scroll-mt-28">
+          <h2 id="partners-section" className="text-2xl font-bold text-[var(--foreground)] tracking-tight scroll-mt-28 js-reveal-heading">
             Partners We Work With
           </h2>
         </div>
@@ -549,9 +549,9 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
           {/* Card 1: Ministry of Foreign Affairs */}
           <div className="flex flex-col items-center justify-center bg-white border border-slate-200/40 rounded-3xl p-4 aspect-square shadow-sm hover:shadow-md transition duration-300 gap-2">
             <svg className="h-10 w-10 text-amber-600" viewBox="0 0 100 100" fill="currentColor">
-              <circle cx="50" cy="50" r="48" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="2 2" />
+              <circle cx="50" cy="50" r="48" fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray="2 2" />
               <path d="M50 20 C45 35 25 40 15 50 C25 50 35 45 50 35 C65 45 75 50 85 50 C75 40 55 35 50 20 Z" />
-              <circle cx="50" cy="45" r="14" fill="none" stroke="currentColor" stroke-width="2" />
+              <circle cx="50" cy="45" r="14" fill="none" stroke="currentColor" strokeWidth="2" />
               <path d="M43 45 L43 53 L57 53 L57 45 Z" fill="white" />
               <path d="M43 45 L43 53 L47 53 L47 45 Z" fill="#c2410c" />
               <path d="M47 45 L47 47.6 L57 47.6 L57 45 Z" fill="#15803d" />
@@ -564,7 +564,7 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
 
           {/* Card 2: Government of Dubai */}
           <div className="flex flex-col items-center justify-center bg-white border border-slate-200/40 rounded-3xl p-4 aspect-square shadow-sm hover:shadow-md transition duration-300 gap-2">
-            <svg className="h-10 w-24 text-red-600" viewBox="0 0 120 40" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <svg className="h-10 w-24 text-red-600" viewBox="0 0 120 40" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M10 20 C20 10 35 15 45 25 C55 15 70 10 80 20 C90 15 105 15 115 25" />
               <path d="M30 15 C35 5 45 5 50 15" />
               <path d="M75 15 C80 5 90 5 95 15" />
@@ -579,11 +579,11 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
             <svg className="h-10 w-20 text-sky-800" viewBox="0 0 100 40" fill="currentColor">
               <path d="M10 15 H40 L35 25 H5 Z" />
               <path d="M90 15 H60 L65 25 H95 Z" />
-              <circle cx="50" cy="20" r="14" fill="none" stroke="currentColor" stroke-width="2" />
-              <path d="M36 20 H64" stroke="currentColor" stroke-width="2" />
-              <path d="M50 6 V34" stroke="currentColor" stroke-width="2" />
-              <path d="M39 12 C44 15 56 15 61 12" fill="none" stroke="currentColor" stroke-width="1.5" />
-              <path d="M39 28 C44 25 56 25 61 28" fill="none" stroke="currentColor" stroke-width="1.5" />
+              <circle cx="50" cy="20" r="14" fill="none" stroke="currentColor" strokeWidth="2" />
+              <path d="M36 20 H64" stroke="currentColor" strokeWidth="2" />
+              <path d="M50 6 V34" stroke="currentColor" strokeWidth="2" />
+              <path d="M39 12 C44 15 56 15 61 12" fill="none" stroke="currentColor" strokeWidth="1.5" />
+              <path d="M39 28 C44 25 56 25 61 28" fill="none" stroke="currentColor" strokeWidth="1.5" />
             </svg>
             <p className="text-[10px] md:text-[11px] font-black text-center tracking-widest text-sky-900 uppercase leading-none mt-1">
               IATA

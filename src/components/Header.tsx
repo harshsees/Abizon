@@ -1,7 +1,7 @@
 "use client";
 
 import { Search, X, User } from "lucide-react";
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -18,6 +18,8 @@ export function Header({ onStart, forceHide = false }: HeaderProps) {
   const [query, setQuery] = useState("");
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const [isAtTop, setIsAtTop] = useState(true);
+  const [isVisible, setIsVisible] = useState(true);
+  const lastScrollY = useRef(0);
 
   const placeholderWords = ["countries", "cities"];
 
@@ -30,7 +32,19 @@ export function Header({ onStart, forceHide = false }: HeaderProps) {
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsAtTop(window.scrollY < 80);
+      const currentScrollY = window.scrollY;
+      setIsAtTop(currentScrollY < 50);
+
+      if (currentScrollY < 100) {
+        setIsVisible(true);
+      } else if (currentScrollY > lastScrollY.current) {
+        // Hide scrolling down
+        setIsVisible(false);
+      } else {
+        // Show scrolling up
+        setIsVisible(true);
+      }
+      lastScrollY.current = currentScrollY;
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
@@ -48,8 +62,12 @@ export function Header({ onStart, forceHide = false }: HeaderProps) {
 
   return (
     <>
-      <header className={`sticky top-0 z-50 bg-white/90 backdrop-blur transition-transform duration-300 ease-in-out ${
-        (isAtTop && !forceHide) ? "translate-y-0" : "-translate-y-full"
+      <header className={`sticky top-0 z-50 transition-all duration-500 ease-out border-b ${
+        isVisible && !forceHide ? "translate-y-0" : "-translate-y-full"
+      } ${
+        isAtTop 
+          ? "bg-transparent border-transparent" 
+          : "bg-white/80 backdrop-blur-md border-slate-200/60 shadow-sm"
       }`}>
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 md:px-6">
           {/* Logo */}
