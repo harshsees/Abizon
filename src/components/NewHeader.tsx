@@ -90,7 +90,7 @@ export function NewHeader({
           
           {/* Shield Badge */}
           <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-100 text-[11px] font-bold text-emerald-700 shadow-sm">
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 fill-emerald-600/10" />
+            <ShieldCheck className="w-3.5 h-3.5 text-success-subtle-foreground fill-emerald-600/10" />
             <span>Visas On Time Guaranteed</span>
           </div>
         </div>
@@ -100,7 +100,7 @@ export function NewHeader({
           <button
             onClick={() => handleTabClick("explore")}
             className={`relative flex items-center gap-2 py-3 px-1 transition-all duration-300 font-semibold cursor-pointer ${
-              activeTab === "explore" ? "text-slate-950 font-bold" : "text-slate-400 hover:text-slate-600"
+              activeTab === "explore" ? "text-slate-950 font-bold" : "text-muted-foreground hover:text-slate-600"
             }`}
           >
             <Compass className="w-4 h-4" />
@@ -116,7 +116,7 @@ export function NewHeader({
           <button
             onClick={() => handleTabClick("events")}
             className={`relative flex items-center gap-2 py-3 px-1 transition-all duration-300 font-semibold cursor-pointer ${
-              activeTab === "events" ? "text-slate-950 font-bold" : "text-slate-400 hover:text-slate-600"
+              activeTab === "events" ? "text-slate-950 font-bold" : "text-muted-foreground hover:text-slate-600"
             }`}
           >
             <Ticket className="w-4 h-4" />
@@ -133,7 +133,7 @@ export function NewHeader({
         {/* Right Section: Search & Profile */}
         <div className="flex items-center gap-3">
           <div className="relative hidden md:block">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <input
               type="text"
               placeholder="Search Country"
@@ -145,10 +145,12 @@ export function NewHeader({
 
           {/* Profile Avatar Button (Matches 2nd Screenshot with Theme Colors) */}
           <button 
+            type="button"
+            aria-label="Open your profile"
             onClick={() => router.push("/profile")}
-            className="flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--primary)] bg-[var(--primary)]/8 text-[var(--primary)] hover:bg-[var(--primary)]/15 transition-all shadow-sm cursor-pointer"
+            className="flex h-9 w-9 items-center justify-center rounded-xl border border-primary bg-primary/8 text-primary hover:bg-primary/15 transition-all shadow-sm cursor-pointer"
           >
-            <User className="w-5 h-5 text-[var(--primary)]" />
+            <User className="w-5 h-5 text-primary" />
           </button>
         </div>
       </div>

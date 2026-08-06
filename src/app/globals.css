@@ -1,113 +1,396 @@
 @import "tailwindcss";
 
+/* Lenis' required stylesheet — it was missing entirely.
+   It supplies `html.lenis { height: auto }` (without which the `h-full` on
+   <html> fights Lenis for the scroll container), `overflow: clip` for the
+   stopped state that backs scroll locking, and `overscroll-behavior: contain`
+   for `[data-lenis-prevent]` — the opt-out that stops a scrollable panel
+   inside a dialog from scrolling the page behind it. */
+@import "lenis/dist/lenis.css";
+
+/* ============================================================================
+   KEYRISE DESIGN SYSTEM
+   ----------------------------------------------------------------------------
+   Three-layer token architecture:
+     1. PRIMITIVE  — raw values. Never referenced directly by components.
+     2. SEMANTIC   — role-based aliases. This is what components use.
+     3. @theme     — exposes semantic tokens to Tailwind as utility classes.
+
+   Rule: components must never contain a raw hex value or a palette class
+   (bg-amber-600, text-slate-400). Use semantic utilities: bg-primary,
+   text-muted-foreground, border-border.
+   ========================================================================= */
+
+/* ---------------------------------------------------------------------------
+   1. PRIMITIVES
+   ------------------------------------------------------------------------ */
 :root {
-  --background: #f7f7fa;
-  --foreground: #111827;
-  --muted: #5f6472;
-  --card: #ffffff;
-  --border: #e5e7eb;
-  --primary: #d97706;
-  --primary-hover: #b45309;
-  --success: #16a34a;
-  --warning: #f59e0b;
-  --error: #dc2626;
+  /* Brand ramp — amber */
+  --amber-50: #fffbeb;
+  --amber-100: #fef3c7;
+  --amber-200: #fde68a;
+  --amber-500: #f59e0b;
+  --amber-600: #d97706;
+  --amber-700: #b45309;
+  --amber-800: #92400e;
+  --amber-900: #78350f;
+
+  /* Neutral ramp — slate */
+  --slate-50: #f8fafc;
+  --slate-100: #f1f5f9;
+  --slate-200: #e2e8f0;
+  --slate-300: #cbd5e1;
+  --slate-400: #94a3b8;
+  --slate-500: #64748b;
+  --slate-600: #475569;
+  --slate-700: #334155;
+  --slate-800: #1e293b;
+  --slate-900: #0f172a;
+  --slate-950: #020617;
+
+  /* Informational — blue. Replaces ad-hoc blue/sky/indigo usage. */
+  --blue-50: #eff6ff;
+  --blue-100: #dbeafe;
+  --blue-600: #2563eb;
+  --blue-700: #1d4ed8;
+
+  /* Status ramps. Foreground values are contrast-checked against their
+     own -subtle background AND against white. */
+  --green-50: #f0fdf4;
+  --green-100: #dcfce7;
+  --green-600: #16a34a;
+  --green-700: #15803d;
+
+  --red-50: #fef2f2;
+  --red-100: #fee2e2;
+  --red-600: #dc2626;
+  --red-700: #b91c1c;
+
+  --canvas: #f7f7fa;
+  --white: #ffffff;
 }
 
+/* ---------------------------------------------------------------------------
+   2. SEMANTIC ROLES
+   ------------------------------------------------------------------------ */
+:root {
+  /* Surfaces */
+  --color-background: var(--canvas);
+  --color-surface: var(--white);
+  --color-surface-raised: var(--white);
+  --color-surface-sunken: var(--slate-50);
+  --color-overlay: rgb(15 23 42 / 0.45); /* modal scrim — 45%, per HIG 40-60% */
+
+  /* Content.
+     These are measured against BOTH --color-surface (white) and
+     --color-background (#f7f7fa). slate-500 was chosen for muted text on the
+     strength of its 4.76:1 against white — but most muted text sits on the
+     canvas, not on a card, and there it is 4.45:1, i.e. a hair under AA.
+     slate-600 is 7.58:1 / 7.09:1 and passes on either surface, so the
+     hierarchy steps 900 → 700 → 600 instead of 900 → 600 → 500. */
+  --color-foreground: var(--slate-900);
+  --color-muted-foreground: var(--slate-600);
+  --color-subtle-foreground: var(--slate-700);
+  --color-on-primary: var(--white);
+  --color-on-accent: var(--white);
+
+  /* Brand.
+     The ramp is shifted one step darker than the obvious choice. amber-600
+     (#d97706) is only 3.18:1 against white — so `text-primary` failed AA as
+     body text, and, because the pairing is symmetric, white-on-primary failed
+     on every filled CTA too. amber-700 is 4.9:1 both ways and still reads as
+     the same brand amber. amber-500/600 remain available for large display
+     type and non-text accents, where 3:1 is the applicable bar. */
+  --color-primary: var(--amber-700);
+  --color-primary-hover: var(--amber-800);
+  --color-primary-active: var(--amber-900);
+  --color-primary-subtle: var(--amber-50);
+  --color-primary-subtle-foreground: var(--amber-800);
+  --color-primary-border: var(--amber-200);
+
+  /* Informational accent */
+  --color-accent: var(--blue-600);
+  --color-accent-hover: var(--blue-700);
+  --color-accent-subtle: var(--blue-50);
+  --color-accent-subtle-foreground: var(--blue-700);
+
+  /* Status */
+  /* green-600 is 3.30:1 on white — fine for a status dot or icon (3:1 bar),
+     not for text. `success` is the non-text role; text must use
+     `success-subtle-foreground` (green-700, 5.02:1). */
+  --color-success: var(--green-600);
+  --color-success-subtle: var(--green-50);
+  --color-success-subtle-foreground: var(--green-700);
+
+  --color-warning: var(--amber-500);
+  --color-warning-subtle: var(--amber-50);
+  --color-warning-subtle-foreground: var(--amber-800);
+
+  --color-destructive: var(--red-600);
+  --color-destructive-hover: var(--red-700);
+  --color-destructive-subtle: var(--red-50);
+  --color-destructive-subtle-foreground: var(--red-700);
+
+  /* Lines */
+  --color-border: var(--slate-200);
+  --color-border-strong: var(--slate-300);
+  --color-input: var(--slate-300);
+  /* Follows primary, so the focus indicator clears 3:1 against white with
+     room to spare rather than sitting exactly on the limit. */
+  --color-ring: var(--color-primary);
+
+  /* Elevation — one scale, used everywhere. Replaces the ~9 ad-hoc
+     shadow values previously scattered across components. */
+  --elevation-0: none;
+  --elevation-1: 0 1px 2px 0 rgb(15 23 42 / 0.04);
+  --elevation-2: 0 4px 12px -2px rgb(15 23 42 / 0.06), 0 2px 4px -2px rgb(15 23 42 / 0.04);
+  --elevation-3: 0 12px 24px -6px rgb(15 23 42 / 0.08), 0 4px 8px -4px rgb(15 23 42 / 0.04);
+  --elevation-4: 0 24px 48px -12px rgb(15 23 42 / 0.12), 0 8px 16px -8px rgb(15 23 42 / 0.06);
+  --elevation-5: 0 32px 64px -16px rgb(15 23 42 / 0.18), 0 12px 24px -12px rgb(15 23 42 / 0.08);
+
+  /* Motion — §7: 150-300ms micro, <=400ms complex, exits ~65% of enters */
+  --duration-instant: 100ms;
+  --duration-fast: 150ms;
+  --duration-base: 220ms;
+  --duration-slow: 320ms;
+  --duration-exit: 140ms;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in: cubic-bezier(0.64, 0, 0.78, 0);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+
+  /* Z-index — single ladder. Replaces z-[9999]/z-[60]/z-25 improvisation. */
+  --z-base: 0;
+  --z-raised: 10;
+  --z-sticky: 20;
+  --z-nav: 40;
+  --z-overlay: 50;
+  --z-modal: 60;
+  --z-toast: 80;
+  --z-cursor: 100;
+}
+
+/* ---------------------------------------------------------------------------
+   3. TAILWIND THEME MAPPING
+   ------------------------------------------------------------------------ */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-background: var(--color-background);
+  --color-surface: var(--color-surface);
+  --color-surface-raised: var(--color-surface-raised);
+  --color-surface-sunken: var(--color-surface-sunken);
+  --color-overlay: var(--color-overlay);
+
+  --color-foreground: var(--color-foreground);
+  --color-muted-foreground: var(--color-muted-foreground);
+  --color-subtle-foreground: var(--color-subtle-foreground);
+  --color-on-primary: var(--color-on-primary);
+  --color-on-accent: var(--color-on-accent);
+
+  --color-primary: var(--color-primary);
+  --color-primary-hover: var(--color-primary-hover);
+  --color-primary-active: var(--color-primary-active);
+  --color-primary-subtle: var(--color-primary-subtle);
+  --color-primary-subtle-foreground: var(--color-primary-subtle-foreground);
+  --color-primary-border: var(--color-primary-border);
+
+  --color-accent: var(--color-accent);
+  --color-accent-hover: var(--color-accent-hover);
+  --color-accent-subtle: var(--color-accent-subtle);
+  --color-accent-subtle-foreground: var(--color-accent-subtle-foreground);
+
+  --color-success: var(--color-success);
+  --color-success-subtle: var(--color-success-subtle);
+  --color-success-subtle-foreground: var(--color-success-subtle-foreground);
+
+  --color-warning: var(--color-warning);
+  --color-warning-subtle: var(--color-warning-subtle);
+  --color-warning-subtle-foreground: var(--color-warning-subtle-foreground);
+
+  --color-destructive: var(--color-destructive);
+  --color-destructive-hover: var(--color-destructive-hover);
+  --color-destructive-subtle: var(--color-destructive-subtle);
+  --color-destructive-subtle-foreground: var(--color-destructive-subtle-foreground);
+
+  --color-border: var(--color-border);
+  --color-border-strong: var(--color-border-strong);
+  --color-input: var(--color-input);
+  --color-ring: var(--color-ring);
+
   --font-sans: var(--font-inter);
+
+  /* Type scale — 9 steps, nothing below 12px.
+     Replaces text-[8.5px] / [9px] / [9.5px] / [11.5px] / [17px] / [28px]. */
+  --text-2xs: 0.75rem;      /* 12px — smallest permitted */
+  --text-2xs--line-height: 1rem;
+  --text-xs: 0.8125rem;     /* 13px */
+  --text-xs--line-height: 1.125rem;
+  --text-sm: 0.875rem;      /* 14px */
+  --text-sm--line-height: 1.375rem;
+  --text-base: 1rem;        /* 16px */
+  --text-base--line-height: 1.5rem;
+  --text-lg: 1.125rem;      /* 18px */
+  --text-lg--line-height: 1.625rem;
+  --text-xl: 1.25rem;       /* 20px */
+  --text-xl--line-height: 1.75rem;
+  --text-2xl: 1.5rem;       /* 24px */
+  --text-2xl--line-height: 2rem;
+  --text-3xl: 1.875rem;     /* 30px */
+  --text-3xl--line-height: 2.25rem;
+  --text-4xl: 2.25rem;      /* 36px */
+  --text-4xl--line-height: 2.5rem;
+  --text-5xl: 3rem;         /* 48px */
+  --text-5xl--line-height: 1;
+
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.25rem;
+  --radius-2xl: 1.75rem;
+  --radius-full: 9999px;
+
+  --shadow-e1: var(--elevation-1);
+  --shadow-e2: var(--elevation-2);
+  --shadow-e3: var(--elevation-3);
+  --shadow-e4: var(--elevation-4);
+  --shadow-e5: var(--elevation-5);
+
+  --ease-out: var(--ease-out);
+  --ease-in: var(--ease-in);
+  --ease-in-out: var(--ease-in-out);
 }
 
+/* ---------------------------------------------------------------------------
+   4. BASE
+   ------------------------------------------------------------------------ */
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-inter), Arial, Helvetica, sans-serif;
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Tabular figures for prices, dates, counters — prevents width jitter (§6). */
+.tabular-nums,
+[data-numeric] {
+  font-variant-numeric: tabular-nums;
 }
 
 a,
 button {
-  transition: all 0.2s ease;
+  transition:
+    color var(--duration-fast) var(--ease-out),
+    background-color var(--duration-fast) var(--ease-out),
+    border-color var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out),
+    opacity var(--duration-fast) var(--ease-out);
 }
 
-input,
-select,
-textarea {
-  outline: none;
-}
-
+/* Focus. A single visible ring on every interactive element.
+   The previous rule set `outline:none !important` on inputs, which removed
+   the indicator entirely — WCAG 2.4.7 failure. Inputs now ring like
+   everything else. */
 *:focus-visible {
-  outline: 2px solid var(--primary);
+  outline: 2px solid var(--color-ring);
   outline-offset: 2px;
+  border-radius: var(--radius-sm);
 }
 
-input:focus-visible,
-select:focus-visible,
-textarea:focus-visible {
-  outline: none !important;
-  box-shadow: none !important;
+::selection {
+  background: var(--color-primary-subtle);
+  color: var(--color-primary-subtle-foreground);
 }
 
+/* Skip link — keyboard users land here first.
+   Hidden with clip-path rather than `left: -9999px`: the old offset put a real
+   box 9999px outside the viewport, which widened the document and showed up as
+   horizontal overflow on narrow screens. */
+.skip-link {
+  position: absolute;
+  left: 1rem;
+  top: 0;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  z-index: var(--z-cursor);
+  padding: 0.75rem 1.25rem;
+  background: var(--color-surface);
+  color: var(--color-foreground);
+  font-weight: 600;
+  border-radius: var(--radius-md);
+  box-shadow: var(--elevation-3);
+}
+.skip-link:focus {
+  clip-path: none;
+  top: 1rem;
+}
+
+/* ---------------------------------------------------------------------------
+   5. CUSTOM CURSOR
+   The `cursor: none` rule is now gated behind a class that CustomCursor adds
+   to <html> only after it successfully mounts. If JS fails, hydration stalls,
+   or the pointer is coarse, the real cursor stays visible.
+   ------------------------------------------------------------------------ */
+@media (min-width: 768px) and (pointer: fine) {
+  html.has-custom-cursor,
+  html.has-custom-cursor a,
+  html.has-custom-cursor button,
+  html.has-custom-cursor input,
+  html.has-custom-cursor textarea,
+  html.has-custom-cursor select,
+  html.has-custom-cursor [role="button"] {
+    cursor: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   6. MOTION
+   ------------------------------------------------------------------------ */
 @keyframes marquee-left {
-  0% {
-    transform: translateX(0);
-  }
-  100% {
-    transform: translateX(-50%);
-  }
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
 }
-
 @keyframes marquee-right {
-  0% {
-    transform: translateX(-50%);
-  }
-  100% {
-    transform: translateX(0);
-  }
+  0% { transform: translateX(-50%); }
+  100% { transform: translateX(0); }
 }
 
-.animate-marquee-left {
-  animation: marquee-left 45s linear infinite;
+.animate-marquee-left { animation: marquee-left 45s linear infinite; }
+.animate-marquee-right { animation: marquee-right 45s linear infinite; }
+
+.marquee-row:hover .marquee-track,
+.marquee-row:focus-within .marquee-track,
+.marquee-row[data-paused="true"] .marquee-track {
+  animation-play-state: paused;
 }
 
-.animate-marquee-right {
-  animation: marquee-right 45s linear infinite;
-}
-
-.marquee-row:hover .marquee-track {
-  animation-play-state: paused !important;
-}
-
-/* Custom Cursor Hide on Desktop */
-@media (min-width: 768px) {
-  body, 
-  a, 
-  button, 
-  input, 
-  textarea, 
-  select, 
-  [role="button"] {
-    cursor: none !important;
-  }
-}
-
-/* SplitType text mask helper */
 .overflow-hidden-line-wrapper {
   overflow: hidden;
   vertical-align: bottom;
 }
 
-/* GPU Optimization */
 .will-change-transform {
   will-change: transform, opacity;
 }
 
-/* Card Tilt & Dynamic Shadow on Hover */
-.js-tilt-card {
-  transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.4s cubic-bezier(0.25, 1, 0.5, 1);
-}
+/* Reduced motion — global. Previously only ApplicationCard honoured this,
+   while the app ran 2 marquees, a ping, a wave, a shine loop, GSAP reveals,
+   magnetic hover and a custom cursor. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 
-.js-tilt-card:hover {
-  box-shadow: 0 30px 60px -15px rgba(15, 23, 42, 0.08), 0 18px 36px -18px rgba(15, 23, 42, 0.04);
-}
+  .animate-marquee-left,
+  .animate-marquee-right {
+    animation: none !important;
+    transform: none !important;
+  }
 
+  html.has-custom-cursor,
+  html.has-custom-cursor * {
+    cursor: auto !important;
+  }
+}

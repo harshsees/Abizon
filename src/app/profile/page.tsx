@@ -54,7 +54,7 @@ export default function ProfilePage() {
             
             {/* Slogan */}
             <div className="flex items-center gap-1.5 pl-3 border-l border-slate-200">
-              <span className="text-[10px] font-extrabold tracking-widest text-[var(--primary)] uppercase">
+              <span className="text-[10px] font-extrabold tracking-widest text-primary uppercase">
                 Visas On Time
               </span>
             </div>
@@ -63,7 +63,7 @@ export default function ProfilePage() {
           {/* Right Section: Exit/LogOut Button */}
           <button 
             onClick={() => router.push("/")}
-            className="flex h-10 w-10 items-center justify-center rounded-xl hover:bg-slate-50 border border-transparent hover:border-slate-200 text-slate-500 hover:text-slate-800 transition duration-200 cursor-pointer"
+            className="flex h-10 w-10 items-center justify-center rounded-xl hover:bg-slate-50 border border-transparent hover:border-slate-200 text-muted-foreground hover:text-slate-800 transition duration-200 cursor-pointer"
             aria-label="Back to home"
           >
             <LogOut className="w-5 h-5" />
@@ -72,7 +72,7 @@ export default function ProfilePage() {
       </header>
 
       {/* 2. BODY CONTENT LAYOUT */}
-      <main className="mx-auto w-full max-w-7xl px-4 py-8 md:px-6 md:py-12 flex-1">
+      <main id="main-content" tabIndex={-1} className="mx-auto w-full max-w-7xl px-4 py-8 md:px-6 md:py-12 flex-1">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
           {/* LEFT SIDEBAR (Profile details, Loyalty, QR) */}
@@ -81,7 +81,7 @@ export default function ProfilePage() {
             {/* Large double-ringed User Avatar */}
             <div className="relative flex h-28 w-28 items-center justify-center rounded-full border border-slate-100 bg-[#f3f4f6]/80 shadow-sm">
               <div className="absolute inset-2.5 rounded-full bg-slate-200/50 flex items-center justify-center">
-                <User className="w-12 h-12 text-slate-400" />
+                <User className="w-12 h-12 text-muted-foreground" />
               </div>
             </div>
 
@@ -94,13 +94,13 @@ export default function ProfilePage() {
             <div className="w-full grid grid-cols-2 divide-x divide-slate-100 border-y border-slate-100 py-5 my-6 text-center">
               <div className="flex flex-col items-center">
                 <span className="text-2xl font-black text-slate-900 leading-none">0</span>
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1.5 leading-none">
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mt-1.5 leading-none">
                   Purchased<br/>Applications
                 </span>
               </div>
               <div className="flex flex-col items-center">
                 <span className="text-2xl font-black text-slate-900 leading-none">0</span>
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1.5 leading-none">
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mt-1.5 leading-none">
                   Ongoing<br/>Applications
                 </span>
               </div>
@@ -108,21 +108,21 @@ export default function ProfilePage() {
 
             {/* Loyalty Program Section */}
             <div className="w-full flex flex-col items-start text-left mb-6">
-              <h3 className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">
+              <h3 className="text-[11px] font-extrabold text-muted-foreground uppercase tracking-wider mb-2">
                 Loyalty Program
               </h3>
               
               <div className="w-full flex items-center justify-between p-3.5 rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 hover:bg-slate-50 transition cursor-pointer">
                 <div className="flex items-center gap-3">
-                  <div className="h-9 w-9 rounded-xl bg-[var(--primary)]/10 text-[var(--primary)] flex items-center justify-center flex-shrink-0">
+                  <div className="h-9 w-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center flex-shrink-0">
                     <Sparkles className="w-4.5 h-4.5" />
                   </div>
                   <div>
                     <h4 className="text-xs font-extrabold text-slate-900">Link a program</h4>
-                    <p className="text-[10px] font-bold text-slate-400 mt-0.5">Earn points per visa.</p>
+                    <p className="text-[10px] font-bold text-muted-foreground mt-0.5">Earn points per visa.</p>
                   </div>
                 </div>
-                <ChevronRight className="w-4 h-4 text-slate-400" />
+                <ChevronRight className="w-4 h-4 text-muted-foreground" />
               </div>
             </div>
 
@@ -131,11 +131,11 @@ export default function ProfilePage() {
               
               {/* Animated Countdown Timer */}
               <div className="w-full flex items-center justify-between mb-4 px-1">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Verification QR</span>
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Verification QR</span>
                 
                 <div className="flex items-center gap-1.5 bg-white border border-slate-200/60 py-1 px-2.5 rounded-full shadow-sm">
                   {/* Circular Loader SVG */}
-                  <svg className="w-3.5 h-3.5 transform -rotate-90 text-[var(--primary)]" viewBox="0 0 28 28">
+                  <svg className="w-3.5 h-3.5 transform -rotate-90 text-primary" viewBox="0 0 28 28">
                     <circle cx="14" cy="14" r="12" fill="transparent" stroke="#f1f5f9" strokeWidth="2.5" />
                     <circle cx="14" cy="14" r="12" fill="transparent" stroke="currentColor" strokeWidth="2.5" 
                       strokeDasharray="75.4"
@@ -144,7 +144,7 @@ export default function ProfilePage() {
                     />
                   </svg>
                   <span className="text-[10px] font-extrabold text-slate-600">
-                    expires in <span className="text-[var(--primary)]">{timeLeft}</span>
+                    expires in <span className="text-primary">{timeLeft}</span>
                   </span>
                 </div>
               </div>
@@ -179,14 +179,14 @@ export default function ProfilePage() {
               <button
                 onClick={() => setActiveSubTab("purchased")}
                 className={`relative px-6 py-3.5 text-sm font-bold tracking-wide transition-colors cursor-pointer ${
-                  activeSubTab === "purchased" ? "text-[var(--primary)]" : "text-slate-400 hover:text-slate-600"
+                  activeSubTab === "purchased" ? "text-primary" : "text-muted-foreground hover:text-slate-600"
                 }`}
               >
                 Purchased Applications
                 {activeSubTab === "purchased" && (
                   <motion.div 
                     layoutId="profile-tab-underline"
-                    className="absolute bottom-0 inset-x-0 h-0.75 bg-[var(--primary)]"
+                    className="absolute bottom-0 inset-x-0 h-0.75 bg-primary"
                   />
                 )}
               </button>
@@ -194,14 +194,14 @@ export default function ProfilePage() {
               <button
                 onClick={() => setActiveSubTab("ongoing")}
                 className={`relative px-6 py-3.5 text-sm font-bold tracking-wide transition-colors cursor-pointer ${
-                  activeSubTab === "ongoing" ? "text-[var(--primary)]" : "text-slate-400 hover:text-slate-600"
+                  activeSubTab === "ongoing" ? "text-primary" : "text-muted-foreground hover:text-slate-600"
                 }`}
               >
                 Ongoing Applications
                 {activeSubTab === "ongoing" && (
                   <motion.div 
                     layoutId="profile-tab-underline"
-                    className="absolute bottom-0 inset-x-0 h-0.75 bg-[var(--primary)]"
+                    className="absolute bottom-0 inset-x-0 h-0.75 bg-primary"
                   />
                 )}
               </button>
@@ -209,7 +209,7 @@ export default function ProfilePage() {
 
             {/* Dynamic content (Empty states) */}
             <div className="bg-slate-50/45 border border-slate-200/50 rounded-3xl p-10 md:p-16 flex flex-col items-center justify-center text-center mt-6 min-h-[420px] shadow-sm">
-              <div className="h-16 w-16 rounded-2xl bg-white border border-slate-200/60 shadow-sm flex items-center justify-center text-slate-400 mb-6">
+              <div className="h-16 w-16 rounded-2xl bg-white border border-slate-200/60 shadow-sm flex items-center justify-center text-muted-foreground mb-6">
                 <FileText className="w-7 h-7 stroke-[1.5]" />
               </div>
               
@@ -217,14 +217,14 @@ export default function ProfilePage() {
                 No Applications Found
               </h3>
               
-              <p className="text-slate-500 text-sm max-w-sm mt-2 leading-relaxed">
+              <p className="text-muted-foreground text-sm max-w-sm mt-2 leading-relaxed">
                 You haven't started any visa applications yet. Begin your journey to explore the world with Keyrise.
               </p>
 
               {/* Start Journey CTA Button */}
               <button
                 onClick={() => router.push("/")}
-                className="mt-8 flex items-center justify-center gap-2 rounded-2xl bg-[var(--primary)] hover:bg-[var(--primary-hover)] px-8 py-3.5 text-center text-sm font-bold text-white shadow-md hover:shadow-lg transition duration-200 active:scale-98 cursor-pointer"
+                className="mt-8 flex items-center justify-center gap-2 rounded-2xl bg-primary hover:bg-primary-hover px-8 py-3.5 text-center text-sm font-bold text-white shadow-md hover:shadow-lg transition duration-200 active:scale-98 cursor-pointer"
               >
                 <span>Start Journey</span>
                 <ArrowRight className="w-4 h-4" />

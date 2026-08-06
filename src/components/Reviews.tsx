@@ -21,7 +21,7 @@ const ReviewCard = ({ name, avatarLetter, avatarBg, rating, time, text }: Review
           </div>
           <div>
             <h4 className="text-xs sm:text-sm font-bold text-slate-800 leading-tight">{name}</h4>
-            <p className="text-[9.5px] text-slate-400 mt-0.5">{time}</p>
+            <p className="text-[9.5px] text-muted-foreground mt-0.5">{time}</p>
           </div>
         </div>
         {/* Google G Logo SVG */}
@@ -43,13 +43,13 @@ const ReviewCard = ({ name, avatarLetter, avatarBg, rating, time, text }: Review
       </div>
 
       {/* Review text */}
-      <p className="text-[11.5px] leading-relaxed text-slate-500 font-medium line-clamp-3">
+      <p className="text-[11.5px] leading-relaxed text-muted-foreground font-medium line-clamp-3">
         {text}
       </p>
     </div>
 
     {/* Verification Footer */}
-    <div className="mt-3.5 pt-3 border-t border-slate-100 flex items-center gap-1.5 text-[8.5px] text-slate-400 font-bold uppercase tracking-wider">
+    <div className="mt-3.5 pt-3 border-t border-slate-100 flex items-center gap-1.5 text-[8.5px] text-muted-foreground font-bold uppercase tracking-wider">
       <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
       Google Review
     </div>
@@ -225,10 +225,10 @@ export function Reviews({ countryName = "Dubai" }: ReviewsProps) {
   return (
     <section id="reviews" className="w-full py-8 md:py-12 border-t border-slate-200/50 space-y-6 md:space-y-8 scroll-mt-28">
       <div>
-        <h2 className="text-2xl md:text-3xl font-bold text-[var(--foreground)] tracking-tight">
+        <h2 className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">
           What our customers say
         </h2>
-        <p className="text-xs md:text-sm text-[var(--muted)] mt-1.5">
+        <p className="text-xs md:text-sm text-muted-foreground mt-1.5">
           Real reviews from verified travelers on Google
         </p>
       </div>

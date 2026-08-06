@@ -79,14 +79,14 @@ export function VerticalNavbar() {
             className={`group relative pb-1 text-xs transition-all duration-300 select-none ${
               isActive 
                 ? "text-slate-900 font-bold" 
-                : "text-slate-500 hover:text-slate-800 font-medium"
+                : "text-muted-foreground hover:text-slate-800 font-medium"
             }`}
           >
             <span>{item.name}</span>
             {isActive ? (
               <motion.div
                 layoutId="activeVerticalSection"
-                className="absolute left-0 right-0 bottom-0 h-0.5 bg-[var(--primary)]"
+                className="absolute left-0 right-0 bottom-0 h-0.5 bg-primary"
                 transition={{ type: "spring", stiffness: 350, damping: 30 }}
               />
             ) : (

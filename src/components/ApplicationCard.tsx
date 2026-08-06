@@ -165,7 +165,7 @@ export function ApplicationCard({
                 type="button"
                 onClick={() => onSelectPlan(0)}
                 className={`relative z-10 flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2 px-3 text-xs font-bold transition duration-300 cursor-pointer ${
-                  selectedPlan === 0 ? "text-amber-600" : "text-slate-500 hover:text-slate-700"
+                  selectedPlan === 0 ? "text-primary-subtle-foreground" : "text-muted-foreground hover:text-slate-700"
                 }`}
               >
                 {selectedPlan === 0 && (
@@ -178,7 +178,7 @@ export function ApplicationCard({
                     transition={{ type: "spring", stiffness: 380, damping: 30 }}
                   />
                 )}
-                {selectedPlan === 0 && <ShieldCheck className="h-3.5 w-3.5 text-amber-600 flex-shrink-0 animate-fade-in" />}
+                {selectedPlan === 0 && <ShieldCheck className="h-3.5 w-3.5 text-primary-subtle-foreground flex-shrink-0 animate-fade-in" />}
                 <span>
                   {selectedPlan === 0 
                     ? `Guaranteed by ${getFormattedDate(2)}, 07:33 pm` 
@@ -192,7 +192,7 @@ export function ApplicationCard({
                 type="button"
                 onClick={() => onSelectPlan(1)}
                 className={`relative z-10 flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2 px-3 text-xs font-bold transition duration-300 cursor-pointer ${
-                  selectedPlan === 1 ? "text-emerald-600" : "text-slate-800 hover:text-slate-900"
+                  selectedPlan === 1 ? "text-success-subtle-foreground" : "text-slate-800 hover:text-slate-900"
                 }`}
               >
                 {selectedPlan === 1 && (
@@ -206,7 +206,7 @@ export function ApplicationCard({
                   />
                 )}
                 <Zap className={`h-3.5 w-3.5 flex-shrink-0 ${
-                  selectedPlan === 1 ? "text-emerald-600 fill-emerald-600" : "text-slate-900 fill-slate-900"
+                  selectedPlan === 1 ? "text-success-subtle-foreground fill-emerald-600" : "text-slate-900 fill-slate-900"
                 }`} />
                 <span>
                   {selectedPlan === 1 
@@ -224,37 +224,45 @@ export function ApplicationCard({
             <div className="grid grid-cols-2 divide-x divide-slate-100 rounded-2xl border border-slate-100 bg-slate-50/50 p-1">
               {/* Visa Type Selector */}
               <div className="relative group/field px-3 py-2 text-left">
-                <label className="block text-[10px] uppercase font-extrabold tracking-wider text-slate-400">
+                <label
+                  htmlFor="application-visa-type"
+                  className="block text-[10px] uppercase font-extrabold tracking-wider text-muted-foreground"
+                >
                   Visa Type
                 </label>
                 <div className="relative mt-0.5 flex items-center">
                   <select
+                    id="application-visa-type"
                     value={visaType}
                     onChange={(e) => setVisaType(e.target.value as "Tourism" | "Business")}
-                    className="w-full bg-transparent border-0 p-0 text-sm font-semibold text-slate-800 focus:ring-0 focus:outline-none cursor-pointer appearance-none pr-5 z-10"
+                    className="w-full min-h-6 bg-transparent border-0 p-0 text-sm font-semibold text-slate-800 focus:ring-0 focus:outline-none cursor-pointer appearance-none pr-5 z-10"
                   >
                     <option value="Tourism">Tourism</option>
                     <option value="Business">Business</option>
                   </select>
-                  <ChevronDown className="absolute right-0.5 h-3.5 w-3.5 text-slate-400 pointer-events-none transition-transform group-hover/field:translate-y-0.5" />
+                  <ChevronDown className="absolute right-0.5 h-3.5 w-3.5 text-muted-foreground pointer-events-none transition-transform group-hover/field:translate-y-0.5" />
                 </div>
               </div>
 
               {/* Processing Selector */}
               <div className="relative group/field px-3 py-2 text-left">
-                <label className="block text-[10px] uppercase font-extrabold tracking-wider text-slate-400">
+                <label
+                  htmlFor="application-processing"
+                  className="block text-[10px] uppercase font-extrabold tracking-wider text-muted-foreground"
+                >
                   Processing
                 </label>
                 <div className="relative mt-0.5 flex items-center">
                   <select
+                    id="application-processing"
                     value={selectedPlan === 0 ? "Standard" : "Express"}
                     onChange={(e) => onSelectPlan(e.target.value === "Standard" ? 0 : 1)}
-                    className="w-full bg-transparent border-0 p-0 text-sm font-semibold text-slate-800 focus:ring-0 focus:outline-none cursor-pointer appearance-none pr-5 z-10"
+                    className="w-full min-h-6 bg-transparent border-0 p-0 text-sm font-semibold text-slate-800 focus:ring-0 focus:outline-none cursor-pointer appearance-none pr-5 z-10"
                   >
                     <option value="Standard">Standard ({country.validity})</option>
                     <option value="Express">Express ({country.validity})</option>
                   </select>
-                  <ChevronDown className="absolute right-0.5 h-3.5 w-3.5 text-slate-400 pointer-events-none transition-transform group-hover/field:translate-y-0.5" />
+                  <ChevronDown className="absolute right-0.5 h-3.5 w-3.5 text-muted-foreground pointer-events-none transition-transform group-hover/field:translate-y-0.5" />
                 </div>
               </div>
             </div>
@@ -265,11 +273,11 @@ export function ApplicationCard({
             <div className="flex items-center justify-between rounded-2xl border border-slate-100 bg-white p-3 shadow-[0_4px_12px_rgba(0,0,0,0.01)]">
               <div className="flex items-center gap-2.5">
                 <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-50 border border-slate-100 text-slate-600">
-                  <CircleDot className="h-4 w-4 text-slate-500" />
+                  <CircleDot className="h-4 w-4 text-muted-foreground" />
                 </div>
                 <div>
                   <p className="text-xs font-bold text-slate-800">Travellers</p>
-                  <p className="text-[10px] text-slate-400">Add info later</p>
+                  <p className="text-[10px] text-muted-foreground">Add info later</p>
                 </div>
               </div>
               <div className="flex items-center gap-2.5 bg-slate-50 border border-slate-100/85 rounded-full p-0.5">
@@ -300,13 +308,13 @@ export function ApplicationCard({
 
           {/* Pricing Display */}
           <motion.div variants={itemVariants} className="text-center py-3 mb-4">
-            <span className="text-[9px] uppercase font-extrabold tracking-[0.25em] text-slate-400">
+            <span className="text-[9px] uppercase font-extrabold tracking-[0.25em] text-muted-foreground">
               To Be Paid Now
             </span>
             <div className="text-4xl font-extrabold tracking-tight text-slate-900 mt-1">
               ₹{totalAmount.toLocaleString("en-IN")}
             </div>
-            <div className="mt-1 flex items-center justify-center gap-1 text-[10px] font-semibold text-emerald-600">
+            <div className="mt-1 flex items-center justify-center gap-1 text-[10px] font-semibold text-success-subtle-foreground">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-ping flex-shrink-0" />
               <span>Price matches official consulate rates</span>
             </div>
@@ -341,12 +349,12 @@ export function ApplicationCard({
             {/* Pay Now */}
             <div className="flex items-center justify-between gap-3 text-xs font-semibold">
               <div className="flex items-center gap-2">
-                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-500/10 text-amber-700">
+                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-500/10 text-primary-subtle-foreground">
                   <Landmark className="h-3.5 w-3.5" />
                 </div>
                 <div>
                   <p className="text-slate-800">Pay Now</p>
-                  <p className="text-[9px] text-slate-400 font-normal">Government Fees</p>
+                  <p className="text-[9px] text-muted-foreground font-normal">Government Fees</p>
                 </div>
               </div>
               <p className="text-slate-800 text-sm">₹{payNowAmount.toLocaleString("en-IN")}</p>
@@ -356,11 +364,11 @@ export function ApplicationCard({
             <div className="flex items-center justify-between gap-3 text-xs font-semibold">
               <div className="flex items-center gap-2">
                 <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 text-slate-600">
-                  <Ticket className="h-3.5 w-3.5 text-slate-500" />
+                  <Ticket className="h-3.5 w-3.5 text-muted-foreground" />
                 </div>
                 <div>
                   <p className="text-slate-800">Pay on approval</p>
-                  <p className="text-[9px] text-slate-400 font-normal">Keyrise service fee</p>
+                  <p className="text-[9px] text-muted-foreground font-normal">Keyrise service fee</p>
                 </div>
               </div>
               <p className="text-slate-800 text-sm">₹{payOnApprovalAmount.toLocaleString("en-IN")}</p>

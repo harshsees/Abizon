@@ -2,11 +2,17 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AnimatePresence, motion } from "framer-motion";
-import { LoaderCircle } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
+
+import { Badge } from "@/components/ui/badge";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { Field, Input, inputVariants } from "@/components/ui/field";
+import { TRANSITION } from "@/lib/motion";
+import { cn } from "@/lib/utils";
+
 import { DocumentUploader, type UploadState } from "./DocumentUploader";
 import { TrackingTimeline } from "./TrackingTimeline";
 import { VisaTypeSelector } from "./VisaTypeSelector";
@@ -111,6 +117,12 @@ const checklistTemplate = [
 
 export function MultiStepApplicationForm({ className }: { className?: string }) {
   const [step, setStep] = useState(1);
+  /**
+   * Which way the wizard is travelling, so a step entering after "Back"
+   * slides in from the opposite side it left on. Without this every step
+   * animated identically and the flow lost its sense of place.
+   */
+  const [direction, setDirection] = useState<1 | -1>(1);
   const [loading, setLoading] = useState(false);
   const [applicationId, setApplicationId] = useState("");
   const [passportFile, setPassportFile] = useState<string>();
@@ -171,10 +183,14 @@ export function MultiStepApplicationForm({ className }: { className?: string }) 
       const valid = await trigger(fields);
       if (!valid) return;
     }
+    setDirection(1);
     setStep((prev) => Math.min(prev + 1, 7));
   };
 
-  const prevStep = () => setStep((prev) => Math.max(prev - 1, 1));
+  const prevStep = () => {
+    setDirection(-1);
+    setStep((prev) => Math.max(prev - 1, 1));
+  };
 
   const onPassportSelect = (file: File | null) => {
     setPassportError(undefined);
@@ -210,44 +226,54 @@ export function MultiStepApplicationForm({ className }: { className?: string }) 
 
   return (
     <section id="application-flow" className={className || "mx-auto w-full max-w-7xl px-4 py-14 md:px-6"}>
-      <div className="rounded-3xl border border-[var(--border)] bg-white p-4 shadow-sm md:p-8">
-        <div className="mb-7 flex flex-wrap gap-2">
-          {[
-            "Visa Type",
-            "Travel Details",
-            "Passport Upload",
-            "Applicant Details",
-            "Document Checklist",
-            "Review & Payment",
-            "Confirmation",
-          ].map((label, index) => {
+      <div className="rounded-2xl border border-border bg-surface p-4 shadow-e2 md:p-8">
+        <ol
+          aria-label={`Application progress — step ${step} of ${STEP_LABELS.length}`}
+          className="mb-7 flex flex-wrap gap-2"
+        >
+          {STEP_LABELS.map((label, index) => {
             const current = index + 1;
+            const reached = step >= current;
             return (
-              <div
+              <li
                 key={label}
-                className={`rounded-full px-3 py-2 text-xs font-semibold ${
-                  step >= current
-                  ? "bg-amber-100 text-[var(--primary)]"
-                    : "bg-[#f6f7fb] text-[var(--muted)]"
-                }`}
+                aria-current={step === current ? "step" : undefined}
+                className={cn(
+                  "rounded-full px-3 py-2 text-xs font-semibold",
+                  reached
+                    ? "bg-primary-subtle text-primary-subtle-foreground"
+                    : "bg-surface-sunken text-muted-foreground",
+                )}
               >
-                {current}. {label}
-              </div>
+                <span className="tabular-nums">{current}.</span> {label}
+                {step === current ? <span className="sr-only"> (current step)</span> : null}
+              </li>
             );
           })}
-        </div>
+        </ol>
 
-        <AnimatePresence mode="wait">
+        {/* `mode="wait"` lets the outgoing step finish before the next arrives,
+            so the panel never shows two steps stacked mid-transition. */}
+        <AnimatePresence mode="wait" custom={direction}>
           <motion.div
             key={step}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -12 }}
-            transition={{ duration: 0.2 }}
+            custom={direction}
+            initial="enter"
+            animate="settled"
+            exit="leave"
+            variants={{
+              enter: (dir: 1 | -1) => ({ opacity: 0, x: dir * 24 }),
+              settled: { opacity: 1, x: 0, transition: TRANSITION.enter },
+              leave: (dir: 1 | -1) => ({
+                opacity: 0,
+                x: dir * -24,
+                transition: TRANSITION.exit,
+              }),
+            }}
           >
             {step === 1 && (
               <div>
-                <h3 className="mb-4 text-2xl font-semibold text-[var(--foreground)]">
+                <h3 className="mb-4 text-2xl font-semibold text-foreground">
                   Step 1: Select visa type
                 </h3>
                 <VisaTypeSelector
@@ -261,38 +287,61 @@ export function MultiStepApplicationForm({ className }: { className?: string }) 
 
             {step === 2 && (
               <div>
-                <h3 className="mb-4 text-2xl font-semibold text-[var(--foreground)]">
+                <h3 className="mb-4 text-2xl font-semibold text-foreground">
                   Step 2: Travel details
                 </h3>
-                <div className="grid gap-3 md:grid-cols-2">
-                  <Field label="Travel date" error={errors.travelDate?.message}>
-                    <input type="date" {...register("travelDate")} className={inputCls} />
+                <div className="grid gap-4 md:grid-cols-2">
+                  <Field label="Travel date" required error={errors.travelDate?.message}>
+                    {(field) => <Input {...field} type="date" {...register("travelDate")} />}
                   </Field>
-                  <Field label="Return date" error={errors.returnDate?.message}>
-                    <input type="date" {...register("returnDate")} className={inputCls} />
+                  <Field label="Return date" required error={errors.returnDate?.message}>
+                    {(field) => <Input {...field} type="date" {...register("returnDate")} />}
                   </Field>
-                  <Field label="Number of travelers" error={errors.travelers?.message}>
-                    <input
-                      type="number"
-                      min={1}
-                      max={10}
-                      {...register("travelers", { valueAsNumber: true })}
-                      className={inputCls}
-                    />
+                  <Field
+                    label="Number of travelers"
+                    required
+                    helper="Up to 10 travelers per application."
+                    error={errors.travelers?.message}
+                  >
+                    {(field) => (
+                      <Input
+                        {...field}
+                        type="number"
+                        min={1}
+                        max={10}
+                        {...register("travelers", { valueAsNumber: true })}
+                      />
+                    )}
                   </Field>
-                  <Field label="Purpose of travel" error={errors.purpose?.message}>
-                    <input
-                      type="text"
-                      placeholder="Tourism / Family visit / Business"
-                      {...register("purpose")}
-                      className={inputCls}
-                    />
+                  <Field label="Purpose of travel" required error={errors.purpose?.message}>
+                    {(field) => (
+                      <Input
+                        {...field}
+                        type="text"
+                        placeholder="Tourism / Family visit / Business"
+                        {...register("purpose")}
+                      />
+                    )}
                   </Field>
-                  <Field label="Contact email" error={errors.contactEmail?.message}>
-                    <input type="email" {...register("contactEmail")} className={inputCls} />
+                  <Field label="Contact email" required error={errors.contactEmail?.message}>
+                    {(field) => (
+                      <Input
+                        {...field}
+                        type="email"
+                        autoComplete="email"
+                        {...register("contactEmail")}
+                      />
+                    )}
                   </Field>
-                  <Field label="Phone number" error={errors.contactPhone?.message}>
-                    <input type="tel" {...register("contactPhone")} className={inputCls} />
+                  <Field label="Phone number" required error={errors.contactPhone?.message}>
+                    {(field) => (
+                      <Input
+                        {...field}
+                        type="tel"
+                        autoComplete="tel"
+                        {...register("contactPhone")}
+                      />
+                    )}
                   </Field>
                 </div>
               </div>
@@ -300,7 +349,7 @@ export function MultiStepApplicationForm({ className }: { className?: string }) 
 
             {step === 3 && (
               <div>
-                <h3 className="mb-4 text-2xl font-semibold text-[var(--foreground)]">
+                <h3 className="mb-4 text-2xl font-semibold text-foreground">
                   Step 3: Passport upload
                 </h3>
                 <DocumentUploader
@@ -309,17 +358,17 @@ export function MultiStepApplicationForm({ className }: { className?: string }) 
                   error={passportError}
                   onFileSelect={onPassportSelect}
                 />
-                <div className="mt-3 flex gap-2">
+                <div className="mt-3 flex flex-wrap gap-2">
                   {(["uploaded", "reviewing", "needs replacement", "approved"] as UploadState[]).map(
                     (state) => (
-                      <button
+                      <Button
                         key={state}
-                        type="button"
+                        variant="secondary"
+                        size="xs"
                         onClick={() => setPassportStatus(state)}
-                        className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-semibold text-[var(--muted)]"
                       >
                         Mark {state}
-                      </button>
+                      </Button>
                     ),
                   )}
                 </div>
@@ -328,43 +377,88 @@ export function MultiStepApplicationForm({ className }: { className?: string }) 
 
             {step === 4 && (
               <div>
-                <h3 className="mb-4 text-2xl font-semibold text-[var(--foreground)]">
+                <h3 className="mb-4 text-2xl font-semibold text-foreground">
                   Step 4: Applicant details
                 </h3>
-                <p className="mb-4 text-sm text-[var(--muted)]">
+                <p className="mb-4 text-sm text-muted-foreground">
                   Passport upload can auto-fill some details. You can edit them before submission.
                 </p>
-                <div className="grid gap-3 md:grid-cols-2">
-                  <Field label="Full name" error={errors.fullName?.message}>
-                    <input type="text" {...register("fullName")} className={inputCls} />
+                <div className="grid gap-4 md:grid-cols-2">
+                  <Field label="Full name" required error={errors.fullName?.message}>
+                    {(field) => (
+                      <Input
+                        {...field}
+                        type="text"
+                        autoComplete="name"
+                        {...register("fullName")}
+                      />
+                    )}
                   </Field>
-                  <Field label="Date of birth" error={errors.dateOfBirth?.message}>
-                    <input type="date" {...register("dateOfBirth")} className={inputCls} />
+                  <Field label="Date of birth" required error={errors.dateOfBirth?.message}>
+                    {(field) => <Input {...field} type="date" {...register("dateOfBirth")} />}
                   </Field>
-                  <Field label="Passport number" error={errors.passportNumber?.message}>
-                    <input type="text" {...register("passportNumber")} className={inputCls} />
+                  <Field
+                    label="Passport number"
+                    required
+                    error={errors.passportNumber?.message}
+                  >
+                    {(field) => (
+                      <Input
+                        {...field}
+                        type="text"
+                        autoCapitalize="characters"
+                        {...register("passportNumber")}
+                      />
+                    )}
                   </Field>
-                  <Field label="Passport expiry date" error={errors.passportExpiry?.message}>
-                    <input type="date" {...register("passportExpiry")} className={inputCls} />
+                  <Field
+                    label="Passport expiry date"
+                    required
+                    error={errors.passportExpiry?.message}
+                  >
+                    {(field) => <Input {...field} type="date" {...register("passportExpiry")} />}
                   </Field>
-                  <Field label="Nationality" error={errors.nationality?.message}>
-                    <input type="text" {...register("nationality")} className={inputCls} />
+                  <Field label="Nationality" required error={errors.nationality?.message}>
+                    {(field) => <Input {...field} type="text" {...register("nationality")} />}
                   </Field>
-                  <Field label="Gender" error={errors.gender?.message}>
-                    <select {...register("gender")} className={inputCls} defaultValue="">
-                      <option value="" disabled>
-                        Select gender
-                      </option>
-                      <option value="Female">Female</option>
-                      <option value="Male">Male</option>
-                      <option value="Other">Other</option>
-                    </select>
+                  <Field label="Gender" required error={errors.gender?.message}>
+                    {({ id, invalid, "aria-describedby": describedBy }) => (
+                      <select
+                        id={id}
+                        aria-describedby={describedBy}
+                        aria-invalid={invalid || undefined}
+                        defaultValue=""
+                        {...register("gender")}
+                        className={inputVariants({ invalid })}
+                      >
+                        <option value="" disabled>
+                          Select gender
+                        </option>
+                        <option value="Female">Female</option>
+                        <option value="Male">Male</option>
+                        <option value="Other">Other</option>
+                      </select>
+                    )}
                   </Field>
-                  <Field label="Email" error={errors.applicantEmail?.message}>
-                    <input type="email" {...register("applicantEmail")} className={inputCls} />
+                  <Field label="Email" required error={errors.applicantEmail?.message}>
+                    {(field) => (
+                      <Input
+                        {...field}
+                        type="email"
+                        autoComplete="email"
+                        {...register("applicantEmail")}
+                      />
+                    )}
                   </Field>
-                  <Field label="Phone number" error={errors.applicantPhone?.message}>
-                    <input type="tel" {...register("applicantPhone")} className={inputCls} />
+                  <Field label="Phone number" required error={errors.applicantPhone?.message}>
+                    {(field) => (
+                      <Input
+                        {...field}
+                        type="tel"
+                        autoComplete="tel"
+                        {...register("applicantPhone")}
+                      />
+                    )}
                   </Field>
                 </div>
               </div>
@@ -372,40 +466,34 @@ export function MultiStepApplicationForm({ className }: { className?: string }) 
 
             {step === 5 && (
               <div>
-                <h3 className="mb-4 text-2xl font-semibold text-[var(--foreground)]">
+                <h3 className="mb-4 text-2xl font-semibold text-foreground">
                   Step 5: Document checklist
                 </h3>
                 <div className="space-y-3">
                   {checklistTemplate.map((doc) => {
                     const item = checklistStatus[doc.key];
                     return (
-                      <div
-                        key={doc.key}
-                        className="rounded-xl border border-[var(--border)] p-4"
-                      >
+                      <div key={doc.key} className="rounded-md border border-border p-4">
                         <div className="flex flex-wrap items-center justify-between gap-2">
                           <div>
-                            <h4 className="text-sm font-semibold text-[var(--foreground)]">
+                            <h4 className="text-sm font-semibold text-foreground">
                               {doc.name}
                             </h4>
-                            <p className="text-xs text-[var(--muted)]">{doc.help}</p>
+                            <p className="text-xs text-muted-foreground">{doc.help}</p>
                           </div>
-                          <span
-                            className={`rounded-full px-2 py-1 text-xs font-semibold ${
-                              doc.required
-                                ? "bg-red-50 text-red-700"
-                                : "bg-slate-100 text-slate-700"
-                            }`}
-                          >
+                          <Badge variant={doc.required ? "destructive" : "neutral"}>
                             {doc.required ? "Required" : "Optional"}
-                          </span>
+                          </Badge>
                         </div>
                         <div className="mt-3 flex flex-wrap items-center gap-2">
-                          <label className="cursor-pointer rounded-lg bg-[var(--primary)] px-3 py-2 text-xs font-semibold text-white">
+                          {/* A label wrapping a hidden input is the accessible way to
+                              style a file picker — it keeps the native control. */}
+                          <label className={cn(buttonVariants({ size: "sm" }), "cursor-pointer")}>
                             Upload
+                            <span className="sr-only"> {doc.name}</span>
                             <input
                               type="file"
-                              className="hidden"
+                              className="sr-only"
                               onChange={(event) => {
                                 const file = event.target.files?.[0];
                                 if (!file) return;
@@ -416,17 +504,14 @@ export function MultiStepApplicationForm({ className }: { className?: string }) 
                               }}
                             />
                           </label>
-                          <span
-                            className={`rounded-lg px-2 py-1 text-xs font-semibold ${
-                              item?.status === "uploaded"
-                                ? "bg-green-50 text-green-700"
-                                : "bg-amber-50 text-amber-700"
-                            }`}
+                          <Badge
+                            dot
+                            variant={item?.status === "uploaded" ? "success" : "warning"}
                           >
                             {item?.status === "uploaded" ? "Uploaded" : "Pending"}
-                          </span>
+                          </Badge>
                           {item?.file && (
-                            <span className="text-xs text-[var(--muted)]">{item.file}</span>
+                            <span className="text-xs text-muted-foreground">{item.file}</span>
                           )}
                         </div>
                       </div>
@@ -438,86 +523,85 @@ export function MultiStepApplicationForm({ className }: { className?: string }) 
 
             {step === 6 && (
               <div>
-                <h3 className="mb-4 text-2xl font-semibold text-[var(--foreground)]">
+                <h3 className="mb-4 text-2xl font-semibold text-foreground">
                   Step 6: Review and payment
                 </h3>
                 <div className="grid gap-4 md:grid-cols-2">
-                  <div className="rounded-xl border border-[var(--border)] bg-amber-50 p-4">
-                    <p className="text-sm text-[var(--muted)]">Selected visa type</p>
-                    <p className="text-base font-semibold text-[var(--foreground)]">
+                  <div className="rounded-md border border-primary-border bg-primary-subtle p-4">
+                    <p className="text-sm text-muted-foreground">Selected visa type</p>
+                    <p className="text-base font-semibold text-foreground">
                       {selectedPlan.title}
                     </p>
-                    <p className="mt-2 text-sm text-[var(--muted)]">
+                    <p className="mt-2 text-sm text-muted-foreground">
                       Processing time: {selectedPlan.processing}
                     </p>
                   </div>
-                  <div className="rounded-xl border border-[var(--border)] p-4">
-                    <ul className="space-y-2 text-sm">
+                  <div className="rounded-md border border-border p-4">
+                    <ul className="space-y-2 text-sm tabular-nums">
                       <li className="flex justify-between">
-                        <span className="text-[var(--muted)]">Government fee</span>
+                        <span className="text-muted-foreground">Government fee</span>
                         <span>₹5,000</span>
                       </li>
                       <li className="flex justify-between">
-                        <span className="text-[var(--muted)]">Service fee</span>
+                        <span className="text-muted-foreground">Service fee</span>
                         <span>₹2,100</span>
                       </li>
                       <li className="flex justify-between">
-                        <span className="text-[var(--muted)]">Taxes</span>
+                        <span className="text-muted-foreground">Taxes</span>
                         <span>₹399</span>
                       </li>
-                      <li className="flex justify-between border-t border-[var(--border)] pt-2 font-semibold text-[var(--foreground)]">
+                      <li className="flex justify-between border-t border-border pt-2 font-semibold text-foreground">
                         <span>Total amount</span>
                         <span>₹7,499</span>
                       </li>
                     </ul>
-                    <p className="mt-3 rounded-lg bg-green-50 p-2 text-xs text-green-700">
+                    <p className="mt-3 rounded-sm bg-success-subtle p-2 text-2xs text-success-subtle-foreground">
                       Refund support available under on-time delivery guarantee terms.
                     </p>
                   </div>
                 </div>
-                <button
-                  type="button"
-                  disabled={loading}
+                <Button
+                  block
+                  size="xl"
+                  className="mt-6"
+                  loading={loading}
                   onClick={handleSubmit(submit)}
-                  className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--primary)] px-4 py-3 text-sm font-semibold text-white hover:bg-[var(--primary-hover)] disabled:opacity-70"
                 >
-                  {loading ? <LoaderCircle className="h-4 w-4 animate-spin" /> : null}
                   {loading ? "Processing payment..." : "Pay Securely"}
-                </button>
+                </Button>
               </div>
             )}
 
             {step === 7 && (
               <div>
-                <h3 className="mb-4 text-2xl font-semibold text-[var(--foreground)]">
+                <h3 className="mb-4 text-2xl font-semibold text-foreground">
                   Step 7: Confirmation and tracking
                 </h3>
-                <div className="mb-4 rounded-xl border border-green-200 bg-green-50 p-4">
-                  <p className="text-sm text-green-700">Application submitted successfully.</p>
-                  <p className="mt-1 text-lg font-semibold text-green-800">
-                    Application ID: {applicationId}
+                {/* role="status" so the ID is announced when the step swaps in. */}
+                <div
+                  role="status"
+                  className="mb-4 rounded-md border border-transparent bg-success-subtle p-4"
+                >
+                  <p className="text-sm text-success-subtle-foreground">
+                    Application submitted successfully.
+                  </p>
+                  <p className="mt-1 text-lg font-semibold text-success-subtle-foreground">
+                    Application ID: <span className="tabular-nums">{applicationId}</span>
                   </p>
                 </div>
                 <TrackingTimeline activeIndex={1} />
                 <div className="mt-4 flex flex-wrap gap-3">
-                  <a
-                    href="#"
-                    className="rounded-xl border border-[var(--border)] px-4 py-2 text-sm font-semibold text-[var(--foreground)]"
-                  >
-                    Download receipt
-                  </a>
-                  <a
-                    href="mailto:[support@email.com]"
-                    className="rounded-xl border border-[var(--border)] px-4 py-2 text-sm font-semibold text-[var(--foreground)]"
-                  >
-                    Contact support
-                  </a>
-                  <Link
-                    href={`/track/${applicationId || "UAE-123456"}`}
-                    className="rounded-xl bg-[var(--primary)] px-4 py-2 text-sm font-semibold text-white"
-                  >
-                    Open tracking page
-                  </Link>
+                  <Button asChild variant="secondary">
+                    <a href="#">Download receipt</a>
+                  </Button>
+                  <Button asChild variant="secondary">
+                    <a href="mailto:[support@email.com]">Contact support</a>
+                  </Button>
+                  <Button asChild>
+                    <Link href={`/track/${applicationId || "UAE-123456"}`}>
+                      Open tracking page
+                    </Link>
+                  </Button>
                 </div>
               </div>
             )}
@@ -526,22 +610,13 @@ export function MultiStepApplicationForm({ className }: { className?: string }) 
 
         {step < 7 && (
           <div className="mt-7 flex items-center justify-between">
-            <button
-              type="button"
-              onClick={prevStep}
-              disabled={step === 1}
-              className="rounded-xl border border-[var(--border)] px-4 py-2 text-sm font-semibold text-[var(--foreground)] disabled:opacity-40"
-            >
+            <Button variant="secondary" onClick={prevStep} disabled={step === 1}>
               Back
-            </button>
+            </Button>
             {step < 6 && (
-              <button
-                type="button"
-                onClick={nextStep}
-                className="rounded-xl bg-[var(--primary)] px-5 py-2 text-sm font-semibold text-white hover:bg-[var(--primary-hover)]"
-              >
+              <Button size="lg" onClick={nextStep}>
                 Continue
-              </button>
+              </Button>
             )}
           </div>
         )}
@@ -550,21 +625,12 @@ export function MultiStepApplicationForm({ className }: { className?: string }) 
   );
 }
 
-const inputCls =
-  "w-full rounded-xl border border-[var(--border)] px-3 py-2 text-sm text-[var(--foreground)]";
-
-type FieldProps = {
-  label: string;
-  error?: string;
-  children: React.ReactNode;
-};
-
-function Field({ label, error, children }: FieldProps) {
-  return (
-    <label className="space-y-1 text-sm">
-      <span className="font-medium text-[var(--foreground)]">{label}</span>
-      {children}
-      {error ? <span className="block text-xs text-[var(--error)]">{error}</span> : null}
-    </label>
-  );
-}
+const STEP_LABELS = [
+  "Visa Type",
+  "Travel Details",
+  "Passport Upload",
+  "Applicant Details",
+  "Document Checklist",
+  "Review & Payment",
+  "Confirmation",
+] as const;

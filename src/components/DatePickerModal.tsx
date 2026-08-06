@@ -1,240 +1,259 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { X, ChevronUp, ChevronDown } from "lucide-react";
+import React, { useMemo, useRef, useState } from "react";
+
+import { Button } from "@/components/ui/button";
+import { Modal } from "@/components/ui/modal";
+import { cn } from "@/lib/utils";
+
+/** Monday-indexed weekday headers, matching the grid padding below. */
+const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const;
+
+const TABS = [
+  { id: "fixed", label: "Fixed Dates" },
+  { id: "flexible", label: "Flexible" },
+] as const;
+
+type TabId = (typeof TABS)[number]["id"];
+
+const monthLabel = new Intl.DateTimeFormat("en-GB", {
+  month: "long",
+  year: "numeric",
+});
+const shortDate = new Intl.DateTimeFormat("en-GB", {
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+});
+const fullDate = new Intl.DateTimeFormat("en-GB", {
+  weekday: "long",
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+});
+
+/**
+ * Days of `month`, padded at the front so the first column is always Monday.
+ * `null` marks a leading blank cell.
+ */
+function getDaysInMonth(year: number, month: number): Array<Date | null> {
+  const date = new Date(year, month, 1);
+  const days: Array<Date | null> = [];
+
+  // getDay() is Sunday-indexed; shift so Monday is 0 and Sunday is 6.
+  const firstDay = (date.getDay() + 6) % 7;
+  for (let i = 0; i < firstDay; i++) days.push(null);
+
+  while (date.getMonth() === month) {
+    days.push(new Date(date));
+    date.setDate(date.getDate() + 1);
+  }
+
+  return days;
+}
 
 interface DatePickerModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSelectDate: (date: Date) => void;
+  /**
+   * Last unselectable date — everything on or before it is struck through.
+   * The two months on offer are derived from it. Defaults to the value this
+   * component previously hardcoded; pass a real date to make it dynamic.
+   */
+  minDate?: Date;
 }
 
-export function DatePickerModal({ isOpen, onClose, onSelectDate }: DatePickerModalProps) {
-  const [activeTab, setActiveTab] = useState<"fixed" | "flexible">("fixed");
+export function DatePickerModal({
+  isOpen,
+  onClose,
+  onSelectDate,
+  minDate,
+}: DatePickerModalProps) {
+  const [activeTab, setActiveTab] = useState<TabId>("fixed");
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  
-  const calendarRef = useRef<HTMLDivElement>(null);
 
-  // August and September 2026 calendar data generation
-  const getDaysInMonth = (year: number, month: number) => {
-    // month is 0-indexed (7 for Aug, 8 for Sep)
-    const date = new Date(year, month, 1);
-    const days = [];
-    
-    // Get the first day of the week (0 = Sun, 1 = Mon, ... 6 = Sat)
-    // We want Monday-indexed (0 = Mon, ... 6 = Sun)
-    let firstDay = date.getDay() - 1;
-    if (firstDay === -1) firstDay = 6; // Sunday becomes 6
-    
-    // Pad initial days
-    for (let i = 0; i < firstDay; i++) {
-      days.push(null);
-    }
-    
-    while (date.getMonth() === month) {
-      days.push(new Date(date));
-      date.setDate(date.getDate() + 1);
-    }
-    
-    return days;
-  };
+  const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
 
-  const augustDays = getDaysInMonth(2026, 7); // August 2026
-  const septemberDays = getDaysInMonth(2026, 8); // September 2026
+  // August 19, 2026 — the previous hardcoded cutoff.
+  const threshold = useMemo(() => minDate ?? new Date(2026, 7, 19), [minDate]);
 
-  const minSelectableDate = new Date(2026, 7, 19); // August 19, 2026 (disabled on/before this)
+  // The cutoff month and the one after it.
+  const months = useMemo(() => {
+    const year = threshold.getFullYear();
+    const month = threshold.getMonth();
+    return [
+      { key: `${year}-${month}`, date: new Date(year, month, 1), days: getDaysInMonth(year, month) },
+      {
+        key: `${year}-${month + 1}`,
+        date: new Date(year, month + 1, 1),
+        days: getDaysInMonth(year, month + 1),
+      },
+    ];
+  }, [threshold]);
 
-  const isDateDisabled = (day: Date | null) => {
-    if (!day) return true;
-    return day <= minSelectableDate;
-  };
-
-  const handleDateClick = (day: Date) => {
-    if (isDateDisabled(day)) return;
-    setSelectedDate(day);
-  };
+  const isDateDisabled = (day: Date) => day <= threshold;
 
   const handleProceed = () => {
-    if (selectedDate) {
-      onSelectDate(selectedDate);
-    }
+    if (selectedDate) onSelectDate(selectedDate);
   };
 
-  const formatDateString = (date: Date) => {
-    const d = date.getDate();
-    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    const m = months[date.getMonth()];
-    const y = date.getFullYear();
-    return `${d} ${m} ${y}`;
+  // Arrow keys move between tabs; the tablist itself is a single tab stop.
+  const handleTabKeyDown = (event: React.KeyboardEvent, index: number) => {
+    const delta = event.key === "ArrowRight" ? 1 : event.key === "ArrowLeft" ? -1 : 0;
+    if (delta === 0) return;
+    event.preventDefault();
+    const next = (index + delta + TABS.length) % TABS.length;
+    setActiveTab(TABS[next].id);
+    tabRefs.current[next]?.focus();
   };
 
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          {/* Backdrop */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={onClose}
-            className="absolute inset-0 bg-slate-900/35"
-          />
-
-          {/* Modal content */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 15 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 15 }}
-            transition={{ type: "spring", duration: 0.4 }}
-            className="relative z-10 w-full max-w-sm rounded-[28px] bg-white p-6 shadow-2xl border border-slate-100 flex flex-col max-h-[90vh]"
-          >
-            {/* Close Button */}
+    <Modal
+      open={isOpen}
+      onClose={onClose}
+      size="sm"
+      title="Select your departure date"
+      closeLabel="Close date picker"
+      footer={
+        <Button block size="lg" disabled={!selectedDate} onClick={handleProceed}>
+          {selectedDate
+            ? `Proceed to Application (${shortDate.format(selectedDate)})`
+            : "Proceed to Application"}
+        </Button>
+      }
+    >
+      <div role="tablist" aria-label="Date selection mode" className="mx-auto mb-5 flex w-fit rounded-full bg-surface-sunken p-1">
+        {TABS.map((tab, index) => {
+          const active = activeTab === tab.id;
+          return (
             <button
-              onClick={onClose}
-              className="absolute right-4 top-4 rounded-full p-1 text-slate-400 hover:bg-slate-50 hover:text-slate-600 transition z-20"
-              aria-label="Close modal"
+              key={tab.id}
+              ref={(node) => {
+                tabRefs.current[index] = node;
+              }}
+              type="button"
+              role="tab"
+              id={`datepicker-tab-${tab.id}`}
+              aria-selected={active}
+              aria-controls={`datepicker-panel-${tab.id}`}
+              tabIndex={active ? 0 : -1}
+              onClick={() => setActiveTab(tab.id)}
+              onKeyDown={(event) => handleTabKeyDown(event, index)}
+              className={cn(
+                "cursor-pointer rounded-full px-5 py-1.5 text-xs font-semibold transition-colors",
+                active
+                  ? "bg-surface text-primary shadow-e1"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
             >
-              <X className="h-5 w-5" />
+              {tab.label}
             </button>
+          );
+        })}
+      </div>
 
-            <h3 className="text-xl font-bold text-slate-900 text-center mt-1 mb-4">
-              Select your departure date
-            </h3>
+      {activeTab === "fixed" ? (
+        <div
+          role="tabpanel"
+          id="datepicker-panel-fixed"
+          aria-labelledby="datepicker-tab-fixed"
+          tabIndex={0}
+          className="flex min-h-0 flex-col"
+        >
+          <div
+            aria-hidden="true"
+            className="mb-2 grid grid-cols-7 text-center text-2xs font-semibold text-muted-foreground"
+          >
+            {WEEKDAYS.map((day) => (
+              <span key={day}>{day}</span>
+            ))}
+          </div>
 
-            {/* Tabs */}
-            <div className="mx-auto flex w-fit rounded-full bg-slate-100 p-1 mb-5">
-              <button
-                type="button"
-                onClick={() => setActiveTab("fixed")}
-                className={`rounded-full px-5 py-1.5 text-xs font-semibold transition ${
-                  activeTab === "fixed"
-                    ? "bg-white text-amber-600 shadow-sm"
-                    : "text-slate-500 hover:text-slate-800"
-                }`}
-              >
-                Fixed Dates
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab("flexible")}
-                className={`rounded-full px-5 py-1.5 text-xs font-semibold transition ${
-                  activeTab === "flexible"
-                    ? "bg-white text-amber-600 shadow-sm"
-                    : "text-slate-500 hover:text-slate-800"
-                }`}
-              >
-                Flexible
-              </button>
-            </div>
-
-            {activeTab === "fixed" ? (
-              <div className="flex-1 flex flex-col min-h-0">
-                {/* Day Names Header */}
-                <div className="grid grid-cols-7 text-center text-xs font-semibold text-slate-500 mb-2">
-                  <span>Mon</span>
-                  <span>Tue</span>
-                  <span>Wed</span>
-                  <span>Thu</span>
-                  <span>Fri</span>
-                  <span>Sat</span>
-                  <span>Sun</span>
-                </div>
-
-                {/* Calendar Scroll Area */}
-                <div 
-                  ref={calendarRef}
-                  className="flex-1 overflow-y-auto pr-1 max-h-[280px] scrollbar-thin scrollbar-thumb-slate-300"
+          <div
+            data-lenis-prevent
+            className="max-h-[280px] flex-1 overflow-y-auto overscroll-contain pr-1"
+          >
+            {months.map(({ key, date, days }, monthIndex) => (
+              <section key={key} aria-label={monthLabel.format(date)} className="mb-4">
+                <h3
+                  className={cn(
+                    "text-center text-2xs font-bold uppercase tracking-wider text-foreground",
+                    monthIndex === 0 ? "mb-3" : "my-4",
+                  )}
                 >
-                  {/* August 2026 */}
-                  <div className="mb-4">
-                    <div className="grid grid-cols-7 gap-y-1.5 text-center text-sm font-medium">
-                      {augustDays.map((day, idx) => {
-                        if (!day) return <div key={`empty-aug-${idx}`} />;
-                        const disabled = isDateDisabled(day);
-                        const isSelected = selectedDate?.toDateString() === day.toDateString();
-                        
-                        return (
-                          <button
-                            key={day.toISOString()}
-                            type="button"
-                            onClick={() => handleDateClick(day)}
-                            disabled={disabled}
-                            className={`relative h-9 w-9 mx-auto flex items-center justify-center rounded-full text-xs font-semibold transition cursor-pointer ${
-                              disabled
-                                ? "text-slate-300 line-through cursor-not-allowed"
-                                : isSelected
-                                ? "bg-amber-500 text-white font-bold shadow-md"
-                                : "text-slate-800 hover:bg-slate-50 active:scale-95"
-                            }`}
-                          >
-                            {day.getDate()}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
+                  {monthLabel.format(date)}
+                </h3>
 
-                  {/* September 2026 Heading */}
-                  <div className="text-center text-xs font-bold text-slate-800 my-4 uppercase tracking-wider">
-                    September 2026
-                  </div>
-
-                  {/* September 2026 Days */}
-                  <div>
-                    <div className="grid grid-cols-7 gap-y-1.5 text-center text-sm font-medium">
-                      {septemberDays.map((day, idx) => {
-                        if (!day) return <div key={`empty-sep-${idx}`} />;
-                        const disabled = isDateDisabled(day);
-                        const isSelected = selectedDate?.toDateString() === day.toDateString();
-
-                        return (
-                          <button
-                            key={day.toISOString()}
-                            type="button"
-                            onClick={() => handleDateClick(day)}
-                            disabled={disabled}
-                            className={`relative h-9 w-9 mx-auto flex items-center justify-center rounded-full text-xs font-semibold transition cursor-pointer ${
-                              disabled
-                                ? "text-slate-300 line-through cursor-not-allowed"
-                                : isSelected
-                                ? "bg-amber-500 text-white font-bold shadow-md"
-                                : "text-slate-800 hover:bg-slate-50 active:scale-95"
-                            }`}
-                          >
-                            {day.getDate()}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
+                <div className="grid grid-cols-7 gap-y-1.5 text-center">
+                  {days.map((day, index) =>
+                    day === null ? (
+                      <div key={`${key}-pad-${index}`} />
+                    ) : (
+                      <DayCell
+                        key={day.toISOString()}
+                        day={day}
+                        disabled={isDateDisabled(day)}
+                        selected={selectedDate?.toDateString() === day.toDateString()}
+                        onSelect={setSelectedDate}
+                      />
+                    ),
+                  )}
                 </div>
-              </div>
-            ) : (
-              <div className="flex-1 flex items-center justify-center py-10 text-center text-sm text-slate-500">
-                Flexible date selection is available on the next page. Please select fixed dates or proceed.
-              </div>
-            )}
-
-            {/* Bottom Proceed Button */}
-            <div className="mt-5">
-              <button
-                type="button"
-                onClick={handleProceed}
-                disabled={!selectedDate}
-                className={`w-full rounded-2xl py-3.5 px-6 text-sm font-bold text-center transition duration-200 ${
-                  selectedDate
-                    ? "bg-amber-500 hover:bg-amber-600 text-white shadow-md active:scale-[0.99] cursor-pointer"
-                    : "bg-amber-200 text-amber-500 cursor-not-allowed"
-                }`}
-              >
-                {selectedDate ? `Proceed to Application (${formatDateString(selectedDate)})` : "Proceed to Application"}
-              </button>
-            </div>
-          </motion.div>
+              </section>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div
+          role="tabpanel"
+          id="datepicker-panel-flexible"
+          aria-labelledby="datepicker-tab-flexible"
+          tabIndex={0}
+          className="flex flex-1 items-center justify-center py-10 text-center text-sm text-muted-foreground"
+        >
+          Flexible date selection is available on the next page. Please select fixed dates
+          or proceed.
         </div>
       )}
-    </AnimatePresence>
+    </Modal>
+  );
+}
+
+function DayCell({
+  day,
+  disabled,
+  selected,
+  onSelect,
+}: {
+  day: Date;
+  disabled: boolean;
+  selected: boolean;
+  onSelect: (day: Date) => void;
+}) {
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      aria-pressed={selected}
+      aria-label={
+        disabled
+          ? `${fullDate.format(day)} — unavailable`
+          : fullDate.format(day)
+      }
+      onClick={() => onSelect(day)}
+      className={cn(
+        "mx-auto flex size-9 cursor-pointer items-center justify-center rounded-full",
+        "text-xs font-semibold tabular-nums transition-colors",
+        "disabled:cursor-not-allowed",
+        disabled
+          ? "text-muted-foreground/50 line-through"
+          : selected
+            ? "bg-primary font-bold text-on-primary shadow-e2"
+            : "text-foreground hover:bg-surface-sunken active:scale-95 motion-reduce:active:scale-100",
+      )}
+    >
+      {day.getDate()}
+    </button>
   );
 }

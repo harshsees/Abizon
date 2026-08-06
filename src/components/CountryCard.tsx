@@ -110,7 +110,7 @@ export function CountryCard({ country, onClick }: CountryCardProps) {
       </motion.div>
 
       {/* Guaranteed Visa Text below the card */}
-      <span className="text-center text-xs font-medium text-slate-500 group-hover:text-slate-700 transition-colors duration-200">
+      <span className="text-center text-xs font-medium text-muted-foreground group-hover:text-slate-700 transition-colors duration-200">
         Guaranteed Visa on <span className="font-semibold text-slate-700">{guaranteedDate}</span>
       </span>
     </div>

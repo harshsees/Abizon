@@ -88,14 +88,14 @@ export function SubNavbar({ isSticky = false }: SubNavbarProps) {
                 className={`group relative h-full flex items-center text-[13px] font-sans tracking-wide transition-colors duration-200 ${
                   isActive 
                     ? "text-slate-900 font-bold" 
-                    : "text-slate-400 hover:text-slate-700 font-medium"
+                    : "text-muted-foreground hover:text-slate-700 font-medium"
                 }`}
               >
                 <span className="relative z-10 py-1">{item.name}</span>
                 {isActive ? (
                   <motion.div
                     layoutId="activeSubSection"
-                    className="absolute left-0 right-0 bottom-0 h-[3px] bg-[var(--primary)] z-10"
+                    className="absolute left-0 right-0 bottom-0 h-[3px] bg-primary z-10"
                     transition={{ type: "spring", stiffness: 350, damping: 30 }}
                   />
                 ) : (

@@ -72,10 +72,10 @@ export function Header({ onStart, forceHide = false }: HeaderProps) {
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 md:px-6">
           {/* Logo */}
           <a href="#" className="flex items-center gap-2 flex-shrink-0">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--primary)] text-sm font-bold text-white">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-sm font-bold text-white">
               VC
             </div>
-            <span className="text-sm font-semibold text-[var(--foreground)]">
+            <span className="text-sm font-semibold text-foreground">
               Keyrise
             </span>
           </a>
@@ -86,9 +86,9 @@ export function Header({ onStart, forceHide = false }: HeaderProps) {
             <button
               type="button"
               onClick={() => setSearchOpen(true)}
-              className="relative flex items-center justify-between w-48 sm:w-56 md:w-64 rounded-full border border-slate-200 bg-slate-50/40 py-2 px-4 text-left text-sm text-[var(--muted)] hover:bg-[#f8f8fc] hover:border-slate-300 transition duration-200 cursor-pointer"
+              className="relative flex items-center justify-between w-48 sm:w-56 md:w-64 rounded-full border border-slate-200 bg-slate-50/40 py-2 px-4 text-left text-sm text-muted-foreground hover:bg-[#f8f8fc] hover:border-slate-300 transition duration-200 cursor-pointer"
             >
-              <div className="flex items-center text-slate-400">
+              <div className="flex items-center text-muted-foreground">
                 <span>Search </span>
                 <div className="relative h-5 overflow-hidden w-20 ml-1 flex items-center">
                   <AnimatePresence mode="wait">
@@ -98,22 +98,24 @@ export function Header({ onStart, forceHide = false }: HeaderProps) {
                       animate={{ y: 0, opacity: 1 }}
                       exit={{ y: -15, opacity: 0 }}
                       transition={{ duration: 0.25, ease: "easeOut" }}
-                      className="absolute left-0 text-slate-400 font-medium"
+                      className="absolute left-0 text-muted-foreground font-medium"
                     >
                       {placeholderWords[placeholderIndex]}
                     </motion.span>
                   </AnimatePresence>
                 </div>
               </div>
-              <Search className="h-4 w-4 text-slate-400 flex-shrink-0" />
+              <Search className="h-4 w-4 text-muted-foreground flex-shrink-0" />
             </button>
 
             {/* Profile Avatar Button (Matches 2nd Screenshot themed style) */}
             <button 
+              type="button"
+              aria-label="Open your profile"
               onClick={() => router.push("/profile")}
-              className="flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--primary)] bg-[var(--primary)]/8 text-[var(--primary)] hover:bg-[var(--primary)]/15 transition-all shadow-sm cursor-pointer flex-shrink-0"
+              className="flex h-9 w-9 items-center justify-center rounded-xl border border-primary bg-primary/8 text-primary hover:bg-primary/15 transition-all shadow-sm cursor-pointer flex-shrink-0"
             >
-              <User className="w-5 h-5 text-[var(--primary)]" />
+              <User className="w-5 h-5 text-primary" />
             </button>
           </div>
         </div>
@@ -123,11 +125,11 @@ export function Header({ onStart, forceHide = false }: HeaderProps) {
         <div className="fixed inset-0 z-[60] flex items-start justify-center bg-black/30 px-4 pt-20">
           <div className="w-full max-w-lg rounded-2xl bg-white p-5 shadow-lg">
             <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-[var(--foreground)]">
+              <h3 className="text-lg font-semibold text-foreground">
                 Search destinations
               </h3>
               <button type="button" onClick={() => setSearchOpen(false)}>
-                <X className="h-5 w-5 text-[var(--muted)]" />
+                <X className="h-5 w-5 text-muted-foreground" />
               </button>
             </div>
             <input
@@ -135,7 +137,7 @@ export function Header({ onStart, forceHide = false }: HeaderProps) {
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Search Dubai, Abu Dhabi..."
-              className="mb-3 w-full rounded-xl border border-[var(--border)] px-4 py-3 text-sm"
+              className="mb-3 w-full rounded-xl border border-border px-4 py-3 text-sm"
               autoFocus
             />
             <ul className="space-y-2">
@@ -143,13 +145,13 @@ export function Header({ onStart, forceHide = false }: HeaderProps) {
                 filtered.map((item) => (
                   <li
                     key={item}
-                    className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm text-[var(--foreground)]"
+                    className="rounded-lg border border-border px-3 py-2 text-sm text-foreground"
                   >
                     {item}
                   </li>
                 ))
               ) : (
-                <li className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700">
+                <li className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-primary-subtle-foreground">
                   No destinations found.
                 </li>
               )}

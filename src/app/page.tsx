@@ -163,11 +163,11 @@ export default function Home() {
       />
 
       {/* Main Container */}
-      <main className="mx-auto w-full max-w-7xl px-4 py-6 md:px-6 flex-1 flex flex-col">
+      <main id="main-content" tabIndex={-1} className="mx-auto w-full max-w-7xl px-4 py-6 md:px-6 flex-1 flex flex-col">
         
         {/* Mobile Search Bar */}
         <div className="relative md:hidden mb-4 w-full">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <input
             type="text"
             placeholder="Search Country"
@@ -179,22 +179,29 @@ export default function Home() {
 
         {/* 2. FILTER CAPSULE BAR (Matches Mockup UI) */}
         <div className="w-full flex justify-center mb-10 z-40">
-          <div className="relative w-full max-w-4xl rounded-full bg-white border border-slate-200/80 shadow-md py-2.5 px-4 flex items-center justify-between gap-1 text-[13px] text-slate-700">
+          <div className="relative w-full max-w-4xl rounded-2xl md:rounded-full bg-white border border-slate-200/80 shadow-md py-2.5 px-4 grid grid-cols-2 md:flex md:items-center md:justify-between gap-1 text-[13px] text-slate-700">
             
             {/* Filter Item 1: Visa Delivery */}
-            <div 
-              onClick={(e) => toggleDropdown(e, "delivery")}
-              className="flex-1 flex items-center gap-2.5 px-3 py-2 rounded-full hover:bg-slate-50 cursor-pointer transition-colors relative"
-            >
-              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
+            <div className="relative flex-1 min-w-0">
+              <button
+                type="button"
+                onClick={(e) => toggleDropdown(e, "delivery")}
+                aria-haspopup="listbox"
+                aria-expanded={activeDropdown === "delivery"}
+                className="w-full min-w-0 flex items-center gap-2.5 px-3 py-2 rounded-full hover:bg-slate-50 cursor-pointer transition-colors text-left"
+              >
+              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-50 text-success-subtle-foreground">
                 <Zap className="w-4 h-4 fill-emerald-500/10" />
               </div>
-              <div className="flex flex-col text-left">
-                <span className="text-[10px] text-slate-400 font-medium uppercase tracking-wider leading-none">Visa delivery</span>
+              <div className="flex flex-col text-left min-w-0">
+                <span className="truncate text-[10px] text-muted-foreground font-medium uppercase tracking-wider leading-none">Visa delivery</span>
                 <span className="font-bold text-slate-800 mt-0.5 flex items-center gap-1">
-                  {deliveryFilter} <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                  <span className="truncate">{deliveryFilter}</span>{" "}<ChevronDown className="w-3.5 h-3.5 shrink-0 text-muted-foreground" />
                 </span>
               </div>
+
+              </button>
+
 
               {/* Dropdown Options */}
               <AnimatePresence>
@@ -212,7 +219,7 @@ export default function Home() {
                         className="w-full flex items-center justify-between px-3.5 py-2 text-[13px] font-semibold rounded-xl text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition text-left cursor-pointer"
                       >
                         <span>{option}</span>
-                        {deliveryFilter === option && <Check className="w-4 h-4 text-emerald-600" />}
+                        {deliveryFilter === option && <Check className="w-4 h-4 text-success-subtle-foreground" />}
                       </button>
                     ))}
                   </motion.div>
@@ -220,22 +227,29 @@ export default function Home() {
               </AnimatePresence>
             </div>
 
-            <div className="h-8 w-px bg-slate-200" />
+            <div className="hidden md:block h-8 w-px bg-slate-200" />
 
             {/* Filter Item 2: Visa Type */}
-            <div 
-              onClick={(e) => toggleDropdown(e, "type")}
-              className="flex-1 flex items-center gap-2.5 px-3 py-2 rounded-full hover:bg-slate-50 cursor-pointer transition-colors relative"
-            >
+            <div className="relative flex-1 min-w-0">
+              <button
+                type="button"
+                onClick={(e) => toggleDropdown(e, "type")}
+                aria-haspopup="listbox"
+                aria-expanded={activeDropdown === "type"}
+                className="w-full min-w-0 flex items-center gap-2.5 px-3 py-2 rounded-full hover:bg-slate-50 cursor-pointer transition-colors text-left"
+              >
               <div className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-50 text-blue-600">
                 <Plane className="w-4 h-4" />
               </div>
-              <div className="flex flex-col text-left">
-                <span className="text-[10px] text-slate-400 font-medium uppercase tracking-wider leading-none">Type</span>
+              <div className="flex flex-col text-left min-w-0">
+                <span className="truncate text-[10px] text-muted-foreground font-medium uppercase tracking-wider leading-none">Type</span>
                 <span className="font-bold text-slate-800 mt-0.5 flex items-center gap-1">
-                  {typeFilter} <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                  <span className="truncate">{typeFilter}</span>{" "}<ChevronDown className="w-3.5 h-3.5 shrink-0 text-muted-foreground" />
                 </span>
               </div>
+
+              </button>
+
 
               {/* Dropdown Options */}
               <AnimatePresence>
@@ -261,22 +275,29 @@ export default function Home() {
               </AnimatePresence>
             </div>
 
-            <div className="h-8 w-px bg-slate-200" />
+            <div className="hidden md:block h-8 w-px bg-slate-200" />
 
             {/* Filter Item 3: Documents */}
-            <div 
-              onClick={(e) => toggleDropdown(e, "documents")}
-              className="flex-1 flex items-center gap-2.5 px-3 py-2 rounded-full hover:bg-slate-50 cursor-pointer transition-colors relative"
-            >
-              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-amber-50 text-amber-600">
+            <div className="relative flex-1 min-w-0">
+              <button
+                type="button"
+                onClick={(e) => toggleDropdown(e, "documents")}
+                aria-haspopup="listbox"
+                aria-expanded={activeDropdown === "documents"}
+                className="w-full min-w-0 flex items-center gap-2.5 px-3 py-2 rounded-full hover:bg-slate-50 cursor-pointer transition-colors text-left"
+              >
+              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-amber-50 text-primary-subtle-foreground">
                 <ClipboardList className="w-4 h-4 fill-amber-500/10" />
               </div>
-              <div className="flex flex-col text-left">
-                <span className="text-[10px] text-slate-400 font-medium uppercase tracking-wider leading-none">Documents</span>
+              <div className="flex flex-col text-left min-w-0">
+                <span className="truncate text-[10px] text-muted-foreground font-medium uppercase tracking-wider leading-none">Documents</span>
                 <span className="font-bold text-slate-800 mt-0.5 flex items-center gap-1">
-                  {documentsFilter} <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                  <span className="truncate">{documentsFilter}</span>{" "}<ChevronDown className="w-3.5 h-3.5 shrink-0 text-muted-foreground" />
                 </span>
               </div>
+
+              </button>
+
 
               {/* Dropdown Options */}
               <AnimatePresence>
@@ -294,7 +315,7 @@ export default function Home() {
                         className="w-full flex items-center justify-between px-3.5 py-2 text-[13px] font-semibold rounded-xl text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition text-left cursor-pointer"
                       >
                         <span>{option}</span>
-                        {documentsFilter === option && <Check className="w-4 h-4 text-amber-600" />}
+                        {documentsFilter === option && <Check className="w-4 h-4 text-primary-subtle-foreground" />}
                       </button>
                     ))}
                   </motion.div>
@@ -302,22 +323,29 @@ export default function Home() {
               </AnimatePresence>
             </div>
 
-            <div className="h-8 w-px bg-slate-200" />
+            <div className="hidden md:block h-8 w-px bg-slate-200" />
 
             {/* Filter Item 4: Holidays */}
-            <div 
-              onClick={(e) => toggleDropdown(e, "holidays")}
-              className="flex-1 flex items-center gap-2.5 px-3 py-2 rounded-full hover:bg-slate-50 cursor-pointer transition-colors relative"
-            >
+            <div className="relative flex-1 min-w-0">
+              <button
+                type="button"
+                onClick={(e) => toggleDropdown(e, "holidays")}
+                aria-haspopup="listbox"
+                aria-expanded={activeDropdown === "holidays"}
+                className="w-full min-w-0 flex items-center gap-2.5 px-3 py-2 rounded-full hover:bg-slate-50 cursor-pointer transition-colors text-left"
+              >
               <div className="flex h-7 w-7 items-center justify-center rounded-full bg-rose-50 text-rose-600">
                 <Calendar className="w-4 h-4" />
               </div>
-              <div className="flex flex-col text-left">
-                <span className="text-[10px] text-slate-400 font-medium uppercase tracking-wider leading-none">Holidays</span>
+              <div className="flex flex-col text-left min-w-0">
+                <span className="truncate text-[10px] text-muted-foreground font-medium uppercase tracking-wider leading-none">Holidays</span>
                 <span className="font-bold text-slate-800 mt-0.5 flex items-center gap-1">
-                  {holidaysFilter} <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                  <span className="truncate">{holidaysFilter}</span>{" "}<ChevronDown className="w-3.5 h-3.5 shrink-0 text-muted-foreground" />
                 </span>
               </div>
+
+              </button>
+
 
               {/* Dropdown Options */}
               <AnimatePresence>
@@ -328,7 +356,7 @@ export default function Home() {
                     exit={{ opacity: 0, y: 10 }}
                     className="absolute top-[120%] right-0 w-60 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl z-50 text-left"
                   >
-                    <div className="px-3.5 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                    <div className="px-3.5 py-1.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
                       Select Travel Date
                     </div>
                     {[
@@ -371,7 +399,7 @@ export default function Home() {
                 
                 {/* Result count & clear filter link */}
                 <div className="flex justify-between items-center mb-6 text-sm">
-                  <p className="text-slate-500 font-medium">
+                  <p className="text-muted-foreground font-medium">
                     Showing <span className="font-semibold text-slate-900">{filteredCountries.length}</span> countries
                   </p>
                   
@@ -411,11 +439,11 @@ export default function Home() {
                 ) : (
                   /* Empty state */
                   <div className="flex flex-col items-center justify-center py-20 text-center rounded-[32px] bg-white border border-slate-200/50 shadow-sm px-6">
-                    <div className="h-14 w-14 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 mb-4">
+                    <div className="h-14 w-14 rounded-full bg-slate-100 flex items-center justify-center text-muted-foreground mb-4">
                       <Search className="w-6 h-6" />
                     </div>
                     <h3 className="text-lg font-bold text-slate-800">No countries found</h3>
-                    <p className="text-slate-500 text-sm max-w-sm mt-1">
+                    <p className="text-muted-foreground text-sm max-w-sm mt-1">
                       No destinations match your filters. Try clearing some selections or searching for a different country.
                     </p>
                     <button 
@@ -450,7 +478,7 @@ export default function Home() {
                     <h2 className="text-xl md:text-2xl font-bold text-white leading-tight">
                       Explore Visa-Required Destinations
                     </h2>
-                    <p className="text-xs text-slate-400 mt-1 max-w-md">
+                    <p className="text-xs text-muted-foreground mt-1 max-w-md">
                       Interactive globe pins. Click on highlighted destination dots to view details and launch the visa application.
                     </p>
                   </div>
@@ -467,7 +495,7 @@ export default function Home() {
                 <div className="relative flex-1 w-full min-h-[350px] flex items-center justify-center py-6 select-none z-10">
                   
                   {/* Styled minimalist World Map SVG */}
-                  <svg className="w-full max-w-4xl h-full opacity-20 text-slate-500" viewBox="0 0 1000 500" fill="currentColor">
+                  <svg className="w-full max-w-4xl h-full opacity-20 text-muted-foreground" viewBox="0 0 1000 500" fill="currentColor">
                     {/* Simplified paths representing world continents */}
                     {/* North America */}
                     <path d="M100 80 Q130 50 180 60 T250 80 T280 150 T220 220 T150 200 T100 80 Z" />
@@ -553,7 +581,7 @@ export default function Home() {
 
                 </div>
 
-                <div className="relative z-10 text-center text-xs text-slate-500 font-medium">
+                <div className="relative z-10 text-center text-xs text-muted-foreground font-medium">
                   Globe map coordinates mapped using standard projections. Mock data for demonstrational completeness.
                 </div>
 
@@ -653,7 +681,7 @@ export default function Home() {
                 
                 {/* Visa delivery time badge */}
                 <div className="flex items-center gap-3 p-4 rounded-2xl bg-emerald-50 border border-emerald-100 text-emerald-900">
-                  <div className="h-10 w-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-600 flex-shrink-0">
+                  <div className="h-10 w-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-success-subtle-foreground flex-shrink-0">
                     <Clock className="w-5 h-5" />
                   </div>
                   <div>
@@ -667,15 +695,15 @@ export default function Home() {
                 {/* Grid details */}
                 <div className="grid grid-cols-3 gap-3">
                   <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 text-center flex flex-col justify-center">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Visa Type</span>
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Visa Type</span>
                     <span className="mt-1 text-sm font-extrabold text-slate-900 uppercase">{selectedCountry.visaType}</span>
                   </div>
                   <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 text-center flex flex-col justify-center">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Validity</span>
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Validity</span>
                     <span className="mt-1 text-sm font-extrabold text-slate-900 uppercase">{selectedCountry.validity}</span>
                   </div>
                   <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 text-center flex flex-col justify-center">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Visa Fees</span>
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Visa Fees</span>
                     <span className="mt-1 text-sm font-extrabold text-slate-900 uppercase">{selectedCountry.fees}</span>
                   </div>
                 </div>
@@ -683,37 +711,37 @@ export default function Home() {
                 {/* Requirements Checklist */}
                 <div className="space-y-3.5">
                   <h3 className="text-sm font-extrabold text-slate-900 uppercase tracking-wider flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-slate-500" /> Required Documents
+                    <FileText className="w-4 h-4 text-muted-foreground" /> Required Documents
                   </h3>
                   
                   <div className="border border-slate-100 rounded-2xl p-4 bg-slate-50/40 space-y-3">
                     
                     {/* Required item: Passport */}
                     <div className="flex items-start gap-3">
-                      <div className="mt-0.5 h-4.5 w-4.5 flex-shrink-0 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
+                      <div className="mt-0.5 h-4.5 w-4.5 flex-shrink-0 rounded-full bg-emerald-100 flex items-center justify-center text-success-subtle-foreground">
                         <Check className="w-3 h-3 stroke-[3]" />
                       </div>
                       <div>
                         <h4 className="text-xs font-bold text-slate-800">Original Passport Page Scan</h4>
-                        <p className="text-[11px] text-slate-500 mt-0.5">Must be valid for at least 6 months after travel date.</p>
+                        <p className="text-[11px] text-muted-foreground mt-0.5">Must be valid for at least 6 months after travel date.</p>
                       </div>
                     </div>
 
                     {/* Required item: Photo (if not "Passport Only" / "No Documents") */}
                     {selectedCountry.documents !== "No Documents Required" && selectedCountry.documents !== "Passport Only" && (
                       <div className="flex items-start gap-3">
-                        <div className="mt-0.5 h-4.5 w-4.5 flex-shrink-0 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
+                        <div className="mt-0.5 h-4.5 w-4.5 flex-shrink-0 rounded-full bg-emerald-100 flex items-center justify-center text-success-subtle-foreground">
                           <Check className="w-3 h-3 stroke-[3]" />
                         </div>
                         <div>
                           <h4 className="text-xs font-bold text-slate-800">Recent Passport-Size Photo Scan</h4>
-                          <p className="text-[11px] text-slate-500 mt-0.5">Plain white background, no glasses, no headwear.</p>
+                          <p className="text-[11px] text-muted-foreground mt-0.5">Plain white background, no glasses, no headwear.</p>
                         </div>
                       </div>
                     )}
 
                     {/* Additional documents context */}
-                    <div className="pt-2 text-[11px] text-slate-400 border-t border-slate-100 flex items-center gap-1.5">
+                    <div className="pt-2 text-[11px] text-muted-foreground border-t border-slate-100 flex items-center gap-1.5">
                       <ShieldCheck className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
                       <span>Processed digitally. No physical paper submissions required.</span>
                     </div>

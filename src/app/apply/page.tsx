@@ -401,15 +401,15 @@ function ApplyPageContent() {
         </div>
         
         <div className="max-w-[1400px] mx-auto px-4 md:px-8 py-4 flex items-center justify-between w-full relative z-10">
-          <button onClick={handleBack} className="flex items-center gap-1.5 text-slate-700 font-semibold text-sm hover:opacity-70 transition">
+          <button type="button" onClick={handleBack} className="flex min-h-11 items-center gap-1.5 text-slate-700 font-semibold text-sm hover:opacity-70 transition">
             <ArrowLeft className="h-4 w-4" /> Back
           </button>
           <div className="flex-1 text-center">
-            <span className="text-[10px] font-bold text-slate-500 tracking-widest uppercase">
+            <span className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase">
               {getProgressPercentage()}% Completed
             </span>
           </div>
-          <button onClick={() => router.push("/")} className="p-2 text-slate-700 hover:bg-slate-200 rounded-full transition">
+          <button type="button" aria-label="Close and return home" onClick={() => router.push("/")} className="p-2 text-slate-700 hover:bg-slate-200 rounded-full transition">
             <Home className="h-5 w-5" />
           </button>
         </div>
@@ -426,7 +426,7 @@ function ApplyPageContent() {
               if (currentStep !== "travelers") setCurrentStep("travelers");
             }}
             className={`group relative w-full px-4 py-3 rounded-2xl flex flex-col items-start gap-1 cursor-pointer transition-colors select-none ${
-              currentStep === "travelers" ? "text-amber-600 font-semibold" : "text-slate-400 hover:text-slate-600"
+              currentStep === "travelers" ? "text-primary-subtle-foreground font-semibold" : "text-muted-foreground hover:text-slate-600"
             }`}
           >
             {currentStep === "travelers" && (
@@ -448,7 +448,7 @@ function ApplyPageContent() {
               }
             }}
             className={`group relative w-full px-4 py-3 rounded-2xl flex flex-col items-start gap-1 cursor-pointer transition-colors select-none ${
-              currentStep === "docs" ? "text-amber-600 font-semibold" : "text-slate-400 hover:text-slate-600"
+              currentStep === "docs" ? "text-primary-subtle-foreground font-semibold" : "text-muted-foreground hover:text-slate-600"
             }`}
           >
             {currentStep === "docs" && (
@@ -470,7 +470,7 @@ function ApplyPageContent() {
               }
             }}
             className={`group relative w-full px-4 py-3 rounded-2xl flex flex-col items-start gap-1 cursor-pointer transition-colors select-none ${
-              currentStep === "checkout" ? "text-amber-600 font-semibold" : "text-slate-400 hover:text-slate-600"
+              currentStep === "checkout" ? "text-primary-subtle-foreground font-semibold" : "text-muted-foreground hover:text-slate-600"
             }`}
           >
             {currentStep === "checkout" && (
@@ -487,14 +487,14 @@ function ApplyPageContent() {
         </aside>
 
         {/* Main Content Area */}
-        <main className="flex-1 flex flex-col items-center w-full relative">
+        <main id="main-content" tabIndex={-1} className="flex-1 flex flex-col items-center w-full relative">
           <AnimatePresence mode="wait">
             
             {/* STEP 1: TRAVELERS */}
             {currentStep === "travelers" && (
               <motion.div key="step-travelers" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="w-full max-w-2xl flex flex-col items-center mt-12 md:mt-24">
                 <h1 className="text-2xl md:text-[28px] font-bold text-center">Who's going on this trip to United Arab Emirates?</h1>
-                <p className="text-slate-500 text-sm mt-3 text-center">You can add all travellers or continue solo</p>
+                <p className="text-muted-foreground text-sm mt-3 text-center">You can add all travellers or continue solo</p>
 
                 <form onSubmit={handleAddTraveler} className="w-full mt-20 flex flex-col items-center">
                   <input
@@ -502,7 +502,7 @@ function ApplyPageContent() {
                     value={currentName}
                     onChange={(e) => setCurrentName(e.target.value.toUpperCase())}
                     placeholder="Enter traveler's first name"
-                    className="w-3/4 md:w-1/2 text-center text-xl md:text-2xl tracking-widest bg-transparent border-b-2 border-dashed border-slate-300 focus:border-slate-800 pb-3 transition-colors outline-none placeholder:text-slate-300 placeholder:tracking-normal placeholder:normal-case placeholder:text-lg focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0"
+                    className="w-3/4 md:w-1/2 text-center text-xl md:text-2xl tracking-widest bg-transparent border-b-2 border-dashed border-slate-300 focus:border-slate-800 pb-3 transition-colors outline-none placeholder:text-muted-foreground placeholder:tracking-normal placeholder:normal-case placeholder:text-lg focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0"
                     autoFocus
                   />
                   
@@ -510,7 +510,7 @@ function ApplyPageContent() {
                     type="submit"
                     disabled={!currentName.trim()}
                     className={`mt-12 rounded-full py-3.5 px-8 text-sm font-semibold flex items-center justify-center gap-2 transition duration-300 w-48 ${
-                      currentName.trim() ? "bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-white shadow-lg shadow-amber-600/10" : "bg-slate-300 text-white cursor-not-allowed"
+                      currentName.trim() ? "bg-primary hover:bg-primary-hover text-white shadow-lg shadow-amber-600/10" : "bg-slate-300 text-white cursor-not-allowed"
                     }`}
                   >
                     <span>Continue</span>
@@ -528,7 +528,7 @@ function ApplyPageContent() {
                   <>
                     <div className="text-center mb-10">
                       <h1 className="text-2xl md:text-[28px] font-bold">The Essential Documents</h1>
-                      <p className="text-slate-500 text-sm mt-2 max-w-md mx-auto">These are as per the official United Arab Emirates embassy requirements for visa processing</p>
+                      <p className="text-muted-foreground text-sm mt-2 max-w-md mx-auto">These are as per the official United Arab Emirates embassy requirements for visa processing</p>
                     </div>
 
                     {/* Cards Container */}
@@ -544,14 +544,14 @@ function ApplyPageContent() {
                           <motion.div layout initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} key={t.id} className="relative bg-white rounded-[2rem] p-6 shadow-sm border border-slate-100 w-full max-w-[340px] min-h-[250px] flex flex-col justify-between">
                             {isNewTravelerNoName ? (
                               <div className="flex flex-col justify-between items-center text-center flex-1 py-4">
-                                <span className="text-[10px] text-slate-400 font-bold tracking-widest uppercase">NEW TRAVELER</span>
+                                <span className="text-[10px] text-muted-foreground font-bold tracking-widest uppercase">NEW TRAVELER</span>
                                 
                                 <div className="w-full flex flex-col items-center gap-4 my-auto">
                                   <input
                                     type="text"
                                     id={`input-name-${t.id}`}
                                     placeholder="Enter first name"
-                                    className="w-4/5 text-center text-xl tracking-widest bg-transparent border-b-2 border-dashed border-slate-300 focus:border-slate-800 pb-2 transition-colors outline-none placeholder:text-slate-300 placeholder:tracking-normal placeholder:normal-case placeholder:text-sm focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0"
+                                    className="w-4/5 text-center text-xl tracking-widest bg-transparent border-b-2 border-dashed border-slate-300 focus:border-slate-800 pb-2 transition-colors outline-none placeholder:text-muted-foreground placeholder:tracking-normal placeholder:normal-case placeholder:text-sm focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0"
                                     autoFocus
                                     onKeyDown={(e) => {
                                       if (e.key === "Enter") {
@@ -572,13 +572,13 @@ function ApplyPageContent() {
                                         setTravelers(prev => prev.filter(trav => trav.id !== t.id));
                                       }
                                     }}
-                                    className="px-4 py-2 bg-amber-50 text-amber-600 text-xs font-bold rounded-full hover:bg-amber-100 transition flex items-center gap-1.5 shadow-sm shrink-0"
+                                    className="px-4 py-2 bg-amber-50 text-primary-subtle-foreground text-xs font-bold rounded-full hover:bg-amber-100 transition flex items-center gap-1.5 shadow-sm shrink-0"
                                   >
                                     <CheckCircle className="h-3.5 w-3.5" /> Save Name
                                   </button>
                                 </div>
                                 
-                                <p className="text-[10px] text-slate-400 font-semibold max-w-[200px]">
+                                <p className="text-[10px] text-muted-foreground font-semibold max-w-[200px]">
                                   Press Enter or click Save to start uploading documents.
                                 </p>
                               </div>
@@ -597,7 +597,7 @@ function ApplyPageContent() {
                                       </div>
                                     ) : (
                                       <div className="h-12 w-12 rounded-full border border-dashed border-amber-200 p-[2px] flex items-center justify-center shrink-0">
-                                        <div className="h-full w-full rounded-full bg-amber-50 flex items-center justify-center text-amber-700 font-bold text-sm">
+                                        <div className="h-full w-full rounded-full bg-amber-50 flex items-center justify-center text-primary-subtle-foreground font-bold text-sm">
                                           {getInitials(t.firstName, index)}
                                         </div>
                                       </div>
@@ -606,7 +606,7 @@ function ApplyPageContent() {
                                       <h3 className="font-bold text-lg border-b border-dotted border-amber-500/20 pb-0.5 inline-block leading-tight">
                                         {t.firstName}
                                       </h3>
-                                      <p className="text-xs text-slate-400 font-semibold mt-1">{uploadedCount}/2 docs uploaded</p>
+                                      <p className="text-xs text-muted-foreground font-semibold mt-1">{uploadedCount}/2 docs uploaded</p>
                                     </div>
                                   </div>
 
@@ -618,7 +618,7 @@ function ApplyPageContent() {
                                           e.stopPropagation();
                                           setOpenMenuTravelerId(openMenuTravelerId === t.id ? null : t.id);
                                         }}
-                                        className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-full transition"
+                                        className="p-1.5 text-muted-foreground hover:text-slate-600 hover:bg-slate-50 rounded-full transition"
                                       >
                                         <MoreVertical className="h-5 w-5" />
                                       </button>
@@ -632,7 +632,7 @@ function ApplyPageContent() {
                                               showToast("Share link copied to clipboard!");
                                               setOpenMenuTravelerId(null);
                                             }}
-                                            className="w-full text-left px-4 py-2 text-xs font-bold text-slate-500 hover:bg-slate-50 flex items-center gap-2 transition"
+                                            className="w-full text-left px-4 py-2 text-xs font-bold text-muted-foreground hover:bg-slate-50 flex items-center gap-2 transition"
                                           >
                                             <Share2 className="h-4 w-4 text-amber-500" />
                                             Share upload link
@@ -689,14 +689,14 @@ function ApplyPageContent() {
                                 </div>
 
                                 <div className="mt-6 flex flex-col items-center">
-                                  <span className="text-[10px] text-slate-400 font-bold mb-3">OR</span>
+                                  <span className="text-[10px] text-muted-foreground font-bold mb-3">OR</span>
                                   <button 
                                     onClick={() => {
                                       setActiveTravelerId(t.id);
                                       setPhoneUploadModalOpen(true);
                                       setPhoneUploadStep("info");
                                     }} 
-                                    className="text-xs text-amber-600 font-bold flex items-center gap-1.5 hover:underline"
+                                    className="text-xs text-primary-subtle-foreground font-bold flex items-center gap-1.5 hover:underline"
                                   >
                                     <Maximize className="h-3.5 w-3.5" /> Upload from phone
                                   </button>
@@ -710,7 +710,7 @@ function ApplyPageContent() {
 
                     {/* Footer Actions */}
                     <div className="mt-12 flex flex-col sm:flex-row items-center gap-4">
-                      <button onClick={addTravelerDirect} className="px-6 py-3.5 rounded-full bg-white border border-slate-200 shadow-sm text-amber-600 font-semibold text-sm flex items-center gap-2 hover:bg-slate-50 transition">
+                      <button onClick={addTravelerDirect} className="px-6 py-3.5 rounded-full bg-white border border-slate-200 shadow-sm text-primary-subtle-foreground font-semibold text-sm flex items-center gap-2 hover:bg-slate-50 transition">
                         <Plus className="h-4 w-4" /> Add travelers
                       </button>
                       <button 
@@ -720,8 +720,8 @@ function ApplyPageContent() {
                         disabled={!allDocsUploaded}
                         className={`px-6 py-3.5 rounded-full font-semibold text-sm flex items-center gap-2 transition duration-300 ${
                           allDocsUploaded 
-                            ? "bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-white shadow-lg shadow-amber-600/10 cursor-pointer" 
-                            : "bg-[#f3f4f6] text-slate-400 cursor-not-allowed"
+                            ? "bg-primary hover:bg-primary-hover text-white shadow-lg shadow-amber-600/10 cursor-pointer" 
+                            : "bg-[#f3f4f6] text-muted-foreground cursor-not-allowed"
                         }`}
                       >
                         <Lock className="h-4 w-4" /> Proceed to checkout
@@ -739,15 +739,15 @@ function ApplyPageContent() {
                        cameraState === "scanning" ? "Scanning Photo" :
                        cameraState === "confirm" ? "Confirm Photo" : "Look ahead,"}
                     </h2>
-                    <h2 className="text-2xl md:text-4xl font-extrabold text-amber-600 mb-8 min-h-[40px] text-center">
+                    <h2 className="text-2xl md:text-4xl font-extrabold text-primary-subtle-foreground mb-8 min-h-[40px] text-center">
                       {cameraState === "analyzing" ? (
-                        <span className="text-amber-600 animate-pulse">{analysisText}</span>
+                        <span className="text-primary-subtle-foreground animate-pulse">{analysisText}</span>
                       ) : typeof cameraState === "number" ? (
                         <span className="text-amber-500">Hold still...</span>
                       ) : cameraState === "scanning" ? (
                         <span className="text-green-500">Analyzing face match...</span>
                       ) : cameraState === "confirm" ? (
-                        <span className="text-emerald-600">Verification Complete</span>
+                        <span className="text-success-subtle-foreground">Verification Complete</span>
                       ) : (
                         "straight at the camera"
                       )}
@@ -883,7 +883,7 @@ function ApplyPageContent() {
                     {cameraState === "confirm" && (
                       <div className="mt-8 flex gap-4">
                         <button onClick={startCameraSequence} className="px-8 py-3 rounded-full bg-white border border-slate-200 font-bold text-sm hover:bg-slate-50 transition">Retake</button>
-                        <button onClick={confirmUpload} className="px-8 py-3 rounded-full bg-[var(--primary)] text-white font-bold text-sm hover:bg-[var(--primary-hover)] transition shadow-lg shadow-amber-600/10">Confirm</button>
+                        <button onClick={confirmUpload} className="px-8 py-3 rounded-full bg-primary text-white font-bold text-sm hover:bg-primary-hover transition shadow-lg shadow-amber-600/10">Confirm</button>
                       </div>
                     )}
                   </motion.div>
@@ -893,7 +893,7 @@ function ApplyPageContent() {
                 {docView === "upload" && (
                   <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center justify-center w-full max-w-3xl mt-4">
                     <h2 className="text-3xl font-extrabold text-slate-900 mb-1">Passport,</h2>
-                    <h2 className="text-3xl font-extrabold text-amber-600 mb-8">photo page up</h2>
+                    <h2 className="text-3xl font-extrabold text-primary-subtle-foreground mb-8">photo page up</h2>
 
                     <div className="bg-amber-50/40 w-full max-w-lg aspect-video rounded-3xl border border-amber-100 flex flex-col items-center justify-center p-6 mb-6">
                       <div className="h-12 w-12 bg-white rounded-full flex items-center justify-center mb-4 shadow-sm text-amber-500">
@@ -907,14 +907,14 @@ function ApplyPageContent() {
 
                     {/* Bottom Tabs Mock */}
                     <div className="flex bg-white rounded-full p-1 border border-slate-200 shadow-sm">
-                      <button onClick={() => startCameraSequence()} className="px-4 py-2 rounded-full text-xs font-bold text-slate-500 flex items-center gap-1.5 hover:text-slate-900"><Camera className="h-3.5 w-3.5"/> Live Capture</button>
+                      <button onClick={() => startCameraSequence()} className="px-4 py-2 rounded-full text-xs font-bold text-muted-foreground flex items-center gap-1.5 hover:text-slate-900"><Camera className="h-3.5 w-3.5"/> Live Capture</button>
                       <button className="px-4 py-2 rounded-full text-xs font-bold text-slate-900 bg-slate-100 flex items-center gap-1.5"><Upload className="h-3.5 w-3.5"/> Upload from device</button>
                       <button 
                         onClick={() => {
                           setPhoneUploadModalOpen(true);
                           setPhoneUploadStep("info");
                         }} 
-                        className="px-4 py-2 rounded-full text-xs font-bold text-slate-500 flex items-center gap-1.5 hover:text-slate-900"
+                        className="px-4 py-2 rounded-full text-xs font-bold text-muted-foreground flex items-center gap-1.5 hover:text-slate-900"
                       >
                         <Maximize className="h-3.5 w-3.5"/> Scan from phone
                       </button>
@@ -931,7 +931,7 @@ function ApplyPageContent() {
             {currentStep === "checkout" && (
               <motion.div key="step-checkout" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="w-full mt-24 text-center">
                 <h1 className="text-3xl font-bold">Checkout</h1>
-                <p className="text-slate-500 mt-2">Payment flow would go here.</p>
+                <p className="text-muted-foreground mt-2">Payment flow would go here.</p>
               </motion.div>
             )}
             
@@ -977,7 +977,7 @@ function ApplyPageContent() {
               {/* Close Button */}
               <button
                 onClick={() => setPhoneUploadModalOpen(false)}
-                className="absolute top-4 right-4 md:top-6 md:right-6 p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition"
+                className="absolute top-4 right-4 md:top-6 md:right-6 p-2 text-muted-foreground hover:text-slate-600 hover:bg-slate-100 rounded-full transition"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -985,8 +985,8 @@ function ApplyPageContent() {
               {phoneUploadStep === "info" ? (
                 <div className="flex flex-col items-center w-full">
                   {/* Top Phone Icon */}
-                  <div className="flex items-center justify-center text-amber-600 mb-6">
-                    <svg className="w-12 h-12 text-amber-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <div className="flex items-center justify-center text-primary-subtle-foreground mb-6">
+                    <svg className="w-12 h-12 text-primary-subtle-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                       <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
                       <path d="M12 18h.01" />
                       <path d="M2 9a9 9 0 0 1 0 6" />
@@ -998,21 +998,21 @@ function ApplyPageContent() {
                   <h2 className="text-2xl md:text-3xl font-extrabold text-[#0f172a] text-center mb-2">
                     Upload documents using your phone
                   </h2>
-                  <p className="text-slate-500 text-sm md:text-base text-center max-w-md mb-8">
+                  <p className="text-muted-foreground text-sm md:text-base text-center max-w-md mb-8">
                     Scan, connect, and securely upload your documents in real time
                   </p>
 
                   {/* Step Indicators */}
                   <div className="flex items-center justify-between w-full max-w-md mb-10">
-                    <div className="w-8 h-8 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center text-xs font-bold border border-amber-100 shadow-sm shrink-0">1</div>
+                    <div className="w-8 h-8 rounded-full bg-amber-50 text-primary-subtle-foreground flex items-center justify-center text-xs font-bold border border-amber-100 shadow-sm shrink-0">1</div>
                     <div className="flex-1 border-t border-dashed border-amber-100 mx-2"></div>
                     <div className="w-2.5 h-2.5 rounded-full bg-amber-200 shrink-0"></div>
                     <div className="flex-1 border-t border-dashed border-amber-100 mx-2"></div>
-                    <div className="w-8 h-8 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center text-xs font-bold border border-amber-100 shadow-sm shrink-0">2</div>
+                    <div className="w-8 h-8 rounded-full bg-amber-50 text-primary-subtle-foreground flex items-center justify-center text-xs font-bold border border-amber-100 shadow-sm shrink-0">2</div>
                     <div className="flex-1 border-t border-dashed border-amber-100 mx-2"></div>
                     <div className="w-2.5 h-2.5 rounded-full bg-amber-200 shrink-0"></div>
                     <div className="flex-1 border-t border-dashed border-amber-100 mx-2"></div>
-                    <div className="w-8 h-8 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center text-xs font-bold border border-amber-100 shadow-sm shrink-0">3</div>
+                    <div className="w-8 h-8 rounded-full bg-amber-50 text-primary-subtle-foreground flex items-center justify-center text-xs font-bold border border-amber-100 shadow-sm shrink-0">3</div>
                   </div>
 
                   {/* 3 Columns Walkthrough */}
@@ -1020,7 +1020,7 @@ function ApplyPageContent() {
                     {/* Step 1 */}
                     <div className="flex flex-col items-center text-center">
                       <div className="h-24 flex items-center justify-center">
-                        <svg className="w-24 h-24 text-amber-600" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="2">
+                        <svg className="w-24 h-24 text-primary-subtle-foreground" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="2">
                           <rect x="35" y="15" width="30" height="60" rx="6" stroke="currentColor" fill="white" />
                           <line x1="45" y1="20" x2="55" y2="20" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
                           <rect x="42" y="27" width="16" height="16" stroke="currentColor" strokeWidth="1.5" />
@@ -1036,7 +1036,7 @@ function ApplyPageContent() {
                           <path d="M75,45 A15,15 0 0,0 75,35" stroke="#d97706" strokeWidth="2" strokeLinecap="round" />
                         </svg>
                       </div>
-                      <p className="text-xs text-slate-500 font-medium max-w-[200px] leading-relaxed mt-4">
+                      <p className="text-xs text-muted-foreground font-medium max-w-[200px] leading-relaxed mt-4">
                         Scan the QR code to securely connect your phone
                       </p>
                     </div>
@@ -1044,7 +1044,7 @@ function ApplyPageContent() {
                     {/* Step 2 */}
                     <div className="flex flex-col items-center text-center">
                       <div className="h-24 flex items-center justify-center">
-                        <svg className="w-28 h-24 text-amber-600" viewBox="0 0 120 100" fill="none" stroke="currentColor" strokeWidth="2">
+                        <svg className="w-28 h-24 text-primary-subtle-foreground" viewBox="0 0 120 100" fill="none" stroke="currentColor" strokeWidth="2">
                           <rect x="15" y="25" width="45" height="30" rx="3" fill="white" />
                           <line x1="10" y1="55" x2="65" y2="55" stroke="currentColor" strokeWidth="3" />
                           <circle cx="37" cy="40" r="4" fill="currentColor" />
@@ -1058,7 +1058,7 @@ function ApplyPageContent() {
                           <circle cx="60" cy="52" r="1.5" fill="white" stroke="none" />
                         </svg>
                       </div>
-                      <p className="text-xs text-slate-500 font-medium max-w-[200px] leading-relaxed mt-4">
+                      <p className="text-xs text-muted-foreground font-medium max-w-[200px] leading-relaxed mt-4">
                         Your phone can now be used as an additional upload device
                       </p>
                     </div>
@@ -1066,7 +1066,7 @@ function ApplyPageContent() {
                     {/* Step 3 */}
                     <div className="flex flex-col items-center text-center">
                       <div className="h-24 flex items-center justify-center">
-                        <svg className="w-28 h-24 text-amber-600" viewBox="0 0 120 100" fill="none" stroke="currentColor" strokeWidth="2">
+                        <svg className="w-28 h-24 text-primary-subtle-foreground" viewBox="0 0 120 100" fill="none" stroke="currentColor" strokeWidth="2">
                           <rect x="15" y="25" width="24" height="48" rx="5" fill="white" />
                           <line x1="23" y1="29" x2="31" y2="29" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
                           <rect x="20" y="37" width="14" height="18" rx="1" fill="none" />
@@ -1086,7 +1086,7 @@ function ApplyPageContent() {
                           <path d="M43,45 C50,42 58,42 62,45" stroke="#d97706" strokeWidth="1.5" strokeDasharray="3,3" />
                         </svg>
                       </div>
-                      <p className="text-xs text-slate-500 font-medium max-w-[200px] leading-relaxed mt-4">
+                      <p className="text-xs text-muted-foreground font-medium max-w-[200px] leading-relaxed mt-4">
                         Your uploaded documents get synced in real-time
                       </p>
                     </div>
@@ -1101,7 +1101,7 @@ function ApplyPageContent() {
                   </button>
 
                   {/* Encryption Note */}
-                  <div className="flex items-center gap-1.5 text-xs text-slate-400 font-semibold">
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-semibold">
                     <Lock className="h-3.5 w-3.5" />
                     <span>Protected with industry-standard AES-256 encryption</span>
                   </div>
@@ -1109,7 +1109,7 @@ function ApplyPageContent() {
               ) : (
                 <div className="flex flex-col items-center text-center w-full max-w-md py-4">
                   <h2 className="text-2xl font-extrabold text-slate-900 mb-2">Scan QR Code</h2>
-                  <p className="text-slate-500 text-sm mb-8">Scan this code with your phone camera to securely sync and upload your files.</p>
+                  <p className="text-muted-foreground text-sm mb-8">Scan this code with your phone camera to securely sync and upload your files.</p>
                   
                   {/* QR Code Container */}
                   <div className="relative w-56 h-56 bg-slate-50 rounded-3xl border border-slate-100 p-4 shadow-inner flex items-center justify-center mb-6">
@@ -1123,13 +1123,13 @@ function ApplyPageContent() {
                     </svg>
                   </div>
 
-                  <span className="text-xs font-bold text-emerald-600 flex items-center gap-1 mb-8">
+                  <span className="text-xs font-bold text-success-subtle-foreground flex items-center gap-1 mb-8">
                     <CheckCircle className="h-3.5 w-3.5" /> 100% Encrypted & Safe
                   </span>
 
                   <button
                     onClick={() => setPhoneUploadStep("info")}
-                    className="text-xs text-amber-600 font-bold hover:underline flex items-center gap-1.5 cursor-pointer"
+                    className="text-xs text-primary-subtle-foreground font-bold hover:underline flex items-center gap-1.5 cursor-pointer"
                   >
                     <ArrowLeft className="h-3.5 w-3.5" /> Back to instructions
                   </button>

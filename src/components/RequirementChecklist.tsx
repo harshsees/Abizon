@@ -31,10 +31,10 @@ const requirements = [
 export function RequirementChecklist({ className }: { className?: string }) {
   return (
     <section id="requirements" className={`${className || "mx-auto w-full max-w-7xl px-4 py-14 md:px-6"} scroll-mt-20`}>
-      <h2 className="text-3xl font-bold text-[var(--foreground)]">
+      <h2 className="text-3xl font-bold text-foreground">
         Visa requirements
       </h2>
-      <p className="mt-3 max-w-2xl text-[var(--muted)]">
+      <p className="mt-3 max-w-2xl text-muted-foreground">
         Keep these details ready for faster application processing.
       </p>
       <div className="mt-10 grid gap-x-8 gap-y-10 md:grid-cols-2 lg:grid-cols-3">
@@ -43,14 +43,14 @@ export function RequirementChecklist({ className }: { className?: string }) {
             key={title}
             className="group flex gap-4.5 p-2 rounded-2xl transition duration-300 hover:bg-slate-50/60"
           >
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-[var(--primary)] transition-transform duration-300 group-hover:scale-110">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-primary transition-transform duration-300 group-hover:scale-110">
               <Icon className="h-6 w-6" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-[var(--foreground)] tracking-tight transition-colors duration-200 group-hover:text-[var(--primary)]">
+              <h3 className="text-base font-bold text-foreground tracking-tight transition-colors duration-200 group-hover:text-primary">
                 {title}
               </h3>
-              <p className="mt-2 text-sm leading-relaxed text-[var(--muted)]">
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
                 {desc}
               </p>
             </div>

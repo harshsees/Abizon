@@ -16,7 +16,7 @@ export const TopHero = React.forwardRef<HTMLElement, TopHeroProps>(
   function TopHero({ onStart, countryName = "Dubai (UAE)", deliveryDays = 4, imageUrl }, ref) {
     return (
       <section ref={ref} className="mx-auto w-full max-w-[1200px] px-4 pt-4 md:px-6 md:pt-6">
-        <div className="relative overflow-hidden rounded-[28px] border border-[var(--border)] bg-[#111827] shadow-[0_25px_70px_rgba(17,24,39,0.18)]">
+        <div className="relative overflow-hidden rounded-[28px] border border-border bg-[#111827] shadow-[0_25px_70px_rgba(17,24,39,0.18)]">
           <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(2,6,23,0.22),rgba(2,6,23,0.5)),radial-gradient(circle_at_top,rgba(255,255,255,0.09),transparent_35%)]" />
           <div className="relative min-h-[540px] px-5 py-10 md:min-h-[620px] md:px-10 md:py-12">
             
@@ -60,7 +60,7 @@ export const TopHero = React.forwardRef<HTMLElement, TopHeroProps>(
                         e.preventDefault();
                         onStart();
                       }}
-                      className="inline-flex items-center gap-2 rounded-xl bg-[var(--primary)] border border-white/15 px-8 py-3 text-sm font-semibold text-white hover:bg-[var(--primary-hover)] cursor-pointer js-magnetic-btn"
+                      className="inline-flex items-center gap-2 rounded-xl bg-primary border border-white/15 px-8 py-3 text-sm font-semibold text-white hover:bg-primary-hover cursor-pointer js-magnetic-btn"
                     >
                       Start Application
                       <ArrowRight className="h-4 w-4" />
@@ -68,7 +68,7 @@ export const TopHero = React.forwardRef<HTMLElement, TopHeroProps>(
                   ) : (
                     <a
                       href="#application-flow"
-                      className="inline-flex items-center gap-2 rounded-xl bg-[var(--primary)] border border-white/15 px-8 py-3 text-sm font-semibold text-white hover:bg-[var(--primary-hover)] cursor-pointer js-magnetic-btn"
+                      className="inline-flex items-center gap-2 rounded-xl bg-primary border border-white/15 px-8 py-3 text-sm font-semibold text-white hover:bg-primary-hover cursor-pointer js-magnetic-btn"
                     >
                       Start Application
                       <ArrowRight className="h-4 w-4" />

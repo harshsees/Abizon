@@ -209,7 +209,7 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
   return (
     <div className="space-y-8 md:space-y-10">
       <div>
-        <h1 id="visa-info-section" className="text-2xl font-bold text-[var(--foreground)] scroll-mt-28 js-reveal-heading">
+        <h1 id="visa-info-section" className="text-2xl font-bold text-foreground scroll-mt-28 js-reveal-heading">
           {displayName} visa information
         </h1>
         {/* Scaled up borderless visa info details aligned in a column grid */}
@@ -222,8 +222,8 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
                 <Smartphone className="h-5.5 w-5.5" />
               </div>
               <div>
-                <p className="text-xs md:text-sm font-medium text-[var(--muted)]">Visa Type:</p>
-                <p className="text-base md:text-lg font-extrabold text-[var(--foreground)] mt-0.5">{country.visaType}</p>
+                <p className="text-xs md:text-sm font-medium text-muted-foreground">Visa Type:</p>
+                <p className="text-base md:text-lg font-extrabold text-foreground mt-0.5">{country.visaType}</p>
               </div>
             </div>
 
@@ -233,15 +233,15 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
                 <CalendarDays className="h-5.5 w-5.5" />
               </div>
               <div>
-                <p className="text-xs md:text-sm font-medium text-[var(--muted)]">Length of Stay:</p>
+                <p className="text-xs md:text-sm font-medium text-muted-foreground">Length of Stay:</p>
                 <div className="relative group inline-block mt-0.5">
-                  <span className="text-base md:text-lg font-extrabold text-[var(--foreground)] underline decoration-slate-400 decoration-dotted underline-offset-4 cursor-pointer">
+                  <span className="text-base md:text-lg font-extrabold text-foreground underline decoration-slate-400 decoration-dotted underline-offset-4 cursor-pointer">
                     {country.validity}
                   </span>
                   {/* Tooltip Box */}
                   <div className="absolute top-full left-0 mt-2.5 hidden group-hover:block w-[280px] bg-white border border-slate-200/80 rounded-2xl p-4 shadow-[0_12px_32px_rgba(15,23,42,0.08)] z-30 pointer-events-none">
                     <p className="text-sm font-bold text-slate-900">Length of Stay: {country.validity}</p>
-                    <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
+                    <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
                       {`The maximum duration that you are allowed to remain in ${displayName} after entering with that particular visa.`}
                     </p>
                   </div>
@@ -251,19 +251,19 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
 
             {/* 3. Validity */}
             <div className="flex items-center gap-3.5 js-info-item">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 text-success-subtle-foreground">
                 <Clock3 className="h-5.5 w-5.5" />
               </div>
               <div>
-                <p className="text-xs md:text-sm font-medium text-[var(--muted)]">Validity:</p>
+                <p className="text-xs md:text-sm font-medium text-muted-foreground">Validity:</p>
                 <div className="relative group inline-block mt-0.5">
-                  <span className="text-base md:text-lg font-extrabold text-[var(--foreground)] underline decoration-slate-400 decoration-dotted underline-offset-4 cursor-pointer">
+                  <span className="text-base md:text-lg font-extrabold text-foreground underline decoration-slate-400 decoration-dotted underline-offset-4 cursor-pointer">
                     {country.validity}
                   </span>
                   {/* Tooltip Box */}
                   <div className="absolute top-full left-0 mt-2.5 hidden group-hover:block w-[280px] bg-white border border-slate-200/80 rounded-2xl p-4 shadow-[0_12px_32px_rgba(15,23,42,0.08)] z-30 pointer-events-none">
                     <p className="text-sm font-bold text-slate-900">Validity Period: {country.validity}</p>
-                    <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
+                    <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
                       {`The number of days your visa is active after the date of issuance. We ensure your visa is valid based on your travel dates.`}
                     </p>
                   </div>
@@ -280,15 +280,15 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
                 <FileText className="h-5.5 w-5.5" />
               </div>
               <div>
-                <p className="text-xs md:text-sm font-medium text-[var(--muted)]">Entry:</p>
+                <p className="text-xs md:text-sm font-medium text-muted-foreground">Entry:</p>
                 <div className="relative group inline-block mt-0.5">
-                  <span className="text-base md:text-lg font-extrabold text-[var(--foreground)] underline decoration-slate-400 decoration-dotted underline-offset-4 cursor-pointer">
+                  <span className="text-base md:text-lg font-extrabold text-foreground underline decoration-slate-400 decoration-dotted underline-offset-4 cursor-pointer">
                     {entryType}
                   </span>
                   {/* Tooltip Box */}
                   <div className="absolute top-full left-0 mt-2.5 hidden group-hover:block w-[280px] bg-white border border-slate-200/80 rounded-2xl p-4 shadow-[0_12px_32px_rgba(15,23,42,0.08)] z-30 pointer-events-none">
                     <p className="text-sm font-bold text-slate-900">Entry: {entryType}</p>
-                    <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
+                    <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
                       {`You can enter the country only once during the visa's validity period and cannot re-enter using the same visa once you've exited.`}
                     </p>
                   </div>
@@ -298,19 +298,19 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
 
             {/* 5. Method */}
             <div className="flex items-center gap-3.5 js-info-item">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-50 text-primary-subtle-foreground">
                 <FolderOpen className="h-5.5 w-5.5" />
               </div>
               <div>
-                <p className="text-xs md:text-sm font-medium text-[var(--muted)]">Method:</p>
+                <p className="text-xs md:text-sm font-medium text-muted-foreground">Method:</p>
                 <div className="relative group inline-block mt-0.5">
-                  <span className="text-base md:text-lg font-extrabold text-[var(--foreground)] underline decoration-slate-400 decoration-dotted underline-offset-4 cursor-pointer">
+                  <span className="text-base md:text-lg font-extrabold text-foreground underline decoration-slate-400 decoration-dotted underline-offset-4 cursor-pointer">
                     {methodType}
                   </span>
                   {/* Tooltip Box */}
                   <div className="absolute top-full left-0 mt-2.5 hidden group-hover:block w-[280px] bg-white border border-slate-200/80 rounded-2xl p-4 shadow-[0_12px_32px_rgba(15,23,42,0.08)] z-30 pointer-events-none">
                     <p className="text-sm font-bold text-slate-900">Method: {methodType}</p>
-                    <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
+                    <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
                       {`Apply and receive your visa fully online. No paperwork needed.`}
                     </p>
                   </div>
@@ -328,10 +328,10 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
         <div className="relative">
           {/* Header row with indicator dot */}
           <div className="flex items-center gap-2.5">
-            <span className="relative z-10 flex h-3 w-3 items-center justify-center rounded-full bg-[var(--primary)]">
+            <span className="relative z-10 flex h-3 w-3 items-center justify-center rounded-full bg-primary">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75"></span>
             </span>
-            <h1 id="guaranteed-visa-section" className="text-2xl font-bold text-[var(--foreground)] scroll-mt-28 js-reveal-heading">
+            <h1 id="guaranteed-visa-section" className="text-2xl font-bold text-foreground scroll-mt-28 js-reveal-heading">
               Get a Guaranteed Visa on
             </h1>
           </div>
@@ -377,37 +377,37 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
                     transition={{ type: "spring", stiffness: 300, damping: 25 }}
                     className={`relative w-full rounded-xl border p-3.5 text-left transition ${
                       active
-                        ? "border-[var(--primary)] bg-amber-50 shadow-md shadow-amber-100/50"
-                        : "border-[var(--border)] bg-[#fcfcfc]"
+                        ? "border-primary bg-amber-50 shadow-md shadow-amber-100/50"
+                        : "border-border bg-[#fcfcfc]"
                     }`}
                   >
                     {index === 1 && (
-                      <span className="absolute left-3.5 -top-2.5 rounded-full bg-[var(--primary)] px-2.5 py-0.5 text-[11px] font-semibold text-white shadow-sm">
+                      <span className="absolute left-3.5 -top-2.5 rounded-full bg-primary px-2.5 py-0.5 text-[11px] font-semibold text-white shadow-sm">
                         {plan.badge}
                       </span>
                     )}
 
                     <div className="flex items-start justify-between gap-2.5 w-full">
                       <div>
-                        <p className="text-sm font-semibold text-[var(--foreground)]">
+                        <p className="text-sm font-semibold text-foreground">
                           {plan.title}
                         </p>
-                        <div className="mt-1 inline-flex items-center gap-1.5 text-xs text-[var(--muted)]">
-                          <CheckCircle2 className="h-3.5 w-3.5 text-[var(--primary)]" />
+                        <div className="mt-1 inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+                          <CheckCircle2 className="h-3.5 w-3.5 text-primary" />
                           {plan.timing}
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-xl font-bold text-[var(--foreground)]">{plan.price}</p>
-                        <p className="text-[10px] font-semibold tracking-[0.18em] text-[var(--muted)]">
+                        <p className="text-xl font-bold text-foreground">{plan.price}</p>
+                        <p className="text-[10px] font-semibold tracking-[0.18em] text-muted-foreground">
                           TO BE PAID NOW
                         </p>
                       </div>
                     </div>
 
                     <div className="mt-3 flex items-center justify-between w-full">
-                      <span className="inline-flex items-center gap-1.5 text-xs text-[var(--primary)]">
-                        <span className="rounded-full border border-[var(--border)] bg-white px-2 py-0.5 text-[11px] font-semibold">
+                      <span className="inline-flex items-center gap-1.5 text-xs text-primary">
+                        <span className="rounded-full border border-border bg-white px-2 py-0.5 text-[11px] font-semibold">
                           View Timeline
                         </span>
                         <ChevronDown className="h-3.5 w-3.5" />
@@ -415,8 +415,8 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
                       <span
                         className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
                           active
-                            ? "bg-[var(--primary)] text-white"
-                            : "bg-white text-[var(--primary)]"
+                            ? "bg-primary text-white"
+                            : "bg-white text-primary"
                         }`}
                       >
                         {active ? "Selected" : "Select"}
@@ -433,7 +433,7 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
         <div className="pt-8 border-t border-slate-200/50">
           <div className="space-y-6">
           <div>
-            <h2 id="emirates-section" className="text-2xl font-bold text-[var(--foreground)] tracking-tight scroll-mt-28">
+            <h2 id="emirates-section" className="text-2xl font-bold text-foreground tracking-tight scroll-mt-28">
               All 7 Emirates with 1 Visa
             </h2>
           </div>
@@ -520,17 +520,17 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
       {/* Visa Requirements Section */}
       <div className="pt-8 border-t border-slate-200/50 space-y-5">
         <div>
-          <h2 id="requirements-section" className="text-2xl font-bold text-[var(--foreground)] tracking-tight scroll-mt-28 js-reveal-heading">
+          <h2 id="requirements-section" className="text-2xl font-bold text-foreground tracking-tight scroll-mt-28 js-reveal-heading">
             {displayName} Visa Requirements
           </h2>
         </div>
         <div className="flex flex-wrap gap-3">
-          <div className="inline-flex items-center gap-2 px-4.5 py-2.5 bg-slate-50 border border-slate-200/60 rounded-2xl font-bold text-sm text-[var(--foreground)] shadow-sm cursor-pointer hover:bg-slate-100/50 transition js-checklist-item">
+          <div className="inline-flex items-center gap-2 px-4.5 py-2.5 bg-slate-50 border border-slate-200/60 rounded-2xl font-bold text-sm text-foreground shadow-sm cursor-pointer hover:bg-slate-100/50 transition js-checklist-item">
             <Scan className="h-4.5 w-4.5 text-slate-700" />
             Passport Scan
           </div>
           {country.documents === "Photo + Passport" && (
-            <div className="inline-flex items-center gap-2 px-4.5 py-2.5 bg-slate-50 border border-slate-200/60 rounded-2xl font-bold text-sm text-[var(--foreground)] shadow-sm cursor-pointer hover:bg-slate-100/50 transition js-checklist-item">
+            <div className="inline-flex items-center gap-2 px-4.5 py-2.5 bg-slate-50 border border-slate-200/60 rounded-2xl font-bold text-sm text-foreground shadow-sm cursor-pointer hover:bg-slate-100/50 transition js-checklist-item">
               <FileText className="h-4.5 w-4.5 text-slate-700" />
               Photograph (White Background)
             </div>
@@ -541,14 +541,14 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
       {/* Partners We Work With Section */}
       <div className="pt-8 border-t border-slate-200/50 space-y-5">
         <div>
-          <h2 id="partners-section" className="text-2xl font-bold text-[var(--foreground)] tracking-tight scroll-mt-28 js-reveal-heading">
+          <h2 id="partners-section" className="text-2xl font-bold text-foreground tracking-tight scroll-mt-28 js-reveal-heading">
             Partners We Work With
           </h2>
         </div>
         <div className="grid grid-cols-3 gap-4 max-w-lg">
           {/* Card 1: Ministry of Foreign Affairs */}
           <div className="flex flex-col items-center justify-center bg-white border border-slate-200/40 rounded-3xl p-4 aspect-square shadow-sm hover:shadow-md transition duration-300 gap-2">
-            <svg className="h-10 w-10 text-amber-600" viewBox="0 0 100 100" fill="currentColor">
+            <svg className="h-10 w-10 text-primary-subtle-foreground" viewBox="0 0 100 100" fill="currentColor">
               <circle cx="50" cy="50" r="48" fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray="2 2" />
               <path d="M50 20 C45 35 25 40 15 50 C25 50 35 45 50 35 C65 45 75 50 85 50 C75 40 55 35 50 20 Z" />
               <circle cx="50" cy="45" r="14" fill="none" stroke="currentColor" strokeWidth="2" />
@@ -595,7 +595,7 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
       {/* How Process Works Section */}
       <div className="pt-8 border-t border-slate-200/50 space-y-6">
         <div>
-          <h2 id="process-section" className="text-2xl font-bold text-[var(--foreground)] tracking-tight scroll-mt-28">
+          <h2 id="process-section" className="text-2xl font-bold text-foreground tracking-tight scroll-mt-28">
             How Process Works
           </h2>
         </div>
@@ -607,9 +607,9 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
               <span className="h-1.5 w-1.5 rounded-full bg-white"></span>
             </span>
             <div className="rounded-2xl border border-slate-200/80 bg-white p-5 md:p-6 shadow-sm hover:shadow-md transition duration-300">
-              <p className="text-xs font-bold text-amber-600">Step 1</p>
-              <h3 className="text-lg font-bold text-[var(--foreground)] mt-1">Apply on Keyrise</h3>
-              <p className="mt-2 text-sm text-[var(--muted)] leading-relaxed">
+              <p className="text-xs font-bold text-primary-subtle-foreground">Step 1</p>
+              <h3 className="text-lg font-bold text-foreground mt-1">Apply on Keyrise</h3>
+              <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
                 Submit your documents on Keyrise — only pay government fee.
               </p>
             </div>
@@ -621,9 +621,9 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
               <span className="h-1.5 w-1.5 rounded-full bg-white"></span>
             </span>
             <div className="rounded-2xl border border-slate-200/80 bg-white p-5 md:p-6 shadow-sm hover:shadow-md transition duration-300">
-              <p className="text-xs font-bold text-amber-600">Step 2</p>
-              <h3 className="text-lg font-bold text-[var(--foreground)] mt-1">Your Documents Are Verified</h3>
-              <p className="mt-2 text-sm text-[var(--muted)] leading-relaxed">
+              <p className="text-xs font-bold text-primary-subtle-foreground">Step 2</p>
+              <h3 className="text-lg font-bold text-foreground mt-1">Your Documents Are Verified</h3>
+              <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
                 Keyrise verifies your documents and submits to Immigration
               </p>
             </div>
@@ -636,9 +636,9 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
             </span>
             <div className="rounded-2xl border border-slate-200/80 bg-white p-5 md:p-6 shadow-sm hover:shadow-md transition duration-300 space-y-4">
               <div>
-                <p className="text-xs font-bold text-amber-600">Step 3</p>
-                <h3 className="text-lg font-bold text-[var(--foreground)] mt-1">Your Visa Gets Processed</h3>
-                <p className="mt-2 text-sm text-[var(--muted)] leading-relaxed">
+                <p className="text-xs font-bold text-primary-subtle-foreground">Step 3</p>
+                <h3 className="text-lg font-bold text-foreground mt-1">Your Visa Gets Processed</h3>
+                <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
                   We work with Immigration to ensure you get your Visa on time.
                 </p>
               </div>
@@ -653,7 +653,7 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
                       Application has been sent to the immigration supervisor
                     </p>
                     <div className="mt-1 flex items-center gap-2">
-                      <span className="text-[10px] font-semibold text-slate-500">8 Jan, 5:45 AM</span>
+                      <span className="text-[10px] font-semibold text-muted-foreground">8 Jan, 5:45 AM</span>
                       <span className="inline-flex items-center rounded bg-emerald-50 px-1.5 py-0.5 text-[9px] font-extrabold text-emerald-700 uppercase tracking-wider">
                         ON TIME
                       </span>
@@ -666,7 +666,7 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
                       Application has been sent to internal intelligence
                     </p>
                     <div className="mt-1 flex items-center gap-2">
-                      <span className="text-[10px] font-semibold text-slate-500">8 Jan, 5:45 AM</span>
+                      <span className="text-[10px] font-semibold text-muted-foreground">8 Jan, 5:45 AM</span>
                       <span className="inline-flex items-center rounded bg-emerald-50 px-1.5 py-0.5 text-[9px] font-extrabold text-emerald-700 uppercase tracking-wider">
                         ON TIME
                       </span>
@@ -684,9 +684,9 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
             </span>
             <div className="rounded-2xl border border-slate-200/80 bg-white p-5 md:p-6 shadow-sm hover:shadow-md transition duration-300 space-y-4">
               <div>
-                <p className="text-xs font-bold text-amber-600">Step 4</p>
-                <h3 className="text-lg font-bold text-[var(--foreground)] mt-1">
-                  Get Your Visa on <span className="text-amber-600">20 Jul, 01:08 PM</span>
+                <p className="text-xs font-bold text-primary-subtle-foreground">Step 4</p>
+                <h3 className="text-lg font-bold text-foreground mt-1">
+                  Get Your Visa on <span className="text-primary-subtle-foreground">20 Jul, 01:08 PM</span>
                 </h3>
               </div>
 
@@ -704,7 +704,7 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
                   <span className="text-xs font-bold text-slate-700 leading-snug max-w-[200px] md:max-w-none">
                     Your visa is approved even one second after the promised time
                   </span>
-                  <span className="rounded-lg bg-amber-50 px-3 py-1.5 text-xs font-bold text-amber-700 shadow-sm border border-amber-100/50 shrink-0">
+                  <span className="rounded-lg bg-amber-50 px-3 py-1.5 text-xs font-bold text-primary-subtle-foreground shadow-sm border border-amber-100/50 shrink-0">
                     Keyrise Fee Waived
                   </span>
                 </div>
@@ -724,7 +724,7 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
       {/* Chances of Approval Section */}
       <div className="pt-8 border-t border-slate-200/50 space-y-6 font-sans">
         <div>
-          <h2 id="approval-section" className="text-2xl font-bold text-[var(--foreground)] tracking-tight scroll-mt-28">
+          <h2 id="approval-section" className="text-2xl font-bold text-foreground tracking-tight scroll-mt-28">
             Want to know if your will be approved?
           </h2>
         </div>
@@ -734,11 +734,11 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
             /* Promo Card */
             <div className="w-full max-w-xl bg-white border border-slate-200/60 rounded-3xl p-5 md:p-6 shadow-sm flex items-center justify-between gap-4">
               <div className="space-y-2.5">
-                <p className="text-xs font-bold text-amber-600 uppercase tracking-wider">Learn Your</p>
+                <p className="text-xs font-bold text-primary-subtle-foreground uppercase tracking-wider">Learn Your</p>
                 <h3 className="text-xl md:text-2xl font-extrabold text-slate-800 leading-tight">
                   Chances of Approval
                 </h3>
-                <p className="text-sm text-slate-500">
+                <p className="text-sm text-muted-foreground">
                   Answer 6 questions to know your chances
                 </p>
                 <button
@@ -747,7 +747,7 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
                     setQuizStep(0);
                     setQuizAnswers({});
                   }}
-                  className="inline-flex items-center gap-1 text-sm font-bold text-amber-600 hover:text-amber-800 transition mt-2.5 cursor-pointer"
+                  className="inline-flex items-center gap-1 text-sm font-bold text-primary-subtle-foreground hover:text-amber-800 transition mt-2.5 cursor-pointer"
                 >
                   Evaluate my chances <ChevronRight className="h-4 w-4" />
                 </button>
@@ -774,7 +774,7 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
                     </text>
                   </svg>
                 </div>
-                <span className="rounded-full bg-amber-50 px-2.5 py-0.5 text-[9.5px] font-bold text-amber-600 shadow-sm border border-amber-100/50">
+                <span className="rounded-full bg-amber-50 px-2.5 py-0.5 text-[9.5px] font-bold text-primary-subtle-foreground shadow-sm border border-amber-100/50">
                   Takes 5 seconds
                 </span>
               </div>
@@ -870,11 +870,11 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
                   style={{ height: `${animatedHeight}%` }}
                 >
                   {/* Front Wave */}
-                  <svg className="absolute left-0 w-[200%] h-12 -top-10 text-[#d97706] fill-current animate-wave" viewBox="0 0 1200 120" preserveAspectRatio="none">
+                  <svg className="absolute left-0 w-[200%] h-12 -top-10 text-primary fill-current animate-wave" viewBox="0 0 1200 120" preserveAspectRatio="none">
                     <path d="M0,60 C150,100 350,20 500,60 C650,100 850,20 1000,60 C1150,100 1300,20 1450,60 L1450,120 L0,120 Z" />
                   </svg>
                   {/* Back Wave (slightly offset and transparent) */}
-                  <svg className="absolute left-0 w-[200%] h-12 -top-12 text-[#d97706]/50 fill-current animate-wave-slow opacity-60" viewBox="0 0 1200 120" preserveAspectRatio="none">
+                  <svg className="absolute left-0 w-[200%] h-12 -top-12 text-primary/50 fill-current animate-wave-slow opacity-60" viewBox="0 0 1200 120" preserveAspectRatio="none">
                     <path d="M0,50 C100,20 250,80 400,50 C550,20 700,80 850,50 C1000,20 1150,80 1300,50 L1300,120 L0,120 Z" />
                   </svg>
                 </div>
@@ -897,7 +897,7 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
                   </h4>
                   <p
                     className={`text-xs sm:text-sm max-w-[240px] transition-colors duration-500 mt-2 leading-relaxed font-medium ${
-                      percentage > 50 ? "text-amber-100/90" : "text-slate-500"
+                      percentage > 50 ? "text-amber-100/90" : "text-muted-foreground"
                     }`}
                   >
                     {reason}
@@ -906,7 +906,7 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
                   <div className="mt-6 flex flex-col items-center gap-3 w-full">
                     <button
                       onClick={() => setShowQuiz(false)}
-                      className="w-3/4 sm:w-2/3 font-bold px-6 py-3 rounded-full shadow-md transition-transform hover:scale-105 active:scale-95 text-sm cursor-pointer bg-white text-[#d97706]"
+                      className="w-3/4 sm:w-2/3 font-bold px-6 py-3 rounded-full shadow-md transition-transform hover:scale-105 active:scale-95 text-sm cursor-pointer bg-white text-primary"
                     >
                       Apply anyway
                     </button>
@@ -931,7 +931,7 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
       {/* Statistics Section */}
       <div className="pt-8 border-t border-slate-200/50 space-y-6 font-sans">
         <div className="relative inline-block">
-          <h2 id="statistics-section" className="text-2xl font-bold text-[var(--foreground)] tracking-tight scroll-mt-28">
+          <h2 id="statistics-section" className="text-2xl font-bold text-foreground tracking-tight scroll-mt-28">
             Statistics on
           </h2>
           <div className="absolute left-0 bottom-0 h-0.5 w-12 bg-[#d97706]" />
@@ -947,7 +947,7 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
                 setHasHoveredChart(false);
               }}
               className={`py-4 text-xs font-bold tracking-wider relative transition-colors duration-200 cursor-pointer mr-8 ${
-                statsTab === "processingTime" ? "text-[#d97706]" : "text-slate-500 hover:text-slate-800"
+                statsTab === "processingTime" ? "text-primary" : "text-muted-foreground hover:text-slate-800"
               }`}
             >
               VISA PROCESSING TIME
@@ -962,7 +962,7 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
                 setHasHoveredChart(false);
               }}
               className={`py-4 text-xs font-bold tracking-wider relative transition-colors duration-200 cursor-pointer ${
-                statsTab === "approvalRating" ? "text-[#d97706]" : "text-slate-500 hover:text-slate-800"
+                statsTab === "approvalRating" ? "text-primary" : "text-muted-foreground hover:text-slate-800"
               }`}
             >
               APPROVAL RATING
@@ -978,7 +978,7 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
             <div className="md:col-span-4 bg-slate-50/50 p-6 md:p-8 flex flex-col justify-between border-b md:border-b-0 md:border-r border-slate-100 min-h-[220px]">
               <div className="space-y-3">
                 <h3 className="text-lg font-bold text-slate-800">What is this?</h3>
-                <p className="text-sm text-slate-500 leading-relaxed">
+                <p className="text-sm text-muted-foreground leading-relaxed">
                   {statsTab === "processingTime"
                     ? "This shows the average time a visa decision took to be delivered on"
                     : "This shows the average approval rating for visa applications delivered on"}
@@ -992,7 +992,7 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
                     : "Monday, 20 July"}
                 </p>
                 <div className="h-px bg-slate-200/60 w-8 my-2" />
-                <p className="text-xl font-extrabold text-[#d97706]">
+                <p className="text-xl font-extrabold text-primary">
                   {hoveredPointIndex !== null
                     ? (statsTab === "processingTime" ? statsProcessingData[hoveredPointIndex].valueText : statsApprovalData[hoveredPointIndex].valueText)
                     : (statsTab === "processingTime" ? "4 Days 1 Hr" : "98.5% Approval Rate")}
@@ -1005,7 +1005,7 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
               {/* Chart Grid Lines & SVG Graph */}
               <div className="relative h-[200px] w-full select-none">
                 {/* Horizontal grid lines with labels on the right */}
-                <div className="absolute inset-0 flex flex-col justify-between pointer-events-none text-[10px] font-bold text-slate-400/80">
+                <div className="absolute inset-0 flex flex-col justify-between pointer-events-none text-[10px] font-bold text-muted-foreground/80">
                   {statsTab === "processingTime" ? (
                     <>
                       <div className="w-full flex items-center justify-between border-b border-dashed border-slate-100 pb-1">
@@ -1194,10 +1194,10 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
                       top: `${tooltipState.y}px`
                     }}
                   >
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider leading-none">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider leading-none">
                       {statsTab === "processingTime" ? statsProcessingData[hoveredPointIndex].date : statsApprovalData[hoveredPointIndex].date}
                     </p>
-                    <p className="text-xs font-black text-[#d97706] leading-none mt-1">
+                    <p className="text-xs font-black text-primary leading-none mt-1">
                       {statsTab === "processingTime" ? statsProcessingData[hoveredPointIndex].valueText : statsApprovalData[hoveredPointIndex].valueText}
                     </p>
                   </div>
@@ -1205,7 +1205,7 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
               </div>
 
               {/* X-Axis Labels */}
-              <div className="flex justify-between items-center text-[11px] font-bold text-slate-500 mt-4 px-2 select-none">
+              <div className="flex justify-between items-center text-[11px] font-bold text-muted-foreground mt-4 px-2 select-none">
                 <span className="w-10 text-center">Thu</span>
                 <span className="w-10 text-center">Fri</span>
                 <span className="w-10 text-center">Sat</span>

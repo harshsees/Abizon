@@ -75,26 +75,26 @@ export function Footer() {
             </div>
 
             {/* Description */}
-            <p className="text-[13px] font-medium text-slate-500 leading-relaxed max-w-xs">
+            <p className="text-[13px] font-medium text-muted-foreground leading-relaxed max-w-xs">
               Keyrise helps you plan, apply, and track visas seamlessly across the world.
             </p>
 
             {/* Ask AI Section */}
             <div className="space-y-2.5">
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+              <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">
                 Ask AI about Keyrise
               </span>
               <div className="flex items-center gap-2">
-                <button className="h-9 w-9 flex items-center justify-center rounded-full bg-slate-50 border border-slate-200 text-slate-500 hover:text-slate-800 transition cursor-pointer">
+                <button type="button" aria-label="Chat with Keyrise AI" className="h-9 w-9 flex items-center justify-center rounded-full bg-slate-50 border border-slate-200 text-muted-foreground hover:text-slate-800 transition cursor-pointer">
                   <MessageSquare className="w-4 h-4 fill-slate-400/10" />
                 </button>
-                <button className="h-9 w-9 flex items-center justify-center rounded-full bg-slate-50 border border-slate-200 text-slate-500 hover:text-slate-800 transition cursor-pointer">
+                <button type="button" aria-label="Keyrise AI suggestions" className="h-9 w-9 flex items-center justify-center rounded-full bg-slate-50 border border-slate-200 text-muted-foreground hover:text-slate-800 transition cursor-pointer">
                   <Sparkles className="w-4 h-4 text-amber-500 fill-amber-500/10" />
                 </button>
-                <button className="h-9 w-9 flex items-center justify-center rounded-full bg-slate-50 border border-slate-200 text-slate-500 hover:text-slate-800 transition cursor-pointer">
+                <button type="button" aria-label="Keyrise AI knowledge base" className="h-9 w-9 flex items-center justify-center rounded-full bg-slate-50 border border-slate-200 text-muted-foreground hover:text-slate-800 transition cursor-pointer">
                   <Brain className="w-4 h-4 text-violet-500" />
                 </button>
-                <button className="h-9 w-9 flex items-center justify-center rounded-full bg-slate-50 border border-slate-200 text-slate-500 hover:text-slate-800 transition cursor-pointer">
+                <button type="button" aria-label="Keyrise AI assistant" className="h-9 w-9 flex items-center justify-center rounded-full bg-slate-50 border border-slate-200 text-muted-foreground hover:text-slate-800 transition cursor-pointer">
                   <Bot className="w-4 h-4 text-emerald-500" />
                 </button>
               </div>
@@ -102,9 +102,9 @@ export function Footer() {
 
             {/* Wall Of Love */}
             <div className="space-y-2">
-              <a href="#" className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-800 hover:underline">
+              <a href="#" className="inline-flex items-center gap-1 py-1.5 text-[11px] font-bold text-slate-800 hover:underline">
                 <span>Wall Of Love</span>
-                <ArrowUpRight className="w-3.5 h-3.5 text-slate-400" />
+                <ArrowUpRight className="w-3.5 h-3.5 text-muted-foreground" />
               </a>
               <div className="flex items-center gap-3">
                 {/* Overlapping Avatars */}
@@ -112,9 +112,9 @@ export function Footer() {
                   <div className="h-6 w-6 rounded-full border border-white bg-rose-100 text-rose-700 flex items-center justify-center text-[9px] font-black uppercase">P</div>
                   <div className="h-6 w-6 rounded-full border border-white bg-violet-100 text-violet-700 flex items-center justify-center text-[9px] font-black uppercase">A</div>
                   <div className="h-6 w-6 rounded-full border border-white bg-emerald-100 text-emerald-700 flex items-center justify-center text-[9px] font-black uppercase">R</div>
-                  <div className="h-6 w-6 rounded-full border border-white bg-amber-100 text-amber-700 flex items-center justify-center text-[9px] font-black uppercase">M</div>
+                  <div className="h-6 w-6 rounded-full border border-white bg-amber-100 text-primary-subtle-foreground flex items-center justify-center text-[9px] font-black uppercase">M</div>
                 </div>
-                <span className="text-xs font-semibold text-slate-500">20K+ reviews</span>
+                <span className="text-xs font-semibold text-muted-foreground">20K+ reviews</span>
               </div>
             </div>
 
@@ -153,13 +153,13 @@ export function Footer() {
 
           {/* Column 2: Company (col-span-2) */}
           <div className="lg:col-span-2 space-y-3.5 text-left">
-            <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">
+            <h3 className="text-xs font-black text-muted-foreground uppercase tracking-widest">
               Company
             </h3>
             <ul className="space-y-2.5">
               {companyLinks.map((link) => (
                 <li key={link.name}>
-                  <a href={link.href} className="text-xs font-semibold text-slate-500 hover:text-slate-950 transition">
+                  <a href={link.href} className="inline-block py-1 text-xs font-semibold text-muted-foreground hover:text-slate-950 transition">
                     {link.name}
                   </a>
                 </li>
@@ -169,13 +169,13 @@ export function Footer() {
 
           {/* Column 3: Products (col-span-2) */}
           <div className="lg:col-span-2 space-y-3.5 text-left">
-            <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">
+            <h3 className="text-xs font-black text-muted-foreground uppercase tracking-widest">
               Products
             </h3>
             <ul className="space-y-2.5">
               {productLinks.map((link) => (
                 <li key={link.name}>
-                  <a href={link.href} className="text-xs font-semibold text-slate-500 hover:text-slate-950 transition">
+                  <a href={link.href} className="inline-block py-1 text-xs font-semibold text-muted-foreground hover:text-slate-950 transition">
                     {link.name}
                   </a>
                 </li>
@@ -185,13 +185,13 @@ export function Footer() {
 
           {/* Column 4: Guides (col-span-2) */}
           <div className="lg:col-span-2 space-y-3.5 text-left">
-            <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">
+            <h3 className="text-xs font-black text-muted-foreground uppercase tracking-widest">
               Guides
             </h3>
             <ul className="space-y-2.5">
               {guideLinks.map((link) => (
                 <li key={link.name}>
-                  <a href={link.href} className="text-xs font-semibold text-slate-500 hover:text-slate-950 transition">
+                  <a href={link.href} className="inline-block py-1 text-xs font-semibold text-muted-foreground hover:text-slate-950 transition">
                     {link.name}
                   </a>
                 </li>
@@ -201,14 +201,14 @@ export function Footer() {
 
           {/* Column 5: Offices (col-span-2) */}
           <div className="lg:col-span-2 space-y-3.5 text-left">
-            <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">
+            <h3 className="text-xs font-black text-muted-foreground uppercase tracking-widest">
               Offices
             </h3>
             <ul className="space-y-4">
               {officeLocations.map((loc, idx) => (
                 <li key={idx} className="flex gap-2">
-                  <MapPin className="w-4 h-4 text-slate-400 flex-shrink-0 mt-0.5" />
-                  <span className="text-xs font-semibold text-slate-500 leading-normal">
+                  <MapPin className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5" />
+                  <span className="text-xs font-semibold text-muted-foreground leading-normal">
                     {loc.address}
                   </span>
                 </li>
@@ -219,24 +219,28 @@ export function Footer() {
         </div>
 
         {/* Bottom copyright segment */}
-        <div className="border-t border-slate-200 mt-12 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4 text-slate-400">
+        <div className="border-t border-slate-200 mt-12 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4 text-muted-foreground">
           
           {/* Copyright details */}
           <div className="flex flex-wrap items-center gap-2 text-xs font-medium">
             <span>&copy; {new Date().getFullYear()} Keyrise. All rights reserved.</span>
             <span>&bull;</span>
-            <a href="#" className="hover:text-slate-800 transition">Privacy</a>
+            <a href="#" className="inline-block py-1.5 hover:text-slate-800 transition">Privacy</a>
             <span>&bull;</span>
-            <a href="#" className="hover:text-slate-800 transition">Terms</a>
+            <a href="#" className="inline-block py-1.5 hover:text-slate-800 transition">Terms</a>
           </div>
 
           {/* Mini Logo right */}
-          <div className="flex items-center gap-1.5 opacity-60">
-            <svg className="w-5 h-5 text-slate-500" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+          {/* The wrapper carried `opacity-60`, which dropped this mark to
+              2.88:1. Opacity is invisible to a token system — the colour looks
+              compliant in the class list while rendering as something else —
+              so the de-emphasis comes from the muted token instead. */}
+          <div className="flex items-center gap-1.5">
+            <svg className="w-5 h-5 text-muted-foreground" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
               <path d="M15 80 L50 20 L85 80 Z" stroke="currentColor" strokeWidth="10" strokeLinecap="round" strokeLinejoin="round" />
               <path d="M40 55 L60 55" stroke="currentColor" strokeWidth="10" strokeLinecap="round" />
             </svg>
-            <span className="text-xs font-black tracking-tighter text-slate-600 font-sans uppercase">
+            <span className="text-xs font-black tracking-tighter text-muted-foreground font-sans uppercase">
               keyrise
             </span>
           </div>

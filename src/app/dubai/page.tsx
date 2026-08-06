@@ -52,10 +52,10 @@ export default function DubaiPage() {
   };
 
   return (
-    <div className="flex flex-1 flex-col bg-[var(--background)] relative">
+    <div className="flex flex-1 flex-col bg-background relative">
       <Header forceHide={scrolledPastHero} />
 
-      <main className="flex-1">
+      <main id="main-content" tabIndex={-1} className="flex-1">
         <div id="destinations" className="scroll-mt-28">
           <TopHero onStart={handleStartApplication} />
         </div>
@@ -111,11 +111,11 @@ export default function DubaiPage() {
       </main>
       
       {/* Bottom fixed start button for Mobile/Tablet */}
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--border)] bg-white p-3 md:hidden">
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-white p-3 md:hidden">
         <button
           type="button"
           onClick={handleStartApplication}
-          className="block w-full rounded-xl bg-[var(--primary)] px-4 py-3 text-center text-sm font-semibold text-white cursor-pointer"
+          className="block w-full rounded-xl bg-primary px-4 py-3 text-center text-sm font-semibold text-white cursor-pointer"
         >
           Start Application
         </button>

@@ -1,7 +1,11 @@
 "use client";
 
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ChevronDown } from "lucide-react";
-import { useState } from "react";
+import { useId, useState } from "react";
+
+import { DURATION, EASE } from "@/lib/motion";
+import { cn } from "@/lib/utils";
 
 const faqs = [
   {
@@ -40,6 +44,8 @@ const faqs = [
 
 export function FAQAccordion({ className, countryName = "Dubai" }: { className?: string; countryName?: string }) {
   const [open, setOpen] = useState<number | null>(0);
+  const reduced = useReducedMotion();
+  const baseId = useId();
 
   const formattedFaqs = faqs.map((faq) => {
     return {
@@ -50,26 +56,81 @@ export function FAQAccordion({ className, countryName = "Dubai" }: { className?:
 
   return (
     <section id="faq" className={`${className || "mx-auto w-full max-w-4xl px-4 py-14 md:px-6"} scroll-mt-20`}>
-      <h2 className="text-3xl font-bold text-[var(--foreground)]">FAQs</h2>
+      <h2 className="text-3xl font-bold text-foreground">FAQs</h2>
       <div className="mt-6 space-y-3">
         {formattedFaqs.map((item, index) => {
           const isOpen = open === index;
+          const panelId = `${baseId}-panel-${index}`;
+          const triggerId = `${baseId}-trigger-${index}`;
+
           return (
-            <article key={item.q} className="rounded-2xl border border-[var(--border)] bg-white p-4">
+            <article
+              key={item.q}
+              className={cn(
+                "rounded-lg border bg-surface p-4",
+                "transition-[border-color,box-shadow] duration-[--duration-base] ease-[--ease-out]",
+                isOpen
+                  ? "border-primary-border shadow-e2"
+                  : "border-border hover:border-border-strong",
+              )}
+            >
               <button
                 type="button"
+                id={triggerId}
                 onClick={() => setOpen(isOpen ? null : index)}
-                className="flex w-full items-center justify-between text-left"
+                // min-h-11 keeps the row at the 44px touch minimum; the text
+                // alone collapsed the trigger to 22px on mobile.
+                className="flex min-h-11 w-full cursor-pointer items-center justify-between gap-4 text-left"
                 aria-expanded={isOpen}
+                aria-controls={panelId}
               >
-                <span className="pr-4 text-sm font-semibold text-[var(--foreground)] md:text-base">
+                <span className="text-sm font-semibold text-foreground md:text-base">
                   {item.q}
                 </span>
-                <ChevronDown
-                  className={`h-5 w-5 text-[var(--muted)] ${isOpen ? "rotate-180" : ""}`}
-                />
+                {/* Rotation is driven by Framer rather than a CSS class so it
+                    shares the panel's easing — the two used to disagree, and
+                    the chevron snapped while the text appeared. */}
+                <motion.span
+                  aria-hidden="true"
+                  className="shrink-0 text-muted-foreground"
+                  animate={{ rotate: isOpen ? 180 : 0 }}
+                  transition={{ duration: DURATION.base, ease: EASE.out }}
+                >
+                  <ChevronDown className="size-5" />
+                </motion.span>
               </button>
-              {isOpen && <p className="mt-3 text-sm leading-6 text-[var(--muted)]">{item.a}</p>}
+
+              <AnimatePresence initial={false}>
+                {isOpen ? (
+                  <motion.div
+                    key="panel"
+                    id={panelId}
+                    role="region"
+                    aria-labelledby={triggerId}
+                    initial="collapsed"
+                    animate="open"
+                    exit="collapsed"
+                    variants={{
+                      open: { height: "auto", opacity: 1 },
+                      collapsed: { height: 0, opacity: 0 },
+                    }}
+                    transition={
+                      reduced
+                        ? { duration: 0 }
+                        : {
+                            height: { duration: DURATION.slow, ease: EASE.out },
+                            // Opacity trails the height slightly so text fades
+                            // in against an already-opening panel instead of
+                            // appearing to push it open.
+                            opacity: { duration: DURATION.base, ease: EASE.out },
+                          }
+                    }
+                    className="overflow-hidden"
+                  >
+                    <p className="mt-3 text-sm leading-6 text-muted-foreground">{item.a}</p>
+                  </motion.div>
+                ) : null}
+              </AnimatePresence>
             </article>
           );
         })}

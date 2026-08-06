@@ -1,9 +1,21 @@
 "use client";
 
 import { FileUp, LoaderCircle } from "lucide-react";
-import { useRef } from "react";
+import { useId, useRef, useState } from "react";
+
+import { Badge, type BadgeProps } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 export type UploadState = "uploaded" | "reviewing" | "needs replacement" | "approved";
+
+const STATUS_VARIANT: Record<UploadState, BadgeProps["variant"]> = {
+  uploaded: "primary",
+  reviewing: "warning",
+  "needs replacement": "destructive",
+  approved: "success",
+};
+
+const ACCEPTED = ".jpg,.jpeg,.png,.pdf";
 
 type DocumentUploaderProps = {
   fileName?: string;
@@ -19,49 +31,79 @@ export function DocumentUploader({
   onFileSelect,
 }: DocumentUploaderProps) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const [dragging, setDragging] = useState(false);
 
-  const statusStyles: Record<UploadState, string> = {
-    uploaded: "bg-amber-50 text-amber-700 border-amber-200",
-    reviewing: "bg-amber-50 text-amber-700 border-amber-200",
-    "needs replacement": "bg-red-50 text-red-700 border-red-200",
-    approved: "bg-green-50 text-green-700 border-green-200",
+  const baseId = useId();
+  const hintId = `${baseId}-hint`;
+  const errorId = `${baseId}-error`;
+
+  const handleDrop = (event: React.DragEvent) => {
+    event.preventDefault();
+    setDragging(false);
+    onFileSelect(event.dataTransfer.files?.[0] ?? null);
   };
 
   return (
     <div className="space-y-3">
+      {/* The drop target is the button itself, so the "drag and drop" copy below
+          is actually true — previously it advertised a handler that didn't exist. */}
       <button
         type="button"
-        className="flex w-full flex-col items-center justify-center rounded-2xl border border-dashed border-[var(--border)] bg-white p-6 text-center hover:bg-[#fafafe]"
         onClick={() => inputRef.current?.click()}
+        onDragOver={(event) => {
+          event.preventDefault();
+          setDragging(true);
+        }}
+        onDragLeave={() => setDragging(false)}
+        onDrop={handleDrop}
+        aria-describedby={[hintId, error ? errorId : null].filter(Boolean).join(" ")}
+        className={cn(
+          "flex w-full cursor-pointer flex-col items-center justify-center rounded-lg",
+          "border border-dashed p-6 text-center transition-colors",
+          dragging
+            ? "border-primary bg-primary-subtle"
+            : error
+              ? "border-destructive bg-surface hover:bg-surface-sunken"
+              : "border-border-strong bg-surface hover:bg-surface-sunken",
+        )}
       >
-        <FileUp className="mb-2 h-6 w-6 text-[var(--primary)]" />
-        <p className="text-sm font-semibold text-[var(--foreground)]">
+        <FileUp className="mb-2 size-6 text-primary" aria-hidden="true" />
+        <span className="text-sm font-semibold text-foreground">
           Upload passport front page
-        </p>
-        <p className="mt-1 text-xs text-[var(--muted)]">
+        </span>
+        <span id={hintId} className="mt-1 block text-xs text-muted-foreground">
           Drag and drop supported • JPG, PNG, PDF • Max 5MB
-        </p>
-        <p className="mt-1 text-xs text-[var(--muted)]">
-          Camera scan option: Coming soon
-        </p>
+          <span className="mt-1 block">Camera scan option: Coming soon</span>
+        </span>
       </button>
+
       <input
         ref={inputRef}
         type="file"
-        accept=".jpg,.jpeg,.png,.pdf"
+        accept={ACCEPTED}
         className="hidden"
+        tabIndex={-1}
+        aria-hidden="true"
         onChange={(event) => onFileSelect(event.target.files?.[0] ?? null)}
       />
+
       {fileName && (
-        <div className="rounded-xl border border-[var(--border)] bg-white p-3 text-sm">
-          <p className="font-medium text-[var(--foreground)]">{fileName}</p>
-          <span className={`mt-2 inline-flex items-center gap-2 rounded-full border px-2 py-1 text-xs font-semibold ${statusStyles[status]}`}>
-            {status === "reviewing" ? <LoaderCircle className="h-3 w-3 animate-spin" /> : null}
+        <div className="rounded-md border border-border bg-surface p-3 text-sm">
+          <p className="font-medium text-foreground">{fileName}</p>
+          <Badge variant={STATUS_VARIANT[status]} className="mt-2 capitalize">
+            {status === "reviewing" ? (
+              <LoaderCircle className="size-3 animate-spin" aria-hidden="true" />
+            ) : null}
             {status}
-          </span>
+          </Badge>
         </div>
       )}
-      {error && <p className="text-sm text-[var(--error)]">{error}</p>}
+
+      {error && (
+        <p id={errorId} role="alert" className="text-sm font-semibold text-destructive">
+          {error}
+        </p>
+      )}
     </div>
   );
 }
