@@ -1,43 +1,45 @@
 "use client";
 
+import Link from "next/link";
 import { MapPin, ArrowUpRight, MessageSquare, Bot, Sparkles, Brain } from "lucide-react";
 
 export function Footer() {
   const companyLinks = [
-    { name: "Careers", href: "#" },
-    { name: "Newsroom", href: "#" },
-    { name: "Contact", href: "#" },
-    { name: "Defense Personnel", href: "#" },
-    { name: "Partners", href: "#" },
-    { name: "Engineering", href: "#" },
-    { name: "Faultlines", href: "#" },
-    { name: "Security", href: "#" },
-    { name: "Transparency", href: "#" },
-    { name: "Refunds Policy", href: "#" },
-    { name: "Fee Change Audit", href: "#" },
-    { name: "Status", href: "#" },
-    { name: "Speed", href: "#" },
-    { name: "Keyrise Atlas", href: "#" },
+    { name: "Careers", href: "/careers" },
+    { name: "Newsroom", href: "/newsroom" },
+    { name: "Contact", href: "/contact" },
+    { name: "Defense Personnel", href: "/defense-personnel" },
+    { name: "Partners", href: "/partners" },
+    { name: "Engineering", href: "/engineering" },
+    { name: "Faultlines", href: "/faultlines" },
+    { name: "Security", href: "/security" },
+    { name: "Transparency", href: "/transparency" },
+    { name: "Refunds Policy", href: "/refunds-policy" },
+    { name: "Fee Change Audit", href: "/fee-change-audit" },
+    { name: "Status", href: "/status" },
+    { name: "Speed", href: "/speed" },
+    { name: "Keyrise Atlas", href: "/atlas" },
   ];
 
   const productLinks = [
-    { name: "Visa Requirements", href: "#" },
-    { name: "Schengen Appointment Checker", href: "#" },
-    { name: "Visa Photo Creator", href: "#" },
-    { name: "Keyrise Emergency Helpline", href: "#" },
-    { name: "Rejection Recovery", href: "#" },
-    { name: "Student Visa", href: "#" },
-    { name: "Bible", href: "#" },
-    { name: "Magazine Library", href: "#" },
-    { name: "UAE Visa Status Checker", href: "#" },
+    { name: "All Tools", href: "/tools" },
+    { name: "Visa Requirements", href: "/tools/visa-requirements" },
+    { name: "Schengen Appointment Checker", href: "/tools/schengen-appointment-checker" },
+    { name: "Visa Photo Creator", href: "/tools/visa-photo-creator" },
+    { name: "Keyrise Emergency Helpline", href: "/emergency-helpline" },
+    { name: "Rejection Recovery", href: "/rejection-recovery" },
+    { name: "Student Visa", href: "/student-visa" },
+    { name: "Bible", href: "/bible" },
+    { name: "Magazine Library", href: "/magazine" },
+    { name: "UAE Visa Status Checker", href: "/tools/uae-visa-status-checker" },
   ];
 
   const guideLinks = [
-    { name: "Schengen Visa", href: "#" },
-    { name: "US Visa", href: "#" },
-    { name: "UK Visa", href: "#" },
-    { name: "Japan Visa", href: "#" },
-    { name: "Keyrise Passport Index", href: "#" },
+    { name: "Schengen Visa", href: "/guides/schengen-visa" },
+    { name: "US Visa", href: "/guides/us-visa" },
+    { name: "UK Visa", href: "/guides/uk-visa" },
+    { name: "Japan Visa", href: "/guides/japan-visa" },
+    { name: "Keyrise Passport Index", href: "/passport-index" },
   ];
 
   const officeLocations = [
@@ -102,10 +104,10 @@ export function Footer() {
 
             {/* Wall Of Love */}
             <div className="space-y-2">
-              <a href="#" className="inline-flex items-center gap-1 py-1.5 text-[11px] font-bold text-slate-800 hover:underline">
+              <Link href="/transparency" className="inline-flex items-center gap-1 py-1.5 text-[11px] font-bold text-slate-800 hover:underline">
                 <span>Wall Of Love</span>
                 <ArrowUpRight className="w-3.5 h-3.5 text-muted-foreground" />
-              </a>
+              </Link>
               <div className="flex items-center gap-3">
                 {/* Overlapping Avatars */}
                 <div className="flex -space-x-2">
@@ -159,9 +161,9 @@ export function Footer() {
             <ul className="space-y-2.5">
               {companyLinks.map((link) => (
                 <li key={link.name}>
-                  <a href={link.href} className="inline-block py-1 text-xs font-semibold text-muted-foreground hover:text-slate-950 transition">
+                  <Link href={link.href} className="inline-block py-1 text-xs font-semibold text-muted-foreground hover:text-slate-950 transition">
                     {link.name}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -175,9 +177,9 @@ export function Footer() {
             <ul className="space-y-2.5">
               {productLinks.map((link) => (
                 <li key={link.name}>
-                  <a href={link.href} className="inline-block py-1 text-xs font-semibold text-muted-foreground hover:text-slate-950 transition">
+                  <Link href={link.href} className="inline-block py-1 text-xs font-semibold text-muted-foreground hover:text-slate-950 transition">
                     {link.name}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -191,9 +193,9 @@ export function Footer() {
             <ul className="space-y-2.5">
               {guideLinks.map((link) => (
                 <li key={link.name}>
-                  <a href={link.href} className="inline-block py-1 text-xs font-semibold text-muted-foreground hover:text-slate-950 transition">
+                  <Link href={link.href} className="inline-block py-1 text-xs font-semibold text-muted-foreground hover:text-slate-950 transition">
                     {link.name}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -225,9 +227,9 @@ export function Footer() {
           <div className="flex flex-wrap items-center gap-2 text-xs font-medium">
             <span>&copy; {new Date().getFullYear()} Keyrise. All rights reserved.</span>
             <span>&bull;</span>
-            <a href="#" className="inline-block py-1.5 hover:text-slate-800 transition">Privacy</a>
+            <Link href="/privacy" className="inline-block py-1.5 hover:text-slate-800 transition">Privacy</Link>
             <span>&bull;</span>
-            <a href="#" className="inline-block py-1.5 hover:text-slate-800 transition">Terms</a>
+            <Link href="/terms" className="inline-block py-1.5 hover:text-slate-800 transition">Terms</Link>
           </div>
 
           {/* Mini Logo right */}

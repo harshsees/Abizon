@@ -121,13 +121,10 @@ export default function Home() {
     router.push(`/apply?country=${encodeURIComponent(countryName)}`);
   };
 
-  // Handler to open details or route to specific country pages
+  // Map pins still navigate imperatively; the cards themselves are real
+  // anchors now and route on their own.
   const handleCountryClick = (country: Country) => {
-    if (country.code === "ae" || country.name.toLowerCase() === "dubai" || country.name === "United Arab Emirates") {
-      router.push("/dubai");
-    } else {
-      router.push(`/${getCountrySlug(country.name)}`);
-    }
+    router.push(`/visa/${getCountrySlug(country.name)}`);
   };
 
   // Load from search & tab URL params if redirected from other pages
@@ -429,10 +426,7 @@ export default function Home() {
                         exit={{ opacity: 0, scale: 0.95 }}
                         transition={{ duration: 0.2 }}
                       >
-                        <CountryCard 
-                          country={country}
-                          onClick={() => handleCountryClick(country)}
-                        />
+                        <CountryCard country={country} />
                       </motion.div>
                     ))}
                   </motion.div>

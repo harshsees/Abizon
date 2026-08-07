@@ -388,12 +388,12 @@ function ApplyPageContent() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f8f9fa] flex flex-col font-sans text-slate-900">
+    <div className="min-h-screen bg-background flex flex-col font-sans text-foreground">
       
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-200/80">
+      <header className="sticky top-0 z-40 bg-surface/80 backdrop-blur-md border-b border-border">
         {/* Progress Bar Line */}
-        <div className="absolute top-0 left-0 w-full h-[3px] bg-slate-100/80">
+        <div className="absolute top-0 left-0 w-full h-[3px] bg-surface-sunken">
           <div 
             className="h-full bg-gradient-to-r from-amber-500 to-amber-600 transition-all duration-500 ease-out" 
             style={{ width: `${getProgressPercentage()}%` }}
@@ -409,7 +409,7 @@ function ApplyPageContent() {
               {getProgressPercentage()}% Completed
             </span>
           </div>
-          <button type="button" aria-label="Close and return home" onClick={() => router.push("/")} className="p-2 text-slate-700 hover:bg-slate-200 rounded-full transition">
+          <button type="button" aria-label="Close and return home" onClick={() => router.push("/")} className="p-2 text-slate-700 hover:bg-border rounded-full transition">
             <Home className="h-5 w-5" />
           </button>
         </div>
@@ -426,7 +426,7 @@ function ApplyPageContent() {
               if (currentStep !== "travelers") setCurrentStep("travelers");
             }}
             className={`group relative w-full px-4 py-3 rounded-2xl flex flex-col items-start gap-1 cursor-pointer transition-colors select-none ${
-              currentStep === "travelers" ? "text-primary-subtle-foreground font-semibold" : "text-muted-foreground hover:text-slate-600"
+              currentStep === "travelers" ? "text-primary-subtle-foreground font-semibold" : "text-muted-foreground hover:text-muted-foreground"
             }`}
           >
             {currentStep === "travelers" && (
@@ -448,7 +448,7 @@ function ApplyPageContent() {
               }
             }}
             className={`group relative w-full px-4 py-3 rounded-2xl flex flex-col items-start gap-1 cursor-pointer transition-colors select-none ${
-              currentStep === "docs" ? "text-primary-subtle-foreground font-semibold" : "text-muted-foreground hover:text-slate-600"
+              currentStep === "docs" ? "text-primary-subtle-foreground font-semibold" : "text-muted-foreground hover:text-muted-foreground"
             }`}
           >
             {currentStep === "docs" && (
@@ -470,7 +470,7 @@ function ApplyPageContent() {
               }
             }}
             className={`group relative w-full px-4 py-3 rounded-2xl flex flex-col items-start gap-1 cursor-pointer transition-colors select-none ${
-              currentStep === "checkout" ? "text-primary-subtle-foreground font-semibold" : "text-muted-foreground hover:text-slate-600"
+              currentStep === "checkout" ? "text-primary-subtle-foreground font-semibold" : "text-muted-foreground hover:text-muted-foreground"
             }`}
           >
             {currentStep === "checkout" && (
@@ -502,7 +502,7 @@ function ApplyPageContent() {
                     value={currentName}
                     onChange={(e) => setCurrentName(e.target.value.toUpperCase())}
                     placeholder="Enter traveler's first name"
-                    className="w-3/4 md:w-1/2 text-center text-xl md:text-2xl tracking-widest bg-transparent border-b-2 border-dashed border-slate-300 focus:border-slate-800 pb-3 transition-colors outline-none placeholder:text-muted-foreground placeholder:tracking-normal placeholder:normal-case placeholder:text-lg focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0"
+                    className="w-3/4 md:w-1/2 text-center text-xl md:text-2xl tracking-widest bg-transparent border-b-2 border-dashed border-input focus:border-slate-800 pb-3 transition-colors outline-none placeholder:text-muted-foreground placeholder:tracking-normal placeholder:normal-case placeholder:text-lg focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0"
                     autoFocus
                   />
                   
@@ -510,7 +510,7 @@ function ApplyPageContent() {
                     type="submit"
                     disabled={!currentName.trim()}
                     className={`mt-12 rounded-full py-3.5 px-8 text-sm font-semibold flex items-center justify-center gap-2 transition duration-300 w-48 ${
-                      currentName.trim() ? "bg-primary hover:bg-primary-hover text-white shadow-lg shadow-amber-600/10" : "bg-slate-300 text-white cursor-not-allowed"
+                      currentName.trim() ? "bg-primary hover:bg-primary-hover text-white shadow-lg shadow-amber-600/10" : "bg-border-strong text-white cursor-not-allowed"
                     }`}
                   >
                     <span>Continue</span>
@@ -541,7 +541,7 @@ function ApplyPageContent() {
                         const isNewTravelerNoName = t.firstName === "";
 
                         return (
-                          <motion.div layout initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} key={t.id} className="relative bg-white rounded-[2rem] p-6 shadow-sm border border-slate-100 w-full max-w-[340px] min-h-[250px] flex flex-col justify-between">
+                          <motion.div layout initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} key={t.id} className="relative bg-surface rounded-[2rem] p-6 shadow-sm border border-border w-full max-w-[340px] min-h-[250px] flex flex-col justify-between">
                             {isNewTravelerNoName ? (
                               <div className="flex flex-col justify-between items-center text-center flex-1 py-4">
                                 <span className="text-[10px] text-muted-foreground font-bold tracking-widest uppercase">NEW TRAVELER</span>
@@ -551,7 +551,7 @@ function ApplyPageContent() {
                                     type="text"
                                     id={`input-name-${t.id}`}
                                     placeholder="Enter first name"
-                                    className="w-4/5 text-center text-xl tracking-widest bg-transparent border-b-2 border-dashed border-slate-300 focus:border-slate-800 pb-2 transition-colors outline-none placeholder:text-muted-foreground placeholder:tracking-normal placeholder:normal-case placeholder:text-sm focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0"
+                                    className="w-4/5 text-center text-xl tracking-widest bg-transparent border-b-2 border-dashed border-input focus:border-slate-800 pb-2 transition-colors outline-none placeholder:text-muted-foreground placeholder:tracking-normal placeholder:normal-case placeholder:text-sm focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0"
                                     autoFocus
                                     onKeyDown={(e) => {
                                       if (e.key === "Enter") {
@@ -618,12 +618,12 @@ function ApplyPageContent() {
                                           e.stopPropagation();
                                           setOpenMenuTravelerId(openMenuTravelerId === t.id ? null : t.id);
                                         }}
-                                        className="p-1.5 text-muted-foreground hover:text-slate-600 hover:bg-slate-50 rounded-full transition"
+                                        className="p-1.5 text-muted-foreground hover:text-muted-foreground hover:bg-surface-sunken rounded-full transition"
                                       >
                                         <MoreVertical className="h-5 w-5" />
                                       </button>
                                       {openMenuTravelerId === t.id && (
-                                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-slate-100 py-1.5 z-30">
+                                        <div className="absolute right-0 mt-2 w-48 bg-surface rounded-2xl shadow-xl border border-border py-1.5 z-30">
                                           <button
                                             onClick={(e) => {
                                               e.stopPropagation();
@@ -632,7 +632,7 @@ function ApplyPageContent() {
                                               showToast("Share link copied to clipboard!");
                                               setOpenMenuTravelerId(null);
                                             }}
-                                            className="w-full text-left px-4 py-2 text-xs font-bold text-muted-foreground hover:bg-slate-50 flex items-center gap-2 transition"
+                                            className="w-full text-left px-4 py-2 text-xs font-bold text-muted-foreground hover:bg-surface-sunken flex items-center gap-2 transition"
                                           >
                                             <Share2 className="h-4 w-4 text-amber-500" />
                                             Share upload link
@@ -650,7 +650,7 @@ function ApplyPageContent() {
                                               showToast(`Traveler ${t.firstName} deleted`);
                                               setOpenMenuTravelerId(null);
                                             }}
-                                            className="w-full text-left px-4 py-2 text-xs font-bold text-red-600 hover:bg-red-50 flex items-center gap-2 transition border-t border-slate-100"
+                                            className="w-full text-left px-4 py-2 text-xs font-bold text-red-600 hover:bg-red-50 flex items-center gap-2 transition border-t border-border"
                                           >
                                             <Trash2 className="h-4 w-4 text-red-500" />
                                             Delete traveler
@@ -665,11 +665,11 @@ function ApplyPageContent() {
                                 <div className="space-y-3">
                                   <button 
                                     onClick={() => { setActiveTravelerId(t.id); setActiveDocType("Photo"); startCameraSequence(); }}
-                                    className="w-full bg-[#f4f6fb] hover:bg-[#ebf0f7] p-4 rounded-2xl flex items-center gap-3 transition"
+                                    className="w-full bg-surface-sunken hover:bg-border p-4 rounded-2xl flex items-center gap-3 transition"
                                   >
                                     {photoUploaded ? (
                                       typeof photoUploaded === "string" && photoUploaded.startsWith("data:") ? (
-                                        <img src={photoUploaded} alt="Captured thumbnail" className="h-5 w-5 rounded-full object-cover border border-slate-200" />
+                                        <img src={photoUploaded} alt="Captured thumbnail" className="h-5 w-5 rounded-full object-cover border border-border" />
                                       ) : (
                                         <CheckCircle className="h-5 w-5 text-emerald-500" />
                                       )
@@ -681,7 +681,7 @@ function ApplyPageContent() {
                                   
                                   <button 
                                     onClick={() => { setActiveTravelerId(t.id); setActiveDocType("Passport"); setDocView("upload"); }}
-                                    className="w-full bg-[#f4f6fb] hover:bg-[#ebf0f7] p-4 rounded-2xl flex items-center gap-3 transition"
+                                    className="w-full bg-surface-sunken hover:bg-border p-4 rounded-2xl flex items-center gap-3 transition"
                                   >
                                     {passportUploaded ? <CheckCircle className="h-5 w-5 text-emerald-500" /> : <FileText className="h-5 w-5 text-amber-500" />}
                                     <span className="font-semibold text-sm">Passport</span>
@@ -710,7 +710,7 @@ function ApplyPageContent() {
 
                     {/* Footer Actions */}
                     <div className="mt-12 flex flex-col sm:flex-row items-center gap-4">
-                      <button onClick={addTravelerDirect} className="px-6 py-3.5 rounded-full bg-white border border-slate-200 shadow-sm text-primary-subtle-foreground font-semibold text-sm flex items-center gap-2 hover:bg-slate-50 transition">
+                      <button onClick={addTravelerDirect} className="px-6 py-3.5 rounded-full bg-surface border border-border shadow-sm text-primary-subtle-foreground font-semibold text-sm flex items-center gap-2 hover:bg-surface-sunken transition">
                         <Plus className="h-4 w-4" /> Add travelers
                       </button>
                       <button 
@@ -721,7 +721,7 @@ function ApplyPageContent() {
                         className={`px-6 py-3.5 rounded-full font-semibold text-sm flex items-center gap-2 transition duration-300 ${
                           allDocsUploaded 
                             ? "bg-primary hover:bg-primary-hover text-white shadow-lg shadow-amber-600/10 cursor-pointer" 
-                            : "bg-[#f3f4f6] text-muted-foreground cursor-not-allowed"
+                            : "bg-surface-sunken text-muted-foreground cursor-not-allowed"
                         }`}
                       >
                         <Lock className="h-4 w-4" /> Proceed to checkout
@@ -733,7 +733,7 @@ function ApplyPageContent() {
                 {/* CAMERA VIEW */}
                 {docView === "camera" && (
                   <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center justify-center w-full max-w-2xl mt-4">
-                    <h2 className="text-2xl md:text-4xl font-extrabold text-slate-900 mb-2">
+                    <h2 className="text-2xl md:text-4xl font-extrabold text-foreground mb-2">
                       {cameraState === "analyzing" ? "Face Verification" : 
                        typeof cameraState === "number" ? "Capturing in..." :
                        cameraState === "scanning" ? "Scanning Photo" :
@@ -777,7 +777,7 @@ function ApplyPageContent() {
                       <div className="absolute inset-0 bg-slate-800 opacity-50 z-0" />
                       
                       {cameraState === "idle" && (
-                        <button onClick={startCameraSequence} className="z-10 bg-white text-slate-900 px-6 py-2 rounded-full font-bold text-sm shadow-lg hover:scale-105 transition">
+                        <button onClick={startCameraSequence} className="z-10 bg-surface text-foreground px-6 py-2 rounded-full font-bold text-sm shadow-lg hover:scale-105 transition">
                           Start Camera
                         </button>
                       )}
@@ -882,7 +882,7 @@ function ApplyPageContent() {
                      {/* Camera Actions */}
                     {cameraState === "confirm" && (
                       <div className="mt-8 flex gap-4">
-                        <button onClick={startCameraSequence} className="px-8 py-3 rounded-full bg-white border border-slate-200 font-bold text-sm hover:bg-slate-50 transition">Retake</button>
+                        <button onClick={startCameraSequence} className="px-8 py-3 rounded-full bg-surface border border-border font-bold text-sm hover:bg-surface-sunken transition">Retake</button>
                         <button onClick={confirmUpload} className="px-8 py-3 rounded-full bg-primary text-white font-bold text-sm hover:bg-primary-hover transition shadow-lg shadow-amber-600/10">Confirm</button>
                       </div>
                     )}
@@ -892,29 +892,29 @@ function ApplyPageContent() {
                 {/* PASSPORT UPLOAD VIEW */}
                 {docView === "upload" && (
                   <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center justify-center w-full max-w-3xl mt-4">
-                    <h2 className="text-3xl font-extrabold text-slate-900 mb-1">Passport,</h2>
+                    <h2 className="text-3xl font-extrabold text-foreground mb-1">Passport,</h2>
                     <h2 className="text-3xl font-extrabold text-primary-subtle-foreground mb-8">photo page up</h2>
 
                     <div className="bg-amber-50/40 w-full max-w-lg aspect-video rounded-3xl border border-amber-100 flex flex-col items-center justify-center p-6 mb-6">
-                      <div className="h-12 w-12 bg-white rounded-full flex items-center justify-center mb-4 shadow-sm text-amber-500">
+                      <div className="h-12 w-12 bg-surface rounded-full flex items-center justify-center mb-4 shadow-sm text-amber-500">
                         <Upload className="h-5 w-5" />
                       </div>
                       <p className="font-bold text-sm mb-4">Upload your passport here</p>
-                      <button onClick={confirmUpload} className="bg-white border border-slate-200 px-6 py-2.5 rounded-full text-sm font-semibold shadow-sm hover:bg-slate-50 transition">
+                      <button onClick={confirmUpload} className="bg-surface border border-border px-6 py-2.5 rounded-full text-sm font-semibold shadow-sm hover:bg-surface-sunken transition">
                         Browse files
                       </button>
                     </div>
 
                     {/* Bottom Tabs Mock */}
-                    <div className="flex bg-white rounded-full p-1 border border-slate-200 shadow-sm">
-                      <button onClick={() => startCameraSequence()} className="px-4 py-2 rounded-full text-xs font-bold text-muted-foreground flex items-center gap-1.5 hover:text-slate-900"><Camera className="h-3.5 w-3.5"/> Live Capture</button>
-                      <button className="px-4 py-2 rounded-full text-xs font-bold text-slate-900 bg-slate-100 flex items-center gap-1.5"><Upload className="h-3.5 w-3.5"/> Upload from device</button>
+                    <div className="flex bg-surface rounded-full p-1 border border-border shadow-sm">
+                      <button onClick={() => startCameraSequence()} className="px-4 py-2 rounded-full text-xs font-bold text-muted-foreground flex items-center gap-1.5 hover:text-foreground"><Camera className="h-3.5 w-3.5"/> Live Capture</button>
+                      <button className="px-4 py-2 rounded-full text-xs font-bold text-foreground bg-surface-sunken flex items-center gap-1.5"><Upload className="h-3.5 w-3.5"/> Upload from device</button>
                       <button 
                         onClick={() => {
                           setPhoneUploadModalOpen(true);
                           setPhoneUploadStep("info");
                         }} 
-                        className="px-4 py-2 rounded-full text-xs font-bold text-muted-foreground flex items-center gap-1.5 hover:text-slate-900"
+                        className="px-4 py-2 rounded-full text-xs font-bold text-muted-foreground flex items-center gap-1.5 hover:text-foreground"
                       >
                         <Maximize className="h-3.5 w-3.5"/> Scan from phone
                       </button>
@@ -972,12 +972,12 @@ function ApplyPageContent() {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-white rounded-[2rem] p-6 md:p-10 shadow-2xl w-full max-w-3xl relative z-10 flex flex-col items-center"
+              className="bg-surface rounded-[2rem] p-6 md:p-10 shadow-2xl w-full max-w-3xl relative z-10 flex flex-col items-center"
             >
               {/* Close Button */}
               <button
                 onClick={() => setPhoneUploadModalOpen(false)}
-                className="absolute top-4 right-4 md:top-6 md:right-6 p-2 text-muted-foreground hover:text-slate-600 hover:bg-slate-100 rounded-full transition"
+                className="absolute top-4 right-4 md:top-6 md:right-6 p-2 text-muted-foreground hover:text-muted-foreground hover:bg-surface-sunken rounded-full transition"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -1108,11 +1108,11 @@ function ApplyPageContent() {
                 </div>
               ) : (
                 <div className="flex flex-col items-center text-center w-full max-w-md py-4">
-                  <h2 className="text-2xl font-extrabold text-slate-900 mb-2">Scan QR Code</h2>
+                  <h2 className="text-2xl font-extrabold text-foreground mb-2">Scan QR Code</h2>
                   <p className="text-muted-foreground text-sm mb-8">Scan this code with your phone camera to securely sync and upload your files.</p>
                   
                   {/* QR Code Container */}
-                  <div className="relative w-56 h-56 bg-slate-50 rounded-3xl border border-slate-100 p-4 shadow-inner flex items-center justify-center mb-6">
+                  <div className="relative w-56 h-56 bg-surface-sunken rounded-3xl border border-border p-4 shadow-inner flex items-center justify-center mb-6">
                     <div className="absolute top-3 left-3 w-6 h-6 border-t-4 border-l-4 border-amber-600 rounded-tl-lg"></div>
                     <div className="absolute top-3 right-3 w-6 h-6 border-t-4 border-r-4 border-amber-600 rounded-tr-lg"></div>
                     <div className="absolute bottom-3 left-3 w-6 h-6 border-b-4 border-l-4 border-amber-600 rounded-bl-lg"></div>

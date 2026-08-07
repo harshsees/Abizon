@@ -215,7 +215,7 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
         {/* Scaled up borderless visa info details aligned in a column grid */}
         <div className="mt-5 space-y-5">
           {/* Row 1: 3 components scaled up */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 border-b border-slate-200/50 pb-5">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 border-b border-border/50 pb-5">
             {/* 1. Visa Type */}
             <div className="flex items-center gap-3.5 js-info-item">
               <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
@@ -239,8 +239,8 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
                     {country.validity}
                   </span>
                   {/* Tooltip Box */}
-                  <div className="absolute top-full left-0 mt-2.5 hidden group-hover:block w-[280px] bg-white border border-slate-200/80 rounded-2xl p-4 shadow-[0_12px_32px_rgba(15,23,42,0.08)] z-30 pointer-events-none">
-                    <p className="text-sm font-bold text-slate-900">Length of Stay: {country.validity}</p>
+                  <div className="absolute top-full left-0 mt-2.5 hidden group-hover:block w-[280px] bg-surface border border-border rounded-2xl p-4 shadow-[0_12px_32px_rgba(15,23,42,0.08)] z-30 pointer-events-none">
+                    <p className="text-sm font-bold text-foreground">Length of Stay: {country.validity}</p>
                     <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
                       {`The maximum duration that you are allowed to remain in ${displayName} after entering with that particular visa.`}
                     </p>
@@ -261,8 +261,8 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
                     {country.validity}
                   </span>
                   {/* Tooltip Box */}
-                  <div className="absolute top-full left-0 mt-2.5 hidden group-hover:block w-[280px] bg-white border border-slate-200/80 rounded-2xl p-4 shadow-[0_12px_32px_rgba(15,23,42,0.08)] z-30 pointer-events-none">
-                    <p className="text-sm font-bold text-slate-900">Validity Period: {country.validity}</p>
+                  <div className="absolute top-full left-0 mt-2.5 hidden group-hover:block w-[280px] bg-surface border border-border rounded-2xl p-4 shadow-[0_12px_32px_rgba(15,23,42,0.08)] z-30 pointer-events-none">
+                    <p className="text-sm font-bold text-foreground">Validity Period: {country.validity}</p>
                     <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
                       {`The number of days your visa is active after the date of issuance. We ensure your visa is valid based on your travel dates.`}
                     </p>
@@ -286,8 +286,8 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
                     {entryType}
                   </span>
                   {/* Tooltip Box */}
-                  <div className="absolute top-full left-0 mt-2.5 hidden group-hover:block w-[280px] bg-white border border-slate-200/80 rounded-2xl p-4 shadow-[0_12px_32px_rgba(15,23,42,0.08)] z-30 pointer-events-none">
-                    <p className="text-sm font-bold text-slate-900">Entry: {entryType}</p>
+                  <div className="absolute top-full left-0 mt-2.5 hidden group-hover:block w-[280px] bg-surface border border-border rounded-2xl p-4 shadow-[0_12px_32px_rgba(15,23,42,0.08)] z-30 pointer-events-none">
+                    <p className="text-sm font-bold text-foreground">Entry: {entryType}</p>
                     <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
                       {`You can enter the country only once during the visa's validity period and cannot re-enter using the same visa once you've exited.`}
                     </p>
@@ -308,8 +308,8 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
                     {methodType}
                   </span>
                   {/* Tooltip Box */}
-                  <div className="absolute top-full left-0 mt-2.5 hidden group-hover:block w-[280px] bg-white border border-slate-200/80 rounded-2xl p-4 shadow-[0_12px_32px_rgba(15,23,42,0.08)] z-30 pointer-events-none">
-                    <p className="text-sm font-bold text-slate-900">Method: {methodType}</p>
+                  <div className="absolute top-full left-0 mt-2.5 hidden group-hover:block w-[280px] bg-surface border border-border rounded-2xl p-4 shadow-[0_12px_32px_rgba(15,23,42,0.08)] z-30 pointer-events-none">
+                    <p className="text-sm font-bold text-foreground">Method: {methodType}</p>
                     <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
                       {`Apply and receive your visa fully online. No paperwork needed.`}
                     </p>
@@ -348,7 +348,7 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
                       initial={{ opacity: 0, width: 23 }}
                       animate={{ opacity: 1, width: 31 }}
                       transition={{ duration: 0.3 }}
-                      className="absolute left-[5px] top-[-26px] h-[51px] border-l-2 border-b-2 border-slate-200/80 rounded-bl-[16px] pointer-events-none"
+                      className="absolute left-[5px] top-[-26px] h-[51px] border-l-2 border-b-2 border-border rounded-bl-[16px] pointer-events-none"
                     />
                   )}
 
@@ -357,7 +357,7 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ duration: 0.3 }}
-                      className="absolute left-[5px] top-[-26px] bottom-[-22px] w-[2px] bg-slate-200/80 pointer-events-none"
+                      className="absolute left-[5px] top-[-26px] bottom-[-22px] w-[2px] bg-border/80 pointer-events-none"
                     />
                   )}
 
@@ -366,7 +366,7 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
                       initial={{ opacity: 0, width: 23 }}
                       animate={{ opacity: 1, width: 31 }}
                       transition={{ duration: 0.3 }}
-                      className="absolute left-[5px] top-0 h-[25px] border-l-2 border-b-2 border-slate-200/80 rounded-bl-[16px] pointer-events-none"
+                      className="absolute left-[5px] top-0 h-[25px] border-l-2 border-b-2 border-border rounded-bl-[16px] pointer-events-none"
                     />
                   )}
 
@@ -378,7 +378,7 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
                     className={`relative w-full rounded-xl border p-3.5 text-left transition ${
                       active
                         ? "border-primary bg-amber-50 shadow-md shadow-amber-100/50"
-                        : "border-border bg-[#fcfcfc]"
+                        : "border-border bg-surface"
                     }`}
                   >
                     {index === 1 && (
@@ -407,7 +407,7 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
 
                     <div className="mt-3 flex items-center justify-between w-full">
                       <span className="inline-flex items-center gap-1.5 text-xs text-primary">
-                        <span className="rounded-full border border-border bg-white px-2 py-0.5 text-[11px] font-semibold">
+                        <span className="rounded-full border border-border bg-surface px-2 py-0.5 text-[11px] font-semibold">
                           View Timeline
                         </span>
                         <ChevronDown className="h-3.5 w-3.5" />
@@ -416,7 +416,7 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
                         className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
                           active
                             ? "bg-primary text-white"
-                            : "bg-white text-primary"
+                            : "bg-surface text-primary"
                         }`}
                       >
                         {active ? "Selected" : "Select"}
@@ -430,7 +430,7 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
         </div>
       </div>      {/* All 7 Emirates with 1 Visa Section */}
       {country.name === "United Arab Emirates" && (
-        <div className="pt-8 border-t border-slate-200/50">
+        <div className="pt-8 border-t border-border/50">
           <div className="space-y-6">
           <div>
             <h2 id="emirates-section" className="text-2xl font-bold text-foreground tracking-tight scroll-mt-28">
@@ -457,7 +457,7 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
               ].map((emirate) => (
                 <div
                   key={emirate.name}
-                  className="relative group overflow-hidden rounded-[20px] shadow-sm cursor-pointer h-[180px] sm:h-[240px] md:h-[260px] bg-slate-100"
+                  className="relative group overflow-hidden rounded-[20px] shadow-sm cursor-pointer h-[180px] sm:h-[240px] md:h-[260px] bg-surface-sunken"
                 >
                   <img
                     src={emirate.image}
@@ -496,7 +496,7 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
               ].map((emirate) => (
                 <div
                   key={emirate.name}
-                  className="relative group overflow-hidden rounded-[16px] sm:rounded-[20px] shadow-sm cursor-pointer h-[160px] sm:h-[225px] md:h-[250px] bg-slate-100"
+                  className="relative group overflow-hidden rounded-[16px] sm:rounded-[20px] shadow-sm cursor-pointer h-[160px] sm:h-[225px] md:h-[250px] bg-surface-sunken"
                 >
                   <img
                     src={emirate.image}
@@ -518,19 +518,19 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
       )}
 
       {/* Visa Requirements Section */}
-      <div className="pt-8 border-t border-slate-200/50 space-y-5">
+      <div className="pt-8 border-t border-border/50 space-y-5">
         <div>
           <h2 id="requirements-section" className="text-2xl font-bold text-foreground tracking-tight scroll-mt-28 js-reveal-heading">
             {displayName} Visa Requirements
           </h2>
         </div>
         <div className="flex flex-wrap gap-3">
-          <div className="inline-flex items-center gap-2 px-4.5 py-2.5 bg-slate-50 border border-slate-200/60 rounded-2xl font-bold text-sm text-foreground shadow-sm cursor-pointer hover:bg-slate-100/50 transition js-checklist-item">
+          <div className="inline-flex items-center gap-2 px-4.5 py-2.5 bg-surface-sunken border border-border/60 rounded-2xl font-bold text-sm text-foreground shadow-sm cursor-pointer hover:bg-surface-sunken/50 transition js-checklist-item">
             <Scan className="h-4.5 w-4.5 text-slate-700" />
             Passport Scan
           </div>
           {country.documents === "Photo + Passport" && (
-            <div className="inline-flex items-center gap-2 px-4.5 py-2.5 bg-slate-50 border border-slate-200/60 rounded-2xl font-bold text-sm text-foreground shadow-sm cursor-pointer hover:bg-slate-100/50 transition js-checklist-item">
+            <div className="inline-flex items-center gap-2 px-4.5 py-2.5 bg-surface-sunken border border-border/60 rounded-2xl font-bold text-sm text-foreground shadow-sm cursor-pointer hover:bg-surface-sunken/50 transition js-checklist-item">
               <FileText className="h-4.5 w-4.5 text-slate-700" />
               Photograph (White Background)
             </div>
@@ -539,7 +539,7 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
       </div>
 
       {/* Partners We Work With Section */}
-      <div className="pt-8 border-t border-slate-200/50 space-y-5">
+      <div className="pt-8 border-t border-border/50 space-y-5">
         <div>
           <h2 id="partners-section" className="text-2xl font-bold text-foreground tracking-tight scroll-mt-28 js-reveal-heading">
             Partners We Work With
@@ -547,7 +547,7 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
         </div>
         <div className="grid grid-cols-3 gap-4 max-w-lg">
           {/* Card 1: Ministry of Foreign Affairs */}
-          <div className="flex flex-col items-center justify-center bg-white border border-slate-200/40 rounded-3xl p-4 aspect-square shadow-sm hover:shadow-md transition duration-300 gap-2">
+          <div className="flex flex-col items-center justify-center bg-surface border border-border/40 rounded-3xl p-4 aspect-square shadow-sm hover:shadow-md transition duration-300 gap-2">
             <svg className="h-10 w-10 text-primary-subtle-foreground" viewBox="0 0 100 100" fill="currentColor">
               <circle cx="50" cy="50" r="48" fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray="2 2" />
               <path d="M50 20 C45 35 25 40 15 50 C25 50 35 45 50 35 C65 45 75 50 85 50 C75 40 55 35 50 20 Z" />
@@ -563,7 +563,7 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
           </div>
 
           {/* Card 2: Government of Dubai */}
-          <div className="flex flex-col items-center justify-center bg-white border border-slate-200/40 rounded-3xl p-4 aspect-square shadow-sm hover:shadow-md transition duration-300 gap-2">
+          <div className="flex flex-col items-center justify-center bg-surface border border-border/40 rounded-3xl p-4 aspect-square shadow-sm hover:shadow-md transition duration-300 gap-2">
             <svg className="h-10 w-24 text-red-600" viewBox="0 0 120 40" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M10 20 C20 10 35 15 45 25 C55 15 70 10 80 20 C90 15 105 15 115 25" />
               <path d="M30 15 C35 5 45 5 50 15" />
@@ -575,7 +575,7 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
           </div>
 
           {/* Card 3: IATA */}
-          <div className="flex flex-col items-center justify-center bg-white border border-slate-200/40 rounded-3xl p-4 aspect-square shadow-sm hover:shadow-md transition duration-300 gap-2">
+          <div className="flex flex-col items-center justify-center bg-surface border border-border/40 rounded-3xl p-4 aspect-square shadow-sm hover:shadow-md transition duration-300 gap-2">
             <svg className="h-10 w-20 text-sky-800" viewBox="0 0 100 40" fill="currentColor">
               <path d="M10 15 H40 L35 25 H5 Z" />
               <path d="M90 15 H60 L65 25 H95 Z" />
@@ -593,20 +593,20 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
       </div>
 
       {/* How Process Works Section */}
-      <div className="pt-8 border-t border-slate-200/50 space-y-6">
+      <div className="pt-8 border-t border-border/50 space-y-6">
         <div>
           <h2 id="process-section" className="text-2xl font-bold text-foreground tracking-tight scroll-mt-28">
             How Process Works
           </h2>
         </div>
 
-        <div className="relative pl-6 md:pl-8 border-l border-slate-200/80 ml-3.5 space-y-6 pt-2 pb-2">
+        <div className="relative pl-6 md:pl-8 border-l border-border ml-3.5 space-y-6 pt-2 pb-2">
           {/* Step 1 */}
           <div className="relative">
             <span className="absolute -left-[30px] md:-left-[38px] top-1 flex h-4 w-4 items-center justify-center rounded-full bg-amber-600 border border-white">
-              <span className="h-1.5 w-1.5 rounded-full bg-white"></span>
+              <span className="h-1.5 w-1.5 rounded-full bg-surface"></span>
             </span>
-            <div className="rounded-2xl border border-slate-200/80 bg-white p-5 md:p-6 shadow-sm hover:shadow-md transition duration-300">
+            <div className="rounded-2xl border border-border bg-surface p-5 md:p-6 shadow-sm hover:shadow-md transition duration-300">
               <p className="text-xs font-bold text-primary-subtle-foreground">Step 1</p>
               <h3 className="text-lg font-bold text-foreground mt-1">Apply on Keyrise</h3>
               <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
@@ -618,9 +618,9 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
           {/* Step 2 */}
           <div className="relative">
             <span className="absolute -left-[30px] md:-left-[38px] top-1 flex h-4 w-4 items-center justify-center rounded-full bg-amber-600 border border-white">
-              <span className="h-1.5 w-1.5 rounded-full bg-white"></span>
+              <span className="h-1.5 w-1.5 rounded-full bg-surface"></span>
             </span>
-            <div className="rounded-2xl border border-slate-200/80 bg-white p-5 md:p-6 shadow-sm hover:shadow-md transition duration-300">
+            <div className="rounded-2xl border border-border bg-surface p-5 md:p-6 shadow-sm hover:shadow-md transition duration-300">
               <p className="text-xs font-bold text-primary-subtle-foreground">Step 2</p>
               <h3 className="text-lg font-bold text-foreground mt-1">Your Documents Are Verified</h3>
               <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
@@ -632,9 +632,9 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
           {/* Step 3 */}
           <div className="relative">
             <span className="absolute -left-[30px] md:-left-[38px] top-1 flex h-4 w-4 items-center justify-center rounded-full bg-amber-600 border border-white">
-              <span className="h-1.5 w-1.5 rounded-full bg-white"></span>
+              <span className="h-1.5 w-1.5 rounded-full bg-surface"></span>
             </span>
-            <div className="rounded-2xl border border-slate-200/80 bg-white p-5 md:p-6 shadow-sm hover:shadow-md transition duration-300 space-y-4">
+            <div className="rounded-2xl border border-border bg-surface p-5 md:p-6 shadow-sm hover:shadow-md transition duration-300 space-y-4">
               <div>
                 <p className="text-xs font-bold text-primary-subtle-foreground">Step 3</p>
                 <h3 className="text-lg font-bold text-foreground mt-1">Your Visa Gets Processed</h3>
@@ -644,7 +644,7 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
               </div>
               
               {/* Nested tracking sub-timeline */}
-              <div className="bg-slate-50 border border-slate-100 rounded-xl p-4.5 space-y-4">
+              <div className="bg-surface-sunken border border-border rounded-xl p-4.5 space-y-4">
                 <div className="relative pl-5 border-l border-amber-500/30 space-y-4 ml-1">
                   {/* Item 1 */}
                   <div className="relative">
@@ -680,9 +680,9 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
           {/* Step 4 */}
           <div className="relative">
             <span className="absolute -left-[30px] md:-left-[38px] top-1 flex h-4 w-4 items-center justify-center rounded-full bg-amber-600 border border-white">
-              <span className="h-1.5 w-1.5 rounded-full bg-white"></span>
+              <span className="h-1.5 w-1.5 rounded-full bg-surface"></span>
             </span>
-            <div className="rounded-2xl border border-slate-200/80 bg-white p-5 md:p-6 shadow-sm hover:shadow-md transition duration-300 space-y-4">
+            <div className="rounded-2xl border border-border bg-surface p-5 md:p-6 shadow-sm hover:shadow-md transition duration-300 space-y-4">
               <div>
                 <p className="text-xs font-bold text-primary-subtle-foreground">Step 4</p>
                 <h3 className="text-lg font-bold text-foreground mt-1">
@@ -691,7 +691,7 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
               </div>
 
               {/* Nested fee grid */}
-              <div className="bg-slate-50 border border-slate-100 rounded-xl p-4 divide-y divide-slate-200/60">
+              <div className="bg-surface-sunken border border-border rounded-xl p-4 divide-y divide-slate-200/60">
                 {/* Row 1 */}
                 <div className="flex items-center justify-between py-2 first:pt-0">
                   <span className="text-xs font-bold text-slate-700 leading-snug">Your visa is approved on time</span>
@@ -722,7 +722,7 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
       </div>
 
       {/* Chances of Approval Section */}
-      <div className="pt-8 border-t border-slate-200/50 space-y-6 font-sans">
+      <div className="pt-8 border-t border-border/50 space-y-6 font-sans">
         <div>
           <h2 id="approval-section" className="text-2xl font-bold text-foreground tracking-tight scroll-mt-28">
             Want to know if your will be approved?
@@ -732,7 +732,7 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
         <div className="flex items-center justify-center p-4">
           {!showQuiz ? (
             /* Promo Card */
-            <div className="w-full max-w-xl bg-white border border-slate-200/60 rounded-3xl p-5 md:p-6 shadow-sm flex items-center justify-between gap-4">
+            <div className="w-full max-w-xl bg-surface border border-border/60 rounded-3xl p-5 md:p-6 shadow-sm flex items-center justify-between gap-4">
               <div className="space-y-2.5">
                 <p className="text-xs font-bold text-primary-subtle-foreground uppercase tracking-wider">Learn Your</p>
                 <h3 className="text-xl md:text-2xl font-extrabold text-slate-800 leading-tight">
@@ -782,7 +782,7 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
           ) : quizStep < 6 ? (
             /* Active Quiz Interface */
             <div className="flex flex-col items-center justify-center py-4">
-              <div className="relative flex items-center justify-center w-[340px] h-[340px] sm:w-[400px] sm:h-[400px] rounded-full shadow-md bg-slate-50/50">
+              <div className="relative flex items-center justify-center w-[340px] h-[340px] sm:w-[400px] sm:h-[400px] rounded-full shadow-md bg-surface-sunken/50">
                 {/* SVG Progress Ring for smooth hardware-accelerated circular animation */}
                 <svg className="absolute inset-0 w-full h-full transform -rotate-90" viewBox="0 0 100 100">
                   <circle
@@ -814,7 +814,7 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.92, y: -15 }}
                     transition={{ duration: 0.3 }}
-                    className="relative z-10 w-[270px] sm:w-[320px] bg-white rounded-2xl shadow-xl border border-slate-100 p-6 flex flex-col justify-between h-[270px] sm:h-[300px]"
+                    className="relative z-10 w-[270px] sm:w-[320px] bg-surface rounded-2xl shadow-xl border border-border p-6 flex flex-col justify-between h-[270px] sm:h-[300px]"
                   >
                     <div>
                       <p className="text-4xl sm:text-5xl font-extrabold text-slate-200 leading-none">
@@ -830,13 +830,13 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
                         <div className="space-y-2 flex flex-col">
                           <button
                             onClick={() => handleAnswer(quizQuestions[quizStep].options[0])}
-                            className="w-full py-2 sm:py-2.5 rounded-xl border border-slate-200 bg-white text-xs sm:text-sm font-bold text-slate-600 hover:bg-[#d97706] hover:text-white hover:border-[#d97706] transition-all duration-200"
+                            className="w-full py-2 sm:py-2.5 rounded-xl border border-border bg-surface text-xs sm:text-sm font-bold text-muted-foreground hover:bg-primary hover:text-white hover:border-primary transition-all duration-200"
                           >
                             {quizQuestions[quizStep].options[0]}
                           </button>
                           <button
                             onClick={() => handleAnswer(quizQuestions[quizStep].options[1])}
-                            className="w-full py-2 sm:py-2.5 rounded-xl border border-slate-200 bg-white text-xs sm:text-sm font-bold text-slate-600 hover:bg-[#d97706] hover:text-white hover:border-[#d97706] transition-all duration-200"
+                            className="w-full py-2 sm:py-2.5 rounded-xl border border-border bg-surface text-xs sm:text-sm font-bold text-muted-foreground hover:bg-primary hover:text-white hover:border-primary transition-all duration-200"
                           >
                             {quizQuestions[quizStep].options[1]}
                           </button>
@@ -847,7 +847,7 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
                             <button
                               key={opt}
                               onClick={() => handleAnswer(opt)}
-                              className="py-2.5 rounded-xl border border-slate-200 bg-white text-[10px] sm:text-xs font-bold text-slate-600 hover:bg-[#d97706] hover:text-white hover:border-[#d97706] transition-all duration-200 leading-tight flex items-center justify-center px-1"
+                              className="py-2.5 rounded-xl border border-border bg-surface text-[10px] sm:text-xs font-bold text-muted-foreground hover:bg-primary hover:text-white hover:border-primary transition-all duration-200 leading-tight flex items-center justify-center px-1"
                             >
                               {opt}
                             </button>
@@ -866,7 +866,7 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
                 
                 {/* Wave container filling corresponding to percentage */}
                 <div
-                  className="absolute bottom-0 left-0 right-0 bg-[#d97706] transition-all duration-1000 ease-[cubic-bezier(0.4,0,0.2,1)]"
+                  className="absolute bottom-0 left-0 right-0 bg-primary transition-all duration-1000 ease-[cubic-bezier(0.4,0,0.2,1)]"
                   style={{ height: `${animatedHeight}%` }}
                 >
                   {/* Front Wave */}
@@ -906,7 +906,7 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
                   <div className="mt-6 flex flex-col items-center gap-3 w-full">
                     <button
                       onClick={() => setShowQuiz(false)}
-                      className="w-3/4 sm:w-2/3 font-bold px-6 py-3 rounded-full shadow-md transition-transform hover:scale-105 active:scale-95 text-sm cursor-pointer bg-white text-primary"
+                      className="w-3/4 sm:w-2/3 font-bold px-6 py-3 rounded-full shadow-md transition-transform hover:scale-105 active:scale-95 text-sm cursor-pointer bg-surface text-primary"
                     >
                       Apply anyway
                     </button>
@@ -929,17 +929,17 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
       </div>
 
       {/* Statistics Section */}
-      <div className="pt-8 border-t border-slate-200/50 space-y-6 font-sans">
+      <div className="pt-8 border-t border-border/50 space-y-6 font-sans">
         <div className="relative inline-block">
           <h2 id="statistics-section" className="text-2xl font-bold text-foreground tracking-tight scroll-mt-28">
             Statistics on
           </h2>
-          <div className="absolute left-0 bottom-0 h-0.5 w-12 bg-[#d97706]" />
+          <div className="absolute left-0 bottom-0 h-0.5 w-12 bg-primary" />
         </div>
 
-        <div className="w-full bg-white border border-slate-200/60 rounded-3xl overflow-hidden shadow-sm">
+        <div className="w-full bg-surface border border-border/60 rounded-3xl overflow-hidden shadow-sm">
           {/* Tab Headers */}
-          <div className="flex border-b border-slate-100 px-6">
+          <div className="flex border-b border-border px-6">
             <button
               onClick={() => {
                 setStatsTab("processingTime");
@@ -952,7 +952,7 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
             >
               VISA PROCESSING TIME
               {statsTab === "processingTime" && (
-                <span className="absolute bottom-0 left-0 right-0 h-0.75 bg-[#d97706]" />
+                <span className="absolute bottom-0 left-0 right-0 h-0.75 bg-primary" />
               )}
             </button>
             <button
@@ -967,7 +967,7 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
             >
               APPROVAL RATING
               {statsTab === "approvalRating" && (
-                <span className="absolute bottom-0 left-0 right-0 h-0.75 bg-[#d97706]" />
+                <span className="absolute bottom-0 left-0 right-0 h-0.75 bg-primary" />
               )}
             </button>
           </div>
@@ -975,7 +975,7 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
           {/* Inner Panels */}
           <div className="grid grid-cols-1 md:grid-cols-12">
             {/* Left Panel */}
-            <div className="md:col-span-4 bg-slate-50/50 p-6 md:p-8 flex flex-col justify-between border-b md:border-b-0 md:border-r border-slate-100 min-h-[220px]">
+            <div className="md:col-span-4 bg-surface-sunken/50 p-6 md:p-8 flex flex-col justify-between border-b md:border-b-0 md:border-r border-border min-h-[220px]">
               <div className="space-y-3">
                 <h3 className="text-lg font-bold text-slate-800">What is this?</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">
@@ -991,7 +991,7 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
                     ? (statsTab === "processingTime" ? statsProcessingData[hoveredPointIndex].date : statsApprovalData[hoveredPointIndex].date)
                     : "Monday, 20 July"}
                 </p>
-                <div className="h-px bg-slate-200/60 w-8 my-2" />
+                <div className="h-px bg-border/60 w-8 my-2" />
                 <p className="text-xl font-extrabold text-primary">
                   {hoveredPointIndex !== null
                     ? (statsTab === "processingTime" ? statsProcessingData[hoveredPointIndex].valueText : statsApprovalData[hoveredPointIndex].valueText)
@@ -1008,19 +1008,19 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
                 <div className="absolute inset-0 flex flex-col justify-between pointer-events-none text-[10px] font-bold text-muted-foreground/80">
                   {statsTab === "processingTime" ? (
                     <>
-                      <div className="w-full flex items-center justify-between border-b border-dashed border-slate-100 pb-1">
+                      <div className="w-full flex items-center justify-between border-b border-dashed border-border pb-1">
                         <span />
                         <span className="pr-1 shrink-0">120 hr</span>
                       </div>
-                      <div className="w-full flex items-center justify-between border-b border-dashed border-slate-100 pb-1">
+                      <div className="w-full flex items-center justify-between border-b border-dashed border-border pb-1">
                         <span />
                         <span className="pr-1 shrink-0">90 hr</span>
                       </div>
-                      <div className="w-full flex items-center justify-between border-b border-dashed border-slate-100 pb-1">
+                      <div className="w-full flex items-center justify-between border-b border-dashed border-border pb-1">
                         <span />
                         <span className="pr-1 shrink-0">60 hr</span>
                       </div>
-                      <div className="w-full flex items-center justify-between border-b border-dashed border-slate-100 pb-1">
+                      <div className="w-full flex items-center justify-between border-b border-dashed border-border pb-1">
                         <span />
                         <span className="pr-1 shrink-0">30 hr</span>
                       </div>
@@ -1031,19 +1031,19 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
                     </>
                   ) : (
                     <>
-                      <div className="w-full flex items-center justify-between border-b border-dashed border-slate-100 pb-1">
+                      <div className="w-full flex items-center justify-between border-b border-dashed border-border pb-1">
                         <span />
                         <span className="pr-1 shrink-0">100%</span>
                       </div>
-                      <div className="w-full flex items-center justify-between border-b border-dashed border-slate-100 pb-1">
+                      <div className="w-full flex items-center justify-between border-b border-dashed border-border pb-1">
                         <span />
                         <span className="pr-1 shrink-0">97.5%</span>
                       </div>
-                      <div className="w-full flex items-center justify-between border-b border-dashed border-slate-100 pb-1">
+                      <div className="w-full flex items-center justify-between border-b border-dashed border-border pb-1">
                         <span />
                         <span className="pr-1 shrink-0">95%</span>
                       </div>
-                      <div className="w-full flex items-center justify-between border-b border-dashed border-slate-100 pb-1">
+                      <div className="w-full flex items-center justify-between border-b border-dashed border-border pb-1">
                         <span />
                         <span className="pr-1 shrink-0">92.5%</span>
                       </div>
@@ -1188,7 +1188,7 @@ export function VisaInfoAndPlans({ selectedPlan, onSelectPlan, country = default
                 {/* Floating dynamic popup tooltip following cursor */}
                 {tooltipState.show && hoveredPointIndex !== null && (
                   <div
-                    className="absolute bg-white border border-slate-100 rounded-2xl p-3.5 shadow-xl pointer-events-none z-30 flex flex-col gap-1 transition-all duration-75 ease-out select-none min-w-[170px]"
+                    className="absolute bg-surface border border-border rounded-2xl p-3.5 shadow-xl pointer-events-none z-30 flex flex-col gap-1 transition-all duration-75 ease-out select-none min-w-[170px]"
                     style={{
                       left: `${tooltipState.x}px`,
                       top: `${tooltipState.y}px`

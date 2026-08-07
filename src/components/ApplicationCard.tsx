@@ -153,12 +153,12 @@ export function ApplicationCard({
               : "0 20px 50px rgba(22, 163, 74, 0.05), 0 1px 3px rgba(22, 163, 74, 0.01)"
           }}
           transition={{ duration: 0.4, ease: "easeInOut" as const }}
-          className="w-full rounded-[28px] border bg-white/95 backdrop-blur-md p-3.5 md:p-4 transition-colors duration-300"
+          className="w-full rounded-[28px] border bg-surface/95 backdrop-blur-md p-3.5 md:p-4 transition-colors duration-300"
         >
           
           {/* Top Status Bar with active capsule sliding transition */}
           <motion.div variants={itemVariants} className="mb-4">
-            <div className="relative flex items-center justify-between rounded-2xl bg-slate-100/80 border border-slate-200/30 p-1 min-h-[46px] w-full">
+            <div className="relative flex items-center justify-between rounded-2xl bg-surface-sunken border border-border/30 p-1 min-h-[46px] w-full">
               
               {/* Option 1 Button: 30 Days selection */}
               <button
@@ -174,7 +174,7 @@ export function ApplicationCard({
                     animate={{
                       borderColor: "rgba(217, 119, 6, 0.75)"
                     }}
-                    className="absolute inset-0 bg-white rounded-xl shadow-sm border-2 -z-10"
+                    className="absolute inset-0 bg-surface rounded-xl shadow-sm border-2 -z-10"
                     transition={{ type: "spring", stiffness: 380, damping: 30 }}
                   />
                 )}
@@ -192,7 +192,7 @@ export function ApplicationCard({
                 type="button"
                 onClick={() => onSelectPlan(1)}
                 className={`relative z-10 flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2 px-3 text-xs font-bold transition duration-300 cursor-pointer ${
-                  selectedPlan === 1 ? "text-success-subtle-foreground" : "text-slate-800 hover:text-slate-900"
+                  selectedPlan === 1 ? "text-success-subtle-foreground" : "text-slate-800 hover:text-foreground"
                 }`}
               >
                 {selectedPlan === 1 && (
@@ -201,12 +201,12 @@ export function ApplicationCard({
                     animate={{
                       borderColor: "rgba(22, 163, 74, 0.75)"
                     }}
-                    className="absolute inset-0 bg-white rounded-xl shadow-sm border-2 -z-10"
+                    className="absolute inset-0 bg-surface rounded-xl shadow-sm border-2 -z-10"
                     transition={{ type: "spring", stiffness: 380, damping: 30 }}
                   />
                 )}
                 <Zap className={`h-3.5 w-3.5 flex-shrink-0 ${
-                  selectedPlan === 1 ? "text-success-subtle-foreground fill-emerald-600" : "text-slate-900 fill-slate-900"
+                  selectedPlan === 1 ? "text-success-subtle-foreground fill-emerald-600" : "text-foreground fill-slate-900"
                 }`} />
                 <span>
                   {selectedPlan === 1 
@@ -221,7 +221,7 @@ export function ApplicationCard({
 
           {/* Visa configuration selectors */}
           <motion.div variants={itemVariants} className="mb-3.5">
-            <div className="grid grid-cols-2 divide-x divide-slate-100 rounded-2xl border border-slate-100 bg-slate-50/50 p-1">
+            <div className="grid grid-cols-2 divide-x divide-slate-100 rounded-2xl border border-border bg-surface-sunken/50 p-1">
               {/* Visa Type Selector */}
               <div className="relative group/field px-3 py-2 text-left">
                 <label
@@ -270,9 +270,9 @@ export function ApplicationCard({
 
           {/* Traveller Stepper Counter */}
           <motion.div variants={itemVariants} className="mb-4">
-            <div className="flex items-center justify-between rounded-2xl border border-slate-100 bg-white p-3 shadow-[0_4px_12px_rgba(0,0,0,0.01)]">
+            <div className="flex items-center justify-between rounded-2xl border border-border bg-surface p-3 shadow-[0_4px_12px_rgba(0,0,0,0.01)]">
               <div className="flex items-center gap-2.5">
-                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-50 border border-slate-100 text-slate-600">
+                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-surface-sunken border border-border text-muted-foreground">
                   <CircleDot className="h-4 w-4 text-muted-foreground" />
                 </div>
                 <div>
@@ -280,11 +280,11 @@ export function ApplicationCard({
                   <p className="text-[10px] text-muted-foreground">Add info later</p>
                 </div>
               </div>
-              <div className="flex items-center gap-2.5 bg-slate-50 border border-slate-100/85 rounded-full p-0.5">
+              <div className="flex items-center gap-2.5 bg-surface-sunken border border-border/85 rounded-full p-0.5">
                 <button
                   type="button"
                   onClick={() => setTravellers((t) => Math.max(1, t - 1))}
-                  className="flex h-7 w-7 items-center justify-center rounded-full bg-white border border-slate-200 text-slate-600 shadow-sm hover:bg-slate-50 active:scale-95 disabled:opacity-50 disabled:pointer-events-none"
+                  className="flex h-7 w-7 items-center justify-center rounded-full bg-surface border border-border text-muted-foreground shadow-sm hover:bg-surface-sunken active:scale-95 disabled:opacity-50 disabled:pointer-events-none"
                   disabled={travellers <= 1}
                   aria-label="Decrease travelers"
                 >
@@ -296,7 +296,7 @@ export function ApplicationCard({
                 <button
                   type="button"
                   onClick={() => setTravellers((t) => Math.min(10, t + 1))}
-                  className="flex h-7 w-7 items-center justify-center rounded-full bg-white border border-slate-200 text-slate-600 shadow-sm hover:bg-slate-50 active:scale-95 disabled:opacity-50 disabled:pointer-events-none"
+                  className="flex h-7 w-7 items-center justify-center rounded-full bg-surface border border-border text-muted-foreground shadow-sm hover:bg-surface-sunken active:scale-95 disabled:opacity-50 disabled:pointer-events-none"
                   disabled={travellers >= 10}
                   aria-label="Increase travelers"
                 >
@@ -311,7 +311,7 @@ export function ApplicationCard({
             <span className="text-[9px] uppercase font-extrabold tracking-[0.25em] text-muted-foreground">
               To Be Paid Now
             </span>
-            <div className="text-4xl font-extrabold tracking-tight text-slate-900 mt-1">
+            <div className="text-4xl font-extrabold tracking-tight text-foreground mt-1">
               ₹{totalAmount.toLocaleString("en-IN")}
             </div>
             <div className="mt-1 flex items-center justify-center gap-1 text-[10px] font-semibold text-success-subtle-foreground">
@@ -345,7 +345,7 @@ export function ApplicationCard({
           </motion.div>
 
           {/* Breakdown Rows */}
-          <motion.div variants={itemVariants} className="space-y-3 bg-slate-50/50 rounded-2xl border border-slate-100/50 p-3.5">
+          <motion.div variants={itemVariants} className="space-y-3 bg-surface-sunken/50 rounded-2xl border border-border/50 p-3.5">
             {/* Pay Now */}
             <div className="flex items-center justify-between gap-3 text-xs font-semibold">
               <div className="flex items-center gap-2">
@@ -363,7 +363,7 @@ export function ApplicationCard({
             {/* Pay on approval */}
             <div className="flex items-center justify-between gap-3 text-xs font-semibold">
               <div className="flex items-center gap-2">
-                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 text-slate-600">
+                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-surface-sunken text-muted-foreground">
                   <Ticket className="h-3.5 w-3.5 text-muted-foreground" />
                 </div>
                 <div>
@@ -375,10 +375,10 @@ export function ApplicationCard({
             </div>
 
             {/* Total Row */}
-            <div className="border-t border-slate-100/80 pt-3">
+            <div className="border-t border-border/80 pt-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-200/50 text-slate-600">
+                  <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-border/50 text-muted-foreground">
                     <ReceiptText className="h-3.5 w-3.5 text-slate-700" />
                   </div>
                   <p className="text-xs font-bold text-slate-800">Total Amount</p>

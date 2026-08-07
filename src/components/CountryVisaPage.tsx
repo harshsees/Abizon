@@ -1,67 +1,63 @@
 "use client";
 
-import React, { use, useState, useEffect, useRef } from "react";
-import { useRouter, notFound } from "next/navigation";
+/**
+ * The country visa page body.
+ *
+ * Split out of the route so `app/visa/[countrySlug]/page.tsx` can stay a
+ * server component: that's what lets each of the 150-odd destinations
+ * prerender with its own <title> and description. Everything below the fold
+ * here is interactive (plan selection, modals, scroll-spy), so it all lives
+ * on the client side of that boundary.
+ */
+
+import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+
+import { ApplicationCard } from "@/components/ApplicationCard";
+import { DatePickerModal } from "@/components/DatePickerModal";
 import { FAQAccordion } from "@/components/FAQAccordion";
+import { FeeBreakdown } from "@/components/FeeBreakdown";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
-import { VisaInfoAndPlans } from "@/components/VisaInfoAndPlans";
-import { ApplicationCard } from "@/components/ApplicationCard";
+import { RelatedVisas } from "@/components/RelatedVisas";
+import { Reviews } from "@/components/Reviews";
+import { SubNavbar } from "@/components/SubNavbar";
 import { TopHero } from "@/components/TopHero";
 import { TravelPlanModal } from "@/components/TravelPlanModal";
-import { DatePickerModal } from "@/components/DatePickerModal";
-import { SubNavbar } from "@/components/SubNavbar";
-import { Reviews } from "@/components/Reviews";
-import { countriesData, getCountrySlug } from "@/data/countries";
+import { VisaInfoAndPlans } from "@/components/VisaInfoAndPlans";
+import { Country } from "@/data/countries";
 import { useHeadingReveal, useMagneticHover, useSectionReveal } from "@/hooks/usePremiumMotion";
 
-type PageProps = {
-  params: Promise<{ countrySlug: string }>;
-};
-
-export default function CountryPage({ params }: PageProps) {
+export function CountryVisaPage({ country }: { country: Country }) {
   const router = useRouter();
-  const { countrySlug } = use(params);
 
-  // Find matching country
-  const country = countriesData.find(
-    (c) => getCountrySlug(c.name) === countrySlug
-  );
-
-  // If no matching country, trigger 404
-  if (!country) {
-    notFound();
-  }
-
-  const [selectedPlan, setSelectedPlan] = useState<number>(0);
-  const [isTravelPlanOpen, setIsTravelPlanOpen] = useState<boolean>(false);
-  const [isDatePickerOpen, setIsDatePickerOpen] = useState<boolean>(false);
+  const [selectedPlan, setSelectedPlan] = useState(0);
+  const [isTravelPlanOpen, setIsTravelPlanOpen] = useState(false);
+  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
   const [scrolledPastHero, setScrolledPastHero] = useState(false);
 
-  // Animation refs
   const pageContainerRef = useRef<HTMLDivElement>(null);
   const heroRef = useRef<HTMLElement>(null);
 
-  // Connect scroll animations
   useHeadingReveal(pageContainerRef, ".js-reveal-heading");
   useMagneticHover(pageContainerRef, ".js-magnetic-btn");
-  useSectionReveal(pageContainerRef, ".js-info-item, .js-plan-card, .js-checklist-item, .js-review-card, .js-faq-item");
+  useSectionReveal(
+    pageContainerRef,
+    ".js-info-item, .js-plan-card, .js-checklist-item, .js-review-card, .js-faq-item",
+  );
 
   useEffect(() => {
     const handleScroll = () => {
       const heroEl = document.getElementById("destinations");
       if (heroEl) {
-        const heroHeight = heroEl.offsetHeight;
-        setScrolledPastHero(window.scrollY > heroHeight - 55);
+        setScrolledPastHero(window.scrollY > heroEl.offsetHeight - 55);
       }
     };
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const handleStartApplication = () => {
-    setIsTravelPlanOpen(true);
-  };
+  const handleStartApplication = () => setIsTravelPlanOpen(true);
 
   const handleSelectTravelOption = (option: "before" | "after") => {
     setIsTravelPlanOpen(false);
@@ -75,58 +71,61 @@ export default function CountryPage({ params }: PageProps) {
   const handleSelectDate = (date: Date) => {
     setIsDatePickerOpen(false);
     const dateStr = date.toISOString().split("T")[0];
-    router.push(`/apply?option=after&date=${dateStr}&country=${encodeURIComponent(country.name)}`);
+    router.push(
+      `/apply?option=after&date=${dateStr}&country=${encodeURIComponent(country.name)}`,
+    );
   };
 
   const displayName = country.name === "United Arab Emirates" ? "Dubai" : country.name;
 
   return (
-    <div ref={pageContainerRef} className="flex flex-1 flex-col bg-background relative">
+    <div ref={pageContainerRef} className="relative flex flex-1 flex-col bg-background">
       <Header forceHide={scrolledPastHero} />
 
       <main id="main-content" tabIndex={-1} className="flex-1">
         <div id="destinations" className="scroll-mt-28">
-          <TopHero 
+          <TopHero
             ref={heroRef}
-            onStart={handleStartApplication} 
-            countryName={displayName} 
+            onStart={handleStartApplication}
+            countryName={displayName}
             deliveryDays={country.deliveryDays}
             imageUrl={country.imageUrl}
           />
         </div>
 
-        {/* Horizontal Sub-Navbar below the first div (hero banner) */}
         <SubNavbar isSticky={scrolledPastHero} />
 
-        {/* Responsive Grid Layout containing the entire page below TopHero */}
         <div className="mx-auto w-full max-w-7xl px-4 pt-4 pb-8 md:px-6 md:pt-6 md:pb-10">
-          <div className="grid grid-cols-1 md:grid-cols-[1.08fr_0.92fr] gap-8 md:gap-12 items-start">
-            
-            {/* Left Column: Scrollable Content */}
+          <div className="grid grid-cols-1 items-start gap-8 md:grid-cols-[1.08fr_0.92fr] md:gap-12">
+            {/* Left column: scrollable content */}
             <div className="space-y-4 md:space-y-6">
               <div id="visas" className="scroll-mt-28">
-                <VisaInfoAndPlans 
-                  selectedPlan={selectedPlan} 
-                  onSelectPlan={setSelectedPlan} 
+                <VisaInfoAndPlans
+                  selectedPlan={selectedPlan}
+                  onSelectPlan={setSelectedPlan}
                   country={country}
                 />
               </div>
 
-              {/* Mobile/Tablet Application Card (stacks in natural order) */}
-              <div className="md:hidden mt-6">
+              <FeeBreakdown country={country} />
+
+              {/* Mobile/tablet application card stacks in natural order */}
+              <div className="mt-6 md:hidden">
                 <ApplicationCard
                   selectedPlan={selectedPlan}
                   onSelectPlan={setSelectedPlan}
                   onStart={handleStartApplication}
-                  className="w-full max-w-md mx-auto py-4 select-none"
+                  className="mx-auto w-full max-w-md select-none py-4"
                   country={country}
                 />
               </div>
-
             </div>
 
-            {/* Right Column: Sticky Application Card (Desktop) */}
-            <div id="pricing" className="sticky top-[100px] hidden md:block self-start w-full pr-1 scroll-mt-28 z-30">
+            {/* Right column: sticky application card (desktop) */}
+            <div
+              id="pricing"
+              className="sticky top-[100px] z-30 hidden w-full self-start pr-1 scroll-mt-28 md:block"
+            >
               <ApplicationCard
                 selectedPlan={selectedPlan}
                 onSelectPlan={setSelectedPlan}
@@ -135,36 +134,35 @@ export default function CountryPage({ params }: PageProps) {
                 country={country}
               />
             </div>
-
           </div>
         </div>
 
-        {/* Full-width Reviews Section outside the grid layout */}
         <div className="mx-auto w-full max-w-7xl px-4 md:px-6">
           <Reviews countryName={displayName} />
         </div>
 
-        {/* Full-width FAQs Section outside the grid layout */}
-        <div className="mx-auto w-full max-w-7xl px-4 md:px-6 mt-6 pt-6 border-t border-slate-200/50">
+        <div className="mx-auto mt-6 w-full max-w-7xl border-t border-border px-4 pt-6 md:px-6">
           <FAQAccordion className="w-full py-4" countryName={displayName} />
         </div>
 
+        <div className="mx-auto w-full max-w-7xl px-4 md:px-6">
+          <RelatedVisas current={country} />
+        </div>
       </main>
-      
-      {/* Bottom fixed start button for Mobile/Tablet */}
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-white p-3 md:hidden">
+
+      {/* Bottom fixed start button for mobile/tablet */}
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface p-3 md:hidden">
         <button
           type="button"
           onClick={handleStartApplication}
-          className="block w-full rounded-xl bg-primary px-4 py-3 text-center text-sm font-semibold text-white cursor-pointer"
+          className="block w-full cursor-pointer rounded-xl bg-primary px-4 py-3 text-center text-sm font-semibold text-on-primary hover:bg-primary-hover"
         >
           Start Application
         </button>
       </div>
-      
+
       <Footer />
 
-      {/* Modals */}
       <TravelPlanModal
         isOpen={isTravelPlanOpen}
         onClose={() => setIsTravelPlanOpen(false)}

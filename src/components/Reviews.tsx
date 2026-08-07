@@ -12,7 +12,7 @@ interface ReviewCardProps {
 }
 
 const ReviewCard = ({ name, avatarLetter, avatarBg, rating, time, text }: ReviewCardProps) => (
-  <div className="w-[280px] sm:w-[310px] md:w-[340px] shrink-0 rounded-2xl border border-slate-200/70 bg-white p-4.5 shadow-[0_8px_24px_rgba(15,23,42,0.02)] flex flex-col justify-between select-none">
+  <div className="w-[280px] sm:w-[310px] md:w-[340px] shrink-0 rounded-2xl border border-border/70 bg-surface p-4.5 shadow-[0_8px_24px_rgba(15,23,42,0.02)] flex flex-col justify-between select-none">
     <div>
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2.5">
@@ -49,7 +49,7 @@ const ReviewCard = ({ name, avatarLetter, avatarBg, rating, time, text }: Review
     </div>
 
     {/* Verification Footer */}
-    <div className="mt-3.5 pt-3 border-t border-slate-100 flex items-center gap-1.5 text-[8.5px] text-muted-foreground font-bold uppercase tracking-wider">
+    <div className="mt-3.5 pt-3 border-t border-border flex items-center gap-1.5 text-[8.5px] text-muted-foreground font-bold uppercase tracking-wider">
       <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
       Google Review
     </div>
@@ -223,7 +223,7 @@ export function Reviews({ countryName = "Dubai" }: ReviewsProps) {
   const row2 = formatReviews(row2Templates);
 
   return (
-    <section id="reviews" className="w-full py-8 md:py-12 border-t border-slate-200/50 space-y-6 md:space-y-8 scroll-mt-28">
+    <section id="reviews" className="w-full py-8 md:py-12 border-t border-border/50 space-y-6 md:space-y-8 scroll-mt-28">
       <div>
         <h2 className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">
           What our customers say
