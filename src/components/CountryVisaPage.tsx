@@ -18,7 +18,7 @@ import { DatePickerModal } from "@/components/DatePickerModal";
 import { FAQAccordion } from "@/components/FAQAccordion";
 import { FeeBreakdown } from "@/components/FeeBreakdown";
 import { Footer } from "@/components/Footer";
-import { Header } from "@/components/Header";
+import { SiteHeader } from "@/components/SiteHeader";
 import { RelatedVisas } from "@/components/RelatedVisas";
 import { Reviews } from "@/components/Reviews";
 import { SubNavbar } from "@/components/SubNavbar";
@@ -80,7 +80,7 @@ export function CountryVisaPage({ country }: { country: Country }) {
 
   return (
     <div ref={pageContainerRef} className="relative flex flex-1 flex-col bg-background">
-      <Header forceHide={scrolledPastHero} />
+      <SiteHeader forceHide={scrolledPastHero} />
 
       <main id="main-content" tabIndex={-1} className="flex-1">
         <div id="destinations" className="scroll-mt-28">

@@ -29,6 +29,12 @@ export const DURATION = {
   base: 0.22,
   slow: 0.32,
   exit: 0.14,
+  /**
+   * The live-capture countdown, mirroring `--duration-countdown`. Measured off
+   * the reference recording: one full arc sweep in ~3.0s at a constant rate.
+   * Declared now so Phase 5 builds against the token rather than a literal.
+   */
+  countdown: 3,
 } as const;
 
 /** Cubic-bezier control points, mirroring `--ease-*`. */
@@ -39,6 +45,13 @@ export const EASE = {
   in: [0.64, 0, 0.78, 0],
   inOut: [0.65, 0, 0.35, 1],
 } as const satisfies Record<string, [number, number, number, number]>;
+
+/**
+ * Constant rate, mirroring `--ease-linear`. Framer takes the string form.
+ * Reserved for progress that represents elapsed time — the countdown ring,
+ * the marquees. Never for entrances: a linear entrance reads as mechanical.
+ */
+export const EASE_LINEAR = "linear" as const;
 
 /**
  * Springs, for anything the user is directly manipulating. Tuned by feel:

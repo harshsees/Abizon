@@ -20,7 +20,7 @@ import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 
 import { Footer } from "@/components/Footer";
-import { Header } from "@/components/Header";
+import { SiteHeader } from "@/components/SiteHeader";
 import { fadeUp, staggerContainer, VIEWPORT } from "@/lib/motion";
 
 /* -------------------------------------------------------------------------- */
@@ -30,7 +30,7 @@ import { fadeUp, staggerContainer, VIEWPORT } from "@/lib/motion";
 export function PageShell({ children }: { children: ReactNode }) {
   return (
     <div className="flex flex-1 flex-col bg-background">
-      <Header />
+      <SiteHeader />
       <main id="main-content" tabIndex={-1} className="flex-1 pt-16">
         {children}
       </main>

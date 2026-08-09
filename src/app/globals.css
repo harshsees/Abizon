@@ -166,6 +166,27 @@
      dominant pairing on the reference site, and the panel travels far enough
      that the standard 220ms base reads as a snap. */
   --duration-panel: 400ms;
+  /* The live-capture countdown, measured off the reference recording frame by
+     frame: the progress arc sweeps a full turn in ~3.0s at a constant rate,
+     with the numeral swapping every ~1.05s. It is deliberately linear — an
+     eased ring reads as a loading spinner rather than a clock, because the
+     user is timing themselves against it. Declared here in Phase 1 so the
+     vocabulary exists; the countdown itself is built in Phase 5. */
+  --duration-countdown: 3000ms;
+  --ease-linear: linear;
+
+  /* Geometry — chrome sizing.
+     The header pair is consumed by SiteHeader and by anything that offsets
+     itself beneath the header (the country-page sub-nav), so the two can never
+     drift apart again. The control heights back the site chrome — the header
+     search field, the icon buttons — and match the ramp already encoded in
+     ui/button.tsx and ui/field.tsx, which stay the authority for form
+     controls. */
+  --header-h-compact: 4rem;   /* 64px — every page except the homepage */
+  --header-h-full: 10rem;     /* 160px — homepage, matching the reference */
+  --control-h-sm: 2.25rem;    /* 36px */
+  --control-h-md: 2.75rem;    /* 44px — the touch-target floor */
+  --control-h-lg: 3.25rem;    /* 52px */
 
   /* Z-index — single ladder. Replaces z-[9999]/z-[60]/z-25 improvisation. */
   --z-base: 0;
@@ -225,9 +246,15 @@
   --color-ring: var(--color-ring);
 
   --font-sans: var(--font-inter);
+  /* Display family. Editorial voice only — headings and country names.
+     Never navigation, filters, buttons, inputs, labels or metadata: those
+     stay on --font-sans, which is what keeps the UI legible at small sizes. */
+  --font-serif: var(--font-newsreader);
 
-  /* Type scale — 9 steps, nothing below 12px.
-     Replaces text-[8.5px] / [9px] / [9.5px] / [11.5px] / [17px] / [28px]. */
+  /* Type scale — 11 steps, nothing below 12px.
+     Replaces text-[8.5px] / [9px] / [9.5px] / [11.5px] / [17px] / [28px].
+     6xl/7xl were added for the display tier, which the previous 48px ceiling
+     could not reach. */
   --text-2xs: 0.75rem;      /* 12px — smallest permitted */
   --text-2xs--line-height: 1rem;
   --text-xs: 0.8125rem;     /* 13px */
@@ -248,6 +275,10 @@
   --text-4xl--line-height: 2.5rem;
   --text-5xl: 3rem;         /* 48px */
   --text-5xl--line-height: 1;
+  --text-6xl: 3.75rem;      /* 60px */
+  --text-6xl--line-height: 1;
+  --text-7xl: 4.5rem;       /* 72px */
+  --text-7xl--line-height: 0.98;
 
   --radius-sm: 0.5rem;
   --radius-md: 0.75rem;
@@ -255,6 +286,19 @@
   --radius-xl: 1.25rem;
   --radius-2xl: 1.75rem;
   --radius-full: 9999px;
+
+  /* The z-index ladder, exposed as utilities. The values already existed as
+     :root variables but were not in @theme, so `z-nav` was not a real class
+     and components fell back to z-50 / z-[60] / z-[9999] by hand — which is
+     exactly what the ladder was written to prevent. */
+  --z-index-base: var(--z-base);
+  --z-index-raised: var(--z-raised);
+  --z-index-sticky: var(--z-sticky);
+  --z-index-nav: var(--z-nav);
+  --z-index-overlay: var(--z-overlay);
+  --z-index-modal: var(--z-modal);
+  --z-index-toast: var(--z-toast);
+  --z-index-cursor: var(--z-cursor);
 
   --shadow-e1: var(--elevation-1);
   --shadow-e2: var(--elevation-2);
@@ -266,6 +310,97 @@
   --ease-in: var(--ease-in);
   --ease-in-out: var(--ease-in-out);
   --ease-out-back: var(--ease-out-back);
+  --ease-linear: var(--ease-linear);
+}
+
+/* ---------------------------------------------------------------------------
+   3b. TYPE HIERARCHY
+   ----------------------------------------------------------------------------
+   Eight roles. Each bundles family + size + weight + leading + tracking so a
+   heading is one class, not five utilities guessed at per component — which is
+   how the app ended up with `text-2xl font-bold` in some sections and
+   `text-xl font-extrabold` in others for the same rank.
+
+   Serif is confined to the top three display roles. Everything the user
+   operates stays on the sans stack; see the --font-serif note above.
+
+   Sizes step by roughly a major third and tighten their tracking as they grow,
+   because Newsreader's default spacing is set for text sizes and reads loose
+   above ~36px. The premium of the reference comes from that scale contrast and
+   the whitespace around it — not from making everything larger.
+   ------------------------------------------------------------------------ */
+.type-display {
+  font-family: var(--font-serif), ui-serif, Georgia, serif;
+  font-size: var(--text-5xl);
+  line-height: 1.02;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+@media (min-width: 768px) {
+  .type-display { font-size: var(--text-7xl); }
+}
+
+.type-h1 {
+  font-family: var(--font-serif), ui-serif, Georgia, serif;
+  font-size: var(--text-4xl);
+  line-height: 1.08;
+  font-weight: 500;
+  letter-spacing: -0.015em;
+}
+@media (min-width: 768px) {
+  .type-h1 { font-size: var(--text-6xl); }
+}
+
+.type-h2 {
+  font-family: var(--font-serif), ui-serif, Georgia, serif;
+  font-size: var(--text-3xl);
+  line-height: 1.15;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+@media (min-width: 768px) {
+  .type-h2 { font-size: var(--text-4xl); }
+}
+
+/* H3 drops back to the sans stack. Below ~30px the serif stops reading as a
+   deliberate editorial voice and starts looking like a font mismatch. */
+.type-h3 {
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  font-size: var(--text-lg);
+  line-height: var(--text-lg--line-height);
+  font-weight: 600;
+  letter-spacing: -0.005em;
+}
+
+.type-body {
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  font-size: var(--text-base);
+  line-height: 1.6;
+  font-weight: 400;
+}
+
+.type-small {
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  font-size: var(--text-sm);
+  line-height: var(--text-sm--line-height);
+  font-weight: 400;
+}
+
+.type-caption {
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  font-size: var(--text-2xs);
+  line-height: var(--text-2xs--line-height);
+  font-weight: 500;
+  color: var(--color-muted-foreground);
+}
+
+/* Controls: nav items, buttons, tabs. Slightly tighter leading than body and
+   a touch more weight, so a label centres cleanly in a fixed-height control. */
+.type-ui {
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  font-size: var(--text-sm);
+  line-height: 1.2;
+  font-weight: 600;
 }
 
 /* ---------------------------------------------------------------------------

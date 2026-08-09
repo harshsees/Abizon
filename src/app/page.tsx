@@ -25,7 +25,7 @@ import {
 } from "lucide-react";
 import { countriesData, Country, getCountrySlug } from "@/data/countries";
 import { CountryCard } from "@/components/CountryCard";
-import { NewHeader } from "@/components/NewHeader";
+import { SiteHeader } from "@/components/SiteHeader";
 import { useSectionReveal, useMagneticHover } from "@/hooks/usePremiumMotion";
 
 export default function Home() {
@@ -152,11 +152,12 @@ export default function Home() {
     <div ref={pageContainerRef} className="min-h-screen bg-[#f7f7fa] flex flex-col font-sans antialiased text-slate-800 pb-20 relative">
       
       {/* 1. HEADER */}
-      <NewHeader
+      <SiteHeader
+        variant="full"
         searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
+        onSearchChange={setSearchQuery}
         activeTab={activeTab}
-        setActiveTab={setActiveTab}
+        onTabChange={setActiveTab}
       />
 
       {/* Main Container */}
@@ -175,6 +176,7 @@ export default function Home() {
         </div>
 
         {/* 2. FILTER CAPSULE BAR (Matches Mockup UI) */}
+        {activeTab === "explore" && (
         <div className="w-full flex justify-center mb-10 z-40">
           <div className="relative w-full max-w-4xl rounded-2xl md:rounded-full bg-white border border-slate-200/80 shadow-md py-2.5 px-4 grid grid-cols-2 md:flex md:items-center md:justify-between gap-1 text-[13px] text-slate-700">
             
@@ -378,10 +380,14 @@ export default function Home() {
 
           </div>
         </div>
+        )}
 
         {/* 3. MAIN CARDS GRID OR MAP VIEW */}
         <div className="flex-1 flex flex-col justify-start">
-          
+
+          {activeTab === "events" ? (
+            <EventsPanel onBrowseDestinations={() => setActiveTab("explore")} />
+          ) : (
           <AnimatePresence mode="wait">
             
             {viewMode === "list" ? (
@@ -583,12 +589,14 @@ export default function Home() {
             )}
 
           </AnimatePresence>
+          )}
 
         </div>
 
       </main>
 
       {/* 4. FLOATING ACTION PILL (Bottom Center - Toggle View Mode) */}
+      {activeTab === "explore" && (
       <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
         <div className="bg-slate-900/90 text-white shadow-2xl p-1.5 flex items-center gap-1.5 rounded-full border border-slate-700/50 backdrop-blur-lg">
           <button
@@ -612,6 +620,7 @@ export default function Home() {
           </button>
         </div>
       </div>
+      )}
 
       {/* 5. SLIDE-OVER DRAWER FOR COUNTRY DETAILS & APPLY ACTION */}
       <AnimatePresence>
@@ -761,6 +770,43 @@ export default function Home() {
         )}
       </AnimatePresence>
 
+    </div>
+  );
+}
+
+/**
+ * The Events tab.
+ *
+ * `activeTab` was state that nothing read: clicking Events moved the underline
+ * and left the destination grid on screen, so the control claimed to switch
+ * views and then didn't. The tab now branches, and this is what it branches to.
+ *
+ * Deliberately minimal — Phase 1 is fixing the state architecture, not
+ * designing an Events product. When there is something real to show, this is
+ * the single place it goes.
+ */
+function EventsPanel({
+  onBrowseDestinations,
+}: {
+  onBrowseDestinations: () => void;
+}) {
+  return (
+    <div className="flex flex-col items-center justify-center rounded-2xl border border-border bg-surface px-6 py-20 text-center shadow-e1">
+      <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-surface-sunken text-muted-foreground">
+        <Ticket className="h-6 w-6" aria-hidden="true" />
+      </div>
+      <h2 className="type-h2 text-foreground">Events are on the way</h2>
+      <p className="type-small mt-3 max-w-md text-muted-foreground">
+        We&rsquo;re putting together visa-ready trips built around concerts,
+        matches and festivals abroad. Nothing is bookable here yet.
+      </p>
+      <button
+        type="button"
+        onClick={onBrowseDestinations}
+        className="mt-7 cursor-pointer rounded-xl bg-foreground px-6 py-3 text-xs font-bold text-surface transition-colors hover:bg-subtle-foreground"
+      >
+        Browse destinations instead
+      </button>
     </div>
   );
 }

@@ -24,6 +24,10 @@
 .DS_Store
 *.pem
 
+# design reference captures — ~19MB of screenshots/recordings used to spec the
+# redesign. Kept on disk for reference, out of the repo.
+/image_video/
+
 # debug
 npm-debug.log*
 yarn-debug.log*

@@ -71,7 +71,11 @@ export function SubNavbar({ isSticky = false }: SubNavbarProps) {
 
   return (
     <nav
-      style={{ top: isSticky ? "0px" : "57px" }}
+      // Reads the header's own height token rather than a literal. The 57px
+      // this used to hardcode was measured against a header that rendered at
+      // 61px, so the sub-nav sat 4px underneath it and the gap showed on
+      // scroll.
+      style={{ top: isSticky ? "0px" : "var(--header-h-compact)" }}
       className={`sticky inset-x-0 w-full z-40 transition-all duration-300 ease-in-out select-none border-b border-slate-100 bg-white ${
         isSticky ? "mt-0" : "mt-8"
       }`}
