@@ -66,6 +66,10 @@
   --red-600: #dc2626;
   --red-700: #b91c1c;
 
+  /* Pink exists solely for the fourth discovery facet. It is not a status or
+     brand role and must not be used as one. */
+  --pink-600: #db2777;
+
   --canvas: #f7f7fa;
   --white: #ffffff;
 }
@@ -130,6 +134,16 @@
   --color-destructive-hover: var(--red-700);
   --color-destructive-subtle: var(--red-50);
   --color-destructive-subtle-foreground: var(--red-700);
+
+  /* Discovery facets.
+     Four fixed hues that let a user identify a filter before reading it. They
+     are identity, not status — nothing about "green" here means success. Each
+     carries white glyphs only, at 34px, so the 3:1 non-text contrast bar is
+     the applicable one and all four clear it. */
+  --color-facet-delivery: var(--green-600);
+  --color-facet-type: var(--blue-600);
+  --color-facet-documents: var(--amber-600);
+  --color-facet-holidays: var(--pink-600);
 
   /* Lines */
   --color-border: var(--slate-200);
@@ -240,6 +254,11 @@
   --color-destructive-subtle: var(--color-destructive-subtle);
   --color-destructive-subtle-foreground: var(--color-destructive-subtle-foreground);
 
+  --color-facet-delivery: var(--color-facet-delivery);
+  --color-facet-type: var(--color-facet-type);
+  --color-facet-documents: var(--color-facet-documents);
+  --color-facet-holidays: var(--color-facet-holidays);
+
   --color-border: var(--color-border);
   --color-border-strong: var(--color-border-strong);
   --color-input: var(--color-input);
@@ -286,6 +305,10 @@
   --radius-xl: 1.25rem;
   --radius-2xl: 1.75rem;
   --radius-full: 9999px;
+  /* The country card. Measured at ~24px on the reference; it was 25px at one
+     breakpoint and 30px at another here, which is the kind of drift a named
+     token exists to stop. */
+  --radius-card: 1.5rem;
 
   /* The z-index ladder, exposed as utilities. The values already existed as
      :root variables but were not in @theme, so `z-nav` was not a real class

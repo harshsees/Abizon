@@ -185,7 +185,16 @@ export function useSectionReveal(
           y: 0,
           opacity: 1,
           duration: 0.55,
-          stagger: 0.06,
+          /**
+           * `amount`, not `each`. A per-item 0.06s reads fine on the six or
+           * eight items these reveals were written for, but the destination
+           * grid renders 154 cards — 154 x 0.06 is a nine-second stagger, with
+           * the last cards still sliding in long after the user has scrolled
+           * past them. `amount` spreads a fixed 0.6s across however many
+           * children there are, so the rhythm is identical on a small group
+           * and bounded on a large one.
+           */
+          stagger: { amount: 0.6 },
           ease: EASE_OUT,
           scrollTrigger: { trigger: element, start: "top 85%", once: true },
         },

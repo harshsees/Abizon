@@ -1,0 +1,111 @@
+"use client";
+
+/**
+ * The destination grid.
+ *
+ * Column ramp is driven by the card's own proportions rather than by a fixed
+ * breakpoint habit: at every step the card lands within ~10% of the
+ * reference's 312px, so it never goes awkwardly narrow or stretches.
+ *
+ *   base   1 col   ~358px card   (390px viewport)
+ *   sm     2 cols  ~294px
+ *   lg     3 cols  ~305px
+ *   xl     4 cols  ~285px
+ *   2xl    5 cols  ~273px, reaching exactly 312px once the container
+ *                  hits its 1680px ceiling at ~1728px viewport
+ *
+ * Two columns on a phone was tried and rejected: it puts the card at ~171px,
+ * where TYPE / VALID / FEES cannot fit on one line, and those stats being
+ * legible at rest is the point of the Phase 2 card.
+ */
+
+import { AnimatePresence, motion } from "framer-motion";
+import { Search } from "lucide-react";
+
+import { CountryCard } from "@/components/CountryCard";
+import { Country } from "@/data/countries";
+
+type CountryGridProps = {
+  countries: Country[];
+  hasActiveFilters: boolean;
+  onResetFilters: () => void;
+};
+
+export function CountryGrid({
+  countries,
+  hasActiveFilters,
+  onResetFilters,
+}: CountryGridProps) {
+  if (countries.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center rounded-2xl border border-border bg-surface px-6 py-20 text-center shadow-e1">
+        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-surface-sunken text-muted-foreground">
+          <Search className="h-6 w-6" aria-hidden="true" />
+        </div>
+        <h3 className="type-h3 text-foreground">No countries found</h3>
+        <p className="type-small mt-1 max-w-sm text-muted-foreground">
+          No destinations match your filters. Try clearing some selections or
+          searching for a different country.
+        </p>
+        <button
+          type="button"
+          onClick={onResetFilters}
+          className="mt-6 cursor-pointer rounded-xl bg-foreground px-6 py-2.5 text-xs font-bold text-surface transition-colors hover:bg-subtle-foreground"
+        >
+          Reset all filters
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      {/* Secondary by design: the count reports on the grid, it does not
+          compete with it. */}
+      <div className="mb-6 flex items-center justify-between gap-4">
+        <p className="type-caption" aria-live="polite">
+          Showing{" "}
+          <span className="font-semibold text-subtle-foreground" data-numeric>
+            {countries.length}
+          </span>{" "}
+          {countries.length === 1 ? "country" : "countries"}
+        </p>
+
+        {hasActiveFilters && (
+          <button
+            type="button"
+            onClick={onResetFilters}
+            className="cursor-pointer text-2xs font-medium text-muted-foreground underline decoration-border-strong underline-offset-4 transition-colors hover:text-foreground hover:decoration-current"
+          >
+            Clear all filters
+          </button>
+        )}
+      </div>
+
+      <motion.div
+        layout
+        className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4 xl:gap-[30px] 2xl:grid-cols-5"
+      >
+        {/* `initial={false}` so the first paint is instant. Animating 154
+            cards in on mount buys nothing — they are below the fold within two
+            rows — and costs a scale/opacity animation on every one of them.
+            Adds and removals still animate, which is where filtering needs it. */}
+        <AnimatePresence mode="popLayout" initial={false}>
+          {countries.map((country) => (
+            <motion.div
+              layout
+              key={`${country.id}-${country.code}`}
+              className="js-country-card-wrapper"
+              initial={{ opacity: 0, scale: 0.97 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.97 }}
+              transition={{ duration: 0.2 }}
+            >
+              <CountryCard country={country} />
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </motion.div>
+    </>
+  );
+}
