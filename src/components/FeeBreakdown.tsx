@@ -14,22 +14,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Info, Landmark, Minus, Plus, ReceiptText, ShieldCheck } from "lucide-react";
 
 import { Country } from "@/data/countries";
+import { computeTotals, resolveCountryVisaConfig } from "@/lib/countryVisa";
 import { DURATION, EASE } from "@/lib/motion";
-
-/** Flat per-applicant handling charge, matching the ApplicationCard pricing. */
-const SERVICE_FEE = 1499;
-/** GST applies to the service component only — never to the embassy's fee. */
-const GST_RATE = 0.18;
 
 const inr = (value: number) =>
   `₹${Math.round(value).toLocaleString("en-IN")}`;
-
-/** Country fees are authored as display strings ("₹8,099", "Free"). */
-function parseGovernmentFee(fees: string): number {
-  if (/free/i.test(fees)) return 0;
-  const digits = fees.replace(/[^0-9]/g, "");
-  return digits ? Number(digits) : 0;
-}
 
 type FeeBreakdownProps = {
   country: Country;
@@ -39,10 +28,16 @@ type FeeBreakdownProps = {
 export function FeeBreakdown({ country, className = "" }: FeeBreakdownProps) {
   const [travellers, setTravellers] = useState(1);
 
-  const governmentFee = parseGovernmentFee(country.fees);
-  const gst = SERVICE_FEE * GST_RATE;
-  const perTraveller = governmentFee + SERVICE_FEE + gst;
-  const total = perTraveller * travellers;
+  /**
+   * Shared with `CountryApplicationPanel` via `computeTotals`. The service fee
+   * and GST rate used to be local constants here and different local constants
+   * in the application card, so the two quoted totals ₹1,270 apart for Dubai.
+   */
+  const totals = computeTotals(resolveCountryVisaConfig(country).pricing);
+  const governmentFee = totals.governmentFee;
+  const SERVICE_FEE = totals.serviceFee;
+  const gst = totals.gst;
+  const total = totals.perTraveller * travellers;
 
   const rows = [
     {
@@ -146,7 +141,8 @@ export function FeeBreakdown({ country, className = "" }: FeeBreakdownProps) {
             Total payable
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
-            {inr(perTraveller)} × {travellers} {travellers === 1 ? "traveller" : "travellers"}
+            {inr(totals.perTraveller)} × {travellers}{" "}
+            {travellers === 1 ? "traveller" : "travellers"}
           </p>
         </div>
         {/* Keyed on the value so the figure cross-fades when the stepper moves,

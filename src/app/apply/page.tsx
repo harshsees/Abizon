@@ -3,6 +3,8 @@
 import React, { useState, useEffect, Suspense, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
+
+import { countryFromSlug, displayCountryName } from "@/lib/countryVisa";
 import {
   ArrowLeft,
   Home,
@@ -52,6 +54,21 @@ function ApplyPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const dateStr = searchParams.get("date");
+
+  /**
+   * Which country this application is for.
+   *
+   * The country page has always appended `?country=`, and this flow has always
+   * ignored it — so every applicant, for all 154 destinations, went through an
+   * application that did not know where they were going.
+   *
+   * The country lives in the URL rather than in module state on purpose: the
+   * flow survives a refresh, a shared link and the back button, and there is no
+   * cross-page mutable singleton to keep in sync. `countryFromSlug` accepts the
+   * slug (`dubai`) and falls back to matching on name, so links already in the
+   * wild that pass `United%20Arab%20Emirates` keep resolving.
+   */
+  const country = countryFromSlug(searchParams.get("country"));
 
   // Flow State
   const [currentStep, setCurrentStep] = useState<StepType>("travelers");
@@ -404,7 +421,17 @@ function ApplyPageContent() {
           <button type="button" onClick={handleBack} className="flex min-h-11 items-center gap-1.5 text-slate-700 font-semibold text-sm hover:opacity-70 transition">
             <ArrowLeft className="h-4 w-4" /> Back
           </button>
-          <div className="flex-1 text-center">
+          <div className="flex flex-1 flex-col items-center gap-1">
+            {country && (
+              <span className="flex items-center gap-1.5 text-sm font-bold text-foreground">
+                <img
+                  src={`https://flagcdn.com/w40/${country.code}.png`}
+                  alt=""
+                  className="h-3.5 w-5 rounded-[2px] object-cover"
+                />
+                {displayCountryName(country)}
+              </span>
+            )}
             <span className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase">
               {getProgressPercentage()}% Completed
             </span>

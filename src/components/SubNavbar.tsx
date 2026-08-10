@@ -5,46 +5,63 @@ import { motion } from "framer-motion";
 
 interface SubNavbarProps {
   isSticky?: boolean;
+  /**
+   * Section ids the page actually rendered. Anything absent is dropped from the
+   * nav — "Additional" only exists where a destination declares country-scoped
+   * content (one of 154 today), and a tab that scrolls nowhere is worse than no
+   * tab. The page passes this because the page is what decides; querying the
+   * DOM for it would mean an effect, a state write and a frame of wrong nav.
+   */
+  sections?: string[];
 }
 
-export function SubNavbar({ isSticky = false }: SubNavbarProps) {
+export function SubNavbar({ isSticky = false, sections }: SubNavbarProps) {
   const [activeSection, setActiveSection] = useState<string>("visa-info");
 
+  /**
+   * Section names follow the reference's country-page tab set, in Keyrise's
+   * own words: the fee tab is explicit that the breakdown is governmental, and
+   * "Why Keyrise" replaces the generic "Visa Process" entry because the process
+   * is one section down rather than a destination of its own.
+   *
+   * "Additional" targets whichever country-scoped section a destination
+   * declares, so it only resolves where one exists.
+   */
   const items = [
     { name: "Visa Info", href: "#visas", id: "visa-info" },
     { name: "Documents", href: "#requirements-section", id: "documents" },
-    { name: "Visa Process", href: "#process-section", id: "process" },
+    { name: "Gov. Fee Breakdown", href: "#fee-breakdown", id: "fees" },
+    { name: "Why Keyrise", href: "#why-keyrise-section", id: "why" },
     { name: "Reviews", href: "#reviews", id: "reviews" },
+    { name: "Additional", href: "#additional-section", id: "additional" },
     { name: "FAQs", href: "#faq", id: "faqs" },
   ];
+
+  const visibleItems = sections
+    ? items.filter((item) => sections.includes(item.id))
+    : items;
 
   useEffect(() => {
     const handleScroll = () => {
       const offset = 140; // Spacing threshold below header to activate a section
       const scrollPosition = window.scrollY + offset;
 
-      const visasEl = document.getElementById("visas");
-      const requirementsEl = document.getElementById("requirements-section");
-      const processEl = document.getElementById("process-section");
-      const reviewsEl = document.getElementById("reviews");
-      const faqEl = document.getElementById("faq");
+      // Walk the sections in reverse document order and take the first one the
+      // scroll position has passed.
+      //
+      // Measured with getBoundingClientRect + scrollY, NOT offsetTop.
+      // `offsetTop` is relative to the nearest positioned ancestor, and these
+      // sections live in different containers — the FAQ sits inside its own
+      // wrapper, so its offsetTop was ~0 and it matched immediately, leaving
+      // "FAQs" highlighted while the user was still looking at the hero.
+      const passed = [...visibleItems].reverse().find((item) => {
+        const el = document.querySelector<HTMLElement>(item.href);
+        if (!el) return false;
+        const top = el.getBoundingClientRect().top + window.scrollY;
+        return scrollPosition >= top;
+      });
 
-      let currentActive = "visa-info";
-
-      // Precise offsetTop scroll-spy checks to prevent frame lag or flickering
-      if (faqEl && scrollPosition >= faqEl.offsetTop) {
-        currentActive = "faqs";
-      } else if (reviewsEl && scrollPosition >= reviewsEl.offsetTop) {
-        currentActive = "reviews";
-      } else if (processEl && scrollPosition >= processEl.offsetTop) {
-        currentActive = "process";
-      } else if (requirementsEl && scrollPosition >= requirementsEl.offsetTop) {
-        currentActive = "documents";
-      } else if (visasEl && scrollPosition >= visasEl.offsetTop) {
-        currentActive = "visa-info";
-      }
-
-      setActiveSection(currentActive);
+      setActiveSection(passed?.id ?? "visa-info");
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
@@ -82,7 +99,7 @@ export function SubNavbar({ isSticky = false }: SubNavbarProps) {
     >
       <div className="mx-auto max-w-7xl px-4 md:px-6 overflow-x-auto scrollbar-none">
         <div className="flex justify-start items-center gap-8 md:gap-10 h-16 md:h-18 min-w-max">
-          {items.map((item) => {
+          {visibleItems.map((item) => {
             const isActive = activeSection === item.id;
             return (
               <a
