@@ -32,6 +32,26 @@ export type ApplicationDraft = {
   travelDate?: string;
   /** Index into the processing options. */
   plan?: number;
+
+  /* --- added in Phase 5A, so the apply flow can resume where it stopped --- */
+
+  /** The `ApplicationStepId` the applicant had reached. */
+  step?: string;
+  /** The loose travel answer, where no exact date was picked. */
+  travelWindow?: "soon" | "later";
+  /**
+   * Traveller first names, in order. This is the only personal data the draft
+   * holds, and it is here because resuming into a list of blank cards is not
+   * resuming.
+   *
+   * WHAT IS DELIBERATELY NOT STORED: passport numbers, dates of birth, expiry
+   * dates, email, phone, and above all document files or captured images.
+   * Those are held in memory for the life of the tab and are gone when it
+   * closes. localStorage is readable by any script on the origin and survives
+   * indefinitely; a convenience feature is not worth putting a passport number
+   * there, and re-entering six fields is a smaller cost than leaking them.
+   */
+  travellerNames?: string[];
 };
 
 type DraftMap = Record<string, ApplicationDraft>;

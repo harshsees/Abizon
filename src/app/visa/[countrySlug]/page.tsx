@@ -2,36 +2,59 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { CountryVisaPage } from "@/components/CountryVisaPage";
-import { countriesData, getCountrySlug } from "@/data/countries";
+import { countrySlugs, hasAuthenticImagery, resolveCountry } from "@/lib/countryCatalogue";
+import { deriveVisaFlow, displayCountryName } from "@/lib/countryVisa";
 
 /**
- * The dataset carries a couple of duplicate rows (Morocco and Jordan each
- * appear twice) which collapse to the same slug. Returning a duplicate from
- * generateStaticParams makes the build emit the same route twice, so the
- * lookup is deduped once here and reused by both the params list and the page.
+ * Routing goes through the catalogue, which is the product's single slug
+ * resolver.
+ *
+ * This route used to build its own `new Map(countriesData.map(...))`. `Map.set`
+ * overwrites, so for the duplicated Morocco row that map kept the LAST entry
+ * while `countryFromSlug` — used by /apply — kept the FIRST. The page quoted
+ * ₹5,169 and the application quoted ₹4,669 for the same visa. One resolver
+ * makes that class of bug unrepresentable.
  */
-const countryBySlug = new Map(
-  countriesData.map((country) => [getCountrySlug(country.name), country] as const),
-);
-
 export function generateStaticParams() {
-  return [...countryBySlug.keys()].map((countrySlug) => ({ countrySlug }));
+  return countrySlugs.map((countrySlug) => ({ countrySlug }));
 }
 
 export async function generateMetadata({
   params,
 }: PageProps<"/visa/[countrySlug]">): Promise<Metadata> {
   const { countrySlug } = await params;
-  const country = countryBySlug.get(countrySlug);
+  const country = resolveCountry(countrySlug);
 
   if (!country) return { title: "Visa not found | Keyrise" };
 
-  const displayName = country.name === "United Arab Emirates" ? "Dubai" : country.name;
-  const title = `${displayName} Visa for Indians — Fees, Documents & Processing Time | Keyrise`;
-  const description =
-    `Apply online for a ${displayName} ${country.visaType.toLowerCase()} with ${country.validity.toLowerCase()} validity. ` +
-    `Delivered in ${country.deliveryDays} ${country.deliveryDays === 1 ? "day" : "days"}, guaranteed, or your money back. ` +
-    `Government fee ${country.fees}. Documents needed: ${country.documents.toLowerCase()}.`;
+  // Was a second copy of this rule. One definition, imported.
+  const displayName = displayCountryName(country);
+
+  /**
+   * PHASE 7C: metadata follows the flow, like the page body already does.
+   *
+   * Phase 7B stopped visa-free destinations from rendering an application panel
+   * and a fee — but `generateMetadata` was untouched, so all 30 of them still
+   * told search engines and link previews "Apply online for a Mauritius visa
+   * free … Government fee Free. Fees, Documents & Processing Time". The page
+   * said there is nothing to apply for while its own title advertised applying.
+   *
+   * Branching on `deriveVisaFlow`, not on a country name, so this stays
+   * configuration rather than a list of special cases.
+   */
+  const isVisaFree = deriveVisaFlow(country.visaType) === "visa-free";
+
+  const title = isVisaFree
+    ? `${displayName} Visa Requirements for Indians — No Visa Needed | Keyrise`
+    : `${displayName} Visa for Indians — Fees, Documents & Processing Time | Keyrise`;
+
+  const description = isVisaFree
+    ? `Indian passport holders do not need a visa for ${displayName}. ` +
+      `Entry is permitted for ${country.validity.toLowerCase()}. ` +
+      `Check passport validity and entry conditions before you travel.`
+    : `Apply online for a ${displayName} ${country.visaType.toLowerCase()} with ${country.validity.toLowerCase()} validity. ` +
+      `Delivered in ${country.deliveryDays} ${country.deliveryDays === 1 ? "day" : "days"}, guaranteed, or your money back. ` +
+      `Government fee ${country.fees}. Documents needed: ${country.documents.toLowerCase()}.`;
 
   return {
     title,
@@ -41,14 +64,19 @@ export async function generateMetadata({
       title,
       description,
       type: "website",
-      images: country.imageUrl ? [{ url: country.imageUrl }] : undefined,
+      // Only a photograph that genuinely depicts this destination. The generic
+      // stock and dead-id images are suppressed here for the same reason the
+      // hero suppresses them — a share card is a claim about the place.
+      images: hasAuthenticImagery(country)
+        ? [{ url: country.imageUrl }]
+        : undefined,
     },
   };
 }
 
 export default async function Page({ params }: PageProps<"/visa/[countrySlug]">) {
   const { countrySlug } = await params;
-  const country = countryBySlug.get(countrySlug);
+  const country = resolveCountry(countrySlug);
 
   if (!country) notFound();
 

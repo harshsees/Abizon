@@ -66,14 +66,14 @@ export function FeeBreakdown({ country, className = "" }: FeeBreakdownProps) {
   return (
     <section
       id="fees-section"
-      className={`scroll-mt-28 rounded-2xl border border-border bg-surface p-5 shadow-e2 md:p-6 ${className}`}
+      className={`scroll-mt-28 border-t border-border pt-10 md:pt-12 ${className}`}
     >
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold tracking-tight text-foreground js-reveal-heading">
+          <h2 className="text-2xl font-bold tracking-tight text-foreground js-reveal-heading">
             Gov. fee breakdown
           </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted-foreground">
             Every rupee itemised. No charge appears at checkout that isn&apos;t listed here.
           </p>
         </div>
@@ -108,19 +108,21 @@ export function FeeBreakdown({ country, className = "" }: FeeBreakdownProps) {
         </div>
       </header>
 
-      <ul className="mt-6 divide-y divide-border">
+      <ul className="mt-6 divide-y divide-border border-t border-border">
         {rows.map((row) => (
           <li
             key={row.label}
-            className="js-info-item flex items-start justify-between gap-4 py-4"
+            className="js-info-item flex items-start justify-between gap-4 py-5"
           >
-            <div className="flex items-start gap-3">
-              <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-surface-sunken text-muted-foreground">
+            <div className="flex items-start gap-4">
+              <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-surface-sunken text-subtle-foreground">
                 <row.icon className="h-4 w-4" />
               </span>
               <div>
                 <p className="text-sm font-semibold text-foreground">{row.label}</p>
-                <p className="mt-0.5 text-xs text-muted-foreground">{row.hint}</p>
+                <p className="mt-1 max-w-xl text-xs leading-relaxed text-muted-foreground">
+                  {row.hint}
+                </p>
               </div>
             </div>
             <span
@@ -135,9 +137,9 @@ export function FeeBreakdown({ country, className = "" }: FeeBreakdownProps) {
         ))}
       </ul>
 
-      <div className="mt-2 flex items-end justify-between gap-4 rounded-xl bg-surface-sunken px-4 py-4">
+      <div className="flex items-end justify-between gap-4 border-t border-border-strong py-5">
         <div>
-          <p className="text-2xs font-bold uppercase tracking-widest text-muted-foreground">
+          <p className="text-2xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
             Total payable
           </p>
           <p className="mt-1 text-xs text-muted-foreground">

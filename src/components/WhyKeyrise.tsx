@@ -1,19 +1,21 @@
-"use client";
-
 /**
  * Why Keyrise.
  *
- * The reference runs an equivalent section on every country page. The four
- * claims below are not borrowed from it — each one is a commitment Keyrise
- * already makes elsewhere in this codebase, restated in one place:
+ * The four claims below are not borrowed from a competitor — each one is a
+ * commitment Keyrise already makes elsewhere in this codebase, restated in one
+ * place:
  *
- *   on-time or free      the process timeline's "Keyrise Fee Waived" row
- *   refund on rejection  the same timeline's "Government Fee Refunded" row
- *   pay after approval   the application card's pay-on-approval split
+ *   on-time or free      the process section's "Keyrise fee is waived" row
+ *   refund on rejection  the same section's "government fee is refunded" row
+ *   checked before filed `VisaRequirements`' verification line
  *   fully digital        the e-visa "Paperless" method
  *
  * Nothing here asserts a statistic, a rating, or a volume, because none of
- * those exist as data. Kept deliberately plain — four lines and an icon.
+ * those exist as data.
+ *
+ * Phase 4.1 dropped the four bordered cards for a hairline list. Four boxed
+ * panels inside a column that was itself a stack of boxed panels read as a
+ * dashboard; the claims are short enough that type and rules carry them.
  */
 
 import { BadgeCheck, Clock, RotateCcw, Smartphone } from "lucide-react";
@@ -26,7 +28,7 @@ const POINTS = [
   },
   {
     Icon: RotateCcw,
-    title: "Rejected? Government fee refunded",
+    title: "Refused? Government fee refunded",
     body: "If the application is turned down, the government fee comes back to you.",
   },
   {
@@ -43,26 +45,23 @@ const POINTS = [
 
 export function WhyKeyrise() {
   return (
-    <section className="space-y-5 border-t border-border/50 pt-8">
-      <h2
-        id="why-keyrise-section"
-        className="scroll-mt-28 text-2xl font-bold tracking-tight text-foreground"
-      >
+    <section
+      id="why-keyrise-section"
+      className="scroll-mt-28 border-t border-border pt-10 md:pt-12"
+    >
+      <h2 className="text-2xl font-bold tracking-tight text-foreground js-reveal-heading">
         Why Keyrise
       </h2>
 
-      <ul className="grid gap-3 sm:grid-cols-2">
+      <ul className="mt-6 divide-y divide-border border-t border-border">
         {POINTS.map((point) => (
-          <li
-            key={point.title}
-            className="flex items-start gap-3 rounded-2xl border border-border bg-surface p-5 shadow-e1"
-          >
-            <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-primary-subtle text-primary-subtle-foreground">
-              <point.Icon aria-hidden className="h-5 w-5" />
+          <li key={point.title} className="js-info-item flex gap-4 py-5">
+            <span className="mt-0.5 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-surface-sunken text-subtle-foreground">
+              <point.Icon aria-hidden className="h-4 w-4" />
             </span>
-            <div>
-              <p className="text-sm font-bold text-foreground">{point.title}</p>
-              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-foreground">{point.title}</p>
+              <p className="mt-1 max-w-xl text-xs leading-relaxed text-muted-foreground">
                 {point.body}
               </p>
             </div>

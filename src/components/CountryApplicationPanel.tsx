@@ -27,6 +27,10 @@ import { CalendarDays, Check, ChevronRight, Minus, Plus, Zap } from "lucide-reac
 
 import { VisaGuarantee } from "@/components/VisaGuarantee";
 import { Country } from "@/data/countries";
+// One list of required documents for the whole product — the panel, the
+// requirements section and the application flow all read the same function.
+// The panel's own `documentList` was one of the three copies Phase 5A merged.
+import { requiredDocumentLabels } from "@/lib/application/documents";
 import {
   computeTotals,
   type CountryVisaConfig,
@@ -43,20 +47,6 @@ import {
 
 const inr = (value: number) => `₹${Math.round(value).toLocaleString("en-IN")}`;
 
-/** The documents a country actually asks for, from the one field that has them. */
-function documentList(documents: Country["documents"]): string[] {
-  switch (documents) {
-    case "Photo + Passport":
-      return ["Passport front page", "Passport-size photograph"];
-    case "Passport Only":
-      return ["Passport front page"];
-    case "No Documents Required":
-      return [];
-    default:
-      return [];
-  }
-}
-
 type TravelChoice = "soon" | "later" | "exact";
 
 type CountryApplicationPanelProps = {
@@ -66,7 +56,17 @@ type CountryApplicationPanelProps = {
   onPickDate: () => void;
   /** Chosen exact date, when one has been picked. */
   travelDate?: Date;
-  onStart: (details: { travellers: number; plan: number }) => void;
+  /**
+   * `travelWindow` carries the looser answer ("within 30 days" / "not decided
+   * yet"). Phase 6A added it: the panel had always collected it and then
+   * dropped it at the handoff, so a user who answered the question here was
+   * asked it again on the application's first screen.
+   */
+  onStart: (details: {
+    travellers: number;
+    plan: number;
+    travelWindow?: "soon" | "later";
+  }) => void;
 };
 
 export function CountryApplicationPanel({
@@ -105,16 +105,24 @@ export function CountryApplicationPanel({
   const totals = computeTotals(config.pricing, { express: plan === 1 });
   const total = totals.perTraveller * travellers;
 
-  const docs = documentList(country.documents);
+  const docs = requiredDocumentLabels(country.documents);
   const deliveryDays = plan === 1 ? Math.max(1, config.deliveryDays - 1) : config.deliveryDays;
 
   const handleStart = () => {
+    // "exact" is derived from the date, so only the loose answers travel as a
+    // window — sending both would give the flow two sources for one question.
+    const travelWindow =
+      chosenTravelWindow === "soon" || chosenTravelWindow === "later"
+        ? chosenTravelWindow
+        : undefined;
+
     saveDraft(config.slug, {
       travellers,
       plan,
       travelDate: travelDate?.toISOString().split("T")[0],
+      travelWindow,
     });
-    onStart({ travellers, plan });
+    onStart({ travellers, plan, travelWindow });
   };
 
   return (

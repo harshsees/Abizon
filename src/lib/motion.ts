@@ -30,11 +30,75 @@ export const DURATION = {
   slow: 0.32,
   exit: 0.14,
   /**
-   * The live-capture countdown, mirroring `--duration-countdown`. Measured off
-   * the reference recording: one full arc sweep in ~3.0s at a constant rate.
-   * Declared now so Phase 5 builds against the token rather than a literal.
+   * The live-capture countdown, mirroring `--duration-countdown`.
+   *
+   * CORRECTED IN PHASE 5C. Phase 1 declared this as 3.0s from an eyeballed
+   * reading of the reference recording, with a note claiming "the numeral
+   * swaps every ~1.05s". Frame-by-frame measurement of that recording
+   * (image_video/2.mp4, 30fps) says otherwise: the numerals swap every
+   * ~1.30s, so the countdown runs 3 × 1.30 = 3.9s. The 3.0s figure was close
+   * to the ARC sweep alone (measured 2.833s), which is a different thing.
+   *
+   * See COUNTDOWN below — that is what the countdown actually reads.
    */
-  countdown: 3,
+  countdown: 3.9,
+} as const;
+
+/**
+ * LIVE-CAPTURE COUNTDOWN
+ * ---------------------------------------------------------------------------
+ * Every number here was measured from `image_video/2.mp4` — the project's
+ * screen recording of the reference live-capture screen — at 30fps. Nothing is
+ * rounded to a comfortable value, and nothing is here that the recording does
+ * not show.
+ *
+ * MEASURED, FRAME-EXACT:
+ *   "3" appears  f208 = 6.933s     held 41 frames = 1.367s
+ *   "2" appears  f249 = 8.300s     held 37 frames = 1.233s
+ *   "1" appears  f286 = 9.533s     held 88 frames = 2.933s *
+ *   numerals go  f374 = 12.467s
+ *
+ *   * The long "1" is not a design choice. The reference's ring advances in six
+ *     irregular increments (0.40, 0.50, 0.60, 0.63, 0.64s apart) — the
+ *     signature of a face-detection confidence counter, not an easing curve.
+ *     The capture waited on that loop. `digitHold` therefore takes the mean of
+ *     the two clean holds, which agree closely with each other.
+ *
+ * WHAT THE RECORDING DOES NOT CONTAIN, verified rather than assumed:
+ *   - No fade. Frames 207→208 jump 666→2667 white pixels simultaneously at
+ *     thresholds 120, 160, 200 and 240. A fade would stagger those.
+ *   - No scale. Glyph cap height is 75/74/73px for 3/2/1 — that spread is
+ *     glyph overshoot, not animation.
+ *   - No blur, no travel, no rotation, no background zoom/pan/darkening. A
+ *     background patch measures 255,255,255 and the heading 223.63,223.87,
+ *     223.87 at six sample frames spanning the whole countdown — identical to
+ *     two decimal places.
+ *
+ * So the countdown is a hard cut between numerals of constant size and
+ * opacity, over a ring that fills. `swap` exists only so the outgoing numeral
+ * leaves through AnimatePresence rather than being torn out of the tree; at
+ * 80ms it is 2.4 frames, under what the 30fps source could have resolved.
+ */
+export const COUNTDOWN = {
+  /** Numerals counted down, inclusive: 3, 2, 1. */
+  from: 3,
+  /** Seconds each numeral is held. Mean of the two uninterrupted holds. */
+  digitHold: 1.3,
+  /** Seconds for the whole run. */
+  total: 3.9,
+  /** Seconds for the numeral cross-dissolve. Opacity only. */
+  swap: 0.08,
+  /**
+   * Ring geometry, as a ratio of the capture circle so it scales with the
+   * viewport instead of carrying pixel values that only hold at one size.
+   *   radius  270.5px / 233px circle radius
+   *   stroke  2px on a 466px diameter
+   *   numeral cap height 75px / 0.70 em ÷ 466px diameter
+   */
+  ring: { radiusRatio: 1.16, strokeRatio: 0.0043 },
+  numeralSizeRatio: 0.23,
+  /** Sampled from the reference ring at its peak: rgb(9, 142, 77). */
+  ringColor: "#098E4D",
 } as const;
 
 /** Cubic-bezier control points, mirroring `--ease-*`. */

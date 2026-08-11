@@ -180,13 +180,17 @@
      dominant pairing on the reference site, and the panel travels far enough
      that the standard 220ms base reads as a snap. */
   --duration-panel: 400ms;
-  /* The live-capture countdown, measured off the reference recording frame by
-     frame: the progress arc sweeps a full turn in ~3.0s at a constant rate,
-     with the numeral swapping every ~1.05s. It is deliberately linear — an
-     eased ring reads as a loading spinner rather than a clock, because the
-     user is timing themselves against it. Declared here in Phase 1 so the
-     vocabulary exists; the countdown itself is built in Phase 5. */
-  --duration-countdown: 3000ms;
+  /* The live-capture countdown.
+     CORRECTED IN PHASE 5C against image_video/2.mp4 at 30fps. Phase 1 declared
+     3000ms with a note claiming the numeral swaps every ~1.05s; measurement
+     says the numerals swap every ~1.30s (holds of 1.367s and 1.233s), so a
+     three-numeral run is 3900ms. The old 3000ms was roughly the ARC sweep on
+     its own (measured 2.833s), which is not the same quantity.
+     Still deliberately linear — an eased ring reads as a loading spinner
+     rather than a clock, because the user is timing themselves against it.
+     `lib/motion.ts` → COUNTDOWN is the authority; this mirrors it for CSS. */
+  --duration-countdown: 3900ms;
+  --duration-countdown-digit: 1300ms;
   --ease-linear: linear;
 
   /* Geometry — chrome sizing.

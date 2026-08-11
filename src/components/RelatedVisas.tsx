@@ -14,7 +14,8 @@ import { useMemo } from "react";
 import { motion } from "framer-motion";
 import { ArrowRight, Clock } from "lucide-react";
 
-import { Country, countriesData, getCountrySlug } from "@/data/countries";
+import { Country, getCountrySlug } from "@/data/countries";
+import { catalogue } from "@/lib/countryCatalogue";
 import { staggerContainer, fadeUp, VIEWPORT } from "@/lib/motion";
 
 type RelatedVisasProps = {
@@ -25,17 +26,13 @@ type RelatedVisasProps = {
 
 export function RelatedVisas({ current, count = 8 }: RelatedVisasProps) {
   const related = useMemo(() => {
-    const seen = new Set<string>([getCountrySlug(current.name)]);
+    const currentSlug = getCountrySlug(current.name);
 
-    return countriesData
-      .filter((country) => {
-        // The dataset carries a few duplicate rows (Morocco, Jordan) that
-        // collapse to the same slug — first one wins.
-        const slug = getCountrySlug(country.name);
-        if (seen.has(slug)) return false;
-        seen.add(slug);
-        return true;
-      })
+    // Suggestions come from the catalogue — already deduplicated, by the same
+    // rule the route and the application use. This component used to run its
+    // own `seen` Set, which was one of three competing de-duplications.
+    return catalogue
+      .filter((country) => getCountrySlug(country.name) !== currentSlug)
       .sort((a, b) => {
         // Fastest first; break ties toward the lighter document requirement.
         if (a.deliveryDays !== b.deliveryDays) return a.deliveryDays - b.deliveryDays;

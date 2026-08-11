@@ -7,6 +7,18 @@ import { useId, useState } from "react";
 import { DURATION, EASE } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
+/**
+ * The processing-time answer used to read "Standard processing takes 3-5
+ * working days. Express applications can be processed in 24-48 hours." Those
+ * were fixed numbers rendered identically on all ~154 country pages, and on
+ * Dubai they contradicted the page's own guarantee three sections above it —
+ * the dataset's `deliveryDays` for the UAE is 1. The answer now interpolates
+ * `{delivery}` from that real field, and the generic fallback states the
+ * guarantee rather than a duration.
+ *
+ * The tracking answer no longer promises "real-time status updates through your
+ * dashboard": there is no application backend behind it yet.
+ */
 const faqs = [
   {
     q: "Do Indians need a visa for Dubai?",
@@ -14,7 +26,7 @@ const faqs = [
   },
   {
     q: "How long does Dubai visa processing take?",
-    a: "Standard processing takes 3-5 working days. Express applications can be processed in 24-48 hours.",
+    a: "{delivery} Choosing Express adds priority handling, and a faster date where the destination offers one.",
   },
   {
     q: "What documents are required?",
@@ -30,7 +42,7 @@ const faqs = [
   },
   {
     q: "Can I track my application?",
-    a: "Yes, you get real-time status updates through your dashboard and email notifications.",
+    a: "Yes. You are notified by email as your application moves through document review, filing and decision.",
   },
   {
     q: "What happens if my visa is delayed?",
@@ -42,15 +54,34 @@ const faqs = [
   },
 ];
 
-export function FAQAccordion({ className, countryName = "Dubai" }: { className?: string; countryName?: string }) {
+export function FAQAccordion({
+  className,
+  countryName = "Dubai",
+  /** The dataset's guaranteed delivery, in days. Omitted where unknown. */
+  deliveryDays,
+}: {
+  className?: string;
+  countryName?: string;
+  deliveryDays?: number;
+}) {
   const [open, setOpen] = useState<number | null>(0);
   const reduced = useReducedMotion();
   const baseId = useId();
 
+  const deliveryAnswer =
+    typeof deliveryDays === "number"
+      ? `Keyrise guarantees your ${countryName} visa within ${deliveryDays} ${
+          deliveryDays === 1 ? "day" : "days"
+        } of a complete application, or our fee is waived.`
+      : `Keyrise guarantees your ${countryName} visa by the date shown on your application, or our fee is waived.`;
+
   const formattedFaqs = faqs.map((faq) => {
     return {
       q: faq.q.replace(/Dubai/g, countryName).replace(/UAE/g, countryName),
-      a: faq.a.replace(/Dubai/g, countryName).replace(/UAE/g, countryName),
+      a: faq.a
+        .replace("{delivery}", deliveryAnswer)
+        .replace(/Dubai/g, countryName)
+        .replace(/UAE/g, countryName),
     };
   });
 

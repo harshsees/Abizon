@@ -11,10 +11,10 @@
 
 export function EmiratesCoverage() {
   return (
-        <div className="pt-8 border-t border-border/50">
+        <div className="border-t border-border pt-10 md:pt-12">
           <div className="space-y-6">
           <div>
-            <h2 id="emirates-section" className="text-2xl font-bold text-foreground tracking-tight scroll-mt-28">
+            <h2 id="emirates-section" className="text-2xl font-bold text-foreground tracking-tight scroll-mt-28 js-reveal-heading">
               All 7 Emirates with 1 Visa
             </h2>
           </div>

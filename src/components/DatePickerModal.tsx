@@ -62,6 +62,14 @@ interface DatePickerModalProps {
    * component previously hardcoded; pass a real date to make it dynamic.
    */
   minDate?: Date;
+  /**
+   * The confirm button's verb.
+   *
+   * It used to be hardcoded to "Proceed to Application", which is right on the
+   * country page and wrong inside the application, where the user is already
+   * in it and is only choosing a date.
+   */
+  confirmLabel?: string;
 }
 
 export function DatePickerModal({
@@ -69,6 +77,7 @@ export function DatePickerModal({
   onClose,
   onSelectDate,
   minDate,
+  confirmLabel = "Proceed to Application",
 }: DatePickerModalProps) {
   const [activeTab, setActiveTab] = useState<TabId>("fixed");
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -118,8 +127,8 @@ export function DatePickerModal({
       footer={
         <Button block size="lg" disabled={!selectedDate} onClick={handleProceed}>
           {selectedDate
-            ? `Proceed to Application (${shortDate.format(selectedDate)})`
-            : "Proceed to Application"}
+            ? `${confirmLabel} (${shortDate.format(selectedDate)})`
+            : confirmLabel}
         </Button>
       }
     >

@@ -29,6 +29,7 @@
  */
 
 import { Country, countriesData, getCountrySlug } from "@/data/countries";
+import { hasAuthenticImagery, resolveCountry } from "@/lib/countryCatalogue";
 
 /* -------------------------------------------------------------------------- */
 /* Visa flow                                                                  */
@@ -173,13 +174,22 @@ export type CountryVisaConfig = {
    */
   additionalSections?: Array<"emirates">;
 
-  /**
-   * Which authorities to show. Previously every destination displayed all
-   * three, so Japan's page claimed a partnership with the Government of Dubai.
-   * Only definitional attributions are derived: the two UAE bodies are UAE
-   * bodies, IATA is a global industry association.
+  /*
+   * There is deliberately no `partners` field.
+   *
+   * Phase 4 gated a "Partners We Work With" block on one, so that only the UAE
+   * pages showed the two UAE bodies and every page showed IATA. Phase 4.1
+   * removed the block outright: the three marks were hand-drawn SVG
+   * approximations, not licensed logos, and Keyrise holds no record of a
+   * partnership with the Ministry of Foreign Affairs, the Government of Dubai
+   * or IATA. Showing an authority's name and crest on a commercial visa page
+   * asserts an endorsement, and "it is a UAE body and this is a UAE page" is
+   * not evidence of one.
+   *
+   * If verified relationships are ever documented, they belong in the dataset
+   * per country, with the counterparty's own approved mark — not derived from
+   * a country code.
    */
-  partners: Array<"uae-mofa" | "dubai-government" | "iata">;
 };
 
 /* -------------------------------------------------------------------------- */
@@ -281,14 +291,11 @@ export function displayCountryName(country: Pick<Country, "name">): string {
  * country rather than a flow with a wrong one.
  */
 export function countryFromSlug(value: string | null | undefined): Country | undefined {
-  if (!value) return undefined;
-  const needle = value.trim().toLowerCase();
-
-  return countriesData.find(
-    (country) =>
-      getCountrySlug(country.name) === needle ||
-      country.name.toLowerCase() === needle,
-  );
+  // Delegates to the catalogue so the application and the country page cannot
+  // resolve a duplicated slug to different rows. This used to be its own
+  // `Array.find`, which is how /visa/morocco and /apply?country=morocco ended
+  // up quoting prices ₹500 apart. See lib/countryCatalogue.ts.
+  return resolveCountry(value);
 }
 
 /**
@@ -309,10 +316,26 @@ const LOCAL_HERO_IMAGES: Record<string, string> = {
   ae: "/images/emirates/dubai.jpg",
 };
 
+/**
+ * PHASE 7B: no photograph beats the wrong photograph.
+ *
+ * Phase 7A probed every image in the dataset. 117 destinations are served one
+ * of five generic stock landscapes chosen by array index, and 8 more point at
+ * ids that now return HTTP 404. Blowing either of those up to 1600px and
+ * captioning it "Peru Visa for Indians" states something false about the place
+ * the reader is about to travel to — the same class of error as an invented
+ * fee, just harder to notice.
+ *
+ * So an inauthentic image resolves to `undefined`, and `CountryHero` renders
+ * its gradient without a photograph. The layout already supports that: the
+ * `<img>` is conditional and the scrim sits over a solid ground. The result is
+ * a quiet dark hero that asserts nothing, until a real photograph exists.
+ */
 export function resolveHeroImage(country: Country): string | undefined {
   const local = LOCAL_HERO_IMAGES[country.code];
   if (local) return local;
   if (!country.imageUrl) return undefined;
+  if (!hasAuthenticImagery(country)) return undefined;
 
   return country.imageUrl
     .replace(/w=\d+/, "w=1600")
@@ -383,10 +406,5 @@ export function resolveCountryVisaConfig(country: Country): CountryVisaConfig {
 
     additionalSections:
       country.name === "United Arab Emirates" ? ["emirates"] : undefined,
-
-    partners:
-      country.code === "ae"
-        ? ["uae-mofa", "dubai-government", "iata"]
-        : ["iata"],
   };
 }

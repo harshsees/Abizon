@@ -75,26 +75,23 @@ export function AppointmentRequirements({ config }: { config: CountryVisaConfig 
   }
 
   return (
-    <section className="space-y-5 border-t border-border/50 pt-8">
-      <h2
-        id="appointment-section"
-        className="type-h3 scroll-mt-28 text-xl font-bold tracking-tight text-foreground"
-      >
+    <section
+      id="appointment-section"
+      className="scroll-mt-28 border-t border-border pt-10 md:pt-12"
+    >
+      <h2 className="text-2xl font-bold tracking-tight text-foreground js-reveal-heading">
         In-person requirements
       </h2>
 
-      <ul className="grid gap-3 sm:grid-cols-2">
+      <ul className="mt-6 divide-y divide-border border-t border-border">
         {rows.map((row) => (
-          <li
-            key={row.label}
-            className="flex items-start gap-3 rounded-2xl border border-border bg-surface p-4 shadow-e1"
-          >
-            <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-surface-sunken text-subtle-foreground">
-              <row.Icon aria-hidden className="h-5 w-5" />
+          <li key={row.label} className="js-info-item flex gap-4 py-5">
+            <span className="mt-0.5 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-surface-sunken text-subtle-foreground">
+              <row.Icon aria-hidden className="h-4 w-4" />
             </span>
-            <div>
-              <p className="text-sm font-bold text-foreground">{row.label}</p>
-              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-foreground">{row.label}</p>
+              <p className="mt-1 max-w-xl text-xs leading-relaxed text-muted-foreground">
                 {row.detail}
               </p>
             </div>

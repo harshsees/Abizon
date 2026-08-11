@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Newsreader } from "next/font/google";
 import { SmoothScroll } from "@/components/SmoothScroll";
 import { CustomCursor } from "@/components/CustomCursor";
@@ -32,8 +32,28 @@ const newsreader = Newsreader({
 
 export const metadata: Metadata = {
   title: "Keyrise | Dubai / UAE Visa for Indians",
+  // "real-time status tracking" was in this description until Phase 6C.
+  // Phase 6B established there is no status service — `lookupApplicationStatus`
+  // returns `available: false` for every reference — so the claim was false in
+  // the one place search engines and link previews quote verbatim.
   description:
-    "Apply online for Dubai / UAE Visa for Indians with expert document checks, secure uploads, and real-time status tracking.",
+    "Apply online for a Dubai / UAE visa from India. Document checks against the destination's requirements, transparent government and service fees, and on-time delivery or the Keyrise fee is waived.",
+};
+
+/**
+ * `interactiveWidget: "resizes-content"` is the mobile-keyboard fix.
+ *
+ * The application's primary CTA is a `position: fixed` bar at the bottom of the
+ * viewport below `md`. By default an on-screen keyboard overlays the visual
+ * viewport without resizing the layout viewport, so that bar ends up UNDER the
+ * keyboard — invisible and unreachable — exactly while the user is typing into
+ * the form it belongs to. Resizing the content instead keeps the bar sitting on
+ * top of the keyboard, which is where a thumb expects it.
+ */
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  interactiveWidget: "resizes-content",
 };
 
 export default function RootLayout({

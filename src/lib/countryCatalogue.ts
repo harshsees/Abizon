@@ -1,0 +1,158 @@
+/**
+ * THE COUNTRY CATALOGUE — one resolver for the whole product.
+ *
+ * WHY THIS EXISTS. Phase 7A found `Morocco` and `Jordan` each present twice in
+ * the dataset with different data, and found THREE modules independently
+ * de-duplicating them with different tie-breaks:
+ *
+ *   app/visa/[countrySlug]/page.tsx   `new Map(...)`   → LAST row wins
+ *   lib/countryVisa.countryFromSlug   `Array.find`     → FIRST row wins
+ *   components/RelatedVisas           a `seen` Set     → FIRST row wins
+ *
+ * The consequence was measurable: `/visa/morocco` quoted ₹5,169 from the
+ * 90-day row while `/apply?country=morocco` quoted ₹4,669 from the 30-day row.
+ * The page and the application disagreed about the price of the same visa by
+ * ₹500, and every check passed, because each module was individually correct.
+ *
+ * The fix is not a better tie-break. It is having ONE.
+ *
+ * FIRST-ROW-WINS, and why. The duplicates are a data defect, not a product
+ * decision — nobody chose which Morocco is the real one. First-wins is chosen
+ * because it matches source order, is stable under appends, and was already the
+ * behaviour of two of the three call sites. It is a deterministic placeholder
+ * for a decision that belongs in the dataset: `DUPLICATE_SLUGS` names the rows
+ * so they stay visible until someone resolves them properly.
+ */
+
+import { countriesData, getCountrySlug, type Country } from "@/data/countries";
+
+/**
+ * Slugs claimed by more than one dataset row. Kept as data so the validator,
+ * the audit and any future fix can all see the same list.
+ */
+export const DUPLICATE_SLUGS: ReadonlyArray<{ slug: string; rows: number }> = (() => {
+  const counts = new Map<string, number>();
+  for (const country of countriesData) {
+    const slug = getCountrySlug(country.name);
+    counts.set(slug, (counts.get(slug) ?? 0) + 1);
+  }
+  return [...counts.entries()]
+    .filter(([, rows]) => rows > 1)
+    .map(([slug, rows]) => ({ slug, rows }));
+})();
+
+/**
+ * The canonical slug → country map. Built once at module load.
+ *
+ * `Map.set` overwrites, so the insertion loop skips a slug it has already seen
+ * — that is what makes this first-wins rather than last-wins.
+ */
+const BY_SLUG: ReadonlyMap<string, Country> = (() => {
+  const map = new Map<string, Country>();
+  for (const country of countriesData) {
+    const slug = getCountrySlug(country.name);
+    if (!map.has(slug)) map.set(slug, country);
+  }
+  return map;
+})();
+
+/** Every destination exactly once, in dataset order. The catalogue. */
+export const catalogue: readonly Country[] = [...BY_SLUG.values()];
+
+/** Every routable slug. The single source for `generateStaticParams`. */
+export const countrySlugs: readonly string[] = [...BY_SLUG.keys()];
+
+/**
+ * Resolve a destination.
+ *
+ * Accepts a slug (`dubai`) or, for links already in circulation, a raw country
+ * name (`United Arab Emirates`). Returns `undefined` for anything unrecognised
+ * so callers render a flow with no country rather than a flow with a wrong one.
+ */
+export function resolveCountry(value: string | null | undefined): Country | undefined {
+  if (!value) return undefined;
+  const needle = value.trim().toLowerCase();
+
+  const bySlug = BY_SLUG.get(needle);
+  if (bySlug) return bySlug;
+
+  // Name fallback, resolved through the same map so it cannot pick a different
+  // row than the slug lookup would.
+  for (const country of BY_SLUG.values()) {
+    if (country.name.toLowerCase() === needle) return country;
+  }
+  return undefined;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Readiness — what a destination can actually support                        */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Deliberately NOT the same as Phase 7A's A–D grade.
+ *
+ * 7A graded 127 destinations "D", almost entirely because their photograph is a
+ * generic stock landscape. That is a credibility problem, not an application
+ * problem — the fee, validity, delivery time and document list are all present
+ * and correct for those countries. Withholding 127 working applications over a
+ * photograph would be the wrong trade.
+ *
+ * So readiness asks only: can this destination's application be operated
+ * truthfully? Imagery is handled separately by `hasAuthenticImagery`, which the
+ * hero uses to decide between a real photograph and no photograph — never
+ * another country's.
+ */
+export type CountryReadiness =
+  /** An application can be filed and every figure on the page is real. */
+  | "supported"
+  /** No visa exists, so the page is informational by nature. */
+  | "informational"
+  /** A core fact is missing; an application would have to invent something. */
+  | "incomplete";
+
+export function countryReadiness(country: Country): CountryReadiness {
+  const missingCore =
+    !country.validity?.trim() ||
+    !country.fees?.trim() ||
+    !country.documents ||
+    !Number.isFinite(country.deliveryDays) ||
+    country.deliveryDays <= 0;
+
+  if (missingCore) return "incomplete";
+  if (country.visaType === "Visa Free") return "informational";
+  return "supported";
+}
+
+/**
+ * The five generic stock photographs `countries.ts` rotates through, plus the
+ * eight ids that Phase 7A probed and found returning HTTP 404.
+ *
+ * A country whose image is on either list has no photograph of itself. The hero
+ * must then render without one rather than presenting a stranger's landscape as
+ * the destination — the imagery equivalent of not inventing a fee.
+ */
+const GENERIC_IMAGE_IDS = new Set([
+  "photo-1507525428034-b723cf961d3e",
+  "photo-1470071459604-3b5ec3a7fe05",
+  "photo-1477959858617-67f85cf4f1df",
+  "photo-1464822759023-fed622ff2c3b",
+  "photo-1500530855697-b586d89ba3ee",
+]);
+
+const DEAD_IMAGE_IDS = new Set([
+  "photo-1485081661445-7e753080975f", // United Kingdom
+  "photo-1509060464153-44667396260f", // Mauritius
+  "photo-1512813583145-baaa340ef29f", // Mexico
+  "photo-1513581166391-887a96ded73a", // United States
+  "photo-1528181304800-2f5373a29587", // Thailand
+  "photo-1531816458010-fb76819ec72f", // Peru
+  "photo-1588598130794-3d9ad5a266db", // Sri Lanka
+  "photo-1589979482837-e74f2e145060", // Seychelles
+]);
+
+/** True only when the image genuinely depicts this destination. */
+export function hasAuthenticImagery(country: Country): boolean {
+  const id = /unsplash\.com\/(photo-[^?]+)/.exec(country.imageUrl)?.[1];
+  if (!id) return false;
+  return !GENERIC_IMAGE_IDS.has(id) && !DEAD_IMAGE_IDS.has(id);
+}

@@ -65,7 +65,7 @@ export function VisaOverview({ country }: { country: Country }) {
                     {country.validity}
                   </span>
                   {/* Tooltip Box */}
-                  <div className="absolute top-full left-0 mt-2.5 hidden group-hover:block w-[280px] bg-surface border border-border rounded-2xl p-4 shadow-[0_12px_32px_rgba(15,23,42,0.08)] z-30 pointer-events-none">
+                  <div className="absolute top-full left-0 mt-2.5 hidden group-hover:block w-[280px] max-w-[calc(100vw-2.5rem)] bg-surface border border-border rounded-2xl p-4 shadow-[0_12px_32px_rgba(15,23,42,0.08)] z-30 pointer-events-none">
                     <p className="text-sm font-bold text-foreground">Length of Stay: {country.validity}</p>
                     <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
                       {`The maximum duration that you are allowed to remain in ${displayName} after entering with that particular visa.`}
@@ -87,7 +87,7 @@ export function VisaOverview({ country }: { country: Country }) {
                     {country.validity}
                   </span>
                   {/* Tooltip Box */}
-                  <div className="absolute top-full left-0 mt-2.5 hidden group-hover:block w-[280px] bg-surface border border-border rounded-2xl p-4 shadow-[0_12px_32px_rgba(15,23,42,0.08)] z-30 pointer-events-none">
+                  <div className="absolute top-full left-0 mt-2.5 hidden group-hover:block w-[280px] max-w-[calc(100vw-2.5rem)] bg-surface border border-border rounded-2xl p-4 shadow-[0_12px_32px_rgba(15,23,42,0.08)] z-30 pointer-events-none">
                     <p className="text-sm font-bold text-foreground">Validity Period: {country.validity}</p>
                     <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
                       {`The number of days your visa is active after the date of issuance. We ensure your visa is valid based on your travel dates.`}
@@ -112,7 +112,7 @@ export function VisaOverview({ country }: { country: Country }) {
                     {entryType}
                   </span>
                   {/* Tooltip Box */}
-                  <div className="absolute top-full left-0 mt-2.5 hidden group-hover:block w-[280px] bg-surface border border-border rounded-2xl p-4 shadow-[0_12px_32px_rgba(15,23,42,0.08)] z-30 pointer-events-none">
+                  <div className="absolute top-full left-0 mt-2.5 hidden group-hover:block w-[280px] max-w-[calc(100vw-2.5rem)] bg-surface border border-border rounded-2xl p-4 shadow-[0_12px_32px_rgba(15,23,42,0.08)] z-30 pointer-events-none">
                     <p className="text-sm font-bold text-foreground">Entry: {entryType}</p>
                     <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
                       {`You can enter the country only once during the visa's validity period and cannot re-enter using the same visa once you've exited.`}
@@ -134,7 +134,7 @@ export function VisaOverview({ country }: { country: Country }) {
                     {methodType}
                   </span>
                   {/* Tooltip Box */}
-                  <div className="absolute top-full left-0 mt-2.5 hidden group-hover:block w-[280px] bg-surface border border-border rounded-2xl p-4 shadow-[0_12px_32px_rgba(15,23,42,0.08)] z-30 pointer-events-none">
+                  <div className="absolute top-full left-0 mt-2.5 hidden group-hover:block w-[280px] max-w-[calc(100vw-2.5rem)] bg-surface border border-border rounded-2xl p-4 shadow-[0_12px_32px_rgba(15,23,42,0.08)] z-30 pointer-events-none">
                     <p className="text-sm font-bold text-foreground">Method: {methodType}</p>
                     <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
                       {`Apply and receive your visa fully online. No paperwork needed.`}
