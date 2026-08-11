@@ -48,32 +48,24 @@
 import Link from "next/link";
 import { ArrowUpRight, ShieldCheck } from "lucide-react";
 
+import { CountryImagePlate } from "@/components/CountryImagePlate";
 import { Country, getCountrySlug } from "@/data/countries";
-
-/**
- * The dataset requests every photo at 400x550 — an 0.727 aspect, for a card
- * that is now 0.625, and only 400px wide for a slot that renders at 624px on a
- * 2x display. Both are fixed here rather than in `countries.ts`, which stays
- * the source of record for visa data and is not a place to encode the current
- * card's pixel dimensions. Unsplash crops server-side from the w/h it is
- * given, so asking for the card's own aspect is what stops the crop drifting.
- */
-function sizedImage(url: string, width: number): string {
-  const height = Math.round(width * (8 / 5));
-  return url.replace(/w=\d+/, `w=${width}`).replace(/h=\d+/, `h=${height}`);
-}
+import { countryCardImage } from "@/lib/countryImagery";
 
 /**
  * `complete` with a zero intrinsic width means the request finished and
  * produced no image — a 404, or Unsplash's error body being blocked by ORB,
  * which is how its dead photo IDs actually surface in a browser.
+ *
+ * PHASE 8B note: the manifest means no card should ever request a dead id
+ * again, so this is now a net rather than a mechanism. It stays because a live
+ * id can still fail in the wild — an outage, a blocked third party, a photo
+ * withdrawn after review — and the plate underneath makes that failure land
+ * somewhere designed.
  */
 function hideIfBroken(node: HTMLImageElement | null) {
   if (node?.complete && node.naturalWidth === 0) node.style.display = "none";
 }
-
-/** Widths the grid actually renders a card at, across its breakpoints. */
-const IMAGE_WIDTHS = [400, 640, 960];
 
 const IMAGE_SIZES = [
   "(min-width: 1536px) 312px",
@@ -88,6 +80,8 @@ interface CountryCardProps {
 }
 
 export function CountryCard({ country }: CountryCardProps) {
+  const photo = countryCardImage(getCountrySlug(country.name));
+
   const stats = [
     { label: "Type", value: country.visaType, align: "text-left" },
     { label: "Valid", value: country.validity, align: "text-center" },
@@ -108,42 +102,45 @@ export function CountryCard({ country }: CountryCardProps) {
         href={`/visa/${getCountrySlug(country.name)}`}
         className="block rounded-card"
       >
-        {/* The gradient is a resilience measure, not decoration. Eight of the
-            dataset's 38 Unsplash photos now 404 (Thailand, Sri Lanka, the UK,
-            the US, Mexico, Mauritius, Seychelles, Peru), and a card whose image
-            fails was rendering as a flat black rectangle. Replacing those IDs
-            means editing the dataset and choosing new country imagery, neither
-            of which belongs to this phase — so the card degrades to a deliberate
-            dark ground instead, on which the flag, name and stats all still
-            read. No JS, no per-card state, correct for all 154. */}
-        <div className="relative aspect-[5/8] w-full overflow-hidden rounded-card bg-gradient-to-br from-slate-700 via-slate-800 to-slate-950 shadow-e2">
-          <img
-            src={sizedImage(country.imageUrl, 640)}
-            srcSet={IMAGE_WIDTHS.map(
-              (w) => `${sizedImage(country.imageUrl, w)} ${w}w`,
-            ).join(", ")}
-            sizes={IMAGE_SIZES}
-            // Decorative: the country name sits in text directly beneath it,
-            // inside the same link. Describing the photograph as well would
-            // make a screen reader announce the destination twice.
-            alt=""
-            loading="lazy"
-            decoding="async"
-            // A dead photo otherwise leaves the browser's broken-image glyph
-            // in the corner of the card. Hiding the element uncovers the
-            // gradient beneath, which is the intended degraded state.
-            //
-            // Both hooks are needed. Above-the-fold images finish failing
-            // before React hydrates, so `onError` never fires for them — the
-            // ref catches those by asking the element whether it already
-            // finished loading with no pixels. Lazy images below the fold
-            // request later, by which point `onError` is attached.
-            ref={hideIfBroken}
-            onError={(event) => {
-              event.currentTarget.style.display = "none";
-            }}
-            className="absolute inset-0 h-full w-full scale-100 object-cover transition-transform duration-300 ease-out group-hover:scale-110 group-focus-visible:scale-110"
-          />
+        {/* PHASE 8B. This used to read `country.imageUrl` — whatever the
+            dataset held, dead or generic or another country's — and lean on a
+            gradient to catch the failures. It now asks the manifest, which
+            answers only for photographs someone has opened and confirmed. 141
+            of 152 destinations have no such photograph and render the plate,
+            which is a designed surface rather than the absence of one.
+
+            The card no longer resizes a URL by string replacement either: the
+            manifest derives a 5:8 card rendition and a 16:9 hero rendition
+            independently, so neither can ever become the other. */}
+        <div className="relative aspect-[5/8] w-full overflow-hidden rounded-card shadow-e2">
+          <CountryImagePlate seed={country.code} />
+
+          {photo && (
+            <img
+              src={photo.src}
+              srcSet={photo.srcSet}
+              // `sizes` only means anything alongside a `srcSet` with width
+              // descriptors. Local assets ship one file, so it would be a
+              // misleading no-op there.
+              sizes={photo.srcSet ? IMAGE_SIZES : undefined}
+              // Decorative: the country name sits in text directly beneath it,
+              // inside the same link. Describing the photograph as well would
+              // make a screen reader announce the destination twice.
+              alt=""
+              loading="lazy"
+              decoding="async"
+              // Both hooks are needed. Above-the-fold images finish failing
+              // before React hydrates, so `onError` never fires for them — the
+              // ref catches those by asking the element whether it already
+              // finished loading with no pixels. Lazy images below the fold
+              // request later, by which point `onError` is attached.
+              ref={hideIfBroken}
+              onError={(event) => {
+                event.currentTarget.style.display = "none";
+              }}
+              className="absolute inset-0 h-full w-full scale-100 object-cover transition-transform duration-300 ease-out group-hover:scale-110 group-focus-visible:scale-110"
+            />
+          )}
 
           {/* The scrim. A gradient over the bottom 45%, three-stop so it fades
               into the photograph instead of banding against it — the reference

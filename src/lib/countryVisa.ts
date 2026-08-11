@@ -29,7 +29,8 @@
  */
 
 import { Country, countriesData, getCountrySlug } from "@/data/countries";
-import { hasAuthenticImagery, resolveCountry } from "@/lib/countryCatalogue";
+import { resolveCountry } from "@/lib/countryCatalogue";
+import { countryHeroImage } from "@/lib/countryImagery";
 
 /* -------------------------------------------------------------------------- */
 /* Visa flow                                                                  */
@@ -131,6 +132,11 @@ export type CountryVisaConfig = {
   code: string;
   flagUrl: string;
   heroImage?: string;
+  /**
+   * What the hero photograph shows. Empty when there is none — the plate that
+   * renders instead is decoration and announces nothing.
+   */
+  heroImageAlt: string;
 
   /* --- classification: always present --- */
   visaType: Country["visaType"];
@@ -299,47 +305,32 @@ export function countryFromSlug(value: string | null | undefined): Country | und
 }
 
 /**
- * Hero artwork, at hero resolution.
- *
- * Two problems this solves. First, `countries.ts` requests every photo at
- * w=400 — sized for a card, then stretched across a ~1230px hero, where it
- * reads as a blurred smudge under the scrim. Unsplash crops server-side, so the
- * hero simply asks for a hero-sized crop.
- *
- * Second, some destinations already have a real, local, correct photograph
- * shipped in `public/`. Those beat a generic remote stock image on quality and
- * on not depending on a third party staying up, so they win where they exist.
- * This is a lookup of assets that are actually in the repository — not a place
- * to invent artwork for countries that have none.
- */
-const LOCAL_HERO_IMAGES: Record<string, string> = {
-  ae: "/images/emirates/dubai.jpg",
-};
-
-/**
  * PHASE 7B: no photograph beats the wrong photograph.
+ * PHASE 8B: and a photograph nobody has looked at is a wrong photograph waiting.
  *
- * Phase 7A probed every image in the dataset. 117 destinations are served one
- * of five generic stock landscapes chosen by array index, and 8 more point at
- * ids that now return HTTP 404. Blowing either of those up to 1600px and
- * captioning it "Peru Visa for Indians" states something false about the place
- * the reader is about to travel to — the same class of error as an invented
- * fee, just harder to notice.
+ * 7B blew the dataset's card URL up to 1600x900 whenever its id was not on a
+ * known-bad list. That produced, among others, a full-width photograph of a
+ * Bangkok street under the headline "France Visa for Indians" — the id was on
+ * neither list, so the check passed.
  *
- * So an inauthentic image resolves to `undefined`, and `CountryHero` renders
- * its gradient without a photograph. The layout already supports that: the
- * `<img>` is conditional and the scrim sits over a solid ground. The result is
- * a quiet dark hero that asserts nothing, until a real photograph exists.
+ * The hero now asks `countryImagery` for a rendition that was *derived for a
+ * hero* from a photograph someone has reviewed. Anything else resolves to
+ * `undefined` and `CountryHero` draws its designed plate instead. Note what is
+ * no longer here: the string-replace that turned a card URL into a hero URL.
+ * Card and hero are separate derivations now (§5), which is what keeps a local
+ * portrait asset from ever being stretched across a desktop band.
  */
 export function resolveHeroImage(country: Country): string | undefined {
-  const local = LOCAL_HERO_IMAGES[country.code];
-  if (local) return local;
-  if (!country.imageUrl) return undefined;
-  if (!hasAuthenticImagery(country)) return undefined;
+  return countryHeroImage(getCountrySlug(country.name))?.src;
+}
 
-  return country.imageUrl
-    .replace(/w=\d+/, "w=1600")
-    .replace(/h=\d+/, "h=900");
+/**
+ * What is actually in the hero photograph, for the `alt` attribute — empty when
+ * there is no photograph, because the plate beneath is decoration and has
+ * nothing to announce.
+ */
+export function resolveHeroImageAlt(country: Country): string {
+  return countryHeroImage(getCountrySlug(country.name))?.alt ?? "";
 }
 
 /** "29th Jul" — shared by the plan selector and the guarantee. */
@@ -383,6 +374,7 @@ export function resolveCountryVisaConfig(country: Country): CountryVisaConfig {
     code: country.code,
     flagUrl: `https://flagcdn.com/w80/${country.code}.png`,
     heroImage: resolveHeroImage(country),
+    heroImageAlt: resolveHeroImageAlt(country),
 
     visaType: country.visaType,
     flow: deriveVisaFlow(country.visaType),

@@ -17,6 +17,7 @@
 import { ArrowRight } from "lucide-react";
 import React from "react";
 
+import { CountryImagePlate } from "@/components/CountryImagePlate";
 import { VisaGuarantee } from "@/components/VisaGuarantee";
 import type { CountryVisaConfig } from "@/lib/countryVisa";
 
@@ -54,10 +55,21 @@ export function CountryHero({ config, onStart }: CountryHeroProps) {
   return (
     <section className="mx-auto w-full max-w-7xl px-4 pt-4 md:px-6 md:pt-6">
       <div className="relative overflow-hidden rounded-[28px] border border-border bg-foreground shadow-e4">
+        {/* PHASE 8B: the plate is always beneath, never instead.
+
+            It costs nothing — no request, no bytes — and it means a photograph
+            that fails in the browser uncovers a designed surface rather than
+            the flat near-black that 8A found on 124 pages. The `onError` below
+            no longer has to leave a hole behind it. */}
+        <CountryImagePlate seed={config.code} />
+
         {config.heroImage && (
           <img
             src={config.heroImage}
-            alt=""
+            // Described, not decorative. The headline states the destination;
+            // this states what the reader is looking at, which is a different
+            // fact and the only one a screen reader would otherwise miss.
+            alt={config.heroImageAlt}
             // The hero is the largest image on the page and sits above the
             // fold, so it must not wait for the lazy queue.
             fetchPriority="high"

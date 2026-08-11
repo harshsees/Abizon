@@ -98,9 +98,9 @@ export function resolveCountry(value: string | null | undefined): Country | unde
  * photograph would be the wrong trade.
  *
  * So readiness asks only: can this destination's application be operated
- * truthfully? Imagery is handled separately by `hasAuthenticImagery`, which the
- * hero uses to decide between a real photograph and no photograph — never
- * another country's.
+ * truthfully? Imagery is handled separately by `countryImagery`, which the hero
+ * uses to decide between a real photograph and no photograph — never another
+ * country's.
  */
 export type CountryReadiness =
   /** An application can be filed and every figure on the page is real. */
@@ -124,35 +124,16 @@ export function countryReadiness(country: Country): CountryReadiness {
 }
 
 /**
- * The five generic stock photographs `countries.ts` rotates through, plus the
- * eight ids that Phase 7A probed and found returning HTTP 404.
+ * PHASE 8B: this question moved, because this module could not answer it.
  *
- * A country whose image is on either list has no photograph of itself. The hero
- * must then render without one rather than presenting a stranger's landscape as
- * the destination — the imagery equivalent of not inventing a fee.
+ * What lived here was a set of five known-generic ids and eight known-dead ids,
+ * and an image was "authentic" if it was on neither list. That is a test for
+ * *absence*, and it passed every one of the 26 surviving photographs — including
+ * the Bangkok street the dataset files under France and the Italian lake it
+ * files under both Switzerland and Malaysia.
+ *
+ * Trust in an image cannot be derived from its URL. It comes from someone having
+ * looked at the frame, which is what `countryImagery` records. Re-exported here
+ * so the catalogue remains the one import a caller needs.
  */
-const GENERIC_IMAGE_IDS = new Set([
-  "photo-1507525428034-b723cf961d3e",
-  "photo-1470071459604-3b5ec3a7fe05",
-  "photo-1477959858617-67f85cf4f1df",
-  "photo-1464822759023-fed622ff2c3b",
-  "photo-1500530855697-b586d89ba3ee",
-]);
-
-const DEAD_IMAGE_IDS = new Set([
-  "photo-1485081661445-7e753080975f", // United Kingdom
-  "photo-1509060464153-44667396260f", // Mauritius
-  "photo-1512813583145-baaa340ef29f", // Mexico
-  "photo-1513581166391-887a96ded73a", // United States
-  "photo-1528181304800-2f5373a29587", // Thailand
-  "photo-1531816458010-fb76819ec72f", // Peru
-  "photo-1588598130794-3d9ad5a266db", // Sri Lanka
-  "photo-1589979482837-e74f2e145060", // Seychelles
-]);
-
-/** True only when the image genuinely depicts this destination. */
-export function hasAuthenticImagery(country: Country): boolean {
-  const id = /unsplash\.com\/(photo-[^?]+)/.exec(country.imageUrl)?.[1];
-  if (!id) return false;
-  return !GENERIC_IMAGE_IDS.has(id) && !DEAD_IMAGE_IDS.has(id);
-}
+export { hasVerifiedPhoto } from "@/lib/countryImagery";

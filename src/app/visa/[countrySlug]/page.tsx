@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { CountryVisaPage } from "@/components/CountryVisaPage";
-import { countrySlugs, hasAuthenticImagery, resolveCountry } from "@/lib/countryCatalogue";
+import { countrySlugs, resolveCountry } from "@/lib/countryCatalogue";
+import { countryOgImage } from "@/lib/countryImagery";
 import { deriveVisaFlow, displayCountryName } from "@/lib/countryVisa";
 
 /**
@@ -43,6 +44,7 @@ export async function generateMetadata({
    * configuration rather than a list of special cases.
    */
   const isVisaFree = deriveVisaFlow(country.visaType) === "visa-free";
+  const ogImage = countryOgImage(countrySlug);
 
   const title = isVisaFree
     ? `${displayName} Visa Requirements for Indians — No Visa Needed | Keyrise`
@@ -64,12 +66,24 @@ export async function generateMetadata({
       title,
       description,
       type: "website",
-      // Only a photograph that genuinely depicts this destination. The generic
-      // stock and dead-id images are suppressed here for the same reason the
-      // hero suppresses them — a share card is a claim about the place.
-      images: hasAuthenticImagery(country)
-        ? [{ url: country.imageUrl }]
-        : undefined,
+      /**
+       * PHASE 8B. Two things were wrong here, and only one of them was visible.
+       *
+       * The visible one: `hasAuthenticImagery` let through every photograph it
+       * had not specifically blacklisted, so the France share card carried a
+       * photograph of Bangkok. A share card is a claim about a place made in
+       * someone else's feed, where there is no page around it to correct the
+       * impression — it is the worst possible surface for a wrong image.
+       *
+       * The invisible one: the URL passed through was `country.imageUrl`, the
+       * 400x550 *card* crop. Every share surface renders OG art at 1.91:1, so
+       * a portrait image was being centre-cropped or letterboxed by Twitter,
+       * Slack and WhatsApp independently. The manifest derives a real 1200x630.
+       *
+       * No trustworthy photograph means no `images` key at all, and the crawler
+       * falls back to the site-level card — never a stand-in destination photo.
+       */
+      images: ogImage ? [ogImage] : undefined,
     },
   };
 }

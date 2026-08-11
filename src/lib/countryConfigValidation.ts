@@ -18,6 +18,7 @@
 
 import { countriesData, getCountrySlug, type Country } from "@/data/countries";
 import { requiredDocuments } from "@/lib/application/documents";
+import { CATEGORY_PHOTO_IDS, countryPhoto } from "@/lib/countryImagery";
 import { deriveVisaFlow, parseGovernmentFee, resolveHeroImage } from "@/lib/countryVisa";
 
 export type Severity = "error" | "warning" | "info";
@@ -41,37 +42,6 @@ export type CountryConfigReport = {
   grade: Completeness;
   issues: ConfigIssue[];
 };
-
-/**
- * The five generic photographs `countries.ts` rotates through for any country
- * without a mapped image. A landscape that belongs to no particular country,
- * presented as that country, is a factual error on a page about travelling
- * there — so it is an error, not a style note.
- */
-const GENERIC_CATEGORY_IDS = new Set([
-  "photo-1507525428034-b723cf961d3e",
-  "photo-1470071459604-3b5ec3a7fe05",
-  "photo-1477959858617-67f85cf4f1df",
-  "photo-1464822759023-fed622ff2c3b",
-  "photo-1500530855697-b586d89ba3ee",
-]);
-
-/**
- * Image ids that returned HTTP 404 when probed in Phase 7A.
- *
- * Recorded here so the validator fails on them until they are replaced. This is
- * a snapshot, not a live check — re-probe with the audit script and update it.
- */
-export const KNOWN_DEAD_IMAGE_IDS = new Set([
-  "photo-1485081661445-7e753080975f", // United Kingdom
-  "photo-1509060464153-44667396260f", // Mauritius
-  "photo-1512813583145-baaa340ef29f", // Mexico
-  "photo-1513581166391-887a96ded73a", // United States
-  "photo-1528181304800-2f5373a29587", // Thailand
-  "photo-1531816458010-fb76819ec72f", // Peru
-  "photo-1588598130794-3d9ad5a266db", // Sri Lanka
-  "photo-1589979482837-e74f2e145060", // Seychelles
-]);
 
 function imageIdOf(url: string): string | undefined {
   return /unsplash\.com\/(photo-[^?]+)/.exec(url)?.[1];
@@ -135,26 +105,65 @@ export function validateCountryConfig(country: Country): CountryConfigReport {
   }
 
   /* --- imagery ----------------------------------------------------------- */
-  const imageId = imageIdOf(country.imageUrl);
-  if (!imageId) {
-    push("error", "imageUrl", "No resolvable card image.");
-  } else if (KNOWN_DEAD_IMAGE_IDS.has(imageId)) {
-    push("error", "imageUrl", `Card image ${imageId} returns HTTP 404.`);
-  } else if (GENERIC_CATEGORY_IDS.has(imageId)) {
-    push(
-      "error",
-      "imageUrl",
-      "Card image is a generic stock category, not this country — a photograph of somewhere else presented as here.",
-    );
+  /**
+   * PHASE 8B: the validator no longer inspects `country.imageUrl` at all.
+   *
+   * It used to check the dataset's URL against two id lists, which is exactly
+   * the test that let a photograph of Bangkok through as France. What matters
+   * is not what the dataset holds but what the product will actually render,
+   * and that is the manifest's verdict.
+   *
+   * The one thing still worth checking about the raw dataset is the assumption
+   * the manifest is built on: that any country it does not name is on one of
+   * the five known category landscapes. If `countries.ts` ever gains a new
+   * unmapped photograph, that country would silently be treated as reviewed
+   * generic stock when in truth nobody has seen it.
+   */
+  const photo = countryPhoto(slug);
+
+  switch (photo?.verdict) {
+    case "depicts-country":
+      break;
+    case "wrong-country":
+      push(
+        "error",
+        "imageUrl",
+        `Dataset image shows somewhere else: ${photo.note ?? photo.subject}. Suppressed from render.`,
+      );
+      break;
+    case "dead":
+      push("error", "imageUrl", `Dataset image ${photo.ref} returns HTTP 404. Suppressed from render.`);
+      break;
+    case "not-identifiable":
+      push(
+        "warning",
+        "imageUrl",
+        `Dataset image cannot be confirmed as this country: ${photo.subject}. Suppressed from render.`,
+      );
+      break;
+    default: {
+      // Unnamed by the manifest — assert the generic-stock assumption holds.
+      const imageId = imageIdOf(country.imageUrl);
+      if (!imageId) {
+        push("error", "imageUrl", "No resolvable card image.");
+      } else if (!CATEGORY_PHOTO_IDS.has(imageId)) {
+        push(
+          "error",
+          "imageUrl",
+          `Image ${imageId} is neither a reviewed photograph nor a known category landscape — nobody has looked at it.`,
+        );
+      } else {
+        push(
+          "warning",
+          "imageUrl",
+          "Generic stock category landscape, not this country. Suppressed from render; needs a destination photograph.",
+        );
+      }
+    }
   }
+
   if (!resolveHeroImage(country)) {
-    push("warning", "heroImage", "No hero image resolves.");
-  } else if (/^https?:/.test(resolveHeroImage(country) ?? "")) {
-    push(
-      "info",
-      "heroImage",
-      "Hero is an upscaled remote card image, not a hi-res local asset.",
-    );
+    push("info", "heroImage", "No verified photograph; renders the designed plate.");
   }
 
   /* --- grade ------------------------------------------------------------- */

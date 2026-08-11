@@ -9,6 +9,8 @@
  * it, from `CountryVisaConfig.additionalSections`.
  */
 
+import { CountryImagePlate } from "@/components/CountryImagePlate";
+
 export function EmiratesCoverage() {
   return (
         <div className="border-t border-border pt-10 md:pt-12">
@@ -62,13 +64,28 @@ export function EmiratesCoverage() {
                   name: "Ras Al Khaimah",
                   image: "/images/emirates/ras-al-khaimah.jpg",
                 },
+                /**
+                 * PHASE 8B. These two carried photographs of somewhere else,
+                 * with the emirate's name printed across them:
+                 *
+                 *   Fujairah        the dataset's generic Beach/Tropical stock
+                 *   Umm Al Quwain   the Taj Mahal — a building in Agra, India
+                 *
+                 * The country pages were audited for this and the emirates grid
+                 * was not, because it hardcodes its own URLs instead of going
+                 * through the dataset. Same defect, different door: a caption
+                 * naming a place, over a picture of a different one.
+                 *
+                 * Neither emirate has a photograph in `public/`, so neither gets
+                 * one. `image: undefined` renders the plate.
+                 */
                 {
                   name: "Fujairah",
-                  image: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=400&h=400&q=80",
+                  image: undefined,
                 },
                 {
                   name: "Umm Al Quwain",
-                  image: "https://images.unsplash.com/photo-1564507592333-c60657eea523?auto=format&fit=crop&w=400&h=400&q=80",
+                  image: undefined,
                 },
                 {
                   name: "Ajman",
@@ -79,11 +96,14 @@ export function EmiratesCoverage() {
                   key={emirate.name}
                   className="relative group overflow-hidden rounded-[16px] sm:rounded-[20px] shadow-sm cursor-pointer h-[160px] sm:h-[225px] md:h-[250px] bg-surface-sunken"
                 >
-                  <img
-                    src={emirate.image}
-                    alt={emirate.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
+                  <CountryImagePlate seed={emirate.name} />
+                  {emirate.image && (
+                    <img
+                      src={emirate.image}
+                      alt={emirate.name}
+                      className="relative w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                  )}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent" />
                   <div className="absolute bottom-3 left-3 right-3 sm:bottom-4 sm:left-4 sm:right-4">
                     <p className="text-white font-bold text-xs sm:text-base md:text-lg tracking-tight leading-tight break-words">
