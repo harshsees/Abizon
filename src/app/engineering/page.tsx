@@ -40,7 +40,7 @@ const systems = [
     icon: <Cpu className="h-5 w-5" />,
     title: "Rejection risk scoring",
     description:
-      "A model trained on 2M+ historical outcomes flags the specific field most likely to sink an application, before it is submitted. It powers Rejection Recovery.",
+      "A model trained on historical outcomes is intended to flag the specific field most likely to sink an application before it is submitted. It is not in production yet.",
   },
   {
     icon: <GitBranch className="h-5 w-5" />,
@@ -69,10 +69,10 @@ export default function EngineeringPage() {
       <Section eyebrow="Scale" title="What the systems handle">
         <StatGrid
           stats={[
-            { value: "60+", label: "Portal integrations", hint: "None with an API" },
-            { value: "40k", label: "Requirement edges", hint: "Each source-dated" },
-            { value: "2M+", label: "Training outcomes", hint: "Rejection model" },
-            { value: "99.2%", label: "On-time delivery", hint: "Trailing 90 days" },
+            { value: null, label: "Portal integrations", hint: "None with an API" },
+            { value: null, label: "Requirement edges", hint: "Each source-dated" },
+            { value: null, label: "Training outcomes", hint: "Rejection model" },
+            { value: null, label: "On-time delivery", hint: "Trailing 90 days" },
           ]}
         />
       </Section>

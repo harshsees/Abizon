@@ -124,8 +124,8 @@ export default function SchengenVisaGuidePage() {
       <Section muted eyebrow="Refusals" title="Why Schengen applications get refused">
         <Prose>
           <p>
-            Our approval rate on Schengen filings is 91.2%, which is the lowest of any lane we
-            run. The refusals cluster tightly:
+            Schengen is among the harder applications to get right. Refusals cluster
+            tightly, and almost all of them come down to the same few causes:
           </p>
           <ul>
             <li>

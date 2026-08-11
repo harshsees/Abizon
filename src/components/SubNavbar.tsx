@@ -97,7 +97,19 @@ export function SubNavbar({ isSticky = false, sections }: SubNavbarProps) {
         isSticky ? "mt-0" : "mt-8"
       }`}
     >
-      <div className="mx-auto max-w-7xl px-4 md:px-6 overflow-x-auto scrollbar-none">
+      {/* PHASE 8D §7. The rail scrolls horizontally on mobile, which is right,
+          but it was hard-clipped at the viewport edge: at 390 the last item
+          ended mid-glyph ("W…") with nothing to say more existed. A reader
+          cannot tell a clipped word from a broken layout.
+
+          The mask fades the final 40px so the cut reads as continuation. It is
+          a paint effect, not a scroll change — the same items, the same
+          positions, and `scrollbar-none` still hides the bar. `mask-image` is
+          on the scroll container so the fade sits at the container edge and
+          travels with it, rather than over a fixed screen position. */}
+      <div
+        className="mx-auto max-w-7xl px-4 md:px-6 overflow-x-auto scrollbar-none [mask-image:linear-gradient(to_right,#000_0,#000_calc(100%-40px),transparent_100%)] md:[mask-image:none]"
+      >
         <div className="flex justify-start items-center gap-8 md:gap-10 h-16 md:h-18 min-w-max">
           {visibleItems.map((item) => {
             const isActive = activeSection === item.id;

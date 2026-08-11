@@ -113,10 +113,10 @@ export default function FeeChangeAuditPage() {
       <Section eyebrow="Last 12 months" title="What the log shows">
         <StatGrid
           stats={[
-            { value: "34", label: "Fee changes detected", hint: "Across 155 destinations" },
-            { value: "19", label: "Were reductions", hint: "All passed on same day" },
-            { value: "0 hrs", label: "Median lag on cuts", hint: "Detected to applied" },
-            { value: "₹9.4L", label: "Refunded on cuts", hint: "To in-flight applications" },
+            { value: null, label: "Fee changes detected", hint: "Across 155 destinations" },
+            { value: null, label: "Were reductions", hint: "All passed on same day" },
+            { value: null, label: "Median lag on cuts", hint: "Detected to applied" },
+            { value: null, label: "Refunded on cuts", hint: "To in-flight applications" },
           ]}
         />
 

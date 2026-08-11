@@ -14,7 +14,7 @@ import {
 export const metadata: Metadata = {
   title: "Rejection Recovery | Keyrise",
   description:
-    "Refused a visa? Keyrise identifies the likely reason and refiles at no service cost. 71% of applications refiled through the programme are subsequently approved.",
+    "Refused a visa? Keyrise identifies the likely reason and refiles at no service cost.",
 };
 
 const steps = [
@@ -26,7 +26,7 @@ const steps = [
   {
     title: "We identify the likely cause",
     description:
-      "Most authorities give a generic reason or none at all. We score your application against 2M+ historical outcomes to find the fields most associated with refusal in your specific category and destination.",
+      "Most authorities give a generic reason or none at all. We score your application against historical outcomes to find the fields most associated with refusal in your specific category and destination.",
   },
   {
     title: "You get a written assessment",
@@ -52,10 +52,10 @@ export default function RejectionRecoveryPage() {
       <Section eyebrow="Results" title="How the programme has performed">
         <StatGrid
           stats={[
-            { value: "71%", label: "Approved on refile", hint: "First 12 months" },
+            { value: null, label: "Approved on refile", hint: "First 12 months" },
             { value: "₹0", label: "Service fee", hint: "Government fee only" },
-            { value: "17%", label: "We advise against", hint: "Refile unlikely to succeed" },
-            { value: "6 days", label: "Median to assessment", hint: "From upload" },
+            { value: null, label: "We advise against", hint: "Refile unlikely to succeed" },
+            { value: null, label: "Median to assessment", hint: "From upload" },
           ]}
         />
       </Section>
@@ -64,7 +64,7 @@ export default function RejectionRecoveryPage() {
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1.05fr_0.95fr]">
           <StepList steps={steps} />
           <div className="space-y-4">
-            <Callout tone="success" title="The 17% matters more than the 71%">
+            <Callout tone="success" title="When we advise against refiling">
               A programme that refiled everything would show a worse approval rate and take
               money from people with no realistic path. Where the refusal reflects something
               structural — a prior overstay, an adverse immigration record, a genuine
@@ -81,7 +81,7 @@ export default function RejectionRecoveryPage() {
       <Section eyebrow="Causes" title="Why applications actually get refused">
         <Prose>
           <p>
-            Across 2M+ filings, refusals cluster far more tightly than most applicants expect.
+            Refusals cluster far more tightly than most applicants expect.
             These five account for the large majority of what we see.
           </p>
           <h3>1. Financial evidence that doesn&apos;t demonstrate what it needs to</h3>

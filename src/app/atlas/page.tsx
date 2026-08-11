@@ -75,9 +75,9 @@ export default function AtlasPage() {
       <Section eyebrow="The dataset" title="What Atlas is built on">
         <StatGrid
           stats={[
-            { value: "2M+", label: "Applications analysed", hint: "Since 2023" },
-            { value: "155", label: "Destinations covered", hint: "All filing lanes" },
-            { value: "40k", label: "Requirement records", hint: "Each source-dated" },
+            { value: null, label: "Applications analysed", hint: "Since 2023" },
+            { value: "152", label: "Destinations covered", hint: "All filing lanes" },
+            { value: null, label: "Requirement records", hint: "Each source-dated" },
             { value: "Quarterly", label: "Publication", hint: "Free, no registration" },
           ]}
         />

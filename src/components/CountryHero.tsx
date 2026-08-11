@@ -90,7 +90,19 @@ export function CountryHero({ config, onStart }: CountryHeroProps) {
         <div className="relative flex min-h-[420px] flex-col items-center justify-center px-5 py-14 text-center md:min-h-[520px] md:px-10 md:py-20">
           <h1 className="max-w-4xl text-white">
             <span className="type-h1 block">{lead}</span>
-            <span className="type-h2 mt-2 block text-white/70">{trail}</span>
+            {/* PHASE 8D §4/§5. The pairing, not the scale, was the problem.
+                `type-h1`/`type-h2` step 6xl→4xl on desktop, where the hierarchy
+                reads correctly, but only 4xl→3xl on mobile — one size apart, so
+                at 390 "Fees, Requirements, and Apply Online" competed with
+                "Dubai Visa for Indians" instead of supporting it.
+
+                Corrected here rather than in the global scale: `type-h2` is
+                used across the site at sizes where it is right, and §5 says not
+                to touch the font system without a demonstrated problem. Same
+                two faces, same tokens above md. */}
+            <span className="type-h2 mt-2 block text-xl text-white/70 md:text-[length:inherit]">
+              {trail}
+            </span>
           </h1>
 
           <VisaGuarantee

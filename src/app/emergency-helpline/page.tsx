@@ -93,10 +93,10 @@ export default function EmergencyHelplinePage() {
       <Section eyebrow="Performance" title="What the desk delivers">
         <StatGrid
           stats={[
-            { value: "90 sec", label: "Median answer time", hint: "Voice, 24/7" },
+            { value: null, label: "Median answer time", hint: "Voice, 24/7" },
             { value: "24/7", label: "Staffed", hint: "Including public holidays" },
-            { value: "8 hrs", label: "Fastest filing to visa", hint: "UAE, achieved" },
-            { value: "94%", label: "Made their flight", hint: "Of emergency cases" },
+            { value: null, label: "Fastest filing to visa", hint: "UAE, achieved" },
+            { value: null, label: "Made their flight", hint: "Of emergency cases" },
           ]}
         />
       </Section>

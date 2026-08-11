@@ -65,7 +65,7 @@ export default function UkVisaGuidePage() {
             { value: "₹12,500", label: "Government fee", hint: "6-month visitor" },
             { value: "15 days", label: "Standard processing", hint: "Working days" },
             { value: "180 days", label: "Maximum stay", hint: "Per visit" },
-            { value: "93.7%", label: "Our approval rate", hint: "Trailing quarter" },
+            { value: null, label: "Our approval rate", hint: "Trailing quarter" },
           ]}
         />
       </Section>

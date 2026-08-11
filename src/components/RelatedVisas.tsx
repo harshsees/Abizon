@@ -16,6 +16,7 @@ import { ArrowRight, Clock } from "lucide-react";
 
 import { Country, getCountrySlug } from "@/data/countries";
 import { catalogue } from "@/lib/countryCatalogue";
+import { formatGovernmentFee } from "@/lib/countryVisa";
 import { staggerContainer, fadeUp, VIEWPORT } from "@/lib/motion";
 
 type RelatedVisasProps = {
@@ -101,7 +102,7 @@ export function RelatedVisas({ current, count = 8 }: RelatedVisasProps) {
                   data-numeric
                   className="text-sm font-black tracking-tight text-foreground"
                 >
-                  {country.fees}
+                  {formatGovernmentFee(country.fees)}
                 </span>
               </div>
             </Link>

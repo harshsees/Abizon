@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { CountryVisaPage } from "@/components/CountryVisaPage";
 import { countrySlugs, resolveCountry } from "@/lib/countryCatalogue";
 import { countryOgImage } from "@/lib/countryImagery";
-import { deriveVisaFlow, displayCountryName } from "@/lib/countryVisa";
+import { deriveVisaFlow, displayCountryName, formatGovernmentFee } from "@/lib/countryVisa";
 
 /**
  * Routing goes through the catalogue, which is the product's single slug
@@ -56,7 +56,7 @@ export async function generateMetadata({
       `Check passport validity and entry conditions before you travel.`
     : `Apply online for a ${displayName} ${country.visaType.toLowerCase()} with ${country.validity.toLowerCase()} validity. ` +
       `Delivered in ${country.deliveryDays} ${country.deliveryDays === 1 ? "day" : "days"}, guaranteed, or your money back. ` +
-      `Government fee ${country.fees}. Documents needed: ${country.documents.toLowerCase()}.`;
+      `Government fee ${formatGovernmentFee(country.fees)}. Documents needed: ${country.documents.toLowerCase()}.`;
 
   return {
     title,

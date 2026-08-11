@@ -63,9 +63,9 @@ export default function JapanVisaGuidePage() {
         <StatGrid
           stats={[
             { value: "Free", label: "Government fee", hint: "Waived for Indian nationals" },
-            { value: "5–7 days", label: "Processing", hint: "Working days" },
+            { value: null, label: "Processing", hint: "Working days" },
             { value: "90 days", label: "Maximum stay", hint: "Single or multiple entry" },
-            { value: "95.1%", label: "Our approval rate", hint: "Trailing quarter" },
+            { value: null, label: "Our approval rate", hint: "Trailing quarter" },
           ]}
         />
       </Section>

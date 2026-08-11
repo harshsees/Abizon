@@ -49,10 +49,10 @@ export default function SpeedPage() {
       <Section eyebrow="Overall" title="Across every destination">
         <StatGrid
           stats={[
-            { value: "2.4 days", label: "Median delivery", hint: "All destinations" },
-            { value: "6.1 days", label: "95th percentile", hint: "19 in 20 arrive by here" },
-            { value: "99.2%", label: "Inside the promise", hint: "Trailing 90 days" },
-            { value: "4 min", label: "Median support reply", hint: "24/7" },
+            { value: null, label: "Median delivery", hint: "All destinations" },
+            { value: null, label: "95th percentile", hint: "19 in 20 arrive by here" },
+            { value: null, label: "Inside the promise", hint: "Trailing 90 days" },
+            { value: null, label: "Median support reply", hint: "24/7" },
           ]}
         />
       </Section>

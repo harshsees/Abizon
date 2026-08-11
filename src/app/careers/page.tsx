@@ -83,7 +83,7 @@ const roles = [
   {
     title: "Data Analyst, Approval Rates",
     description:
-      "Turn 2M+ historical applications into the rejection-risk signals that power Rejection Recovery.",
+      "Turn historical application outcomes into the rejection-risk signals that power Rejection Recovery.",
     meta: "New Delhi",
   },
   {
@@ -138,10 +138,10 @@ export default function CareersPage() {
       >
         <StatGrid
           stats={[
-            { value: "2M+", label: "Applications filed", hint: "Since launch" },
-            { value: "155", label: "Destinations", hint: "e-Visa, sticker and VoA" },
-            { value: "99.2%", label: "On-time delivery", hint: "Trailing 90 days" },
-            { value: "180", label: "People", hint: "Across 3 offices" },
+            { value: null, label: "Applications filed", hint: "Since launch" },
+            { value: "152", label: "Destinations", hint: "e-Visa, sticker and VoA" },
+            { value: null, label: "On-time delivery", hint: "Trailing 90 days" },
+            { value: null, label: "People", hint: "Across 3 offices" },
           ]}
         />
       </Section>

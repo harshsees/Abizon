@@ -19,6 +19,7 @@
 import { countriesData, getCountrySlug, type Country } from "@/data/countries";
 import { requiredDocuments } from "@/lib/application/documents";
 import { CATEGORY_PHOTO_IDS, countryPhoto } from "@/lib/countryImagery";
+import { KEYRISE_TERMS, feesAreProvisional } from "@/lib/pricingConfig";
 import { deriveVisaFlow, parseGovernmentFee, resolveHeroImage } from "@/lib/countryVisa";
 
 export type Severity = "error" | "warning" | "info";
@@ -41,6 +42,78 @@ export type CountryConfigReport = {
   slug: string;
   grade: Completeness;
   issues: ConfigIssue[];
+};
+
+/**
+ * PHASE 8C §10–§11: the nine empty configuration slots, classified.
+ *
+ * §10 says do not fill these with guesses. §11 asks what each one *is*, because
+ * "empty" is not one condition — a field that is derivable is a different
+ * problem from a field that needs a data source Keyrise does not have, and both
+ * differ from a field that should never have existed.
+ *
+ * `classification`
+ *   derived          computable from data already held; no source needed
+ *   required         the page is materially incomplete without it
+ *   optional         improves the page; its absence is not a defect
+ *   not-applicable   does not apply to every destination by nature
+ *
+ * `presentFor` records reality today, so the gap between intent and state is
+ * visible in one place rather than inferred from 152 pages.
+ */
+export const CONFIG_FIELD_STATUS: Record<
+  string,
+  {
+    classification: "derived" | "required" | "optional" | "not-applicable";
+    presentFor: "all" | "some" | "none";
+    note: string;
+  }
+> = {
+  stayDuration: {
+    classification: "derived",
+    presentFor: "all",
+    note: "The dataset's `validity` already carries this and the page renders it. The separate slot is redundant, not empty.",
+  },
+  processingTime: {
+    classification: "derived",
+    presentFor: "all",
+    note: "`deliveryDays` is Keyrise's committed delivery, which is what the guarantee and the plan selector show. Government processing time is a different, unheld fact — and §12 forbids inventing it.",
+  },
+  entryType: {
+    classification: "optional",
+    presentFor: "none",
+    note: "Single vs multiple entry is a real property of a visa but is not in the dataset. Hidden rather than guessed (§14).",
+  },
+  applicationMethod: {
+    classification: "derived",
+    presentFor: "all",
+    note: "`deriveVisaFlow` already distinguishes e-visa, on-arrival, sticker and visa-free from `visaType`. Nothing further is claimed (§15).",
+  },
+  requirements: {
+    classification: "optional",
+    presentFor: "none",
+    note: "Per-destination eligibility rules. Needs a source; the document list is handled separately and is real.",
+  },
+  appointmentRequired: {
+    classification: "derived",
+    presentFor: "some",
+    note: "Derived from flow — sticker visas imply a mission appointment. Not asserted for any other flow.",
+  },
+  biometricsRequired: {
+    classification: "not-applicable",
+    presentFor: "none",
+    note: "Never displayed. §16: an unknown biometrics requirement must not be rendered either way, and it is not.",
+  },
+  applicationSteps: {
+    classification: "not-applicable",
+    presentFor: "none",
+    note: "§17: the shared Keyrise journey is the product UX and is already shown. Country-specific government steps would have to be sourced per destination.",
+  },
+  faqs: {
+    classification: "optional",
+    presentFor: "all",
+    note: "Phase 8C replaced string substitution with questions composed from `flow` and `documents`. No per-country FAQ dataset is invented (§18).",
+  },
 };
 
 function imageIdOf(url: string): string | undefined {
@@ -166,6 +239,47 @@ export function validateCountryConfig(country: Country): CountryConfigReport {
     push("info", "heroImage", "No verified photograph; renders the designed plate.");
   }
 
+  /* --- PHASE 8C: credibility -------------------------------------------- */
+
+  /**
+   * §24 — placeholder pricing. Reported per destination rather than once,
+   * because every country page publishes this number and a reader of any one of
+   * them is being shown a figure nobody has agreed.
+   */
+  if (feesAreProvisional) {
+    push(
+      "warning",
+      "pricing.serviceFee",
+      `Keyrise service fee (₹${KEYRISE_TERMS.serviceFee}) and express surcharge (₹${KEYRISE_TERMS.expressSurcharge}) are provisional and require business confirmation. See lib/pricingConfig.ts.`,
+    );
+  }
+
+  /**
+   * §24 — invented-looking values. A dataset written by hand acquires round
+   * numbers and repeated numbers, and both are signals worth surfacing even
+   * though neither is proof. This does not fail a country; it asks a question.
+   */
+  const fee = parseGovernmentFee(country.fees);
+  if (fee > 0 && fee % 1000 === 0) {
+    push(
+      "info",
+      "fees",
+      `Government fee ₹${fee} is a round thousand — check it against the authority's published tariff rather than assuming.`,
+    );
+  }
+
+  /**
+   * §24 — missing critical data. The nine empty configuration slots are not
+   * all equal, and §11 asks which are which. The classification lives in
+   * `CONFIG_FIELD_STATUS` below; only `required` gaps are raised here, because
+   * a warning on all nine for all 152 destinations is noise that hides them.
+   */
+  for (const [field, status] of Object.entries(CONFIG_FIELD_STATUS)) {
+    if (status.classification === "required" && status.presentFor === "none") {
+      push("warning", field, `Required but unpopulated for every destination: ${status.note}`);
+    }
+  }
+
   /* --- grade ------------------------------------------------------------- */
   const errors = issues.filter((issue) => issue.severity === "error");
   const warnings = issues.filter((issue) => issue.severity === "warning");
@@ -205,23 +319,66 @@ export function validateCountryDataset(
 ): DatasetReport {
   const reports = countries.map(validateCountryConfig);
 
-  const bySlug = new Map<string, string[]>();
+  const bySlug = new Map<string, Country[]>();
   for (const country of countries) {
     const slug = getCountrySlug(country.name);
-    bySlug.set(slug, [...(bySlug.get(slug) ?? []), country.name]);
+    bySlug.set(slug, [...(bySlug.get(slug) ?? []), country]);
   }
 
-  const duplicateSlugs = [...bySlug.entries()]
-    .filter(([, names]) => names.length > 1)
-    .map(([slug, names]) => ({ slug, names }));
+  const collisions = [...bySlug.entries()].filter(([, rows]) => rows.length > 1);
 
-  for (const duplicate of duplicateSlugs) {
+  const duplicateSlugs = collisions.map(([slug, rows]) => ({
+    slug,
+    names: rows.map((row) => row.name),
+  }));
+
+  /**
+   * PHASE 8C §23: report the conflict, do not resolve it.
+   *
+   * Comparing the competing rows shows these are not accidental duplicates:
+   *
+   *   Morocco   30 Days / ₹2,900 / 3 days   vs   90 Days / ₹3,400 / 4 days
+   *   Jordan    30 Days / ₹4,800 / 1 day    vs   90 Days / ₹4,800 / 1 day
+   *
+   * A duplicate row would be identical or near-identical. These differ on
+   * validity and, for Morocco, on price — which is the signature of two
+   * genuine visa *products* for one country, a 30-day and a 90-day variant,
+   * flattened into a dataset with one row per destination and no product axis.
+   *
+   * That means there is no correct row to keep. Picking one silently discards a
+   * product Keyrise may sell; merging them invents a price. So the validator
+   * names the differing fields and stops, and the catalogue's first-wins rule
+   * stays an explicitly-labelled placeholder rather than a decision.
+   */
+  const FIELDS: Array<keyof Country> = [
+    "visaType",
+    "validity",
+    "fees",
+    "deliveryDays",
+    "documents",
+  ];
+
+  for (const [slug, rows] of collisions) {
+    const differing = FIELDS.filter(
+      (field) => new Set(rows.map((row) => String(row[field]))).size > 1,
+    );
+
+    const detail = differing.length
+      ? differing
+          .map((field) => `${field}: ${rows.map((row) => String(row[field])).join(" vs ")}`)
+          .join("; ")
+      : "rows are identical — a true duplicate, safe to delete either";
+
+    const verdict = differing.length
+      ? "These look like distinct visa products for one destination, not a duplicate. Resolving this is a product decision: either the dataset gains a product axis, or one row is retired. Do not pick one here."
+      : "Identical rows. Remove one.";
+
     for (const report of reports) {
-      if (report.slug === duplicate.slug) {
+      if (report.slug === slug) {
         report.issues.push({
           severity: "error",
           field: "slug",
-          message: `Slug "${duplicate.slug}" is claimed by ${duplicate.names.length} rows. Only the first is reachable at /visa/${duplicate.slug}.`,
+          message: `Slug "${slug}" is claimed by ${rows.length} rows; only the first is reachable at /visa/${slug}. Differences — ${detail}. ${verdict}`,
         });
         report.grade = "D";
       }

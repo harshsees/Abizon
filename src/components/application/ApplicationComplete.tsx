@@ -26,6 +26,7 @@ import Link from "next/link";
 
 import { getCountrySlug } from "@/data/countries";
 import { useApplication } from "@/lib/application/context";
+import { FEE_NOT_PUBLISHED } from "@/lib/pricingConfig";
 
 const inr = (value: number) => `₹${Math.round(value).toLocaleString("en-IN")}`;
 
@@ -106,9 +107,22 @@ export function ApplicationComplete() {
             the rest of your progress stays on this device only.
           </p>
           <p>
-            When filing opens, {inr(summary.fees.payNow * per)} government fee is
-            payable up front and {inr(summary.fees.payOnApproval * per)} to
-            Keyrise once the visa is granted — {inr(summary.fees.total)} in total.
+            When filing opens,{" "}
+            {summary.fees.payNow === 0
+              ? `${summary.country.displayName} charges no government fee`
+              : `${inr(summary.fees.payNow * per)} government fee is payable up front`}
+            {summary.fees.payOnApproval === null || summary.fees.total === null ? (
+              // The government fee is real and stays. The Keyrise side is not,
+              // so the sentence stops rather than completing itself with a
+              // number nobody has agreed.
+              <>. The Keyrise fee is not yet published.</>
+            ) : (
+              <>
+                {" "}
+                and {inr(summary.fees.payOnApproval * per)} to Keyrise once the
+                visa is granted — {inr(summary.fees.total)} in total.
+              </>
+            )}
           </p>
         </div>
       </div>
@@ -143,7 +157,15 @@ export function ApplicationComplete() {
           label="Passport details"
           value={`${summary.passport.completeCount} of ${summary.passport.total} complete`}
         />
-        <FinalRow label="Total" value={inr(summary.fees.total)} strong />
+        <FinalRow
+          label="Total"
+          value={
+            summary.fees.total === null
+              ? FEE_NOT_PUBLISHED
+              : inr(summary.fees.total)
+          }
+          strong
+        />
       </dl>
 
       <div className="flex flex-wrap gap-3">

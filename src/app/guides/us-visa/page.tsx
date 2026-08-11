@@ -65,7 +65,7 @@ export default function UsVisaGuidePage() {
             { value: "₹15,500", label: "MRV fee", hint: "Non-refundable" },
             { value: "10 years", label: "Typical validity", hint: "Multiple entry" },
             { value: "180 days", label: "Maximum stay", hint: "Per entry, at CBP discretion" },
-            { value: "88.4%", label: "Our approval rate", hint: "Trailing quarter" },
+            { value: null, label: "Our approval rate", hint: "Trailing quarter" },
           ]}
         />
       </Section>

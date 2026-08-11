@@ -73,10 +73,10 @@ export default function RefundsPolicyPage() {
       <Section eyebrow="Last quarter" title="What we actually paid out">
         <StatGrid
           stats={[
-            { value: "₹41.8L", label: "Refunded", hint: "Q2 2026" },
-            { value: "4,903", label: "Automatic refunds", hint: "Late deliveries" },
-            { value: "18 hrs", label: "Median refund time", hint: "From trigger" },
-            { value: "0", label: "Disputes escalated", hint: "Nothing to argue about" },
+            { value: null, label: "Refunded", hint: "Q2 2026" },
+            { value: null, label: "Automatic refunds", hint: "Late deliveries" },
+            { value: null, label: "Median refund time", hint: "From trigger" },
+            { value: null, label: "Disputes escalated", hint: "Nothing to argue about" },
           ]}
         />
       </Section>

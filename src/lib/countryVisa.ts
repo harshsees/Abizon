@@ -31,6 +31,7 @@
 import { Country, countriesData, getCountrySlug } from "@/data/countries";
 import { resolveCountry } from "@/lib/countryCatalogue";
 import { countryHeroImage } from "@/lib/countryImagery";
+import { KEYRISE_TERMS, feesAreProvisional } from "@/lib/pricingConfig";
 
 /* -------------------------------------------------------------------------- */
 /* Visa flow                                                                  */
@@ -203,24 +204,16 @@ export type CountryVisaConfig = {
 /* -------------------------------------------------------------------------- */
 
 /**
- * UNVERIFIED. These two numbers are not Keyrise data.
+ * PHASE 8C: moved to `lib/pricingConfig.ts`, and the status came with it.
  *
- * They were previously hardcoded in three separate components —
- * `ApplicationCard` used 499/1999, `FeeBreakdown` used 1499, and
- * `VisaPlanSelector` adds a flat 1500 for express — so the same page quoted
- * three different service fees depending on where you looked. Centralising them
- * here does not make them true; it makes them *one* lie instead of three, and
- * gives a single place to replace when the real commercial terms arrive.
+ * `PLACEHOLDER_PRICING` was a plain object of numbers under a comment saying
+ * they were unverified. Consumers read `.serviceFee` and received `1499` — at
+ * the type level, and on the page, indistinguishable from an agreed fee. The
+ * provisional status now travels with the values instead of sitting above them.
  *
- * Do not treat these as authoritative, and do not add per-country variants
- * here: per-country pricing belongs in the dataset, via `VisaPricing`.
+ * Re-exported so callers that only want the numbers keep one import.
  */
-export const PLACEHOLDER_PRICING = {
-  serviceFee: 1499,
-  gstRate: 0.18,
-  /** Carried over from the plan selector's existing "+1500" for express. */
-  expressSurcharge: 1500,
-} as const;
+export { KEYRISE_TERMS, feesAreProvisional };
 
 /**
  * `ApplicationCard` multiplied the government fee by 1.5 for a business visa,
@@ -234,7 +227,23 @@ export const PLACEHOLDER_PRICING = {
  */
 export const REMOVED_BUSINESS_FEE_MULTIPLIER = 1.5;
 
-/** The per-traveller total, computed one way for the whole app. */
+/**
+ * The per-traveller total, computed one way for the whole app.
+ *
+ * PHASE 8C changed one thing, and it is the whole point of the change: a
+ * service fee that is *unknown* no longer collapses to zero.
+ *
+ * The old body read `pricing.serviceFee ?? 0`. That is the right default for
+ * arithmetic and the wrong one for meaning — a missing fee and a waived fee
+ * produced the same total, so a country with no commercial terms on file would
+ * quote the government fee alone and present it as the full price. §7 asks the
+ * architecture to support a missing fee rather than invent one; `null` is how
+ * it does that, and `null` propagates through every derived figure so a caller
+ * cannot accidentally add it to something.
+ *
+ * `payNow` is deliberately never null. The government fee is the one number in
+ * this system that comes from the dataset and is real for every destination.
+ */
 export function computeTotals(
   pricing: VisaPricing,
   options: { express?: boolean; business?: boolean } = {},
@@ -244,9 +253,18 @@ export function computeTotals(
     ? (pricing.businessGovernmentFee ?? base)
     : base;
 
+  // Absent, not zero. `0` would be a claim that Keyrise charges nothing.
+  const baseServiceFee = pricing.serviceFee ?? null;
+  const surcharge = options.express ? (pricing.expressSurcharge ?? null) : 0;
+
+  /**
+   * Express is unknown only when express was actually asked for. A standard
+   * quote is unaffected by an undecided express surcharge, so it stays whole.
+   */
   const serviceFee =
-    (pricing.serviceFee ?? 0) +
-    (options.express ? (pricing.expressSurcharge ?? 0) : 0);
+    baseServiceFee === null || surcharge === null
+      ? null
+      : baseServiceFee + surcharge;
 
   /**
    * Rounded to whole rupees here, once, rather than left for each caller to
@@ -255,17 +273,28 @@ export function computeTotals(
    * still disagreed by a rupee after being put on shared maths. Money is
    * rounded where it is computed, not where it is printed.
    */
-  const gst = Math.round(serviceFee * (pricing.gstRate ?? 0));
+  const gst =
+    serviceFee === null ? null : Math.round(serviceFee * (pricing.gstRate ?? 0));
+
+  const payOnApproval =
+    serviceFee === null || gst === null ? null : serviceFee + gst;
 
   return {
     governmentFee,
     serviceFee,
     gst,
-    /** What is owed up front — the authority's fee. */
+    /** What is owed up front — the authority's fee. Always known. */
     payNow: governmentFee,
     /** What is owed once the visa is granted — Keyrise's fee plus tax. */
-    payOnApproval: serviceFee + gst,
-    perTraveller: governmentFee + serviceFee + gst,
+    payOnApproval,
+    /** `null` when any Keyrise component of the price is undecided. */
+    perTraveller: payOnApproval === null ? null : governmentFee + payOnApproval,
+    /**
+     * Whether the Keyrise components above are agreed commercial terms. Carried
+     * on the result so a component showing a price does not have to reach for a
+     * second import to find out whether it may present it as final.
+     */
+    provisional: feesAreProvisional,
   };
 }
 
@@ -274,6 +303,28 @@ export function parseGovernmentFee(fees: string): number {
   if (/free/i.test(fees)) return 0;
   const digits = fees.replace(/[^0-9]/g, "");
   return digits ? Number(digits) : 0;
+}
+
+/**
+ * PHASE 8C §9: "₹0" and "Free" are the same fact, so they must read the same.
+ *
+ * The dataset authors Japan's government fee as the string `"₹0"` and 30-odd
+ * other destinations as `"Free"`. `FeeBreakdown` normalised them — its row
+ * tests `governmentFee === 0` and prints "Free" — but the country card and the
+ * related-visa list printed `country.fees` raw. So Japan's card said "FEES ₹0"
+ * under a label that switched to "COST" only for the literal string "Free",
+ * while Japan's own fee breakdown three sections later said "Free".
+ *
+ * The numeric value is untouched, exactly as §9 requires: `parseGovernmentFee`
+ * still returns 0 and every total is unaffected. This is presentation only.
+ */
+export function formatGovernmentFee(fees: string): string {
+  return parseGovernmentFee(fees) === 0 ? "Free" : fees;
+}
+
+/** True where the destination's authority charges nothing, however authored. */
+export function isGovernmentFeeFree(fees: string): boolean {
+  return parseGovernmentFee(fees) === 0;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -383,9 +434,12 @@ export function resolveCountryVisaConfig(country: Country): CountryVisaConfig {
 
     pricing: {
       governmentFee: parseGovernmentFee(country.fees),
-      serviceFee: PLACEHOLDER_PRICING.serviceFee,
-      gstRate: PLACEHOLDER_PRICING.gstRate,
-      expressSurcharge: PLACEHOLDER_PRICING.expressSurcharge,
+      // `?? undefined` rather than `?? 0`: an undecided fee is absent from the
+      // pricing object, and `computeTotals` reports the total as unavailable
+      // instead of quoting the government fee as if it were the whole price.
+      serviceFee: KEYRISE_TERMS.serviceFee ?? undefined,
+      gstRate: KEYRISE_TERMS.gstRate,
+      expressSurcharge: KEYRISE_TERMS.expressSurcharge ?? undefined,
       // Sticker visas are collected at the mission, which is a property of the
       // flow rather than of an individual country, so it is safe to derive.
       paidAtEmbassy: country.visaType === "Sticker Visa" || undefined,

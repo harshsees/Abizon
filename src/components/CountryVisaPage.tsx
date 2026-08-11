@@ -225,10 +225,22 @@ export function CountryVisaPage({ country }: { country: Country }) {
         </div>
 
         <div className="mx-auto mt-6 w-full max-w-7xl border-t border-border px-4 pt-6 md:px-6">
+          {/* PHASE 8D §17/§18. This passed `w-full py-4`, which overrode the
+              accordion's own `max-w-4xl` and its section padding. Measured on
+              /visa/dubai, that made FAQ the only section on the page with 16px
+              of vertical padding where every neighbour has 40 (mobile) or 48
+              (desktop), and stretched question and answer text to the full
+              1232px container — roughly twice a readable measure.
+
+              `max-w-3xl` restores an editorial line length; the padding now
+              matches the sections above and below, so the page reads as one
+              composition rather than a run of unrelated blocks. */}
           <FAQAccordion
-            className="w-full py-4"
+            className="w-full max-w-3xl py-10 md:py-12"
             countryName={config.displayName}
             deliveryDays={config.deliveryDays}
+            flow={config.flow}
+            documents={country.documents}
           />
         </div>
 
@@ -238,9 +250,14 @@ export function CountryVisaPage({ country }: { country: Country }) {
       </main>
 
       {/* Mobile application bar. Sends the user up to the panel rather than
-          starting blind, so the same choices are made on both breakpoints. */}
+          starting blind, so the same choices are made on both breakpoints.
+
+          PHASE 8D §20: `p-3` alone put the button under the home indicator on
+          a notched phone. `ApplicationShell` already accounts for this; the
+          country page's bar did not. `main` carries pb-24, which clears the
+          bar's own height at the end of the document. */}
       {applicable && (
-      <div className="fixed inset-x-0 bottom-0 z-nav border-t border-border bg-surface/95 p-3 backdrop-blur-md md:hidden">
+      <div className="fixed inset-x-0 bottom-0 z-nav border-t border-border bg-surface/95 p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur-md md:hidden">
         <button
           type="button"
           onClick={focusApplication}

@@ -23,9 +23,9 @@ const releases = [
     meta: "12 Jul 2026",
   },
   {
-    title: "Rejection Recovery reaches 71% overturn rate in first year",
+    title: "Rejection Recovery programme opens",
     description:
-      "Of applications refiled through the programme after an initial refusal, 71% were subsequently approved at no additional service cost.",
+      "Applications refiled through the programme after an initial refusal carry no additional service cost.",
     meta: "28 Jun 2026",
   },
   {

@@ -15,10 +15,15 @@ import { Info, Landmark, Minus, Plus, ReceiptText, ShieldCheck } from "lucide-re
 
 import { Country } from "@/data/countries";
 import { computeTotals, resolveCountryVisaConfig } from "@/lib/countryVisa";
+import { FEE_NOT_PUBLISHED } from "@/lib/pricingConfig";
 import { DURATION, EASE } from "@/lib/motion";
 
 const inr = (value: number) =>
   `₹${Math.round(value).toLocaleString("en-IN")}`;
+
+/** PHASE 8C: a fee Keyrise has not decided prints as words, never as a number. */
+const inrOrUnset = (value: number | null) =>
+  value === null ? FEE_NOT_PUBLISHED : inr(value);
 
 type FeeBreakdownProps = {
   country: Country;
@@ -37,7 +42,7 @@ export function FeeBreakdown({ country, className = "" }: FeeBreakdownProps) {
   const governmentFee = totals.governmentFee;
   const SERVICE_FEE = totals.serviceFee;
   const gst = totals.gst;
-  const total = totals.perTraveller * travellers;
+  const total = totals.perTraveller === null ? null : totals.perTraveller * travellers;
 
   const rows = [
     {
@@ -50,7 +55,13 @@ export function FeeBreakdown({ country, className = "" }: FeeBreakdownProps) {
     {
       icon: ShieldCheck,
       label: "Keyrise service fee",
-      hint: "Document checks, application filing and on-time guarantee.",
+      // The hint carries the status. A traveller reading a fee table is
+      // entitled to know which of these numbers is settled and which is not,
+      // and the distinction disappears from here on its own the moment
+      // `KEYRISE_TERMS.status` becomes "verified".
+      hint: totals.provisional
+        ? "Document checks, application filing and on-time guarantee. This fee is provisional and not yet confirmed."
+        : "Document checks, application filing and on-time guarantee.",
       amount: SERVICE_FEE,
       free: false,
     },
@@ -131,7 +142,7 @@ export function FeeBreakdown({ country, className = "" }: FeeBreakdownProps) {
                 row.free ? "text-success-subtle-foreground" : "text-foreground"
               }`}
             >
-              {row.free ? "Free" : inr(row.amount)}
+              {row.free ? "Free" : inrOrUnset(row.amount)}
             </span>
           </li>
         ))}
@@ -143,7 +154,7 @@ export function FeeBreakdown({ country, className = "" }: FeeBreakdownProps) {
             Total payable
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
-            {inr(totals.perTraveller)} × {travellers}{" "}
+            {inrOrUnset(totals.perTraveller)} × {travellers}{" "}
             {travellers === 1 ? "traveller" : "travellers"}
           </p>
         </div>
@@ -151,15 +162,19 @@ export function FeeBreakdown({ country, className = "" }: FeeBreakdownProps) {
             rather than snapping — the only thing on the card that changes. */}
         <AnimatePresence mode="popLayout" initial={false}>
           <motion.span
-            key={total}
+            key={total ?? "unset"}
             data-numeric
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -6 }}
             transition={{ duration: DURATION.fast, ease: EASE.out }}
-            className="text-2xl font-black tracking-tight text-foreground"
+            className={
+              total === null
+                ? "text-sm font-bold tracking-tight text-muted-foreground"
+                : "text-2xl font-black tracking-tight text-foreground"
+            }
           >
-            {inr(total)}
+            {inrOrUnset(total)}
           </motion.span>
         </AnimatePresence>
       </div>

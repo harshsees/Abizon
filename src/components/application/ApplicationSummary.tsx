@@ -20,6 +20,7 @@
 import { ShieldCheck } from "lucide-react";
 
 import type { ApplicationSummary as Summary } from "@/lib/application/state";
+import { FEE_NOT_PUBLISHED } from "@/lib/pricingConfig";
 
 const inr = (value: number) => `₹${Math.round(value).toLocaleString("en-IN")}`;
 
@@ -116,7 +117,11 @@ export function ApplicationSummaryPanel({
           />
           <Line
             label={`Keyrise fee${per > 1 ? ` × ${per}` : ""}`}
-            value={inr(fees.baseServiceFee * per)}
+            value={
+              fees.baseServiceFee === null
+                ? FEE_NOT_PUBLISHED
+                : inr(fees.baseServiceFee * per)
+            }
           />
           {fees.expressSurcharge > 0 && (
             <Line
@@ -124,16 +129,27 @@ export function ApplicationSummaryPanel({
               value={inr(fees.expressSurcharge * per)}
             />
           )}
-          <Line label="GST (18%)" value={inr(fees.gst * per)} />
+          <Line
+            label="GST (18%)"
+            value={fees.gst === null ? FEE_NOT_PUBLISHED : inr(fees.gst * per)}
+          />
         </dl>
 
         <div className="mt-3.5 border-t border-border-strong pt-3.5">
-          <Line label="Total" value={inr(fees.total)} strong />
+          <Line
+            label="Total"
+            value={fees.total === null ? FEE_NOT_PUBLISHED : inr(fees.total)}
+            strong
+          />
         </div>
 
         <p className="mt-3 text-2xs leading-relaxed text-muted-foreground">
-          {inr(fees.payNow * per)} government fee up front ·{" "}
-          {inr(fees.payOnApproval * per)} to Keyrise on approval.
+          {fees.payNow === 0
+            ? "No government fee"
+            : `${inr(fees.payNow * per)} government fee up front`}
+          {fees.payOnApproval === null
+            ? " · Keyrise fee not yet published."
+            : ` · ${inr(fees.payOnApproval * per)} to Keyrise on approval.`}
         </p>
       </div>
 

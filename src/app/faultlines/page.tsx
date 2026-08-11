@@ -26,60 +26,31 @@ type Incident = {
   fix: string;
 };
 
-const incidents: Incident[] = [
-  {
-    id: "KR-2026-014",
-    date: "09–18 May 2026",
-    title: "Schengen appointment portal outage",
-    severity: "Critical",
-    affected: "2,740 applications",
-    summary:
-      "The shared appointment system used by fifteen Schengen missions in India was unavailable for nine days. We could not book slots, and we had sold delivery dates that assumed we could.",
-    cause:
-      "A third-party dependency with no contractual SLA and no status page. Our monitoring detected the outage in eleven minutes; it did not help, because there was no alternative filing path.",
-    fix:
-      "We stopped selling committed Schengen dates during confirmed outages, and now show a range instead. We also built a manual walk-in fallback with three missions. Refunds were issued automatically to all 2,740.",
-  },
-  {
-    id: "KR-2026-009",
-    date: "22 Mar 2026",
-    title: "Photo validator rejected valid Japanese-spec photos",
-    severity: "Major",
-    affected: "1,180 applications",
-    summary:
-      "A model update tightened head-height tolerance beyond the actual Japanese specification. Travellers with compliant photos were told to retake them, some repeatedly.",
-    cause:
-      "The tolerance change shipped without a regression suite covering per-country specs. Our test set was dominated by Schengen photos, where the tighter bound happens to be correct.",
-    fix:
-      "Per-destination golden test sets, run on every model change. The validator now fails open — an uncertain photo is flagged for human review rather than rejected outright.",
-  },
-  {
-    id: "KR-2026-003",
-    date: "07 Feb 2026",
-    title: "Duplicate charges on retried payments",
-    severity: "Major",
-    affected: "412 travellers",
-    summary:
-      "A payment gateway timeout caused our retry logic to submit a second charge for applications where the first had actually succeeded.",
-    cause:
-      "Retries keyed on our internal request ID rather than an idempotency key shared with the gateway. A timeout is not a failure, and we were treating it as one.",
-    fix:
-      "Proper idempotency keys on every payment call. All duplicates were refunded within 36 hours of detection, before most travellers noticed.",
-  },
-  {
-    id: "KR-2025-041",
-    date: "14 Nov 2025",
-    title: "Passport scans briefly readable across accounts",
-    severity: "Critical",
-    affected: "0 confirmed accesses",
-    summary:
-      "For 43 minutes, a misconfigured cache could return another traveller's document thumbnail to a logged-in user requesting their own.",
-    cause:
-      "A CDN caching rule added for performance did not include the session identifier in its cache key. Document blobs were correctly scoped; the thumbnail path was not.",
-    fix:
-      "Thumbnails now share the document store's access path and are never cached at the edge. We audited all access logs for the window and found no cross-account reads. Every affected traveller was notified within 24 hours regardless.",
-  },
-];
+/**
+ * PHASE 8C: four invented post-mortems removed.
+ *
+ * They read as a real incident log — KR-prefixed IDs, date ranges, severity
+ * grades, affected counts, root causes and remediations:
+ *
+ *   KR-2026-014  a nine-day Schengen appointment portal outage, 2,740
+ *                applications affected, refunds issued automatically
+ *   KR-2026-009  a photo validator regression, 1,180 applications
+ *   KR-2026-003  duplicate charges on retried payments
+ *   KR-2025-041  passport scan thumbnails briefly readable across accounts
+ *
+ * None of it happened. The last one is the most serious: a fabricated security
+ * incident disclosure, complete with an exposure window, an access-log audit
+ * and a notification commitment. Publishing a breach that did not occur is not
+ * a smaller error than concealing one that did — it is the same failure of the
+ * disclosure record, and it makes a real future disclosure unbelievable.
+ *
+ * The third is impossible on its own terms: Keyrise cannot take a payment, so
+ * it cannot have double-charged one.
+ *
+ * The page's editorial commitment survives. What is gone is the pretence of a
+ * history to be transparent about.
+ */
+const incidents: Incident[] = [];
 
 const SEVERITY_STYLES: Record<Incident["severity"], string> = {
   Critical: "bg-destructive-subtle text-destructive-subtle-foreground",
@@ -105,6 +76,20 @@ export default function FaultlinesPage() {
             traveller, it is here.
           </Callout>
         </div>
+
+        {incidents.length === 0 && (
+          <div className="rounded-2xl border border-border bg-surface p-6 shadow-e1">
+            <h3 className="text-base font-bold text-foreground">
+              No incidents published
+            </h3>
+            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+              Keyrise has not filed applications at volume yet, so there is no
+              operational history to write up. When there is, every incident that
+              affected a traveller appears here with its cause and what changed —
+              including the ones that are embarrassing to publish.
+            </p>
+          </div>
+        )}
 
         <ol className="space-y-5">
           {incidents.map((incident) => (

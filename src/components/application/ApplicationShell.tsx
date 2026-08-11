@@ -33,6 +33,7 @@ import { useEffect, useId, useRef, useState } from "react";
 
 import { getCountrySlug } from "@/data/countries";
 import { useApplication } from "@/lib/application/context";
+import { FEE_NOT_PUBLISHED } from "@/lib/pricingConfig";
 
 import { ApplicantDetailsStep } from "./ApplicantDetailsStep";
 import { ApplicationComplete } from "./ApplicationComplete";
@@ -282,7 +283,9 @@ export function ApplicationShell() {
                   data-numeric
                   className="text-sm font-bold tracking-tight text-foreground"
                 >
-                  ₹{Math.round(summary.fees.total).toLocaleString("en-IN")}
+                  {summary.fees.total === null
+                    ? FEE_NOT_PUBLISHED
+                    : `₹${Math.round(summary.fees.total).toLocaleString("en-IN")}`}
                 </span>
                 <ChevronDown
                   aria-hidden

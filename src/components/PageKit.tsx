@@ -212,7 +212,19 @@ export function Section({
 /* Stats                                                                      */
 /* -------------------------------------------------------------------------- */
 
-export type Stat = { value: string; label: string; hint?: string };
+/**
+ * PHASE 8C: `value: null` means "we do not have this number yet".
+ *
+ * Every StatGrid on the site was filled with invented operating metrics —
+ * "99.2% on-time delivery, trailing 90 days", "95.1% approval rate, trailing
+ * quarter" — rendered in the same heavy numeral as a real figure and captioned
+ * with a measurement window that implied someone had measured it.
+ *
+ * The label is worth keeping even when the number is not: it says what Keyrise
+ * intends to publish and be held to. The value is what must not be invented.
+ * `null` renders the commitment without the fabrication.
+ */
+export type Stat = { value: string | null; label: string; hint?: string };
 
 export function StatGrid({ stats }: { stats: Stat[] }) {
   return (
@@ -232,12 +244,22 @@ export function StatGrid({ stats }: { stats: Stat[] }) {
           <dt className="text-2xs font-bold uppercase tracking-widest text-muted-foreground">
             {stat.label}
           </dt>
-          <dd
-            data-numeric
-            className="mt-2 text-3xl font-black tracking-tight text-foreground"
-          >
-            {stat.value}
-          </dd>
+          {stat.value === null ? (
+            // Deliberately not in the numeral face or the numeral size. An
+            // unpublished metric must not occupy the visual slot of a measured
+            // one — at 3xl black, "Not published" still reads as a headline
+            // figure at a glance.
+            <dd className="mt-2 text-sm font-semibold leading-snug text-muted-foreground">
+              Not published yet
+            </dd>
+          ) : (
+            <dd
+              data-numeric
+              className="mt-2 text-3xl font-black tracking-tight text-foreground"
+            >
+              {stat.value}
+            </dd>
+          )}
           {stat.hint && (
             <p className="mt-1.5 text-xs text-muted-foreground">{stat.hint}</p>
           )}

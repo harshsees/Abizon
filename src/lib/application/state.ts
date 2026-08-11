@@ -565,8 +565,9 @@ export type ApplicationSummary = {
    */
   fees: ReturnType<typeof computeTotals> & {
     travellers: number;
-    total: number;
-    baseServiceFee: number;
+    /** `null` while any Keyrise fee component is undecided. See pricingConfig. */
+    total: number | null;
+    baseServiceFee: number | null;
     expressSurcharge: number;
   };
   progress: {
@@ -647,9 +648,12 @@ export function buildSummary(
     fees: {
       ...totals,
       travellers: travellerCount,
-      total: totals.perTraveller * travellerCount,
+      // PHASE 8C: null propagates. An undecided Keyrise fee makes the party
+      // total undecided too, rather than quietly becoming the government fee.
+      total: totals.perTraveller === null ? null : totals.perTraveller * travellerCount,
       expressSurcharge,
-      baseServiceFee: totals.serviceFee - expressSurcharge,
+      baseServiceFee:
+        totals.serviceFee === null ? null : totals.serviceFee - expressSurcharge,
     },
     progress: {
       stepId: state.step,

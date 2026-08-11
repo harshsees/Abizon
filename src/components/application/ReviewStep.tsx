@@ -19,6 +19,7 @@ import { Pencil } from "lucide-react";
 
 import { useApplication } from "@/lib/application/context";
 import { EMPTY_DETAILS } from "@/lib/application/state";
+import { FEE_NOT_PUBLISHED } from "@/lib/pricingConfig";
 
 const inr = (value: number) => `₹${Math.round(value).toLocaleString("en-IN")}`;
 
@@ -169,7 +170,11 @@ export function ReviewStep() {
           />
           <Row
             label={`Keyrise fee${per > 1 ? ` × ${per}` : ""}`}
-            value={inr(summary.fees.baseServiceFee * per)}
+            value={
+              summary.fees.baseServiceFee === null
+                ? FEE_NOT_PUBLISHED
+                : inr(summary.fees.baseServiceFee * per)
+            }
           />
           {summary.fees.expressSurcharge > 0 && (
             <Row
@@ -177,7 +182,14 @@ export function ReviewStep() {
               value={inr(summary.fees.expressSurcharge * per)}
             />
           )}
-          <Row label="GST (18%)" value={inr(summary.fees.gst * per)} />
+          <Row
+            label="GST (18%)"
+            value={
+              summary.fees.gst === null
+                ? FEE_NOT_PUBLISHED
+                : inr(summary.fees.gst * per)
+            }
+          />
         </dl>
 
         <div className="mt-3 flex items-baseline justify-between gap-4 border-t border-border-strong pt-3">
@@ -186,13 +198,18 @@ export function ReviewStep() {
             data-numeric
             className="text-xl font-bold tracking-tight text-foreground"
           >
-            {inr(summary.fees.total)}
+            {summary.fees.total === null
+              ? FEE_NOT_PUBLISHED
+              : inr(summary.fees.total)}
           </span>
         </div>
         <p className="mt-2 text-2xs leading-relaxed text-muted-foreground">
-          {inr(summary.fees.payNow * per)} government fee up front ·{" "}
-          {inr(summary.fees.payOnApproval * per)} to Keyrise once the visa is
-          granted.
+          {summary.fees.payNow === 0
+            ? "No government fee"
+            : `${inr(summary.fees.payNow * per)} government fee up front`}
+          {summary.fees.payOnApproval === null
+            ? " · the Keyrise fee is not yet published."
+            : ` · ${inr(summary.fees.payOnApproval * per)} to Keyrise once the visa is granted.`}
         </p>
       </Block>
     </div>

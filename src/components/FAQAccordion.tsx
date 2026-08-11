@@ -4,65 +4,145 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ChevronDown } from "lucide-react";
 import { useId, useState } from "react";
 
+import type { Country } from "@/data/countries";
+import { requiredDocumentLabels } from "@/lib/application/documents";
 import { DURATION, EASE } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
 /**
- * The processing-time answer used to read "Standard processing takes 3-5
- * working days. Express applications can be processed in 24-48 hours." Those
- * were fixed numbers rendered identically on all ~154 country pages, and on
- * Dubai they contradicted the page's own guarantee three sections above it —
- * the dataset's `deliveryDays` for the UAE is 1. The answer now interpolates
- * `{delivery}` from that real field, and the generic fallback states the
- * guarantee rather than a duration.
+ * PHASE 8C: the FAQ set is now built per destination, because as a flat list it
+ * was making claims that were false for entire classes of country.
  *
- * The tracking answer no longer promises "real-time status updates through your
- * dashboard": there is no application backend behind it yet.
+ * The list was eight fixed entries with `Dubai`/`UAE` string-replaced for the
+ * current country. §18 asked whether each is genuinely applicable everywhere
+ * it is shown. Four were not:
+ *
+ *   "Do Indians need a visa for X?" → "Yes, Indian passport holders need a
+ *   valid X visa before travel." Rendered on all 30 `Visa Free` destinations,
+ *   where it is simply wrong, and contradicted by the same page's own hero,
+ *   which says no visa is needed. Now answered from `flow`.
+ *
+ *   "What documents are required?" → "A valid passport scan, recent
+ *   photograph, travel dates, and additional booking documents." The dataset
+ *   records exactly what each destination needs, and for 40-odd of them the
+ *   answer is "No Documents Required". Now answered from that field.
+ *
+ *   "Is my passport data secure?" → "All uploads are encrypted in transit and
+ *   storage. Access is restricted to verified processing specialists." There
+ *   is no transit and no storage: `ApplicationComplete` tells the applicant,
+ *   correctly, that the documents never left the device. The answer described
+ *   a processing operation that does not exist yet.
+ *
+ *   "Can I track my application?" → "You are notified by email as your
+ *   application moves through document review, filing and decision." There is
+ *   no filing, no decision and no email. Same defect the deleted
+ *   `MultiStepApplicationForm` had, surviving in prose.
+ *
+ * The remaining four are genuinely generic and stay. Nothing here is
+ * country-specific in the sense §18 warns against — no invented per-country
+ * procedures — it is the shared Keyrise process, branched on real fields.
  */
-const faqs = [
-  {
-    q: "Do Indians need a visa for Dubai?",
-    a: "Yes, Indian passport holders need a valid UAE visa before travel unless covered by a qualifying visa-on-arrival policy.",
-  },
-  {
-    q: "How long does Dubai visa processing take?",
-    a: "{delivery} Choosing Express adds priority handling, and a faster date where the destination offers one.",
-  },
-  {
+
+import type { VisaFlow } from "@/lib/countryVisa";
+
+type Faq = { q: string; a: string };
+
+function buildFaqs({
+  countryName,
+  flow,
+  documents,
+  deliveryAnswer,
+}: {
+  countryName: string;
+  flow: VisaFlow;
+  documents: Country["documents"];
+  deliveryAnswer: string;
+}): Faq[] {
+  const visaFree = flow === "visa-free";
+  const onArrival = flow === "on-arrival";
+
+  const faqs: Faq[] = [];
+
+  /* 1 — is a visa needed at all. Answered from the flow, never assumed. */
+  faqs.push({
+    q: `Do Indians need a visa for ${countryName}?`,
+    a: visaFree
+      ? `No. Indian passport holders can enter ${countryName} without a visa for the stay length shown above. Carry a passport with enough remaining validity and any entry documents the border asks for.`
+      : onArrival
+        ? `A visa is required, but it is issued on arrival in ${countryName} rather than before you fly. Keyrise prepares the paperwork you present at the border.`
+        : `Yes. Indian passport holders need a ${countryName} visa granted before travel.`,
+  });
+
+  /* 2 — how long. Only meaningful where something is being processed. */
+  if (!visaFree) {
+    faqs.push({
+      q: `How long does ${countryName} visa processing take?`,
+      a: `${deliveryAnswer} Choosing Express adds priority handling, and a faster date where the destination offers one.`,
+    });
+  }
+
+  /* 3 — documents. Straight from the dataset field, not from a template. */
+  const required = requiredDocumentLabels(documents);
+  faqs.push({
     q: "What documents are required?",
-    a: "A valid passport scan, recent photograph, travel dates, and additional booking documents depending on visa type.",
-  },
-  {
-    q: "Can I apply without confirmed flight tickets?",
-    a: "Yes, for many cases you can start your application first. Our team will tell you if a confirmed return ticket is required.",
-  },
-  {
+    a:
+      required.length === 0
+        ? `${countryName} does not require supporting documents from Indian passport holders — your passport is enough. If that changes, the application will ask for what is needed before you file.`
+        : `${required.join(" and ")}. That is the full list for ${countryName}; the application will not ask for anything the destination does not require.`,
+  });
+
+  /* 4 — flights. Only relevant where there is an application to file. */
+  if (!visaFree) {
+    faqs.push({
+      q: "Can I apply without confirmed flight tickets?",
+      a: "You can start an application without them. Whether the destination requires a confirmed return booking depends on the visa type, and the application tells you before you file rather than after.",
+    });
+  }
+
+  /* 5 — data handling. Describes what the software actually does today. */
+  faqs.push({
     q: "Is my passport data secure?",
-    a: "All uploads are encrypted in transit and storage. Access is restricted to verified processing specialists.",
-  },
-  {
+    a: "Today your answers and documents stay in your own browser — nothing is uploaded, so nothing is stored on a Keyrise server. Closing the tab discards the files. When online filing opens, this answer will describe how they are transmitted and retained.",
+  });
+
+  /* 6 — tracking. Stated as what exists, which is a saved draft. */
+  faqs.push({
     q: "Can I track my application?",
-    a: "Yes. You are notified by email as your application moves through document review, filing and decision.",
-  },
-  {
-    q: "What happens if my visa is delayed?",
-    a: "If delay is due to our processing miss, we offer support under our on-time delivery guarantee terms.",
-  },
-  {
+    a: "Not yet. Keyrise cannot currently file an application online, so there is no status to follow. Your progress is saved on this device and you can pick it up where you left it.",
+  });
+
+  /* 7 — the delay guarantee. Points at the policy rather than restating it. */
+  if (!visaFree) {
+    faqs.push({
+      q: "What happens if my visa is delayed?",
+      a: "If the delay is ours, the Keyrise fee is waived under the on-time delivery guarantee. The refunds policy sets out exactly what is covered and what is not.",
+    });
+  }
+
+  /* 8 — party size. True of the form as built. */
+  faqs.push({
     q: "Can I apply for family members?",
-    a: "Yes, you can submit applications for multiple travelers in one checkout flow.",
-  },
-];
+    a: "Yes. One application can carry several travellers, each with their own passport details and documents.",
+  });
+
+  return faqs;
+}
 
 export function FAQAccordion({
   className,
   countryName = "Dubai",
   /** The dataset's guaranteed delivery, in days. Omitted where unknown. */
   deliveryDays,
+  /** Decides which questions apply at all. */
+  flow,
+  /** The destination's real document requirement. */
+  documents,
 }: {
   className?: string;
   countryName?: string;
   deliveryDays?: number;
+  flow: VisaFlow;
+  documents: Country["documents"];
 }) {
   const [open, setOpen] = useState<number | null>(0);
   const reduced = useReducedMotion();
@@ -75,14 +155,17 @@ export function FAQAccordion({
         } of a complete application, or our fee is waived.`
       : `Keyrise guarantees your ${countryName} visa by the date shown on your application, or our fee is waived.`;
 
-  const formattedFaqs = faqs.map((faq) => {
-    return {
-      q: faq.q.replace(/Dubai/g, countryName).replace(/UAE/g, countryName),
-      a: faq.a
-        .replace("{delivery}", deliveryAnswer)
-        .replace(/Dubai/g, countryName)
-        .replace(/UAE/g, countryName),
-    };
+  /**
+   * No more `.replace(/Dubai/g, countryName)`. Substituting a country name into
+   * a sentence written about a different country is how "Yes, Indian passport
+   * holders need a valid Mauritius visa" reached 30 visa-free pages. The
+   * questions are composed for the destination instead.
+   */
+  const formattedFaqs = buildFaqs({
+    countryName,
+    flow,
+    documents,
+    deliveryAnswer,
   });
 
   return (

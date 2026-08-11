@@ -1,25 +1,22 @@
 "use client";
 
 /**
- * The at-a-glance visa facts: type, stay, validity, entry, method.
+ * The at-a-glance visa facts: type, validity, method.
  *
- * Split out of the 1237-line `VisaInfoAndPlans`. Markup is unchanged.
+ * Split out of the 1237-line `VisaInfoAndPlans`.
  *
- * `entry` and `method` are DERIVED, not sourced. The dataset carries neither,
- * so they are inferred from `visaType`. They are plausible, not verified for
- * any individual country. `CountryVisaConfig` has real `entryType` and
- * `applicationMethod` fields waiting; once those are populated, delete the two
- * derive helpers below and read the config instead.
+ * `method` is DERIVED, not sourced — mapped from `visaType` by the same rule as
+ * `deriveVisaFlow`, which is a restatement of data already held rather than a
+ * new claim. `CountryVisaConfig` has a real `applicationMethod` field waiting;
+ * once it is populated, delete the helper below and read the config instead.
+ *
+ * Phase 8D removed "Length of Stay" and "Entry" — see the note in the markup.
  */
 
-import { CalendarDays, Clock3, FileText, FolderOpen, Smartphone } from "lucide-react";
+import { Clock3, FolderOpen, Smartphone } from "lucide-react";
 
 import { Country } from "@/data/countries";
 import { displayCountryName } from "@/lib/countryVisa";
-
-/** Inferred, not data — see the note above. */
-const deriveEntry = (visaType: Country["visaType"]) =>
-  visaType === "Sticker Visa" ? "Single/Multiple" : "Single";
 
 const deriveMethod = (visaType: Country["visaType"]) =>
   visaType === "E-Visa"
@@ -30,21 +27,50 @@ const deriveMethod = (visaType: Country["visaType"]) =>
 
 export function VisaOverview({ country }: { country: Country }) {
   const displayName = displayCountryName(country);
-  const entryType = deriveEntry(country.visaType);
   const methodType = deriveMethod(country.visaType);
 
   return (
       <div>
-        <h1 id="visa-info-section" className="text-2xl font-bold text-foreground scroll-mt-28 js-reveal-heading">
+        {/* PHASE 8D §23: was an <h1>, which gave every country page two of them
+            — the hero's headline and this. A document has one h1; a screen
+            reader listing headings saw two competing page titles, and the
+            section headings below were structurally siblings of the page
+            title rather than children of it. `id` and styling are unchanged,
+            so the sub-nav anchor and scroll-spy are unaffected. */}
+        <h2 id="visa-info-section" className="text-2xl font-bold text-foreground scroll-mt-28 js-reveal-heading">
           {displayName} visa information
-        </h1>
-        {/* Scaled up borderless visa info details aligned in a column grid */}
+        </h2>
+        {/**
+         * PHASE 8D. Two of the five facts were removed, and both removals are
+         * corrections to Phase 8C rather than visual changes:
+         *
+         * "Length of Stay" rendered `country.validity` — the same field, the
+         * same number, as the "Validity" cell two columns to its right — under
+         * a tooltip explaining that it meant something different ("the maximum
+         * duration you are allowed to remain"). Stay length and validity are
+         * genuinely different facts, and the dataset holds only one of them, so
+         * this labelled one number as two. 8C §13 asks for exactly this: use
+         * the dataset where it exists, otherwise hide the field.
+         *
+         * "Entry: Single" was inferred from `visaType` by a two-line helper and
+         * presented with an authoritative tooltip — "you can enter the country
+         * only once during the visa's validity period and cannot re-enter". For
+         * 152 destinations, unverified. 8C §14 forbids guessing single vs
+         * multiple entry; the guess survived that phase because it lives in a
+         * component rather than in the config fields 8C audited.
+         *
+         * What remains is sourced or safely derived: `visaType` and `validity`
+         * come from the dataset, and `method` maps from `visaType` by the same
+         * rule as `deriveVisaFlow`, which 8C classified as legitimately derived.
+         *
+         * Three cells also grid more cleanly than five across two rows, which
+         * is why §10's clutter reduction and this correction land together.
+         */}
         <div className="mt-5 space-y-5">
-          {/* Row 1: 3 components scaled up */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 border-b border-border/50 pb-5">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pb-1">
             {/* 1. Visa Type */}
             <div className="flex items-center gap-3.5 js-info-item">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-border bg-surface-sunken text-muted-foreground">
                 <Smartphone className="h-5.5 w-5.5" />
               </div>
               <div>
@@ -53,31 +79,9 @@ export function VisaOverview({ country }: { country: Country }) {
               </div>
             </div>
 
-            {/* 2. Length of Stay */}
-            <div className="flex items-center gap-3.5 js-info-item">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-sky-50 text-sky-600">
-                <CalendarDays className="h-5.5 w-5.5" />
-              </div>
-              <div>
-                <p className="text-xs md:text-sm font-medium text-muted-foreground">Length of Stay:</p>
-                <div className="relative group inline-block mt-0.5">
-                  <span className="text-base md:text-lg font-extrabold text-foreground underline decoration-slate-400 decoration-dotted underline-offset-4 cursor-pointer">
-                    {country.validity}
-                  </span>
-                  {/* Tooltip Box */}
-                  <div className="absolute top-full left-0 mt-2.5 hidden group-hover:block w-[280px] max-w-[calc(100vw-2.5rem)] bg-surface border border-border rounded-2xl p-4 shadow-[0_12px_32px_rgba(15,23,42,0.08)] z-30 pointer-events-none">
-                    <p className="text-sm font-bold text-foreground">Length of Stay: {country.validity}</p>
-                    <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
-                      {`The maximum duration that you are allowed to remain in ${displayName} after entering with that particular visa.`}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
             {/* 3. Validity */}
             <div className="flex items-center gap-3.5 js-info-item">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 text-success-subtle-foreground">
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-border bg-surface-sunken text-muted-foreground">
                 <Clock3 className="h-5.5 w-5.5" />
               </div>
               <div>
@@ -96,35 +100,10 @@ export function VisaOverview({ country }: { country: Country }) {
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Row 2: remaining 2 components scaled up and aligned */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-1">
-            {/* 4. Entry */}
+            {/* 3. Method */}
             <div className="flex items-center gap-3.5 js-info-item">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-violet-50 text-violet-600">
-                <FileText className="h-5.5 w-5.5" />
-              </div>
-              <div>
-                <p className="text-xs md:text-sm font-medium text-muted-foreground">Entry:</p>
-                <div className="relative group inline-block mt-0.5">
-                  <span className="text-base md:text-lg font-extrabold text-foreground underline decoration-slate-400 decoration-dotted underline-offset-4 cursor-pointer">
-                    {entryType}
-                  </span>
-                  {/* Tooltip Box */}
-                  <div className="absolute top-full left-0 mt-2.5 hidden group-hover:block w-[280px] max-w-[calc(100vw-2.5rem)] bg-surface border border-border rounded-2xl p-4 shadow-[0_12px_32px_rgba(15,23,42,0.08)] z-30 pointer-events-none">
-                    <p className="text-sm font-bold text-foreground">Entry: {entryType}</p>
-                    <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
-                      {`You can enter the country only once during the visa's validity period and cannot re-enter using the same visa once you've exited.`}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* 5. Method */}
-            <div className="flex items-center gap-3.5 js-info-item">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-50 text-primary-subtle-foreground">
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-border bg-surface-sunken text-muted-foreground">
                 <FolderOpen className="h-5.5 w-5.5" />
               </div>
               <div>
@@ -144,8 +123,6 @@ export function VisaOverview({ country }: { country: Country }) {
               </div>
             </div>
 
-            {/* 3rd Column is empty for alignment balance */}
-            <div className="hidden sm:block" />
           </div>
         </div>
       </div>

@@ -29,6 +29,7 @@ import { useId, useRef } from "react";
 import { computeTotals, type CountryVisaConfig } from "@/lib/countryVisa";
 import { planDeliveryDays, planLabel } from "@/lib/application/state";
 import { SPRING, TRANSITION } from "@/lib/motion";
+import { FEE_NOT_PUBLISHED } from "@/lib/pricingConfig";
 import { cn } from "@/lib/utils";
 
 const inr = (value: number) => `₹${Math.round(value).toLocaleString("en-IN")}`;
@@ -140,10 +141,14 @@ export function ProcessingPlanSelector({
               data-numeric
               className="mt-2 block text-sm font-bold tracking-tight text-foreground"
             >
-              {inr(option.perTraveller)}
-              <span className="ml-1 text-2xs font-medium text-muted-foreground">
-                per traveller
-              </span>
+              {option.perTraveller === null
+                ? FEE_NOT_PUBLISHED
+                : inr(option.perTraveller)}
+              {option.perTraveller !== null && (
+                <span className="ml-1 text-2xs font-medium text-muted-foreground">
+                  per traveller
+                </span>
+              )}
             </span>
           </motion.button>
         );

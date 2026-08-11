@@ -51,6 +51,7 @@ import { ArrowUpRight, ShieldCheck } from "lucide-react";
 import { CountryImagePlate } from "@/components/CountryImagePlate";
 import { Country, getCountrySlug } from "@/data/countries";
 import { countryCardImage } from "@/lib/countryImagery";
+import { formatGovernmentFee, isGovernmentFeeFree } from "@/lib/countryVisa";
 
 /**
  * `complete` with a zero intrinsic width means the request finished and
@@ -86,8 +87,11 @@ export function CountryCard({ country }: CountryCardProps) {
     { label: "Type", value: country.visaType, align: "text-left" },
     { label: "Valid", value: country.validity, align: "text-center" },
     {
-      label: country.fees.toLowerCase() === "free" ? "Cost" : "Fees",
-      value: country.fees,
+      // PHASE 8C §9: both tests go through the same parser, so Japan's "₹0"
+      // and Mauritius's "Free" render identically instead of one card saying
+      // "FEES ₹0" and the other "COST Free" for the same fact.
+      label: isGovernmentFeeFree(country.fees) ? "Cost" : "Fees",
+      value: formatGovernmentFee(country.fees),
       align: "text-right",
     },
   ];

@@ -36,6 +36,7 @@ import {
   type CountryVisaConfig,
   formatShortDate,
 } from "@/lib/countryVisa";
+import { FEE_NOT_PUBLISHED } from "@/lib/pricingConfig";
 import {
   describeAge,
   getDraftsSnapshot,
@@ -103,7 +104,7 @@ export function CountryApplicationPanel({
     : chosenTravelWindow;
 
   const totals = computeTotals(config.pricing, { express: plan === 1 });
-  const total = totals.perTraveller * travellers;
+  const total = totals.perTraveller === null ? null : totals.perTraveller * travellers;
 
   const docs = requiredDocumentLabels(country.documents);
   const deliveryDays = plan === 1 ? Math.max(1, config.deliveryDays - 1) : config.deliveryDays;
@@ -154,11 +155,17 @@ export function CountryApplicationPanel({
               data-numeric
               className="mt-1.5 text-4xl font-bold tracking-tight text-foreground"
             >
-              {inr(total)}
+              {total === null ? FEE_NOT_PUBLISHED : inr(total)}
             </p>
             <p className="mt-1.5 text-2xs text-muted-foreground">
-              {inr(totals.payNow)} government fee now ·{" "}
-              {inr(totals.payOnApproval)} to Keyrise on approval
+              {/* PHASE 8C §9: a zero authority fee reads as words here too. The
+                  fee breakdown already printed "Free" for these destinations
+                  while this line printed "₹0 government fee now" on the same
+                  page. Japan, South Africa, the Maldives and 8 others. */}
+              {totals.payNow === 0 ? "No government fee" : `${inr(totals.payNow)} government fee now`} ·{" "}
+              {totals.payOnApproval === null
+                ? `Keyrise fee ${FEE_NOT_PUBLISHED.toLowerCase()}`
+                : `${inr(totals.payOnApproval)} to Keyrise on approval`}
             </p>
           </div>
 

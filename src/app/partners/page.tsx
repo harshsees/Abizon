@@ -91,10 +91,10 @@ export default function PartnersPage() {
       <Section eyebrow="Coverage" title="What partners get access to">
         <StatGrid
           stats={[
-            { value: "155", label: "Destinations", hint: "Requirements + filing" },
-            { value: "<200ms", label: "Requirements lookup", hint: "p95 response" },
-            { value: "19 days", label: "To first filing", hint: "Median onboarding" },
-            { value: "99.2%", label: "On-time delivery", hint: "Backed by SLA" },
+            { value: "152", label: "Destinations", hint: "Requirements + filing" },
+            { value: null, label: "Requirements lookup", hint: "p95 response" },
+            { value: null, label: "To first filing", hint: "Median onboarding" },
+            { value: null, label: "On-time delivery", hint: "Backed by SLA" },
           ]}
         />
       </Section>
