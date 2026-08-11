@@ -58,11 +58,13 @@ import { DatePickerModal } from "@/components/DatePickerModal";
 import { EmiratesCoverage } from "@/components/EmiratesCoverage";
 import { FAQAccordion } from "@/components/FAQAccordion";
 import { FeeBreakdown } from "@/components/FeeBreakdown";
+import { GuaranteeBand } from "@/components/GuaranteeBand";
 import { Footer } from "@/components/Footer";
 import { RelatedVisas } from "@/components/RelatedVisas";
 import { Reviews } from "@/components/Reviews";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SubNavbar } from "@/components/SubNavbar";
+import { VisaComparison } from "@/components/VisaComparison";
 import { VisaOverview } from "@/components/VisaOverview";
 import { VisaProcess } from "@/components/VisaProcess";
 import { VisaRequirements } from "@/components/VisaRequirements";
@@ -127,6 +129,18 @@ export function CountryVisaPage({ country }: { country: Country }) {
   };
 
   /**
+   * The hero's primary action. The reference makes "Check Required Documents"
+   * the hero CTA and keeps "Start Application" in the sub-nav — the hero asks
+   * for a look, not a decision, which is the right order for a page whose job
+   * is to answer "can I even do this" before "shall I".
+   */
+  const focusDocuments = () => {
+    document
+      .getElementById("requirements-section")
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  /**
    * PHASE 7B §5 — an application panel only where an application exists.
    *
    * 30 destinations in the dataset are `Visa Free`. Their government fee is ₹0,
@@ -156,11 +170,23 @@ export function CountryVisaPage({ country }: { country: Country }) {
 
       <main id="main-content" tabIndex={-1} className="flex-1 pb-24 md:pb-0">
         <div id="destinations" className="scroll-mt-28">
-          <CountryHero config={config} onStart={focusApplication} />
+          <CountryHero
+            config={config}
+            onStart={focusApplication}
+            onCheckDocuments={focusDocuments}
+          />
         </div>
 
         <SubNavbar
           isSticky={scrolledPastHero}
+          onStart={applicable ? focusApplication : undefined}
+          guaranteeLabel={
+            applicable
+              ? `Visa guaranteed in ${config.deliveryDays} ${
+                  config.deliveryDays === 1 ? "day" : "days"
+                }`
+              : undefined
+          }
           sections={[
             "visa-info",
             "documents",
@@ -206,6 +232,10 @@ export function CountryVisaPage({ country }: { country: Country }) {
 
               <WhyKeyrise />
 
+              {/* The reference's comparison panel sits inside the process
+                  section, immediately before the step-by-step. */}
+              {applicable && <VisaComparison />}
+
               <VisaProcess countryName={config.displayName} />
 
               <BeforeYouApply />
@@ -219,6 +249,15 @@ export function CountryVisaPage({ country }: { country: Country }) {
             </div>
           </div>
         </div>
+
+        {/* Full-bleed of the two-column grid above, immediately after the
+            reader has learned what they must provide. */}
+        {applicable && (
+          <GuaranteeBand
+            countryName={config.displayName}
+            deliveryDays={config.deliveryDays}
+          />
+        )}
 
         <div className="mx-auto w-full max-w-7xl px-4 md:px-6">
           <Reviews countryName={config.displayName} />

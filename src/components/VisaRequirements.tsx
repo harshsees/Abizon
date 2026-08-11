@@ -41,10 +41,17 @@ export function VisaRequirements({ country }: { country: Country }) {
       id="requirements-section"
       className="scroll-mt-28 border-t border-border pt-10 md:pt-12"
     >
-      <h2 className="text-2xl font-bold tracking-tight text-foreground js-reveal-heading">
-        What you need for {displayName}
+      {/* The reference leads this section with the *count*, in display serif —
+          "Only 2 documents required". That is the single most reassuring fact
+          about the whole product, and burying it in body copy wastes it. The
+          number is `requiredDocuments().length`, so it cannot drift from the
+          list rendered directly beneath. */}
+      <h2 className="type-h2 text-foreground js-reveal-heading">
+        {requirements.length === 0
+          ? "No documents required"
+          : `Only ${requirements.length} document${requirements.length === 1 ? "" : "s"} required`}
       </h2>
-      <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted-foreground">
+      <p className="mt-2.5 max-w-xl text-base leading-relaxed text-muted-foreground">
         {requirements.length === 0
           ? `${displayName} does not ask for documents to be submitted before you travel.`
           : "Everything below is required. You can scan each one with your phone during the application — nothing needs printing or posting."}

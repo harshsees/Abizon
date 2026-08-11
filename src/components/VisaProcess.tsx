@@ -107,7 +107,11 @@ export function VisaProcess({ countryName }: { countryName?: string }) {
         </dl>
         {countryName && (
           <p className="mt-3 text-2xs text-muted-foreground">
-            The decision on a {countryName} visa is made by the destination&rsquo;s
+            {/* `{" "}` is explicit: JSX drops the whitespace between an
+                expression and the text that follows it across a line break,
+                which rendered this as "a Dubaivisa is made by". */}
+            The decision on a {countryName}{" "}
+            visa is made by the destination&rsquo;s
             immigration authority. Keyrise guarantees the timing of the filing,
             not the outcome.
           </p>

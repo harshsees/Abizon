@@ -1,77 +1,106 @@
 "use client";
 
 /**
- * The country page hero.
+ * The country page hero — rebuilt to the reference composition.
  *
- * Replaces `TopHero`, which centred a single sans-serif line over a photo. The
- * reference leads with an editorial headline that states the destination and
- * what the page will answer, then the guarantee, then the action — in that
- * order, because the guarantee is the reason to trust the action.
+ * The reference leads with the destination and the *commitment* on two lines,
+ * the second in green, then a strip of three hard facts, then a single quiet
+ * action. That ordering is the whole idea: what is this, when will it arrive,
+ * what does it cost, what do I do. The previous hero stated the destination and
+ * then a page-contents subtitle ("Fees, Requirements, and Apply Online"), which
+ * describes the document rather than the product.
  *
- * The headline is generated from data, never hardcoded per country, but the
- * shape is overridable: `headline` on the config wins if a destination needs
- * different wording (an arrival card is not "a visa", and a visa-free country
- * has nothing to apply for).
+ * WHAT IS DIFFERENT FROM THE REFERENCE, and why:
+ *
+ *   The reference's strip reads VALID / PURPOSE / MAX STAY. Keyrise's dataset
+ *   has `validity` and nothing for purpose or maximum stay — those were the
+ *   exact fields Phase 8C §13/§14 and Phase 8D removed as unsupported. The
+ *   strip therefore carries three facts the dataset actually holds: validity,
+ *   visa type, and the government fee.
+ *
+ *   The green line is generated from `deliveryDays`, so it states Keyrise's own
+ *   guarantee rather than a number copied from a competitor. Dubai is 1 day
+ *   here, not 2.
+ *
+ * The headline is generated from data, never hardcoded per country, and the
+ * shape stays overridable: `headline` on the config wins where a destination
+ * needs different wording.
  */
 
 import { ArrowRight } from "lucide-react";
 import React from "react";
 
 import { CountryImagePlate } from "@/components/CountryImagePlate";
-import { VisaGuarantee } from "@/components/VisaGuarantee";
 import type { CountryVisaConfig } from "@/lib/countryVisa";
 
 /**
- * "Dubai Visa for Indians: Fees, Requirements, and Apply Online"
+ * "Dubai Visa for Indians" + "in exactly 1 day".
  *
- * Split into a lead and a trail so the two can be typeset differently — the
- * destination carries the weight, the rest is the promise of the page.
+ * Split so the two can be typeset differently — the destination carries the
+ * weight, the commitment carries the colour.
  */
 export function buildCountryHeadline(config: CountryVisaConfig): {
   lead: string;
-  trail: string;
+  accent: string;
 } {
   const lead = `${config.displayName} Visa for Indians`;
 
   if (config.flow === "visa-free") {
-    return { lead, trail: "Entry Rules, Stay Limits, and What to Carry" };
+    // Nothing is being delivered, so there is no delivery promise to make.
+    return { lead: `${config.displayName} for Indians`, accent: "no visa needed" };
   }
-  if (config.flow === "on-arrival") {
-    return { lead, trail: "Fees, Requirements, and Arrival Process" };
+
+  const days = config.deliveryDays;
+  return {
+    lead,
+    accent: `in exactly ${days} ${days === 1 ? "day" : "days"}`,
+  };
+}
+
+/**
+ * The three facts under the headline. Every one is read from the dataset — the
+ * strip shrinks rather than inventing a third column if a fact is missing.
+ */
+function heroFacts(config: CountryVisaConfig): Array<{ label: string; value: string }> {
+  const facts: Array<{ label: string; value: string }> = [];
+
+  if (config.validity) facts.push({ label: "Valid", value: config.validity });
+  facts.push({ label: "Type", value: config.visaType });
+
+  const fee = config.pricing.governmentFee;
+  if (typeof fee === "number") {
+    facts.push({
+      label: fee === 0 ? "Govt. fee" : "Govt. fee",
+      value: fee === 0 ? "Free" : `₹${fee.toLocaleString("en-IN")}`,
+    });
   }
-  return { lead, trail: "Fees, Requirements, and Apply Online" };
+
+  return facts;
 }
 
 type CountryHeroProps = {
   config: CountryVisaConfig;
   onStart?: () => void;
+  /** Scrolls to the documents section — the reference's primary hero action. */
+  onCheckDocuments?: () => void;
 };
 
-export function CountryHero({ config, onStart }: CountryHeroProps) {
-  const { lead, trail } = buildCountryHeadline(config);
-  // Nothing to apply for; the page is informational.
+export function CountryHero({ config, onStart, onCheckDocuments }: CountryHeroProps) {
+  const { lead, accent } = buildCountryHeadline(config);
+  const facts = heroFacts(config);
   const applicable = config.flow !== "visa-free";
 
   return (
     <section className="mx-auto w-full max-w-7xl px-4 pt-4 md:px-6 md:pt-6">
       <div className="relative overflow-hidden rounded-[28px] border border-border bg-foreground shadow-e4">
-        {/* PHASE 8B: the plate is always beneath, never instead.
-
-            It costs nothing — no request, no bytes — and it means a photograph
-            that fails in the browser uncovers a designed surface rather than
-            the flat near-black that 8A found on 124 pages. The `onError` below
-            no longer has to leave a hole behind it. */}
+        {/* The plate is always beneath, never instead — a photograph that fails
+            uncovers a designed surface rather than a flat near-black. */}
         <CountryImagePlate seed={config.code} />
 
         {config.heroImage && (
           <img
             src={config.heroImage}
-            // Described, not decorative. The headline states the destination;
-            // this states what the reader is looking at, which is a different
-            // fact and the only one a screen reader would otherwise miss.
             alt={config.heroImageAlt}
-            // The hero is the largest image on the page and sits above the
-            // fold, so it must not wait for the lazy queue.
             fetchPriority="high"
             className="absolute inset-0 h-full w-full object-cover"
             onError={(event) => {
@@ -80,47 +109,62 @@ export function CountryHero({ config, onStart }: CountryHeroProps) {
           />
         )}
 
-        {/* Scrim, not a dimmer. The photograph used to be knocked back to 45%
-            opacity AND covered by a gradient, which left the Dubai skyline
-            reading as a black rectangle. The image is now at full strength and
-            only the gradient carries the text contrast: light at the top where
-            nothing sits, heavy behind the heading and CTA. */}
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(2,6,23,0.30)_0%,rgba(2,6,23,0.62)_45%,rgba(2,6,23,0.80)_100%)]" />
+        {/* Scrim, not a dimmer. Heavier in the middle band where the headline
+            and the strip sit, lighter at top and bottom so the photograph still
+            reads as a photograph at its edges. */}
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(2,6,23,0.42)_0%,rgba(2,6,23,0.66)_45%,rgba(2,6,23,0.72)_100%)]" />
 
-        <div className="relative flex min-h-[420px] flex-col items-center justify-center px-5 py-14 text-center md:min-h-[520px] md:px-10 md:py-20">
-          <h1 className="max-w-4xl text-white">
-            <span className="type-h1 block">{lead}</span>
-            {/* PHASE 8D §4/§5. The pairing, not the scale, was the problem.
-                `type-h1`/`type-h2` step 6xl→4xl on desktop, where the hierarchy
-                reads correctly, but only 4xl→3xl on mobile — one size apart, so
-                at 390 "Fees, Requirements, and Apply Online" competed with
-                "Dubai Visa for Indians" instead of supporting it.
-
-                Corrected here rather than in the global scale: `type-h2` is
-                used across the site at sizes where it is right, and §5 says not
-                to touch the font system without a demonstrated problem. Same
-                two faces, same tokens above md. */}
-            <span className="type-h2 mt-2 block text-xl text-white/70 md:text-[length:inherit]">
-              {trail}
-            </span>
+        <div className="relative flex min-h-[520px] flex-col items-center justify-center px-5 py-16 text-center md:min-h-[640px] md:px-10 md:py-24">
+          <h1 className="max-w-4xl text-balance">
+            <span className="type-h1 block text-white">{lead}</span>
+            {/* The commitment, in the one accent this page uses for it. Green
+                reads as "settled" next to the amber that means "act". */}
+            <span className="type-h1 mt-1 block text-[#5DE28E]">{accent}</span>
           </h1>
 
-          <VisaGuarantee
-            className="mt-7"
-            deliveryDays={config.deliveryDays}
-            countryName={config.displayName}
-          />
-
-          {applicable && onStart && (
-            <button
-              type="button"
-              onClick={onStart}
-              className="mt-7 inline-flex cursor-pointer items-center gap-2 rounded-xl bg-primary px-8 py-3.5 text-sm font-semibold text-on-primary transition-colors hover:bg-primary-hover"
-            >
-              Start Application
-              <ArrowRight aria-hidden className="h-4 w-4" data-arrow />
-            </button>
+          {facts.length > 0 && (
+            <dl className="mt-10 flex flex-wrap items-start justify-center gap-x-10 gap-y-5 md:mt-12 md:gap-x-16">
+              {facts.map((fact) => (
+                <div key={fact.label} className="min-w-[84px]">
+                  <dt className="text-2xs font-bold uppercase tracking-[0.14em] text-white/60">
+                    {fact.label}
+                  </dt>
+                  <dd
+                    data-numeric
+                    className="mt-1.5 text-sm font-bold uppercase tracking-[0.02em] text-white md:text-base"
+                  >
+                    {fact.value}
+                  </dd>
+                </div>
+              ))}
+            </dl>
           )}
+
+          {/* One action, and it is the low-commitment one. The reference puts
+              "Check Required Documents" here and keeps "Start Application" in
+              the sub-nav, so the hero invites a look rather than a decision. */}
+          <div className="mt-10 flex flex-wrap items-center justify-center gap-3 md:mt-12">
+            {onCheckDocuments && (
+              <button
+                type="button"
+                onClick={onCheckDocuments}
+                className="inline-flex h-13 cursor-pointer items-center rounded-full bg-white px-8 text-sm font-bold text-slate-900 shadow-e2 transition-[background-color,transform] duration-[--duration-fast] ease-[--ease-out] hover:bg-white/90 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white motion-reduce:transform-none"
+              >
+                Check Required Documents
+              </button>
+            )}
+
+            {applicable && onStart && (
+              <button
+                type="button"
+                onClick={onStart}
+                className="inline-flex h-13 cursor-pointer items-center gap-2 rounded-full border border-white/25 bg-white/10 px-7 text-sm font-semibold text-white backdrop-blur transition-colors hover:bg-white/20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+              >
+                Start Application
+                <ArrowRight aria-hidden className="h-4 w-4" data-arrow />
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </section>

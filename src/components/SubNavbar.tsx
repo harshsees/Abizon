@@ -13,9 +13,25 @@ interface SubNavbarProps {
    * DOM for it would mean an effect, a state write and a frame of wrong nav.
    */
   sections?: string[];
+  /**
+   * The persistent action. The reference reveals a guarantee line and a Start
+   * Application button on the right of the sub-nav once the hero has scrolled
+   * away — so the primary action is never more than a glance away, without
+   * competing with the hero while the hero is still on screen.
+   *
+   * Absent for visa-free destinations: there is nothing to start.
+   */
+  onStart?: () => void;
+  /** "Visa guaranteed in exactly 1 day" — generated from the real SLA. */
+  guaranteeLabel?: string;
 }
 
-export function SubNavbar({ isSticky = false, sections }: SubNavbarProps) {
+export function SubNavbar({
+  isSticky = false,
+  sections,
+  onStart,
+  guaranteeLabel,
+}: SubNavbarProps) {
   const [activeSection, setActiveSection] = useState<string>("visa-info");
 
   /**
@@ -107,8 +123,11 @@ export function SubNavbar({ isSticky = false, sections }: SubNavbarProps) {
           positions, and `scrollbar-none` still hides the bar. `mask-image` is
           on the scroll container so the fade sits at the container edge and
           travels with it, rather than over a fixed screen position. */}
+      {/* The rail and the action share one row. The rail keeps its own scroll
+          container so the action never scrolls away with it. */}
+      <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 md:px-6">
       <div
-        className="mx-auto max-w-7xl px-4 md:px-6 overflow-x-auto scrollbar-none [mask-image:linear-gradient(to_right,#000_0,#000_calc(100%-40px),transparent_100%)] md:[mask-image:none]"
+        className="min-w-0 flex-1 overflow-x-auto scrollbar-none [mask-image:linear-gradient(to_right,#000_0,#000_calc(100%-40px),transparent_100%)] md:[mask-image:none]"
       >
         <div className="flex justify-start items-center gap-8 md:gap-10 h-16 md:h-18 min-w-max">
           {visibleItems.map((item) => {
@@ -138,6 +157,39 @@ export function SubNavbar({ isSticky = false, sections }: SubNavbarProps) {
             );
           })}
         </div>
+      </div>
+
+      {/* The persistent action, desktop only.
+
+          It appears when `isSticky` — i.e. once the hero has left the screen —
+          because while the hero is visible its own CTA is the action, and two
+          competing primaries is worse than one that arrives late. Hidden below
+          md, where the fixed bottom bar already carries it and a second copy
+          would take a third of the viewport width. */}
+      {onStart && (
+        <div
+          aria-hidden={!isSticky}
+          className={`hidden shrink-0 items-center gap-3 transition-[opacity,transform] duration-[--duration-base] ease-[--ease-out] md:flex ${
+            isSticky
+              ? "pointer-events-auto translate-y-0 opacity-100"
+              : "pointer-events-none translate-y-1 opacity-0"
+          }`}
+        >
+          {guaranteeLabel && (
+            <p className="max-w-[9.5rem] text-right text-2xs font-bold leading-tight text-foreground">
+              {guaranteeLabel}
+            </p>
+          )}
+          <button
+            type="button"
+            onClick={onStart}
+            tabIndex={isSticky ? 0 : -1}
+            className="inline-flex h-11 cursor-pointer items-center rounded-full bg-primary px-6 text-sm font-bold text-on-primary shadow-e1 transition-[background-color,transform] duration-[--duration-fast] ease-[--ease-out] hover:bg-primary-hover active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring motion-reduce:transform-none"
+          >
+            Start Application
+          </button>
+        </div>
+      )}
       </div>
     </nav>
   );

@@ -1,22 +1,33 @@
 "use client";
 
 /**
- * The at-a-glance visa facts: type, validity, method.
+ * The at-a-glance visa facts, rebuilt to the reference composition.
  *
- * Split out of the 1237-line `VisaInfoAndPlans`.
+ * The reference presents these as an editorial heading, a one-line description
+ * of the process, and a row of three quiet rounded cards — icon, label, value.
+ * The previous version was a two-row grid of icon chips in five accent colours,
+ * which Phase 8D reduced to one neutral; this takes the next step and adopts
+ * the card geometry.
  *
- * `method` is DERIVED, not sourced — mapped from `visaType` by the same rule as
- * `deriveVisaFlow`, which is a restatement of data already held rather than a
- * new claim. `CountryVisaConfig` has a real `applicationMethod` field waiting;
- * once it is populated, delete the helper below and read the config instead.
+ * WHAT THE CARDS CARRY, and why it is not what the reference carries.
  *
- * Phase 8D removed "Length of Stay" and "Entry" — see the note in the markup.
+ * The reference's three are Length of Stay / Validity / Entry. Keyrise holds
+ * only one of those. Phase 8D removed the other two and the note there explains
+ * why at length: "Length of Stay" was rendering the same `validity` number as
+ * the cell beside it under a tooltip claiming a different meaning, and "Entry:
+ * Single" was a guess presented with an authoritative tooltip across 152
+ * destinations. Reproducing the reference's three columns would mean putting
+ * both back.
+ *
+ * So the cards are Validity, Visa Type and Method — the same geometry, three
+ * facts the dataset can stand behind. `method` maps from `visaType` by the same
+ * rule as `deriveVisaFlow`, a restatement of held data rather than a new claim.
  */
 
 import { Clock3, FolderOpen, Smartphone } from "lucide-react";
 
 import { Country } from "@/data/countries";
-import { displayCountryName } from "@/lib/countryVisa";
+import { deriveVisaFlow, displayCountryName } from "@/lib/countryVisa";
 
 const deriveMethod = (visaType: Country["visaType"]) =>
   visaType === "E-Visa"
@@ -25,106 +36,75 @@ const deriveMethod = (visaType: Country["visaType"]) =>
       ? "On Arrival"
       : "Consulate/VFS";
 
+/**
+ * The reference's subtitle is "A 100% online visa application process", which
+ * is true of an e-visa and false of a sticker visa — the applicant attends a
+ * mission in person. Branching on the flow keeps the line and its accuracy.
+ */
+function describeProcess(country: Country): string {
+  switch (deriveVisaFlow(country.visaType)) {
+    case "visa-free":
+      return "No application, no fee — entry is granted at the border";
+    case "on-arrival":
+      return "Prepared online, issued to you on arrival";
+    case "embassy":
+      return "Prepared and filed online, collected at the mission";
+    default:
+      return "A 100% online visa application process";
+  }
+}
+
 export function VisaOverview({ country }: { country: Country }) {
   const displayName = displayCountryName(country);
   const methodType = deriveMethod(country.visaType);
 
+  const facts = [
+    { icon: Clock3, label: "Validity", value: country.validity },
+    { icon: Smartphone, label: "Visa Type", value: country.visaType },
+    { icon: FolderOpen, label: "Method", value: methodType },
+  ];
+
   return (
-      <div>
-        {/* PHASE 8D §23: was an <h1>, which gave every country page two of them
-            — the hero's headline and this. A document has one h1; a screen
-            reader listing headings saw two competing page titles, and the
-            section headings below were structurally siblings of the page
-            title rather than children of it. `id` and styling are unchanged,
-            so the sub-nav anchor and scroll-spy are unaffected. */}
-        <h2 id="visa-info-section" className="text-2xl font-bold text-foreground scroll-mt-28 js-reveal-heading">
-          {displayName} visa information
-        </h2>
-        {/**
-         * PHASE 8D. Two of the five facts were removed, and both removals are
-         * corrections to Phase 8C rather than visual changes:
-         *
-         * "Length of Stay" rendered `country.validity` — the same field, the
-         * same number, as the "Validity" cell two columns to its right — under
-         * a tooltip explaining that it meant something different ("the maximum
-         * duration you are allowed to remain"). Stay length and validity are
-         * genuinely different facts, and the dataset holds only one of them, so
-         * this labelled one number as two. 8C §13 asks for exactly this: use
-         * the dataset where it exists, otherwise hide the field.
-         *
-         * "Entry: Single" was inferred from `visaType` by a two-line helper and
-         * presented with an authoritative tooltip — "you can enter the country
-         * only once during the visa's validity period and cannot re-enter". For
-         * 152 destinations, unverified. 8C §14 forbids guessing single vs
-         * multiple entry; the guess survived that phase because it lives in a
-         * component rather than in the config fields 8C audited.
-         *
-         * What remains is sourced or safely derived: `visaType` and `validity`
-         * come from the dataset, and `method` maps from `visaType` by the same
-         * rule as `deriveVisaFlow`, which 8C classified as legitimately derived.
-         *
-         * Three cells also grid more cleanly than five across two rows, which
-         * is why §10's clutter reduction and this correction land together.
-         */}
-        <div className="mt-5 space-y-5">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pb-1">
-            {/* 1. Visa Type */}
-            <div className="flex items-center gap-3.5 js-info-item">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-border bg-surface-sunken text-muted-foreground">
-                <Smartphone className="h-5.5 w-5.5" />
-              </div>
-              <div>
-                <p className="text-xs md:text-sm font-medium text-muted-foreground">Visa Type:</p>
-                <p className="text-base md:text-lg font-extrabold text-foreground mt-0.5">{country.visaType}</p>
-              </div>
-            </div>
+    <div>
+      {/* Serif, and at display size — the reference treats each section title
+          as an editorial header rather than a UI label, which is most of what
+          makes the page read as a magazine and not a dashboard.
 
-            {/* 3. Validity */}
-            <div className="flex items-center gap-3.5 js-info-item">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-border bg-surface-sunken text-muted-foreground">
-                <Clock3 className="h-5.5 w-5.5" />
-              </div>
-              <div>
-                <p className="text-xs md:text-sm font-medium text-muted-foreground">Validity:</p>
-                <div className="relative group inline-block mt-0.5">
-                  <span className="text-base md:text-lg font-extrabold text-foreground underline decoration-slate-400 decoration-dotted underline-offset-4 cursor-pointer">
-                    {country.validity}
-                  </span>
-                  {/* Tooltip Box */}
-                  <div className="absolute top-full left-0 mt-2.5 hidden group-hover:block w-[280px] max-w-[calc(100vw-2.5rem)] bg-surface border border-border rounded-2xl p-4 shadow-[0_12px_32px_rgba(15,23,42,0.08)] z-30 pointer-events-none">
-                    <p className="text-sm font-bold text-foreground">Validity Period: {country.validity}</p>
-                    <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
-                      {`The number of days your visa is active after the date of issuance. We ensure your visa is valid based on your travel dates.`}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
+          h2, not h1: the hero carries the page's one h1 (Phase 8D §23). */}
+      <h2
+        id="visa-info-section"
+        className="type-h2 scroll-mt-28 text-foreground js-reveal-heading"
+      >
+        Visa Information
+      </h2>
+      <p className="mt-2.5 text-base text-muted-foreground">
+        {describeProcess(country)}
+      </p>
 
-            {/* 3. Method */}
-            <div className="flex items-center gap-3.5 js-info-item">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-border bg-surface-sunken text-muted-foreground">
-                <FolderOpen className="h-5.5 w-5.5" />
-              </div>
-              <div>
-                <p className="text-xs md:text-sm font-medium text-muted-foreground">Method:</p>
-                <div className="relative group inline-block mt-0.5">
-                  <span className="text-base md:text-lg font-extrabold text-foreground underline decoration-slate-400 decoration-dotted underline-offset-4 cursor-pointer">
-                    {methodType}
-                  </span>
-                  {/* Tooltip Box */}
-                  <div className="absolute top-full left-0 mt-2.5 hidden group-hover:block w-[280px] max-w-[calc(100vw-2.5rem)] bg-surface border border-border rounded-2xl p-4 shadow-[0_12px_32px_rgba(15,23,42,0.08)] z-30 pointer-events-none">
-                    <p className="text-sm font-bold text-foreground">Method: {methodType}</p>
-                    <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
-                      {`Apply and receive your visa fully online. No paperwork needed.`}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
+      <dl className="mt-7 grid grid-cols-1 gap-4 sm:grid-cols-3">
+        {facts.map((fact) => (
+          <div
+            key={fact.label}
+            className="rounded-3xl border border-border bg-surface-sunken p-5"
+          >
+            <fact.icon
+              aria-hidden
+              className="h-6 w-6 text-foreground"
+              strokeWidth={1.6}
+            />
+            <dt className="mt-5 text-sm font-medium text-muted-foreground">
+              {fact.label}
+            </dt>
+            <dd className="mt-1 text-lg font-bold tracking-tight text-foreground">
+              {fact.value}
+            </dd>
           </div>
-        </div>
-      </div>
+        ))}
+      </dl>
+
+      <span className="sr-only">
+        These facts apply to the {displayName} visa described on this page.
+      </span>
+    </div>
   );
 }
