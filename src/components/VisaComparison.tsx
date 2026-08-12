@@ -56,8 +56,12 @@ function Mark({ yes }: { yes: boolean }) {
 
 export function VisaComparison() {
   return (
-    <section className="scroll-mt-28 border-t border-border pt-10 md:pt-12">
-      <div className="rounded-[28px] bg-surface-sunken px-4 py-10 md:px-10 md:py-14">
+    // No top rule and no own max-width: the panel is a block inside the visa
+    // process section now, not a section of its own in a hairline-ruled column.
+    // It kept both, so on the rebuilt page it drew a stray full-width line
+    // across the gap between the road and the panel.
+    <div className="mx-auto w-full max-w-7xl px-4 md:px-6">
+      <div className="rounded-[28px] bg-surface-sunken px-4 py-12 md:px-10 md:py-16">
         <h2 className="type-h2 text-center text-balance text-foreground js-reveal-heading">
           Visa application made simple and reliable
         </h2>
@@ -113,6 +117,6 @@ export function VisaComparison() {
           </table>
         </div>
       </div>
-    </section>
+    </div>
   );
 }

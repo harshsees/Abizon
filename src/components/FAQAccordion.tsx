@@ -1,7 +1,6 @@
 "use client";
 
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { ChevronDown } from "lucide-react";
 import { useId, useState } from "react";
 
 import type { Country } from "@/data/countries";
@@ -144,7 +143,11 @@ export function FAQAccordion({
   flow: VisaFlow;
   documents: Country["documents"];
 }) {
-  const [open, setOpen] = useState<number | null>(0);
+  // Closed to start. The reference's FAQ opens with every row collapsed, and
+  // it is the right default here for a different reason: this list now runs
+  // the full content width, so an open first answer pushes the remaining
+  // questions below the fold before the reader has chosen one.
+  const [open, setOpen] = useState<number | null>(null);
   const reduced = useReducedMotion();
   const baseId = useId();
 
@@ -169,9 +172,29 @@ export function FAQAccordion({
   });
 
   return (
-    <section id="faq" className={`${className || "mx-auto w-full max-w-4xl px-4 py-14 md:px-6"} scroll-mt-20`}>
-      <h2 className="text-3xl font-bold text-foreground">FAQs</h2>
-      <div className="mt-6 space-y-3">
+    /**
+     * PHASE 9. Rebuilt to the reference's FAQ (screenshot 12).
+     *
+     * The reference sets this as an editorial list, not a stack of controls:
+     * a display-serif title, then one question per row in bold navy with a thin
+     * plus on the far right, each row separated by a *dashed* hairline. There
+     * are no card borders, no shadows and no fill — the rules alone carry the
+     * structure, which is why the section can run the full content width
+     * without reading as a wall of boxes.
+     *
+     * Two things are kept from the previous version because they were right:
+     * the answer's measure is capped (`max-w-3xl`) so a line of prose never
+     * runs 1232px, and the trigger keeps its 44px minimum height.
+     */
+    <section
+      id="faqs"
+      className={cn("mx-auto w-full max-w-7xl scroll-mt-24 px-4 md:px-6", className)}
+    >
+      <h2 className="type-h2 text-foreground js-reveal-heading">
+        Frequently asked questions
+      </h2>
+
+      <div className="mt-10 md:mt-12">
         {formattedFaqs.map((item, index) => {
           const isOpen = open === index;
           const panelId = `${baseId}-panel-${index}`;
@@ -180,38 +203,40 @@ export function FAQAccordion({
           return (
             <article
               key={item.q}
-              className={cn(
-                "rounded-lg border bg-surface p-4",
-                "transition-[border-color,box-shadow] duration-[--duration-base] ease-[--ease-out]",
-                isOpen
-                  ? "border-primary-border shadow-e2"
-                  : "border-border hover:border-border-strong",
-              )}
+              className="js-faq-item border-b border-dashed border-border"
             >
               <button
                 type="button"
                 id={triggerId}
                 onClick={() => setOpen(isOpen ? null : index)}
-                // min-h-11 keeps the row at the 44px touch minimum; the text
-                // alone collapsed the trigger to 22px on mobile.
-                className="flex min-h-11 w-full cursor-pointer items-center justify-between gap-4 text-left"
+                className="group flex min-h-11 w-full cursor-pointer items-start justify-between gap-6 py-6 text-left md:py-7"
                 aria-expanded={isOpen}
                 aria-controls={panelId}
               >
-                <span className="text-sm font-semibold text-foreground md:text-base">
+                <span className="text-sm font-bold leading-snug text-foreground transition-colors group-hover:text-primary md:text-base">
                   {item.q}
                 </span>
-                {/* Rotation is driven by Framer rather than a CSS class so it
-                    shares the panel's easing — the two used to disagree, and
-                    the chevron snapped while the text appeared. */}
-                <motion.span
+
+                {/* A plus that becomes a minus. Two bars, one of which
+                    rotates away — cheaper and steadier than swapping icons,
+                    and it shares the panel's easing so the mark and the text
+                    move on one curve. The previous chevron came from the
+                    lucide set and read as a dropdown rather than an expander. */}
+                <span
                   aria-hidden="true"
-                  className="shrink-0 text-muted-foreground"
-                  animate={{ rotate: isOpen ? 180 : 0 }}
-                  transition={{ duration: DURATION.base, ease: EASE.out }}
+                  className="relative mt-0.5 h-5 w-5 shrink-0 text-subtle-foreground"
                 >
-                  <ChevronDown className="size-5" />
-                </motion.span>
+                  <span className="absolute left-0 top-1/2 h-[1.5px] w-5 -translate-y-1/2 rounded-full bg-current" />
+                  <motion.span
+                    className="absolute left-0 top-1/2 h-[1.5px] w-5 -translate-y-1/2 rounded-full bg-current"
+                    animate={{ rotate: isOpen ? 0 : 90 }}
+                    transition={
+                      reduced
+                        ? { duration: 0 }
+                        : { duration: DURATION.base, ease: EASE.out }
+                    }
+                  />
+                </span>
               </button>
 
               <AnimatePresence initial={false}>
@@ -241,7 +266,9 @@ export function FAQAccordion({
                     }
                     className="overflow-hidden"
                   >
-                    <p className="mt-3 text-sm leading-6 text-muted-foreground">{item.a}</p>
+                    <p className="max-w-3xl pb-7 text-sm leading-7 text-muted-foreground">
+                      {item.a}
+                    </p>
                   </motion.div>
                 ) : null}
               </AnimatePresence>

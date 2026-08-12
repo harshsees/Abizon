@@ -35,27 +35,39 @@ export function SubNavbar({
   const [activeSection, setActiveSection] = useState<string>("visa-info");
 
   /**
-   * Section names follow the reference's country-page tab set, in Keyrise's
-   * own words: the fee tab is explicit that the breakdown is governmental, and
-   * "Why Keyrise" replaces the generic "Visa Process" entry because the process
-   * is one section down rather than a destination of its own.
+   * Five tabs, one per top-level section of the page — the reference's exact
+   * set, and now the page's exact set.
    *
-   * "Additional" targets whichever country-scoped section a destination
-   * declares, so it only resolves where one exists.
+   * It used to be seven, because every informational block that had an anchor
+   * got a tab: "Gov. Fee Breakdown", "Why Keyrise" and "Additional" each
+   * pointed at something that is now *inside* one of these five rather than
+   * beside it. A tab per subsection made the rail scroll horizontally on
+   * desktop and gave the reader seven destinations for a page with five ideas.
+   *
+   * The anchors are the section wrappers themselves (`#visa-info`, not
+   * `#visas`), so the scroll-spy below resolves against the same boundaries the
+   * document is actually divided on.
    */
   const items = [
-    { name: "Visa Info", href: "#visas", id: "visa-info" },
-    { name: "Documents", href: "#requirements-section", id: "documents" },
-    { name: "Gov. Fee Breakdown", href: "#fee-breakdown", id: "fees" },
-    { name: "Why Keyrise", href: "#why-keyrise-section", id: "why" },
+    { name: "Visa Info", href: "#visa-info", id: "visa-info" },
+    { name: "Documents", href: "#documents", id: "documents" },
+    // `id` and `href` must name the SAME element: the scroll-spy resolves by
+    // id and the click handler by href, so a tab whose two halves disagree
+    // scrolls correctly and then never highlights.
+    { name: "Visa Process", href: "#visa-process", id: "visa-process" },
     { name: "Reviews", href: "#reviews", id: "reviews" },
-    { name: "Additional", href: "#additional-section", id: "additional" },
-    { name: "FAQs", href: "#faq", id: "faqs" },
+    { name: "FAQs", href: "#faqs", id: "faqs" },
   ];
 
   const visibleItems = sections
     ? items.filter((item) => sections.includes(item.id))
     : items;
+
+  // The effect below re-registers its listener when the *set* of sections
+  // changes, not when the array identity does — `visibleItems` is rebuilt on
+  // every render, so depending on it directly would tear down and re-attach a
+  // scroll listener on each one.
+  const sectionKey = visibleItems.map((item) => item.id).join(",");
 
   useEffect(() => {
     const handleScroll = () => {
@@ -70,20 +82,20 @@ export function SubNavbar({
       // sections live in different containers — the FAQ sits inside its own
       // wrapper, so its offsetTop was ~0 and it matched immediately, leaving
       // "FAQs" highlighted while the user was still looking at the hero.
-      const passed = [...visibleItems].reverse().find((item) => {
-        const el = document.querySelector<HTMLElement>(item.href);
+      const passed = [...sectionKey.split(",")].reverse().find((id) => {
+        const el = document.getElementById(id);
         if (!el) return false;
         const top = el.getBoundingClientRect().top + window.scrollY;
         return scrollPosition >= top;
       });
 
-      setActiveSection(passed?.id ?? "visa-info");
+      setActiveSection(passed ?? "visa-info");
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
     handleScroll(); // Initial run
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, [sectionKey]);
 
   const handleClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
     e.preventDefault();
@@ -129,7 +141,17 @@ export function SubNavbar({
       <div
         className="min-w-0 flex-1 overflow-x-auto scrollbar-none [mask-image:linear-gradient(to_right,#000_0,#000_calc(100%-40px),transparent_100%)] md:[mask-image:none]"
       >
-        <div className="flex justify-start items-center gap-8 md:gap-10 h-16 md:h-18 min-w-max">
+        {/* Centred while the hero is still on screen, flush left once the
+            action appears beside it. The reference does the same, and the
+            reason is mechanical rather than decorative: a centred rail with a
+            button pinned right reads as two competing alignments, and the tabs
+            visibly jump when the button fades in. Shifting the rail at the same
+            moment makes it one movement instead of two. */}
+        <div
+          className={`flex items-center gap-8 md:gap-10 h-16 md:h-18 min-w-max transition-[justify-content] duration-[--duration-base] ${
+            isSticky ? "justify-start" : "justify-start md:justify-center"
+          }`}
+        >
           {visibleItems.map((item) => {
             const isActive = activeSection === item.id;
             return (

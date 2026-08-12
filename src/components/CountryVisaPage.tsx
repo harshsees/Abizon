@@ -58,7 +58,7 @@ import { DatePickerModal } from "@/components/DatePickerModal";
 import { EmiratesCoverage } from "@/components/EmiratesCoverage";
 import { FAQAccordion } from "@/components/FAQAccordion";
 import { FeeBreakdown } from "@/components/FeeBreakdown";
-import { GuaranteeBand } from "@/components/GuaranteeBand";
+import { GuaranteeBand, NoChargeBand } from "@/components/GuaranteeBand";
 import { Footer } from "@/components/Footer";
 import { RelatedVisas } from "@/components/RelatedVisas";
 import { Reviews } from "@/components/Reviews";
@@ -136,7 +136,7 @@ export function CountryVisaPage({ country }: { country: Country }) {
    */
   const focusDocuments = () => {
     document
-      .getElementById("requirements-section")
+      .getElementById("documents")
       ?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
@@ -156,7 +156,6 @@ export function CountryVisaPage({ country }: { country: Country }) {
 
   const applicationPanel = (
     <CountryApplicationPanel
-      country={country}
       config={config}
       travelDate={travelDate}
       onPickDate={() => setIsDatePickerOpen(true)}
@@ -170,11 +169,7 @@ export function CountryVisaPage({ country }: { country: Country }) {
 
       <main id="main-content" tabIndex={-1} className="flex-1 pb-24 md:pb-0">
         <div id="destinations" className="scroll-mt-28">
-          <CountryHero
-            config={config}
-            onStart={focusApplication}
-            onCheckDocuments={focusDocuments}
-          />
+          <CountryHero config={config} onCheckDocuments={focusDocuments} />
         </div>
 
         <SubNavbar
@@ -182,7 +177,7 @@ export function CountryVisaPage({ country }: { country: Country }) {
           onStart={applicable ? focusApplication : undefined}
           guaranteeLabel={
             applicable
-              ? `Visa guaranteed in ${config.deliveryDays} ${
+              ? `Visa guaranteed in exactly ${config.deliveryDays} ${
                   config.deliveryDays === 1 ? "day" : "days"
                 }`
               : undefined
@@ -190,92 +185,123 @@ export function CountryVisaPage({ country }: { country: Country }) {
           sections={[
             "visa-info",
             "documents",
-            ...(applicable ? ["fees"] : []),
-            "why",
+            ...(applicable ? ["visa-process"] : []),
             "reviews",
-            ...(config.additionalSections?.length ? ["additional"] : []),
             "faqs",
           ]}
         />
 
-        <div className="mx-auto w-full max-w-7xl px-4 pt-8 pb-8 md:px-6 md:pt-10 md:pb-10">
-          <div className="grid grid-cols-1 items-start gap-8 md:grid-cols-[1.08fr_0.92fr] md:gap-12">
-            {/* Application first in the document, right-hand column on desktop. */}
-            <div
-              id={APPLICATION_ANCHOR}
-              className="scroll-mt-28 md:order-2 md:sticky md:top-[100px] md:z-raised"
-            >
-              {applicable ? applicationPanel : <VisaFreeNotice config={config} />}
-            </div>
+        {/* ══ 1. VISA INFO ═══════════════════════════════════════════════
+            The only two-column region on the page, and that is the whole
+            point of the change. The grid used to wrap every informational
+            section down to the emirates block, so the application card was
+            sticky for roughly 4,000px of scroll and was still following the
+            reader through the FAQ.
 
-            {/* Supporting information.
-                Each section below the overview draws its own top hairline and
-                owns its own top padding, so the rhythm is one rule per section
-                rather than a stack of bordered cards. `space-y` is deliberately
-                absent here — it would double the gap. */}
-            <div className="md:order-1">
-              <div id="visas" className="scroll-mt-28">
-                <VisaOverview country={country} />
+            Now the grid ENDS with this section. `md:sticky` inside it means
+            the card tracks the reader for exactly as long as the visa-info
+            column is taller than the card, and stops at the section boundary —
+            which is what the reference does and what the card's content
+            justifies: it configures an application, and there is nothing left
+            to configure once the facts beside it have been read. */}
+        <section id="visa-info" className="scroll-mt-24">
+          <div className="mx-auto w-full max-w-7xl px-4 pt-10 pb-14 md:px-6 md:pt-14 md:pb-20">
+            <div className="grid grid-cols-1 items-start gap-10 md:grid-cols-[1.05fr_0.95fr] md:gap-12">
+              {/* Application first in the document, right-hand column on
+                  desktop — so a phone reaches it without scrolling past the
+                  whole information column first. */}
+              <div
+                id={APPLICATION_ANCHOR}
+                className="scroll-mt-24 md:order-2 md:sticky md:top-[92px] md:z-raised"
+              >
+                {applicable ? applicationPanel : <VisaFreeNotice config={config} />}
               </div>
 
-              <VisaRequirements country={country} />
+              {/* Everything the reader needs to judge the visa itself. Each
+                  block below the overview draws its own top hairline and owns
+                  its top padding, so the column reads as one document rather
+                  than a stack of panels. `space-y` is deliberately absent — it
+                  would double the gap. */}
+              <div className="md:order-1">
+                <VisaOverview country={country} />
 
-              {/* Renders only for the embassy flow. */}
-              <AppointmentRequirements config={config} />
+                {/* Renders only for the embassy flow. */}
+                <AppointmentRequirements config={config} />
 
-              {/* No visa, no fee to break down. */}
-              {applicable && (
-                <div id="fee-breakdown" className="scroll-mt-28">
-                  <FeeBreakdown country={country} />
-                </div>
-              )}
+                {/* No visa, no fee to break down. */}
+                {applicable && <FeeBreakdown country={country} />}
 
-              <WhyKeyrise />
+                {/* Both of the remaining blocks describe an application, so
+                    neither belongs on a visa-free page: "Refused? Government
+                    fee refunded" and "the fee is waived" are commitments about
+                    a filing that does not exist where no visa is needed. */}
+                {applicable && <WhyKeyrise />}
 
-              {/* The reference's comparison panel sits inside the process
-                  section, immediately before the step-by-step. */}
-              {applicable && <VisaComparison />}
-
-              <VisaProcess countryName={config.displayName} />
-
-              <BeforeYouApply />
-
-              {/* Country-scoped extras. Only the UAE declares one today. */}
-              {config.additionalSections?.includes("emirates") && (
-                <div id="additional-section" className="scroll-mt-28">
+                {/* Country-scoped extras. Only the UAE declares one today. */}
+                {config.additionalSections?.includes("emirates") && (
                   <EmiratesCoverage />
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
-        </div>
+        </section>
 
-        {/* Full-bleed of the two-column grid above, immediately after the
-            reader has learned what they must provide. */}
-        {applicable && (
-          <GuaranteeBand
-            countryName={config.displayName}
-            deliveryDays={config.deliveryDays}
+        {/* ══ 2. DOCUMENTS ══════════════════════════════════════════════
+            Full width and centred from here down. The reference switches to a
+            single centred column the moment the application card ends, and the
+            switch is what tells the reader the configuring is over and the
+            explaining has begun. */}
+        <section id="documents" className="scroll-mt-24 py-14 md:py-20">
+          <VisaRequirements
+            country={country}
+            deliveryDays={applicable ? config.deliveryDays : undefined}
+            onStart={applicable ? focusApplication : undefined}
           />
+
+          {applicable && (
+            <div className="mx-auto mt-16 w-full max-w-3xl px-4 md:mt-24 md:px-6">
+              <BeforeYouApply />
+            </div>
+          )}
+
+          {/* The band that closes the section: what the reader has just been
+              asked to provide, and the date it buys them. */}
+          {applicable && (
+            <div className="mt-16 md:mt-24">
+              <GuaranteeBand
+                countryName={config.displayName}
+                deliveryDays={config.deliveryDays}
+              />
+            </div>
+          )}
+        </section>
+
+        {/* ══ 3. VISA PROCESS ═══════════════════════════════════════════ */}
+        {applicable && (
+          <section id="visa-process" className="scroll-mt-24 py-14 md:py-20">
+            <VisaProcess countryName={config.displayName} />
+
+            <div className="mt-16 md:mt-24">
+              <VisaComparison />
+            </div>
+
+            <div className="mt-16 md:mt-24">
+              <NoChargeBand />
+            </div>
+          </section>
         )}
 
+        {/* ══ 4. REVIEWS ════════════════════════════════════════════════ */}
         <div className="mx-auto w-full max-w-7xl px-4 md:px-6">
           <Reviews countryName={config.displayName} />
         </div>
 
-        <div className="mx-auto mt-6 w-full max-w-7xl border-t border-border px-4 pt-6 md:px-6">
-          {/* PHASE 8D §17/§18. This passed `w-full py-4`, which overrode the
-              accordion's own `max-w-4xl` and its section padding. Measured on
-              /visa/dubai, that made FAQ the only section on the page with 16px
-              of vertical padding where every neighbour has 40 (mobile) or 48
-              (desktop), and stretched question and answer text to the full
-              1232px container — roughly twice a readable measure.
-
-              `max-w-3xl` restores an editorial line length; the padding now
-              matches the sections above and below, so the page reads as one
-              composition rather than a run of unrelated blocks. */}
+        {/* ══ 5. FAQS ═══════════════════════════════════════════════════
+            The accordion owns its own container and measure now, so this
+            passes padding only. It used to be handed `w-full max-w-3xl`, which
+            fought the component's own layout. */}
+        <div className="py-14 md:py-20">
           <FAQAccordion
-            className="w-full max-w-3xl py-10 md:py-12"
             countryName={config.displayName}
             deliveryDays={config.deliveryDays}
             flow={config.flow}
@@ -283,6 +309,8 @@ export function CountryVisaPage({ country }: { country: Country }) {
           />
         </div>
 
+        {/* The closing strip. No tab of its own — the reference leaves FAQs
+            highlighted while the reader is looking at it. */}
         <div className="mx-auto w-full max-w-7xl px-4 md:px-6">
           <RelatedVisas current={country} />
         </div>

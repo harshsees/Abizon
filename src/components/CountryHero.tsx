@@ -27,7 +27,6 @@
  * needs different wording.
  */
 
-import { ArrowRight } from "lucide-react";
 import React from "react";
 
 import { CountryImagePlate } from "@/components/CountryImagePlate";
@@ -80,12 +79,11 @@ function heroFacts(config: CountryVisaConfig): Array<{ label: string; value: str
 
 type CountryHeroProps = {
   config: CountryVisaConfig;
-  onStart?: () => void;
   /** Scrolls to the documents section — the reference's primary hero action. */
   onCheckDocuments?: () => void;
 };
 
-export function CountryHero({ config, onStart, onCheckDocuments }: CountryHeroProps) {
+export function CountryHero({ config, onCheckDocuments }: CountryHeroProps) {
   const { lead, accent } = buildCountryHeadline(config);
   const facts = heroFacts(config);
   const applicable = config.flow !== "visa-free";
@@ -140,31 +138,25 @@ export function CountryHero({ config, onStart, onCheckDocuments }: CountryHeroPr
             </dl>
           )}
 
-          {/* One action, and it is the low-commitment one. The reference puts
-              "Check Required Documents" here and keeps "Start Application" in
-              the sub-nav, so the hero invites a look rather than a decision. */}
-          <div className="mt-10 flex flex-wrap items-center justify-center gap-3 md:mt-12">
-            {onCheckDocuments && (
+          {/* ONE action, and it is the low-commitment one.
+              The reference's hero has a single white pill reading "Check
+              Required Documents" and keeps "Start Application" in the sub-nav.
+              This used to render a second, ghost-styled "Start Application"
+              beside it — which put the page's two primary journeys 12px apart,
+              at the one moment the reader has read nothing yet. The sub-nav
+              carries the application CTA from the moment the hero leaves the
+              screen, so nothing is lost by asking for a look first. */}
+          {onCheckDocuments && (
+            <div className="mt-10 flex justify-center md:mt-12">
               <button
                 type="button"
                 onClick={onCheckDocuments}
                 className="inline-flex h-13 cursor-pointer items-center rounded-full bg-white px-8 text-sm font-bold text-slate-900 shadow-e2 transition-[background-color,transform] duration-[--duration-fast] ease-[--ease-out] hover:bg-white/90 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white motion-reduce:transform-none"
               >
-                Check Required Documents
+                {applicable ? "Check Required Documents" : "Check Entry Rules"}
               </button>
-            )}
-
-            {applicable && onStart && (
-              <button
-                type="button"
-                onClick={onStart}
-                className="inline-flex h-13 cursor-pointer items-center gap-2 rounded-full border border-white/25 bg-white/10 px-7 text-sm font-semibold text-white backdrop-blur transition-colors hover:bg-white/20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-              >
-                Start Application
-                <ArrowRight aria-hidden className="h-4 w-4" data-arrow />
-              </button>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </div>
     </section>
