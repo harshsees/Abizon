@@ -36,28 +36,41 @@
  *                    "98.5% Approval Rate" had no source. Deleted; the slot for
  *                    a real series is `CountryVisaConfig.processingTime`.
  *   ApprovalChances  a quiz ending on a percentage, promoted by a "100%" gauge.
- *                    Replaced by `BeforeYouApply`, which says what affects a
- *                    decision and quantifies nothing.
+ *                    Replaced by `BeforeYouApply`, which said what affects a
+ *                    decision and quantified nothing. That too is now gone —
+ *                    see below.
  *   VisaPartners     three hand-drawn crests captioned Ministry of Foreign
  *                    Affairs, Government of Dubai and IATA. No partnership with
  *                    any of them is recorded anywhere in this project.
  *
- * The remaining sections were flattened from bordered cards to hairline-ruled
- * lists. Each one now draws its own top rule and owns its top padding, so the
- * column reads as one document rather than a stack of panels.
+ * PHASE 9 is a composition pass, and its subject is the information column.
+ * The column had grown to five prose sections stacked beside a card that
+ * finished a third of the way down it, which is why the card had to be sticky
+ * and why the page read as two documents racing each other. Four things left:
+ *
+ *   FeeBreakdown     moved INTO the card as a closed drawer. It was a
+ *                    permanent section restating the three figures printed in
+ *                    the ledger eighteen inches to its right.
+ *   WhyKeyrise       four claims, every one of which is stated again by the
+ *                    risk banner on the card, the comparison table, or the
+ *                    guarantee bands. Removing it removed no information.
+ *   BeforeYouApply   "What a decision turns on" — true, careful, and four
+ *                    paragraphs of caveat wedged between the document list and
+ *                    the delivery promise, where it read as hedging.
+ *   EmiratesCoverage out of the grid and into its own full-width section, so
+ *                    the grid can end at the fact cards for every destination
+ *                    rather than only for the 153 that are not the UAE.
  */
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { AppointmentRequirements } from "@/components/AppointmentRequirements";
-import { BeforeYouApply } from "@/components/BeforeYouApply";
 import { CountryApplicationPanel } from "@/components/CountryApplicationPanel";
 import { CountryHero } from "@/components/CountryHero";
 import { DatePickerModal } from "@/components/DatePickerModal";
 import { EmiratesCoverage } from "@/components/EmiratesCoverage";
 import { FAQAccordion } from "@/components/FAQAccordion";
-import { FeeBreakdown } from "@/components/FeeBreakdown";
 import { GuaranteeBand, NoChargeBand } from "@/components/GuaranteeBand";
 import { Footer } from "@/components/Footer";
 import { RelatedVisas } from "@/components/RelatedVisas";
@@ -68,7 +81,6 @@ import { VisaComparison } from "@/components/VisaComparison";
 import { VisaOverview } from "@/components/VisaOverview";
 import { VisaProcess } from "@/components/VisaProcess";
 import { VisaRequirements } from "@/components/VisaRequirements";
-import { WhyKeyrise } from "@/components/WhyKeyrise";
 import { Country } from "@/data/countries";
 import { resolveCountryVisaConfig, type CountryVisaConfig } from "@/lib/countryVisa";
 import { useHeadingReveal, useSectionReveal } from "@/hooks/usePremiumMotion";
@@ -192,59 +204,63 @@ export function CountryVisaPage({ country }: { country: Country }) {
         />
 
         {/* ══ 1. VISA INFO ═══════════════════════════════════════════════
-            The only two-column region on the page, and that is the whole
-            point of the change. The grid used to wrap every informational
-            section down to the emirates block, so the application card was
-            sticky for roughly 4,000px of scroll and was still following the
-            reader through the FAQ.
+            The only two-column region on the page, and the left column now
+            ends where its facts do.
 
-            Now the grid ENDS with this section. `md:sticky` inside it means
-            the card tracks the reader for exactly as long as the visa-info
-            column is taller than the card, and stops at the section boundary —
-            which is what the reference does and what the card's content
-            justifies: it configures an application, and there is nothing left
-            to configure once the facts beside it have been read. */}
+            It used to carry the fee breakdown, "Why Keyrise" and the emirates
+            block underneath the three fact cards, which made it roughly twice
+            the card's height — so the card was `md:sticky` and tracked the
+            reader down a column of prose it had nothing to do with. The fee
+            breakdown moved INTO the card as a drawer (it was restating the
+            card's own figures), "Why Keyrise" is gone, and the emirates block
+            is a full-width section below.
+
+            What is left is three cards beside one card. `items-start` leaves
+            the left column at its natural height and the section takes the
+            card's, so the facts stay put, the card runs to its own end, and
+            the next section starts under both. That empty space beneath the
+            facts is the composition, not a gap to fill: it is what stops the
+            page reading as two competing columns of text.
+
+            No `md:sticky` any more. Sticky on an element taller than its
+            container does nothing but cost a compositor layer. */}
         <section id="visa-info" className="scroll-mt-24">
-          <div className="mx-auto w-full max-w-7xl px-4 pt-10 pb-14 md:px-6 md:pt-14 md:pb-20">
-            <div className="grid grid-cols-1 items-start gap-10 md:grid-cols-[1.05fr_0.95fr] md:gap-12">
+          <div className="mx-auto w-full max-w-7xl px-4 pt-10 pb-16 md:px-6 md:pt-14 md:pb-24">
+            <div className="grid grid-cols-1 items-start gap-10 md:grid-cols-[1.05fr_0.95fr] md:gap-14">
               {/* Application first in the document, right-hand column on
                   desktop — so a phone reaches it without scrolling past the
                   whole information column first. */}
-              <div
-                id={APPLICATION_ANCHOR}
-                className="scroll-mt-24 md:order-2 md:sticky md:top-[92px] md:z-raised"
-              >
+              <div id={APPLICATION_ANCHOR} className="scroll-mt-24 md:order-2">
                 {applicable ? applicationPanel : <VisaFreeNotice config={config} />}
               </div>
 
-              {/* Everything the reader needs to judge the visa itself. Each
-                  block below the overview draws its own top hairline and owns
-                  its top padding, so the column reads as one document rather
-                  than a stack of panels. `space-y` is deliberately absent — it
-                  would double the gap. */}
-              <div className="md:order-1">
+              {/* Everything the reader needs to judge the visa itself.
+
+                  Sticky, and it is the SHORT column that sticks now — the
+                  reverse of what this page used to do. The facts are what the
+                  reader checks the card against ("60 days validity, e-visa,
+                  paperless — for ₹8,099?"), so they should still be there when
+                  the reader has scrolled down to the ledger. It releases at the
+                  section boundary, which is where the card ends. */}
+              <div className="md:order-1 md:sticky md:top-[92px]">
                 <VisaOverview country={country} />
 
                 {/* Renders only for the embassy flow. */}
                 <AppointmentRequirements config={config} />
-
-                {/* No visa, no fee to break down. */}
-                {applicable && <FeeBreakdown country={country} />}
-
-                {/* Both of the remaining blocks describe an application, so
-                    neither belongs on a visa-free page: "Refused? Government
-                    fee refunded" and "the fee is waived" are commitments about
-                    a filing that does not exist where no visa is needed. */}
-                {applicable && <WhyKeyrise />}
-
-                {/* Country-scoped extras. Only the UAE declares one today. */}
-                {config.additionalSections?.includes("emirates") && (
-                  <EmiratesCoverage />
-                )}
               </div>
             </div>
           </div>
         </section>
+
+        {/* Country-scoped extras. Only the UAE declares one today. Full width
+            from here down, like every other section below the grid. */}
+        {config.additionalSections?.includes("emirates") && (
+          <section className="pb-14 md:pb-20">
+            <div className="mx-auto w-full max-w-3xl px-4 md:px-6">
+              <EmiratesCoverage />
+            </div>
+          </section>
+        )}
 
         {/* ══ 2. DOCUMENTS ══════════════════════════════════════════════
             Full width and centred from here down. The reference switches to a
@@ -257,12 +273,6 @@ export function CountryVisaPage({ country }: { country: Country }) {
             deliveryDays={applicable ? config.deliveryDays : undefined}
             onStart={applicable ? focusApplication : undefined}
           />
-
-          {applicable && (
-            <div className="mx-auto mt-16 w-full max-w-3xl px-4 md:mt-24 md:px-6">
-              <BeforeYouApply />
-            </div>
-          )}
 
           {/* The band that closes the section: what the reader has just been
               asked to provide, and the date it buys them. */}

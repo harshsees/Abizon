@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 200" width="240" height="200" role="img" aria-label="">
+  <!--
+    Step 1 of the visa process: the two documents an application starts with,
+    a passport and a photograph, lying on a soft ground.
+
+    Drawn rather than photographed, and deliberately so: the reference's art
+    here is a photograph of a real person's passport page and a real portrait,
+    and neither is Keyrise's to use. Everything is soft grey on white with one
+    warm accent, so it sits inside the page's own palette rather than being a
+    picture dropped onto it.
+  -->
+  <defs>
+    <linearGradient id="kr-doc-page" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#F1F1F6"/>
+    </linearGradient>
+    <linearGradient id="kr-doc-cover" x1="0" y1="0" x2="0.9" y2="1">
+      <stop offset="0" stop-color="#E9E9F1"/>
+      <stop offset="1" stop-color="#D6D6E0"/>
+    </linearGradient>
+    <linearGradient id="kr-doc-photo" x1="0" y1="0" x2="0.6" y2="1">
+      <stop offset="0" stop-color="#F6F6FA"/>
+      <stop offset="1" stop-color="#E4E4EC"/>
+    </linearGradient>
+    <filter id="kr-doc-shadow" x="-30%" y="-30%" width="160%" height="180%">
+      <feDropShadow dx="0" dy="9" stdDeviation="9" flood-color="#0B0B14" flood-opacity="0.10"/>
+    </filter>
+    <filter id="kr-doc-shadow-soft" x="-30%" y="-30%" width="160%" height="180%">
+      <feDropShadow dx="0" dy="5" stdDeviation="6" flood-color="#0B0B14" flood-opacity="0.08"/>
+    </filter>
+  </defs>
+
+  <!-- The passport, lying back-left. -->
+  <g filter="url(#kr-doc-shadow)" transform="rotate(-8 78 104)">
+    <rect x="26" y="42" width="104" height="132" rx="10" fill="url(#kr-doc-cover)"/>
+    <rect x="26" y="42" width="104" height="132" rx="10" fill="none" stroke="#CDCDD8" stroke-width="1"/>
+    <!-- Crest. -->
+    <circle cx="78" cy="92" r="18" fill="none" stroke="#B7873A" stroke-width="1.6" opacity="0.75"/>
+    <circle cx="78" cy="92" r="7.5" fill="#B7873A" opacity="0.6"/>
+    <!-- Title lines. -->
+    <rect x="52" y="126" width="52" height="4.5" rx="2.25" fill="#B4B4C2"/>
+    <rect x="60" y="138" width="36" height="4.5" rx="2.25" fill="#C6C6D2"/>
+    <!-- The page block along the fore-edge. -->
+    <rect x="126" y="52" width="7" height="112" rx="3.5" fill="url(#kr-doc-page)" stroke="#DDDDE6" stroke-width="0.8"/>
+  </g>
+
+  <!-- The photograph, front-right, in its crop guides. -->
+  <g filter="url(#kr-doc-shadow-soft)" transform="rotate(5 168 118)">
+    <rect x="128" y="70" width="86" height="106" rx="8" fill="#FFFFFF" stroke="#E3E3EC" stroke-width="1"/>
+    <rect x="136" y="78" width="70" height="78" rx="5" fill="url(#kr-doc-photo)"/>
+    <!-- The sitter, at portrait crop. -->
+    <circle cx="171" cy="108" r="16" fill="#BFBFCC"/>
+    <path d="M143 156c0-16.5 12.5-27 28-27s28 10.5 28 27z" fill="#BFBFCC"/>
+    <rect x="146" y="164" width="50" height="4" rx="2" fill="#DCDCE5"/>
+  </g>
+
+  <!-- Crop marks, floating clear of the photo. -->
+  <g stroke="#A9A9BA" stroke-width="1.6" fill="none" stroke-linecap="round">
+    <path d="M122 66v-9h9"/>
+    <path d="M220 72h9v9"/>
+    <path d="M120 176v9h9"/>
+    <path d="M218 190h9v-9"/>
+  </g>
+</svg>

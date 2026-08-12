@@ -29,10 +29,25 @@
  * showed a stranger's progress, invented. The stop keeps its illustration and
  * loses the status.
  *
- * The fee logic below the road survives from the previous version. It is a real
- * commitment stated elsewhere in the product (pay-on-approval in
- * `CountryApplicationPanel`, the waiver and refund terms on /terms), not a
- * statistic.
+ * PHASE 9, three changes, all of them about weight.
+ *
+ *   the gap        The road's viewBox carries ~170 units of sky above its
+ *                  highest point, so a comfortable `mt-6` under the heading
+ *                  rendered as roughly 230px of nothing. The heading and the
+ *                  road are one object in the reference; the road container is
+ *                  pulled up to close the sky rather than the margin, because
+ *                  the sky is where caption 4 lives.
+ *   the art        Stops 1 and 4 take real illustrations from
+ *                  /images/process/. The reference's are photographs — a real
+ *                  passport page, a real portrait, a photographed open book —
+ *                  and none of them are Keyrise's to use, so these are drawn to
+ *                  the same weight: near-white, one soft shadow, no colour but
+ *                  a single warm accent.
+ *   the outcomes   "What you pay, in each case" is gone. Three rows restating
+ *                  the waiver and the refund, directly above a full-width black
+ *                  band that exists to say the same thing, in a section whose
+ *                  subject is the process rather than the price. The ledger in
+ *                  the application card and /terms both still carry it.
  */
 
 import type { ReactNode } from "react";
@@ -49,7 +64,7 @@ const STEPS: Step[] = [
     num: 1,
     title: "Provide documents to submit application.",
     body: "We handle the rest.",
-    art: <PhotoFrameArt />,
+    art: <DocumentsArt />,
   },
   {
     num: 2,
@@ -69,15 +84,6 @@ const STEPS: Step[] = [
     body: "Or before time.",
     art: <DeliveredArt />,
   },
-];
-
-const OUTCOMES = [
-  { case: "Your visa arrives on time", result: "You pay the Keyrise fee" },
-  {
-    case: "Your visa arrives even one second late",
-    result: "The Keyrise fee is waived",
-  },
-  { case: "Your visa is refused", result: "The government fee is refunded" },
 ];
 
 /**
@@ -142,10 +148,10 @@ const CAPTIONS: Record<
   number,
   { left: string; top: string; width: string; row?: boolean; indent?: boolean }
 > = {
-  1: { left: "15%", top: "21%", width: "33%", row: true },
+  1: { left: "12%", top: "19%", width: "38%", row: true },
   2: { left: "30%", top: "56%", width: "24%" },
   3: { left: "62%", top: "60%", width: "26%", row: true },
-  4: { left: "79%", top: "30%", width: "20%", indent: true },
+  4: { left: "78%", top: "28%", width: "21%", indent: true },
 };
 
 export function VisaProcess({ countryName }: { countryName?: string }) {
@@ -155,8 +161,10 @@ export function VisaProcess({ countryName }: { countryName?: string }) {
         The visa process
       </h2>
 
-      {/* ── The road, lg and up ─────────────────────────────────────────── */}
-      <div className="relative mt-6 hidden aspect-[1200/720] w-full lg:block">
+      {/* ── The road, lg and up ─────────────────────────────────────────────
+          The negative pull is the heading-to-road gap. See the note above:
+          the space being removed is inside the viewBox, not in the margin. */}
+      <div className="relative mt-2 hidden aspect-[1200/720] w-full lg:-mt-24 lg:block xl:-mt-32">
         <svg
           viewBox="0 0 1200 720"
           className="absolute inset-0 h-full w-full"
@@ -193,8 +201,8 @@ export function VisaProcess({ countryName }: { countryName?: string }) {
                   textAnchor="middle"
                   dominantBaseline="central"
                   fill="#FFFFFF"
-                  fontSize={20}
-                  fontWeight={700}
+                  fontSize={19}
+                  fontWeight={600}
                 >
                   {step.num}
                 </text>
@@ -211,19 +219,19 @@ export function VisaProcess({ countryName }: { countryName?: string }) {
               <li
                 key={step.num}
                 className={`js-info-item absolute ${
-                  place.row ? "flex items-start gap-5" : ""
+                  place.row ? "flex items-center gap-6" : ""
                 } ${place.indent ? "pl-12" : ""}`}
                 style={{ left: place.left, top: place.top, width: place.width }}
               >
                 {place.row && <div className="shrink-0">{step.art}</div>}
                 <div className="min-w-0">
-                  <p className="text-base font-bold leading-snug text-foreground">
+                  <p className="text-base font-semibold leading-snug tracking-tight text-foreground">
                     {step.title}
                   </p>
                   <p className="mt-2 text-sm text-muted-foreground">
                     {step.body}
                   </p>
-                  {!place.row && <div className="mt-6">{step.art}</div>}
+                  {!place.row && <div className="mt-7">{step.art}</div>}
                 </div>
               </li>
             );
@@ -231,63 +239,49 @@ export function VisaProcess({ countryName }: { countryName?: string }) {
         </ol>
       </div>
 
-      {/* ── The same four steps, below lg ───────────────────────────────── */}
-      <ol className="mt-8 space-y-8 lg:hidden">
+      {/* ── The same four steps, below lg ─────────────────────────────────
+          The art comes too. It used to be dropped on small screens, which
+          left the mobile reader a plain numbered list where the desktop
+          reader got an illustrated journey — and the art is most of what
+          makes four steps feel like few. */}
+      <ol className="mt-8 space-y-10 lg:hidden">
         {STEPS.map((step, index) => (
           <li key={step.num} className="js-info-item relative flex gap-5">
             {/* The rail, drawn per item so the last one has none below it. */}
             {index < STEPS.length - 1 && (
               <span
                 aria-hidden
-                className="absolute left-[21px] top-11 bottom-[-2rem] w-px border-l-2 border-dashed border-border-strong"
+                className="absolute left-[21px] top-11 bottom-[-2.5rem] w-px border-l-2 border-dashed border-border-strong"
               />
             )}
             <span
               data-numeric
               aria-hidden
-              className="relative z-raised flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-[#0B0B0D] text-base font-bold text-white"
+              className="relative z-raised flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-[#0B0B0D] text-base font-semibold text-white"
             >
               {step.num}
             </span>
             <div className="min-w-0 pt-1.5">
-              <p className="text-sm font-bold leading-snug text-foreground">
+              <p className="text-sm font-semibold leading-snug tracking-tight text-foreground">
                 {step.title}
               </p>
               <p className="mt-1.5 text-xs text-muted-foreground">{step.body}</p>
+              <div className="mt-5">{step.art}</div>
             </div>
           </li>
         ))}
       </ol>
 
-      {/* ── What it costs in each case ──────────────────────────────────── */}
-      <div className="mt-14 md:mt-20">
-        <p className="text-2xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-          What you pay, in each case
+      {countryName && (
+        <p className="mt-12 max-w-2xl text-2xs leading-relaxed text-muted-foreground md:mt-16">
+          {/* `{" "}` is explicit: JSX drops the whitespace between an
+              expression and the text that follows it across a line break,
+              which rendered this as "a Dubaivisa is made by". */}
+          The decision on a {countryName}{" "}
+          visa is made by the destination&rsquo;s immigration authority. Keyrise
+          guarantees the timing of the filing, not the outcome.
         </p>
-        <dl className="mt-3 divide-y divide-border border-t border-border">
-          {OUTCOMES.map((outcome) => (
-            <div
-              key={outcome.case}
-              className="flex items-baseline justify-between gap-6 py-3"
-            >
-              <dt className="text-xs text-muted-foreground">{outcome.case}</dt>
-              <dd className="shrink-0 text-xs font-semibold text-foreground">
-                {outcome.result}
-              </dd>
-            </div>
-          ))}
-        </dl>
-        {countryName && (
-          <p className="mt-3 text-2xs text-muted-foreground">
-            {/* `{" "}` is explicit: JSX drops the whitespace between an
-                expression and the text that follows it across a line break,
-                which rendered this as "a Dubaivisa is made by". */}
-            The decision on a {countryName}{" "}
-            visa is made by the destination&rsquo;s immigration authority.
-            Keyrise guarantees the timing of the filing, not the outcome.
-          </p>
-        )}
-      </div>
+      )}
     </div>
   );
 }
@@ -296,53 +290,101 @@ export function VisaProcess({ countryName }: { countryName?: string }) {
 /* Stop illustrations                                                         */
 /* -------------------------------------------------------------------------- */
 /*
- * Drawn, not sourced. The reference's are photographs — a passport photo of a
- * real person, a real passport number under a loupe — and none of them are
- * Keyrise's to use. All four are `aria-hidden`: every one sits beside a caption
- * that already says the same thing in words.
+ * Two of the four are files under /images/process, two are drawn inline.
+ *
+ * The split is not arbitrary. Stops 1 and 4 are still objects — a passport and
+ * a photograph, an open book — and an object is best described by a picture, so
+ * they are SVG files with gradients and drop shadows that would be noise in
+ * TSX. Stops 2 and 3 are events: something is being checked, something has been
+ * stamped. Both need a piece of live type inside them (the magnified number,
+ * the FILED mark) that has to sit on the app's own font stack and colour
+ * tokens, which a static file cannot do.
+ *
+ * All four are `aria-hidden`: every one sits beside a caption that already says
+ * the same thing in words. The <img>s carry `alt=""` for the same reason, which
+ * is what makes them decorative to a screen reader rather than unlabelled.
  */
 
-/** Stop 1 — the applicant's photograph, in its crop guides. */
-function PhotoFrameArt() {
+/** Stop 1 — what the applicant provides: a passport and a photograph. */
+function DocumentsArt() {
   return (
-    <div aria-hidden className="relative h-[86px] w-[86px]">
-      <span className="absolute -left-2 -top-2 h-3.5 w-3.5 border-l border-t border-border-strong" />
-      <span className="absolute -right-2 -top-2 h-3.5 w-3.5 border-r border-t border-border-strong" />
-      <span className="absolute -bottom-2 -left-2 h-3.5 w-3.5 border-b border-l border-border-strong" />
-      <span className="absolute -bottom-2 -right-2 h-3.5 w-3.5 border-b border-r border-border-strong" />
-      <div className="h-full w-full overflow-hidden rounded-md bg-surface-sunken">
-        <svg viewBox="0 0 100 100" className="h-full w-full">
-          <circle cx="50" cy="38" r="17" className="fill-slate-400" />
-          <path
-            d="M15 100c0-19 16-31 35-31s35 12 35 31z"
-            className="fill-slate-400"
-          />
-        </svg>
-      </div>
-    </div>
+    <img
+      src="/images/process/documents.svg"
+      alt=""
+      aria-hidden
+      width={240}
+      height={200}
+      loading="lazy"
+      decoding="async"
+      className="h-[116px] w-auto select-none lg:h-[152px]"
+      draggable={false}
+    />
   );
 }
 
-/** Stop 2 — the document check: a loupe over a passport number. */
+/**
+ * Stop 2 — the document check.
+ *
+ * The point of this one is the magnification, and the previous version did not
+ * have any: it drew a circle with a number in it, at the same size the number
+ * would have been anywhere else. A loupe that does not enlarge is just a
+ * circle.
+ *
+ * So the number exists TWICE. Once in the document, set at the same 3px weight
+ * as the lines around it and clipped by nothing — that is the passport number
+ * as written. And once inside the lens, at ~4x, overflowing the glass on both
+ * sides exactly as the reference's does, clipped to the lens circle so the
+ * glyphs are cut by the rim. The rim's chromatic fringe and the highlight
+ * across the top are what make the disc read as glass rather than as a hole.
+ */
 function MagnifierArt() {
   return (
-    <div aria-hidden className="relative w-[190px]">
-      <div className="space-y-2 pr-8">
-        <span className="block h-1.5 w-full rounded-full bg-border" />
-        <span className="block h-1.5 w-3/4 rounded-full bg-border" />
-        <span className="block h-1.5 w-5/6 rounded-full bg-border" />
-      </div>
-      <div className="absolute -bottom-6 right-0 flex h-[68px] w-[68px] items-center justify-center rounded-full border-[3px] border-slate-700 bg-surface shadow-e2">
-        <span
-          data-numeric
-          className="text-lg font-bold tracking-tight text-foreground"
-        >
-          7320
+    <div aria-hidden className="relative h-[128px] w-[212px] select-none">
+      {/* The document under the glass. */}
+      <div className="absolute left-0 top-3 w-[190px] space-y-[11px]">
+        <span className="block h-[3px] w-full rounded-full bg-border" />
+        <span className="block h-[3px] w-[72%] rounded-full bg-border" />
+        <span className="relative block h-[3px] w-[88%] rounded-full bg-border">
+          {/* The number as it is actually printed — the thing being read. */}
+          <span
+            data-numeric
+            className="absolute -top-[7px] right-[6px] text-[9px] font-semibold leading-none tracking-tight text-subtle-foreground"
+          >
+            7320
+          </span>
         </span>
+        <span className="block h-[3px] w-[58%] rounded-full bg-border" />
       </div>
-      <span
-        className="absolute -bottom-11 right-14 block h-6 w-[3px] origin-top rotate-45 rounded-full bg-slate-700"
-      />
+
+      {/* The lens. */}
+      <div className="absolute right-1 top-[14px] h-[86px] w-[86px]">
+        {/* Glass: a clipped disc holding the enlarged number. */}
+        <div className="absolute inset-0 overflow-hidden rounded-full bg-[linear-gradient(150deg,#FFFFFF_0%,#FBFBFE_46%,#EFEFF6_100%)] shadow-e2">
+          {/* Chromatic fringe. Two blurred crescents at the rim, which is the
+              one cue that says "thick glass" and costs two divs. */}
+          <span className="absolute -left-1 top-1/2 h-11 w-3 -translate-y-1/2 rounded-full bg-[#38BDF8] opacity-40 blur-[3px]" />
+          <span className="absolute -right-1 top-1/2 h-11 w-3 -translate-y-1/2 rounded-full bg-[#F472B6] opacity-40 blur-[3px]" />
+
+          <span
+            data-numeric
+            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap text-[34px] font-bold leading-none tracking-[-0.04em] text-foreground"
+          >
+            7320
+          </span>
+
+          {/* Specular highlight along the top of the dome. */}
+          <span className="absolute left-1/2 top-[9px] h-4 w-12 -translate-x-1/2 rounded-full bg-white opacity-70 blur-[5px]" />
+          {/* The reflected floor, at the bottom. */}
+          <span className="absolute bottom-[7px] left-1/2 h-3.5 w-10 -translate-x-1/2 rounded-full bg-white opacity-50 blur-[4px]" />
+        </div>
+
+        {/* The rim, over the glass so it is never covered by the fringe. */}
+        <span className="absolute inset-0 rounded-full ring-1 ring-inset ring-border-strong" />
+      </div>
+
+      {/* The handle, running down-left from the rim. */}
+      <span className="absolute bottom-[16px] right-[68px] h-[30px] w-[5px] origin-top rotate-45 rounded-full bg-border-strong" />
+      <span className="absolute bottom-[2px] right-[86px] h-[22px] w-[7px] origin-top rotate-45 rounded-full bg-[#3A3A46]" />
     </div>
   );
 }
@@ -352,41 +394,35 @@ function FiledDocumentArt() {
   return (
     <div
       aria-hidden
-      className="relative h-[86px] w-[68px] rounded-md border border-border bg-surface shadow-e2"
+      className="relative h-[96px] w-[76px] rounded-lg border border-border bg-surface shadow-e2"
     >
-      <div className="space-y-1.5 p-3">
+      <div className="space-y-2 p-3.5">
         <span className="block h-1 w-full rounded-full bg-border" />
         <span className="block h-1 w-4/5 rounded-full bg-border" />
         <span className="block h-1 w-full rounded-full bg-border" />
         <span className="block h-1 w-2/3 rounded-full bg-border" />
+        <span className="block h-1 w-3/4 rounded-full bg-border" />
       </div>
-      <span className="absolute -bottom-2 -right-2 flex h-8 w-8 rotate-[-12deg] items-center justify-center rounded-full border-2 border-success text-[7px] font-bold uppercase leading-none tracking-tight text-success">
+      <span className="absolute -bottom-2.5 -right-2.5 flex h-9 w-9 rotate-[-12deg] items-center justify-center rounded-full border-2 border-success bg-surface text-[7px] font-bold uppercase leading-none tracking-tight text-success">
         Filed
       </span>
     </div>
   );
 }
 
-/** Stop 4 — the visa itself, granted. */
+/** Stop 4 — the visa, delivered: the reference's open book. */
 function DeliveredArt() {
   return (
-    <div
+    <img
+      src="/images/process/delivered.svg"
+      alt=""
       aria-hidden
-      className="w-[150px] rounded-lg border border-border bg-surface p-3 shadow-e3"
-    >
-      <div className="flex items-center justify-between">
-        <span className="block h-1.5 w-12 rounded-full bg-border" />
-        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-success">
-          <svg viewBox="0 0 20 20" className="h-3 w-3 fill-white">
-            <path d="M7.6 14.2 3.8 10.4l1.4-1.4 2.4 2.4 6-6 1.4 1.4z" />
-          </svg>
-        </span>
-      </div>
-      <div className="mt-3 h-8 rounded bg-surface-sunken" />
-      <div className="mt-2 space-y-1.5">
-        <span className="block h-1 w-full rounded-full bg-border" />
-        <span className="block h-1 w-3/5 rounded-full bg-border" />
-      </div>
-    </div>
+      width={260}
+      height={190}
+      loading="lazy"
+      decoding="async"
+      className="h-[104px] w-auto select-none lg:h-[132px]"
+      draggable={false}
+    />
   );
 }

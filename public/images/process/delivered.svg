@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 190" width="260" height="190" role="img" aria-label="">
+  <!--
+    Step 4 of the visa process: the open book.
+
+    The reference closes its road with a white open book photographed from a
+    low three-quarter angle, lit so the pages read almost entirely as tone —
+    the only things carrying the form are the shadow under the fore-edges, the
+    fanned leaf block, and the crease at the spine. This is that object, drawn.
+
+    Built symmetrically about x=130, because a book drawn asymmetrically at
+    this size stops reading as a book and starts reading as a folded sheet.
+    Each half is: a leaf block (the stack of pages seen edge-on), the page
+    plane on top of it, and one lifted sheet inset slightly from the plane's
+    edges so the top page has a visible thickness.
+
+    It is nearly white on a near-white ground on purpose. At this point in the
+    road the reader is being told the visa has arrived; a heavier illustration
+    would compete with the caption, and the reference's does not.
+  -->
+  <defs>
+    <linearGradient id="kr-book-left" x1="0" y1="0.1" x2="0.85" y2="1">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="0.6" stop-color="#FAFAFD"/>
+      <stop offset="1" stop-color="#E9E9F1"/>
+    </linearGradient>
+    <linearGradient id="kr-book-right" x1="1" y1="0.1" x2="0.15" y2="1">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="0.55" stop-color="#F6F6FA"/>
+      <stop offset="1" stop-color="#E2E2EB"/>
+    </linearGradient>
+    <linearGradient id="kr-book-crease" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#B4B4C4" stop-opacity="0"/>
+      <stop offset="0.5" stop-color="#9E9EB2" stop-opacity="0.5"/>
+      <stop offset="1" stop-color="#B4B4C4" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="kr-book-ground" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#6E6E86" stop-opacity="0.22"/>
+      <stop offset="0.65" stop-color="#6E6E86" stop-opacity="0.07"/>
+      <stop offset="1" stop-color="#6E6E86" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- The ground the book sits on. -->
+  <ellipse cx="130" cy="150" rx="106" ry="16" fill="url(#kr-book-ground)"/>
+
+  <!-- Leaf blocks: the page stack seen edge-on, under each page plane. -->
+  <path d="M130 132 L26 112 L26 122 L130 143 Z" fill="#DBDBE6"/>
+  <path d="M130 132 L234 112 L234 122 L130 143 Z" fill="#D0D0DE"/>
+  <path d="M130 136 L30 116 L30 119 L130 140 Z" fill="#C2C2D2"/>
+  <path d="M130 136 L230 116 L230 119 L130 140 Z" fill="#B7B7C9"/>
+
+  <!-- The two page planes. -->
+  <path d="M130 132 L26 112 L46 74 L130 100 Z" fill="url(#kr-book-left)"/>
+  <path d="M130 132 L26 112 L46 74 L130 100 Z" fill="none" stroke="#DFDFE9" stroke-width="0.8"/>
+  <path d="M130 132 L234 112 L214 74 L130 100 Z" fill="url(#kr-book-right)"/>
+  <path d="M130 132 L234 112 L214 74 L130 100 Z" fill="none" stroke="#D9D9E4" stroke-width="0.8"/>
+
+  <!-- The top sheet of each half, inset, so the page has thickness. -->
+  <path d="M128 127 L38 110 L54 80 L128 102 Z" fill="#FFFFFF" opacity="0.95"/>
+  <path d="M132 127 L222 110 L206 80 L132 102 Z" fill="#FFFFFF" opacity="0.9"/>
+
+  <!-- Two ruled lines a page, at the weight of the road's centre line. -->
+  <g stroke="#DCDCE6" stroke-width="1.4" stroke-linecap="round">
+    <path d="M60 105 L112 115"/>
+    <path d="M56 113 L108 123"/>
+    <path d="M200 105 L148 115"/>
+    <path d="M204 113 L152 123"/>
+  </g>
+
+  <!-- The crease, holding the two halves together. -->
+  <path d="M124 100 L136 100 L134 141 L126 141 Z" fill="url(#kr-book-crease)"/>
+</svg>
