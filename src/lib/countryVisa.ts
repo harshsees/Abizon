@@ -30,7 +30,11 @@
 
 import { Country, countriesData, getCountrySlug } from "@/data/countries";
 import { resolveCountry } from "@/lib/countryCatalogue";
-import { countryHeroImage } from "@/lib/countryImagery";
+import {
+  countryHeroFocus,
+  countryHeroImage,
+  countryPhotoCredit,
+} from "@/lib/countryImagery";
 import { KEYRISE_TERMS, feesAreProvisional } from "@/lib/pricingConfig";
 
 /* -------------------------------------------------------------------------- */
@@ -134,10 +138,27 @@ export type CountryVisaConfig = {
   flagUrl: string;
   heroImage?: string;
   /**
+   * The rendition ladder for the same photograph. The hero band is the widest
+   * image on the site — up to 1232px at the container's ceiling — and shipping
+   * one fixed file to a phone as well is most of a megabyte nobody asked for.
+   */
+  heroImageSrcSet?: string;
+  /**
    * What the hero photograph shows. Empty when there is none — the plate that
    * renders instead is decoration and announces nothing.
    */
   heroImageAlt: string;
+  /**
+   * The `object-position` for the hero band. Portrait sources need to be held
+   * near their top or the band frames the middle of a tower.
+   */
+  heroImageFocus?: string;
+  /**
+   * "Photographer · CC BY-SA 4.0", where the licence requires it. The country
+   * page is where that obligation is discharged, because a grid of 152 cards
+   * cannot carry 152 credits and still be a grid.
+   */
+  heroImageCredit?: string;
 
   /* --- classification: always present --- */
   visaType: Country["visaType"];
@@ -425,7 +446,10 @@ export function resolveCountryVisaConfig(country: Country): CountryVisaConfig {
     code: country.code,
     flagUrl: `https://flagcdn.com/w80/${country.code}.png`,
     heroImage: resolveHeroImage(country),
+    heroImageSrcSet: countryHeroImage(getCountrySlug(country.name))?.srcSet,
     heroImageAlt: resolveHeroImageAlt(country),
+    heroImageFocus: countryHeroFocus(getCountrySlug(country.name)),
+    heroImageCredit: countryPhotoCredit(getCountrySlug(country.name)),
 
     visaType: country.visaType,
     flow: deriveVisaFlow(country.visaType),

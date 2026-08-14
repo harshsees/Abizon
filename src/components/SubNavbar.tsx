@@ -121,9 +121,28 @@ export function SubNavbar({
       // 61px, so the sub-nav sat 4px underneath it and the gap showed on
       // scroll.
       style={{ top: isSticky ? "0px" : "var(--header-h-compact)" }}
-      className={`sticky inset-x-0 w-full z-40 transition-all duration-300 ease-in-out select-none border-b border-slate-100 bg-white ${
-        isSticky ? "mt-0" : "mt-8"
-      }`}
+      /**
+       * TWO STATES, and the difference between them is the whole point.
+       *
+       * At rest this rail sits inside the hero's own section, and a white slab
+       * with a bottom rule drawn across it there reads as a *partition* — it
+       * cuts the page in half immediately under the hero and announces a
+       * boundary that does not exist yet. So at rest it is transparent: no
+       * fill, no rule, just the labels sitting on the page ground.
+       *
+       * Once it pins to the top of the viewport it has to be legible over
+       * whatever scrolls beneath it, and that is when it earns the surface, the
+       * hairline and the blur. Both are animated on the same properties as the
+       * position change, so the bar does not appear to swap for a different
+       * component halfway down the page.
+       */
+      className={[
+        "sticky inset-x-0 z-40 w-full select-none border-b",
+        "transition-[background-color,border-color,box-shadow,margin] duration-300 ease-in-out",
+        isSticky
+          ? "mt-0 border-border bg-surface/85 shadow-e1 backdrop-blur-md"
+          : "mt-6 border-transparent bg-transparent",
+      ].join(" ")}
     >
       {/* PHASE 8D §7. The rail scrolls horizontally on mobile, which is right,
           but it was hard-clipped at the viewport edge: at 390 the last item
@@ -173,7 +192,10 @@ export function SubNavbar({
                     transition={{ type: "spring", stiffness: 350, damping: 30 }}
                   />
                 ) : (
-                  <div className="absolute left-0 right-0 bottom-0 h-[3px] bg-transparent group-hover:bg-slate-100 transition-colors z-10" />
+                  /* `border` rather than `slate-100`: at rest the rail is
+                     transparent and sits on the page ground, which is itself
+                     near-slate-100 — the hover indicator was invisible there. */
+                  <div className="absolute left-0 right-0 bottom-0 h-[3px] bg-transparent group-hover:bg-border-strong transition-colors z-10" />
                 )}
               </a>
             );

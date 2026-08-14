@@ -98,8 +98,19 @@ export function CountryHero({ config, onCheckDocuments }: CountryHeroProps) {
         {config.heroImage && (
           <img
             src={config.heroImage}
+            srcSet={config.heroImageSrcSet}
+            /* The band is the container's full width up to its 1280px ceiling,
+               and full viewport width below `md`. Without this the browser
+               assumes 100vw of a *layout* pixel and pulls the 1920 rendition
+               onto a phone. */
+            sizes={config.heroImageSrcSet ? "(min-width: 1280px) 1232px, 100vw" : undefined}
             alt={config.heroImageAlt}
             fetchPriority="high"
+            /* Inline because the value is data — 152 destinations, two
+               possible answers, computed from each file's own aspect. Tailwind
+               cannot see a class name assembled at runtime, and safelisting the
+               pair to save one style attribute is a worse trade. */
+            style={{ objectPosition: config.heroImageFocus }}
             className="absolute inset-0 h-full w-full object-cover"
             onError={(event) => {
               event.currentTarget.style.display = "none";
@@ -112,7 +123,17 @@ export function CountryHero({ config, onCheckDocuments }: CountryHeroProps) {
             reads as a photograph at its edges. */}
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(2,6,23,0.42)_0%,rgba(2,6,23,0.66)_45%,rgba(2,6,23,0.72)_100%)]" />
 
-        <div className="relative flex min-h-[520px] flex-col items-center justify-center px-5 py-16 text-center md:min-h-[640px] md:px-10 md:py-24">
+        {/* The band's height.
+            It was a flat 520/640px, which on a 1080p laptop left the hero
+            hanging past the fold with the sub-nav below it — the section could
+            never be seen whole, which is the one thing a hero has to manage.
+            It is now bounded by the viewport instead: whatever is left after
+            the header, the 24px of top gutter and enough room for the sub-nav
+            to show underneath, with a floor so it cannot collapse on a short
+            window and a ceiling so it cannot balloon on a tall one. `dvh`
+            rather than `vh` so a mobile URL bar collapsing does not resize it
+            mid-scroll. */}
+        <div className="relative flex min-h-[420px] flex-col items-center justify-center px-5 py-14 text-center md:min-h-[clamp(440px,calc(100dvh-var(--header-h-compact)-9rem),580px)] md:px-10 md:py-20">
           <h1 className="max-w-4xl text-balance">
             <span className="type-h1 block text-white">{lead}</span>
             {/* The commitment, in the one accent this page uses for it. Green
@@ -158,6 +179,19 @@ export function CountryHero({ config, onCheckDocuments }: CountryHeroProps) {
             </div>
           )}
         </div>
+
+        {/* Attribution.
+            Most of these photographs are CC BY or CC BY-SA, which require the
+            author to be named wherever the work is shown. Set at the smallest
+            size the type scale allows and at 55% white so it discharges the
+            obligation without joining the composition — a credit that competes
+            with the headline is a worse answer than no credit at all. Rendered
+            only when there is a licence to satisfy. */}
+        {config.heroImage && config.heroImageCredit && (
+          <p className="absolute bottom-2 right-4 text-[10px] leading-none text-white/55">
+            {config.heroImageCredit}
+          </p>
+        )}
       </div>
     </section>
   );

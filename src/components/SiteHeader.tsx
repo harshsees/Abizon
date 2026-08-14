@@ -303,16 +303,56 @@ export function SiteHeader({
               <input
                 type="search"
                 aria-label="Search countries"
-                placeholder="Search Country"
+                /* No `placeholder`. The animated one below is the placeholder,
+                   and two of them would sit on top of each other. The label is
+                   what a screen reader gets, so nothing is lost. */
                 value={searchValue}
                 onChange={(e) => handleSearchChange(e.target.value)}
                 className={[
                   "h-[var(--control-h-md)] w-56 rounded-full border border-border bg-surface-sunken",
-                  "pl-11 pr-4 text-sm text-foreground placeholder:text-muted-foreground",
+                  "pl-11 pr-4 text-sm text-foreground",
                   "transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)]",
                   "hover:border-border-strong focus:border-border-strong focus:bg-surface",
                 ].join(" ")}
               />
+
+              {/* The rotating placeholder, restored.
+                  A real `placeholder` attribute cannot animate — it is painted
+                  by the browser, not laid out — so the word rides in its own
+                  clipped box on top of the field. `pointer-events-none` keeps
+                  the whole control clickable through it, and it disappears the
+                  moment there is a value, which is exactly what a placeholder
+                  does. Marked `aria-hidden` because `aria-label` above already
+                  names the field; announcing a word that changes every 2.5s
+                  would be noise. */}
+              {searchValue === "" && (
+                <span
+                  aria-hidden="true"
+                  className="pointer-events-none absolute left-11 top-1/2 flex -translate-y-1/2 items-baseline gap-[0.3em] text-sm text-muted-foreground"
+                >
+                  Search
+                  <span className="relative inline-flex h-[1.125rem] overflow-hidden">
+                    {/* Width is reserved by the longest word, laid out
+                        invisibly, so the field's contents do not jitter
+                        sideways each time the word swaps. */}
+                    <span className="invisible">
+                      {PLACEHOLDER_WORDS.reduce((a, b) => (b.length > a.length ? b : a))}
+                    </span>
+                    <AnimatePresence initial={false}>
+                      <motion.span
+                        key={PLACEHOLDER_WORDS[placeholderIndex]}
+                        initial={{ y: "100%" }}
+                        animate={{ y: "0%" }}
+                        exit={{ y: "-100%" }}
+                        transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+                        className="absolute inset-x-0 top-0"
+                      >
+                        {PLACEHOLDER_WORDS[placeholderIndex]}
+                      </motion.span>
+                    </AnimatePresence>
+                  </span>
+                </span>
+              )}
             </form>
 
             {/* Mobile gets the icon; the field itself lives in a sheet. */}
@@ -468,16 +508,18 @@ function TabButton({
       ].join(" ")}
     >
       {/* The icon collapses rather than unmounting, so the label never jumps
-          sideways as the header condenses — height and opacity only. */}
+          sideways as the header condenses — height and opacity only.
+          Sized down with the header: a 40px glyph was drawn for a 160px band
+          and looks like an illustration in a 112px one. */}
       <span
         aria-hidden="true"
         className={[
           "flex items-center justify-center overflow-hidden",
           "transition-[height,opacity] duration-[var(--duration-slow)] ease-[var(--ease-out)]",
-          condensed ? "h-0 opacity-0" : "h-11 opacity-100",
+          condensed ? "h-0 opacity-0" : "h-9 opacity-100",
         ].join(" ")}
       >
-        <Icon className="h-10 w-10" strokeWidth={1.5} aria-hidden="true" />
+        <Icon className="h-8 w-8" strokeWidth={1.5} aria-hidden="true" />
       </span>
 
       <span className="type-ui">{label}</span>

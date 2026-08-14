@@ -230,6 +230,13 @@ export function Footer() {
             <Link href="/privacy" className="inline-block py-1.5 hover:text-slate-800 transition">Privacy</Link>
             <span>&bull;</span>
             <Link href="/terms" className="inline-block py-1.5 hover:text-slate-800 transition">Terms</Link>
+            <span>&bull;</span>
+            {/* Not a courtesy link. The destination photographs are CC BY /
+                CC BY-SA, which require the author to be named wherever the work
+                appears — and the homepage grid shows 152 of them at once, where
+                per-card credits are not possible. A site-wide link here is what
+                discharges that for the grid. */}
+            <Link href="/image-credits" className="inline-block py-1.5 hover:text-slate-800 transition">Image credits</Link>
           </div>
 
           {/* Mini Logo right */}

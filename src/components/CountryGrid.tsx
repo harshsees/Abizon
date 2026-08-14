@@ -4,19 +4,24 @@
  * The destination grid.
  *
  * Column ramp is driven by the card's own proportions rather than by a fixed
- * breakpoint habit: at every step the card lands within ~10% of the
- * reference's 312px, so it never goes awkwardly narrow or stretches.
+ * breakpoint habit.
  *
  *   base   1 col   ~358px card   (390px viewport)
  *   sm     2 cols  ~294px
- *   lg     3 cols  ~305px
- *   xl     4 cols  ~285px
- *   2xl    5 cols  ~273px, reaching exactly 312px once the container
- *                  hits its 1680px ceiling at ~1728px viewport
+ *   md     3 cols  ~230px
+ *   lg     4 cols  ~223px
+ *   xl     5 cols  ~226px
+ *   2xl    6 cols  ~223px, ~256px once the container hits its 1680px ceiling
  *
- * Two columns on a phone was tried and rejected: it puts the card at ~171px,
- * where TYPE / VALID / FEES cannot fit on one line, and those stats being
- * legible at rest is the point of the Phase 2 card.
+ * Every step above `sm` gained a column. The previous ramp topped out at five
+ * and put a 312px card on a 1728px screen — a card at 5:8 is then ~500px tall,
+ * so two rows filled a laptop viewport entirely and the grid read as a
+ * slideshow rather than a catalogue. At ~225px the card is ~360px tall and
+ * three rows are visible, which is what makes 152 destinations feel browsable.
+ *
+ * Two columns on a phone is still rejected: it puts the card at ~171px, where
+ * TYPE / VALID / FEES cannot fit on one line, and those stats being legible at
+ * rest is the point of the card.
  */
 
 import { AnimatePresence, motion } from "framer-motion";
@@ -84,7 +89,7 @@ export function CountryGrid({
 
       <motion.div
         layout
-        className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4 xl:gap-[30px] 2xl:grid-cols-5"
+        className="grid grid-cols-1 gap-5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 xl:gap-6 2xl:grid-cols-6"
       >
         {/* `initial={false}` so the first paint is instant. Animating 154
             cards in on mount buys nothing — they are below the fold within two

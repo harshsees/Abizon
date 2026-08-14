@@ -1,0 +1,610 @@
+{
+  "thailand": [
+    "Wat Arun",
+    "Wat Arun on the Chao Phraya river in Bangkok"
+  ],
+  "dubai": [
+    "Burj Khalifa",
+    "The Burj Khalifa rising over the Dubai skyline"
+  ],
+  "sri-lanka": [
+    "Sigiriya",
+    "The Sigiriya rock fortress rising from the Sri Lankan plain"
+  ],
+  "malaysia": [
+    "Kuala Lumpur",
+    "The Petronas Towers above the Kuala Lumpur skyline"
+  ],
+  "vietnam": [
+    "Hạ Long Bay",
+    "Limestone karsts rising from the water in Ha Long Bay"
+  ],
+  "singapore": [
+    "Marina Bay Sands",
+    "Marina Bay Sands above the Singapore waterfront"
+  ],
+  "indonesia": [
+    "Borobudur",
+    "The stupas of Borobudur temple in Central Java"
+  ],
+  "japan": [
+    "Mount Fuji",
+    "Mount Fuji above the Japanese landscape"
+  ],
+  "south-korea": [
+    "Gyeongbokgung",
+    "Gyeongbokgung Palace in Seoul"
+  ],
+  "united-kingdom": [
+    "Tower Bridge",
+    "Tower Bridge over the Thames in London"
+  ],
+  "france": [
+    "Mont-Saint-Michel",
+    "The abbey island of Mont-Saint-Michel in Normandy"
+  ],
+  "italy": [
+    "Colosseum",
+    "The Colosseum in Rome"
+  ],
+  "spain": [
+    "Alhambra",
+    "The Alhambra above Granada with the Sierra Nevada behind"
+  ],
+  "germany": [
+    "Brandenburg Gate",
+    "The Brandenburg Gate in Berlin"
+  ],
+  "switzerland": [
+    "Matterhorn",
+    "The Matterhorn above the Swiss Alps"
+  ],
+  "australia": [
+    "Sydney Opera House",
+    "The Sydney Opera House on Sydney Harbour"
+  ],
+  "new-zealand": [
+    "Milford Sound",
+    "Mitre Peak above Milford Sound in Fiordland"
+  ],
+  "canada": [
+    "Moraine Lake",
+    "Moraine Lake beneath the Valley of the Ten Peaks in Banff"
+  ],
+  "united-states": [
+    "Golden Gate Bridge",
+    "The Golden Gate Bridge at the mouth of San Francisco Bay"
+  ],
+  "turkey": [
+    "Hagia Sophia",
+    "The Hagia Sophia in Istanbul"
+  ],
+  "egypt": [
+    "Great Sphinx of Giza",
+    "The Great Sphinx and the Pyramids of Giza"
+  ],
+  "south-africa": [
+    "Table Mountain",
+    "Table Mountain above Cape Town"
+  ],
+  "maldives": [
+    "Malé",
+    "The island capital of Male in the Maldives"
+  ],
+  "mauritius": [
+    "Le Morne Brabant",
+    "Le Morne Brabant rising above the Mauritian coast"
+  ],
+  "seychelles": [
+    "Anse Source d'Argent",
+    "The granite boulders of Anse Source d'Argent on La Digue"
+  ],
+  "brazil": [
+    "Sugarloaf Mountain",
+    "Sugarloaf Mountain above Guanabara Bay in Rio de Janeiro"
+  ],
+  "argentina": [
+    "Iguazu Falls",
+    "The Iguazu Falls on the Argentine border"
+  ],
+  "mexico": [
+    "Chichen Itza",
+    "El Castillo pyramid at Chichen Itza"
+  ],
+  "peru": [
+    "Machu Picchu",
+    "The Inca citadel of Machu Picchu"
+  ],
+  "morocco": [
+    "Jemaa el-Fnaa",
+    "Jemaa el-Fnaa square in Marrakesh"
+  ],
+  "kenya": [
+    "Maasai Mara",
+    "The plains of the Maasai Mara"
+  ],
+  "saudi-arabia": [
+    "Al-Masjid an-Nabawi",
+    "The Prophet's Mosque in Medina"
+  ],
+  "qatar": [
+    "Doha",
+    "The Doha skyline across the bay"
+  ],
+  "oman": [
+    "Sultan Qaboos Grand Mosque",
+    "The Sultan Qaboos Grand Mosque in Muscat"
+  ],
+  "jordan": [
+    "Al-Khazneh",
+    "Al-Khazneh, the Treasury carved into the rock at Petra"
+  ],
+  "kuwait": [
+    "Kuwait City",
+    "The Kuwait City skyline on the Gulf"
+  ],
+  "bahrain": [
+    "Bahrain World Trade Center",
+    "The Bahrain World Trade Center in Manama"
+  ],
+  "cambodia": [
+    "Angkor Wat",
+    "The temple of Angkor Wat at Siem Reap"
+  ],
+  "philippines": [
+    "Chocolate Hills",
+    "The Chocolate Hills of Bohol"
+  ],
+  "taiwan": [
+    "Taipei",
+    "Taipei 101 above the Taipei skyline"
+  ],
+  "hong-kong": [
+    "Victoria Peak",
+    "The Hong Kong skyline seen from Victoria Peak"
+  ],
+  "macau": [
+    "Ruins of Saint Paul's",
+    "The Ruins of St Paul's in Macau"
+  ],
+  "nepal": [
+    "Boudhanath",
+    "The Boudhanath stupa in Kathmandu"
+  ],
+  "bhutan": [
+    "Paro Taktsang",
+    "The Tiger's Nest monastery clinging to the cliff at Paro"
+  ],
+  "india": [
+    "Taj Mahal",
+    "The Taj Mahal at Agra"
+  ],
+  "bangladesh": [
+    "Sixty Dome Mosque",
+    "The Sixty Dome Mosque at Bagerhat"
+  ],
+  "kazakhstan": [
+    "Bayterek",
+    "The Bayterek tower in Astana"
+  ],
+  "uzbekistan": [
+    "Registan",
+    "The Registan ensemble in Samarkand"
+  ],
+  "georgia": [
+    "Gergeti Trinity Church",
+    "Gergeti Trinity Church beneath Mount Kazbek"
+  ],
+  "armenia": [
+    "Khor Virap",
+    "Khor Virap monastery beneath Mount Ararat"
+  ],
+  "azerbaijan": [
+    "Flame Towers",
+    "The Flame Towers above Baku"
+  ],
+  "austria": [
+    "Schönbrunn Palace",
+    "Schonbrunn Palace in Vienna"
+  ],
+  "belgium": [
+    "Grand-Place",
+    "The Grand-Place in Brussels"
+  ],
+  "netherlands": [
+    "Zaanse Schans",
+    "The windmills of Zaanse Schans"
+  ],
+  "ireland": [
+    "Cliffs of Moher",
+    "The Cliffs of Moher on the Atlantic coast"
+  ],
+  "portugal": [
+    "Belém Tower",
+    "Belem Tower on the Tagus in Lisbon"
+  ],
+  "greece": [
+    "Parthenon",
+    "The Parthenon on the Acropolis of Athens"
+  ],
+  "sweden": [
+    "Stockholm City Hall",
+    "Stockholm City Hall on the water at Kungsholmen"
+  ],
+  "denmark": [
+    "Nyhavn",
+    "The coloured houses along Nyhavn in Copenhagen"
+  ],
+  "finland": [
+    "Helsinki Cathedral",
+    "Helsinki Cathedral above Senate Square"
+  ],
+  "iceland": [
+    "Gullfoss",
+    "The Gullfoss waterfall on the Hvita river"
+  ],
+  "poland": [
+    "Main Market Square, Kraków",
+    "The Main Market Square in Krakow"
+  ],
+  "czech-republic": [
+    "Charles Bridge",
+    "Charles Bridge over the Vltava in Prague"
+  ],
+  "hungary": [
+    "Hungarian Parliament Building",
+    "The Hungarian Parliament Building on the Danube"
+  ],
+  "croatia": [
+    "Dubrovnik",
+    "The walled old town of Dubrovnik on the Adriatic"
+  ],
+  "romania": [
+    "Bran Castle",
+    "Bran Castle in Transylvania"
+  ],
+  "bulgaria": [
+    "Rila Monastery",
+    "The Rila Monastery in the Rila mountains"
+  ],
+  "cyprus": [
+    "Petra tou Romiou",
+    "The rock of Aphrodite on the Cypriot coast"
+  ],
+  "malta": [
+    "Valletta",
+    "The fortified harbour city of Valletta"
+  ],
+  "monaco": [
+    "Monte Carlo",
+    "The harbour and hillside of Monte Carlo"
+  ],
+  "andorra": [
+    "Andorra la Vella",
+    "Andorra la Vella in the Pyrenees"
+  ],
+  "colombia": [
+    "Cartagena, Colombia",
+    "The walled colonial old town of Cartagena"
+  ],
+  "chile": [
+    "Torres del Paine National Park",
+    "The granite towers of Torres del Paine"
+  ],
+  "ecuador": [
+    "Quito",
+    "The historic centre of Quito beneath the Andes"
+  ],
+  "costa-rica": [
+    "Arenal Volcano",
+    "The Arenal volcano above the rainforest"
+  ],
+  "panama": [
+    "Cinta Costera",
+    "The Panama City skyline along the Cinta Costera"
+  ],
+  "bahamas": [
+    "Nassau, Bahamas",
+    "The harbour front at Nassau"
+  ],
+  "jamaica": [
+    "Dunn's River Falls",
+    "Dunn's River Falls near Ocho Rios"
+  ],
+  "dominican-republic": [
+    "Santo Domingo",
+    "The colonial zone of Santo Domingo"
+  ],
+  "cuba": [
+    "El Capitolio",
+    "El Capitolio in Havana"
+  ],
+  "guatemala": [
+    "Tikal",
+    "The Mayan temples of Tikal above the forest canopy"
+  ],
+  "bolivia": [
+    "Laguna Colorada",
+    "The red waters of Laguna Colorada in the Bolivian altiplano"
+  ],
+  "uruguay": [
+    "Colonia del Sacramento",
+    "The historic quarter of Colonia del Sacramento"
+  ],
+  "paraguay": [
+    "Asunción",
+    "The riverfront and skyline of Asuncion"
+  ],
+  "tanzania": [
+    "Mount Kilimanjaro",
+    "Mount Kilimanjaro above the savanna"
+  ],
+  "madagascar": [
+    "Avenue of the Baobabs",
+    "The Avenue of the Baobabs near Morondava"
+  ],
+  "tunisia": [
+    "Amphitheatre of El Jem",
+    "The Roman amphitheatre of El Jem"
+  ],
+  "ethiopia": [
+    "Church of Saint George, Lalibela",
+    "The rock-hewn Church of St George at Lalibela"
+  ],
+  "uganda": [
+    "Murchison Falls",
+    "Murchison Falls on the Victoria Nile"
+  ],
+  "ghana": [
+    "Cape Coast Castle",
+    "Cape Coast Castle on the Gulf of Guinea"
+  ],
+  "nigeria": [
+    "Zuma Rock",
+    "Zuma Rock rising above the plain near Abuja"
+  ],
+  "senegal": [
+    "Gorée",
+    "The colonial houses of Goree Island off Dakar"
+  ],
+  "algeria": [
+    "Algiers",
+    "The bay and white city of Algiers"
+  ],
+  "namibia": [
+    "Sossusvlei",
+    "The red dunes of Sossusvlei in the Namib"
+  ],
+  "botswana": [
+    "Okavango Delta",
+    "The waterways of the Okavango Delta"
+  ],
+  "zimbabwe": [
+    "Great Zimbabwe",
+    "The stone enclosures of Great Zimbabwe"
+  ],
+  "rwanda": [
+    "Kigali",
+    "The hills and skyline of Kigali"
+  ],
+  "fiji": [
+    "Mamanuca Islands",
+    "The Mamanuca Islands off Viti Levu"
+  ],
+  "samoa": [
+    "Apia",
+    "The harbour front at Apia in Samoa"
+  ],
+  "tonga": [
+    "Nukuʻalofa",
+    "The waterfront of Nuku'alofa"
+  ],
+  "vanuatu": [
+    "Mount Yasur",
+    "The active crater of Mount Yasur on Tanna"
+  ],
+  "solomon-islands": [
+    "Honiara",
+    "The coast at Honiara on Guadalcanal"
+  ],
+  "palau": [
+    "Rock Islands",
+    "The Rock Islands of Palau"
+  ],
+  "micronesia": [
+    "Nan Madol",
+    "The basalt ruins of Nan Madol on Pohnpei"
+  ],
+  "tuvalu": [
+    "Funafuti",
+    "The atoll and lagoon of Funafuti"
+  ],
+  "nauru": [
+    "Anibare Bay",
+    "Anibare Bay on the east coast of Nauru"
+  ],
+  "marshall-islands": [
+    "Majuro",
+    "The Majuro atoll and lagoon"
+  ],
+  "kiribati": [
+    "South Tarawa",
+    "The atoll and lagoon of South Tarawa"
+  ],
+  "papua-new-guinea": [
+    "Mount Wilhelm",
+    "Mount Wilhelm in the Papua New Guinea highlands"
+  ],
+  "laos": [
+    "Pha That Luang",
+    "The golden stupa of Pha That Luang in Vientiane"
+  ],
+  "myanmar": [
+    "Bagan",
+    "The temple plain of Bagan at dawn"
+  ],
+  "mongolia": [
+    "Gobi Desert",
+    "The dunes and steppe of the Gobi Desert"
+  ],
+  "brunei": [
+    "Bandar Seri Begawan",
+    "The waterfront of Bandar Seri Begawan"
+  ],
+  "east-timor": [
+    "Cristo Rei of Dili",
+    "The Cristo Rei statue above Dili"
+  ],
+  "zambia": [
+    "South Luangwa National Park",
+    "The Luangwa valley in South Luangwa National Park"
+  ],
+  "angola": [
+    "Luanda",
+    "The bay and skyline of Luanda"
+  ],
+  "cameroon": [
+    "Mount Cameroon",
+    "Mount Cameroon above the coastal plain"
+  ],
+  "gabon": [
+    "Libreville",
+    "The seafront at Libreville"
+  ],
+  "congo": [
+    "Brazzaville",
+    "The Congo river at Brazzaville"
+  ],
+  "ivory-coast": [
+    "Basilica of Our Lady of Peace",
+    "The Basilica of Our Lady of Peace at Yamoussoukro"
+  ],
+  "guinea": [
+    "Conakry",
+    "The coastal city of Conakry"
+  ],
+  "mali": [
+    "Great Mosque of Djenné",
+    "The mud-brick Great Mosque of Djenne"
+  ],
+  "niger": [
+    "Agadez",
+    "The mud-brick minaret and old town of Agadez"
+  ],
+  "benin": [
+    "Ganvié",
+    "The stilt village of Ganvie on Lake Nokoue"
+  ],
+  "togo": [
+    "Koutammakou",
+    "The fortified tower-houses of Koutammakou"
+  ],
+  "liberia": [
+    "Monrovia",
+    "The coast and city of Monrovia"
+  ],
+  "sierra-leone": [
+    "Freetown",
+    "The hills and harbour of Freetown"
+  ],
+  "gambia": [
+    "Banjul",
+    "Arch 22 and the streets of Banjul"
+  ],
+  "mauritania": [
+    "Chinguetti",
+    "The desert town and library of Chinguetti"
+  ],
+  "cape-verde": [
+    "Pico do Fogo",
+    "The volcanic cone of Pico do Fogo"
+  ],
+  "sao-tome-and-principe": [
+    "Pico Cão Grande",
+    "The volcanic plug of Pico Cao Grande on Sao Tome"
+  ],
+  "equatorial-guinea": [
+    "Malabo",
+    "The bay and town of Malabo on Bioko"
+  ],
+  "djibouti": [
+    "Djibouti City",
+    "The waterfront of Djibouti City"
+  ],
+  "somalia": [
+    "Mogadishu",
+    "The coastline of Mogadishu"
+  ],
+  "sudan": [
+    "Jebel Barkal",
+    "The pyramids beneath Jebel Barkal in Sudan"
+  ],
+  "eritrea": [
+    "Fiat Tagliero Building",
+    "The Fiat Tagliero building in Asmara"
+  ],
+  "south-sudan": [
+    "Juba",
+    "The White Nile at Juba"
+  ],
+  "central-african-republic": [
+    "Dzanga-Sangha Special Reserve",
+    "The rainforest of the Dzanga-Sangha reserve"
+  ],
+  "chad": [
+    "Lakes of Ounianga",
+    "The Lakes of Ounianga in the Sahara"
+  ],
+  "burundi": [
+    "Bujumbura",
+    "Bujumbura on the shore of Lake Tanganyika"
+  ],
+  "malawi": [
+    "Zomba Plateau",
+    "The Zomba Plateau in southern Malawi"
+  ],
+  "mozambique": [
+    "Island of Mozambique",
+    "The old town on the Island of Mozambique"
+  ],
+  "lesotho": [
+    "Maletsunyane Falls",
+    "The Maletsunyane Falls in the Lesotho highlands"
+  ],
+  "swaziland": [
+    "Mlilwane Wildlife Sanctuary",
+    "The hills of Mlilwane Wildlife Sanctuary in Eswatini"
+  ],
+  "comoros": [
+    "Mount Karthala",
+    "Mount Karthala on Grande Comore"
+  ],
+  "suriname": [
+    "Saint Peter and Paul Cathedral, Paramaribo",
+    "The wooden cathedral of Paramaribo"
+  ],
+  "guyana": [
+    "Kaieteur Falls",
+    "Kaieteur Falls in the Guyanese rainforest"
+  ],
+  "venezuela": [
+    "Mount Roraima",
+    "The tabletop summit of Mount Roraima"
+  ],
+  "belize": [
+    "Xunantunich",
+    "The Mayan site of Xunantunich in Belize"
+  ],
+  "honduras": [
+    "Copán",
+    "The Mayan ruins of Copan"
+  ],
+  "nicaragua": [
+    "Granada, Nicaragua",
+    "The colonial streets of Granada"
+  ],
+  "el-salvador": [
+    "Santa Ana Volcano",
+    "The crater lake of the Santa Ana volcano"
+  ]
+}

@@ -104,8 +104,23 @@ export function VisaRequirements({
                 key={requirement.kind}
                 className="js-checklist-item flex flex-col items-center rounded-3xl bg-surface-sunken px-6 py-10"
               >
-                <DocumentArtwork kind={requirement.kind} />
-                <p className="mt-8 text-lg font-bold text-foreground">
+                {/* THE STAGE. Both props are laid out inside a fixed-height box
+                    rather than sizing the card themselves.
+
+                    Without it the two cards in a "Photo + Passport" pair do not
+                    line up: the passport is a 144x104 booklet, the photograph is
+                    a 144x144 square whose crop ticks extend 12px past it on
+                    every side and whose "42 mm" measurement hangs 24px below —
+                    so the photograph card's label sat lower than the passport
+                    card's, and the measurement collided with it. The stage is
+                    tall enough for the ticks and the measurement, the props are
+                    bottom-aligned in it, and the two labels land on the same
+                    line. `items-end` because a passport stands on a surface and
+                    a photograph is pinned to one; both read as resting. */}
+                <div className="flex h-[13.5rem] w-full items-end justify-center">
+                  <DocumentArtwork kind={requirement.kind} />
+                </div>
+                <p className="mt-6 text-lg font-bold text-foreground">
                   {requirement.label}
                 </p>
                 <p className="mt-2 max-w-[15rem] text-sm leading-relaxed text-muted-foreground">
@@ -149,11 +164,15 @@ export function VisaRequirements({
 function DocumentArtwork({ kind }: { kind: DocumentKind }) {
   if (kind === "photograph") {
     return (
-      <div aria-hidden className="relative">
+      // `pb-7` reserves the measurement's own line inside the prop, so the
+      // stage above can bottom-align this against the passport without the
+      // "42 mm" hanging into the label beneath. The crop ticks get `mx-3` for
+      // the same reason on the horizontal axis.
+      <div aria-hidden className="relative mx-3 pb-7">
         {/* The 42mm crop guides the reference prints around its sample photo —
             the same measurement the live-capture frame guide uses. */}
         <CropTicks />
-        <div className="relative flex h-36 w-36 items-center justify-center overflow-hidden rounded-xl bg-foreground">
+        <div className="relative flex h-36 w-36 items-center justify-center overflow-hidden rounded-xl bg-foreground shadow-e3">
           <svg viewBox="0 0 100 100" className="h-full w-full">
             <circle cx="50" cy="38" r="18" className="fill-white/85" />
             <path
@@ -162,7 +181,7 @@ function DocumentArtwork({ kind }: { kind: DocumentKind }) {
             />
           </svg>
         </div>
-        <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-2xs text-muted-foreground">
+        <span className="absolute bottom-0 left-1/2 -translate-x-1/2 text-2xs text-muted-foreground">
           42 mm
         </span>
       </div>
@@ -173,7 +192,7 @@ function DocumentArtwork({ kind }: { kind: DocumentKind }) {
   return (
     <div
       aria-hidden
-      className="flex h-36 w-[6.5rem] flex-col items-center justify-center rounded-md bg-[linear-gradient(105deg,#3B3B46_0%,#1C1C22_38%,#2A2A33_100%)] shadow-e3"
+      className="flex h-40 w-[7rem] flex-col items-center justify-center rounded-md bg-[linear-gradient(105deg,#3B3B46_0%,#1C1C22_38%,#2A2A33_100%)] shadow-e3"
     >
       <span className="text-[6px] font-semibold uppercase tracking-[0.18em] text-amber-200/70">
         Republic of India
@@ -190,16 +209,21 @@ function DocumentArtwork({ kind }: { kind: DocumentKind }) {
   );
 }
 
-/** The four corner ticks that frame the reference's photo sample. */
+/**
+ * The four corner ticks that frame the reference's photo sample.
+ *
+ * Positioned against the 144px photo square, not against the wrapper — the
+ * wrapper carries `pb-7` for the measurement, so a `-bottom-3` measured from it
+ * would put the lower ticks 28px below the photograph instead of 12px.
+ */
 function CropTicks() {
-  const corner =
-    "absolute h-4 w-4 border-border-strong text-transparent";
+  const corner = "absolute h-4 w-4 border-border-strong text-transparent";
   return (
     <>
       <span className={`${corner} -left-3 -top-3 border-l border-t`} />
       <span className={`${corner} -right-3 -top-3 border-r border-t`} />
-      <span className={`${corner} -bottom-3 -left-3 border-b border-l`} />
-      <span className={`${corner} -bottom-3 -right-3 border-b border-r`} />
+      <span className={`${corner} -left-3 top-[8.75rem] border-b border-l`} />
+      <span className={`${corner} -right-3 top-[8.75rem] border-b border-r`} />
     </>
   );
 }

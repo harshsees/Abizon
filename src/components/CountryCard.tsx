@@ -20,13 +20,23 @@
  * where there is no hover, never. The reference shows them in the resting
  * state, and that is also the accessible answer.
  *
- * The hover mechanic is deliberately unchanged, because it was already
- * reverse-engineered from the reference's shipped markup and re-deriving it
- * would only introduce drift:
+ * The hover mechanic is still a height transition on a frosted panel plus a
+ * scale on the image, but the panel's top edge is now masked rather than cut:
  *
- *   transition-[height] duration-400 h-[42%] group-hover:h-[72%]
- *   backdrop-blur-[10px] backdrop-brightness-[60%]
+ *   transition-[height] duration-400 h-[46%] group-hover:h-[76%]
+ *   backdrop-blur-[12px] backdrop-brightness-[65%] + a linear-gradient mask
  *   transition-transform duration-300 scale-100 group-hover:scale-110  (image)
+ *
+ * The mask is the fix for what read as a *line* sweeping up the card on hover.
+ * A backdrop-filter is applied at full strength to the element's exact box, so
+ * however soft the blur is, the boundary where it begins is a hard edge — and
+ * animating the height animates that edge. Masking the panel's alpha ramps the
+ * filter in instead, so what moves is a soft shadow rather than a rule.
+ *
+ * The geometry is otherwise scaled down from the 312px reference card: the
+ * grid now runs up to six columns and the card lands around 225px, so the type
+ * ramp, the flag and the insets all step down with it. Only the 5:8 aspect and
+ * the 24px radius are held.
  *
  * What hover reveals is now only what the resting state cannot hold: the
  * documents pill and the emergency link.
@@ -69,9 +79,10 @@ function hideIfBroken(node: HTMLImageElement | null) {
 }
 
 const IMAGE_SIZES = [
-  "(min-width: 1536px) 312px",
-  "(min-width: 1280px) 25vw",
-  "(min-width: 1024px) 33vw",
+  "(min-width: 1536px) 17vw",
+  "(min-width: 1280px) 20vw",
+  "(min-width: 1024px) 25vw",
+  "(min-width: 768px) 33vw",
   "(min-width: 640px) 50vw",
   "100vw",
 ].join(", ");
@@ -155,16 +166,25 @@ export function CountryCard({ country }: CountryCardProps) {
           />
 
           {/* The frosted panel. This is the animation — height only, which the
-              compositor handles without touching the layout around it. */}
+              compositor handles without touching the layout around it.
+
+              THE TOP EDGE. A backdrop-filter applies at full strength right up
+              to the element's boundary, so a panel with a straight top edge
+              draws a hard horizontal seam across the photograph — the blur is
+              soft but the line where it starts is not, and on hover that line
+              visibly slides up the card. Masking the element's own alpha fixes
+              it at the source: the filter is sampled through the mask, so the
+              blur and the dimming both ramp in over the top ~45% of the panel
+              and there is no edge to see. `to_top` because the panel is
+              anchored at the bottom and the fade belongs at the far end. */}
           <div
             aria-hidden
-            className="pointer-events-none absolute inset-x-0 bottom-0 h-[42%] rounded-b-card backdrop-blur-[10px] backdrop-brightness-[60%] transition-[height] duration-[var(--duration-panel)] ease-out-back group-hover:h-[72%] group-focus-within:h-[72%]"
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-[46%] rounded-b-card backdrop-blur-[12px] backdrop-brightness-[65%] [mask-image:linear-gradient(to_top,#000_0%,#000_55%,rgba(0,0,0,0.55)_78%,transparent_100%)] transition-[height] duration-[var(--duration-panel)] ease-out-back group-hover:h-[76%] group-focus-within:h-[76%]"
           />
 
-          {/* Bottom-anchored content stack. Padding matches the reference's
-              ~28px content inset and ~30px bottom margin. */}
-          <div className="absolute inset-x-0 bottom-0 flex flex-col items-center px-7 pb-7">
-            <div className="mb-3.5 h-[26px] w-[26px] overflow-hidden rounded-full shadow-e1">
+          {/* Bottom-anchored content stack. */}
+          <div className="absolute inset-x-0 bottom-0 flex flex-col items-center px-4 pb-5 xl:px-5">
+            <div className="mb-2.5 h-[22px] w-[22px] overflow-hidden rounded-full shadow-e1">
               <img
                 src={`https://flagcdn.com/w80/${country.code}.png`}
                 alt=""
@@ -177,22 +197,22 @@ export function CountryCard({ country }: CountryCardProps) {
             {/* Serif display face, from the Phase 1 type system. `text-balance`
                 keeps "United Arab Emirates" from breaking to a one-word orphan
                 line, which is what the long names did on a 312px card. */}
-            <h3 className="text-center font-serif text-[22px] font-medium uppercase leading-[1.05] tracking-[0.01em] text-white text-balance drop-shadow-[0_2px_6px_rgba(0,0,0,0.55)] xl:text-[26px]">
+            <h3 className="text-center font-serif text-[17px] font-medium uppercase leading-[1.05] tracking-[0.01em] text-white text-balance drop-shadow-[0_2px_6px_rgba(0,0,0,0.55)] sm:text-[18px] xl:text-[20px]">
               {country.name}
             </h3>
 
             <div
               aria-hidden
-              className="mt-3.5 h-px w-full bg-white/25"
+              className="mt-2.5 h-px w-full bg-white/25"
             />
 
-            <dl className="mt-3 grid w-full grid-cols-3 gap-1">
+            <dl className="mt-2.5 grid w-full grid-cols-3 gap-1">
               {stats.map((stat) => (
                 <div key={stat.label} className={stat.align}>
-                  <dt className="text-[10px] font-semibold uppercase tracking-[0.08em] text-white/65">
+                  <dt className="text-[9px] font-semibold uppercase tracking-[0.06em] text-white/65">
                     {stat.label}
                   </dt>
-                  <dd className="mt-0.5 whitespace-nowrap text-sm font-bold uppercase text-white">
+                  <dd className="mt-0.5 whitespace-nowrap text-2xs font-bold uppercase text-white">
                     {stat.value}
                   </dd>
                 </div>
@@ -203,9 +223,9 @@ export function CountryCard({ country }: CountryCardProps) {
                 hold. Desktop only: on touch there is no hover to trigger it,
                 and everything essential is already visible above. */}
             <div className="hidden max-h-0 w-full overflow-hidden transition-all duration-[var(--duration-panel)] ease-out-back group-hover:max-h-[200px] group-focus-within:max-h-[200px] lg:block">
-              <div className="mt-3 flex items-center justify-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1.5 backdrop-blur-sm transition-colors group-hover:bg-white/15">
-                <ShieldCheck className="h-3.5 w-3.5 flex-shrink-0 text-white/80" />
-                <span className="text-2xs font-semibold text-white">
+              <div className="mt-2.5 flex items-center justify-center gap-1.5 rounded-full bg-white/10 px-2 py-1.5 backdrop-blur-sm transition-colors group-hover:bg-white/15">
+                <ShieldCheck className="h-3 w-3 flex-shrink-0 text-white/80" />
+                <span className="whitespace-nowrap text-[10px] font-semibold text-white">
                   {country.documents}
                 </span>
               </div>
@@ -213,7 +233,7 @@ export function CountryCard({ country }: CountryCardProps) {
               {/* Space reserved for the emergency link, which is a sibling of
                   this Link and overlays here. Without the reserve it would sit
                   on top of the documents pill. */}
-              <div className="h-7" />
+              <div className="h-6" />
             </div>
           </div>
         </div>
@@ -223,15 +243,15 @@ export function CountryCard({ country }: CountryCardProps) {
           it is the one control it animates continuously. */}
       <Link
         href="/emergency-helpline"
-        className="absolute inset-x-0 bottom-6 z-raised hidden max-h-0 items-center justify-center gap-1 overflow-hidden transition-all duration-[var(--duration-panel)] ease-out-back group-hover:max-h-10 group-focus-within:max-h-10 lg:flex"
+        className="absolute inset-x-0 bottom-5 z-raised hidden max-h-0 items-center justify-center gap-1 overflow-hidden transition-all duration-[var(--duration-panel)] ease-out-back group-hover:max-h-10 group-focus-within:max-h-10 lg:flex"
       >
         <span
           data-on-dark="true"
-          className="animate-emergency-cta-shimmer bg-clip-text text-2xs font-semibold tracking-[0.02em] text-transparent underline decoration-white/70 decoration-dotted underline-offset-[3px]"
+          className="animate-emergency-cta-shimmer bg-clip-text text-[10px] font-semibold tracking-[0.02em] text-transparent underline decoration-white/70 decoration-dotted underline-offset-[3px]"
         >
           Get emergency assistance
         </span>
-        <ArrowUpRight className="h-3 w-3 text-white/80" />
+        <ArrowUpRight className="h-2.5 w-2.5 text-white/80" />
       </Link>
     </div>
   );

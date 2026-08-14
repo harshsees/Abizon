@@ -17,6 +17,13 @@
  * over it in percentages of that same box, so they scale with the road instead
  * of being pinned to pixel offsets that only hold at one width.
  *
+ * Both strokes sit inside a masked group so the road fades in at the left edge
+ * and out at the right rather than being sheared off by the viewBox. The
+ * numbered nodes are deliberately OUTSIDE that group: node 1 sits at x=190,
+ * well clear of the fade, but a mask over the whole drawing would be one more
+ * thing that could quietly dim them, and the nodes are the part a reader
+ * counts.
+ *
  * The road only renders at lg and above. Below that the same four steps render
  * as a vertical dashed rail — not a scaled-down road, because at 768px the
  * captions would be 9px and the switchbacks would read as noise.
@@ -171,24 +178,52 @@ export function VisaProcess({ countryName }: { countryName?: string }) {
           aria-hidden
           focusable="false"
         >
-          {/* Tarmac. */}
-          <path
-            d={ROAD_PATH}
-            fill="none"
-            stroke={TARMAC}
-            strokeWidth={78}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          {/* Centre line, on the identical path. */}
-          <path
-            d={ROAD_PATH}
-            fill="none"
-            stroke="#C3C3D0"
-            strokeWidth={3}
-            strokeDasharray="14 18"
-            strokeLinecap="round"
-          />
+          {/* ── The two ends ───────────────────────────────────────────────
+              The road runs from x=-40 to x=1260, i.e. it starts and stops
+              outside the viewBox — which meant both ends were butchered flat
+              against the frame. A road that stops dead at the edge of its box
+              reads as a clipped image; a road that fades out reads as one that
+              carries on.
+
+              So the whole group is masked. White is opaque, black is
+              transparent, and the two gradients ride at the same 6% of the box
+              width that the entry and exit runs occupy. It is a mask on the
+              group rather than two overlay rectangles because the section
+              ground is not a flat colour everywhere it appears, and a painted
+              scrim would show its own edges against anything but the exact
+              background it was tuned for. */}
+          <defs>
+            <linearGradient id="road-fade" x1="0" x2="1" y1="0" y2="0">
+              <stop offset="0%" stopColor="#000" />
+              <stop offset="7%" stopColor="#fff" />
+              <stop offset="90%" stopColor="#fff" />
+              <stop offset="100%" stopColor="#000" />
+            </linearGradient>
+            <mask id="road-mask" maskUnits="userSpaceOnUse" x="0" y="0" width="1200" height="720">
+              <rect x="0" y="0" width="1200" height="720" fill="url(#road-fade)" />
+            </mask>
+          </defs>
+
+          <g mask="url(#road-mask)">
+            {/* Tarmac. */}
+            <path
+              d={ROAD_PATH}
+              fill="none"
+              stroke={TARMAC}
+              strokeWidth={78}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            {/* Centre line, on the identical path. */}
+            <path
+              d={ROAD_PATH}
+              fill="none"
+              stroke="#C3C3D0"
+              strokeWidth={3}
+              strokeDasharray="14 18"
+              strokeLinecap="round"
+            />
+          </g>
 
           {STEPS.map((step) => {
             const node = NODES[step.num];

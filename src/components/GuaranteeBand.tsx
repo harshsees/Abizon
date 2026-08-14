@@ -45,6 +45,11 @@
  * is what makes it read as the reader opening the band rather than the page
  * playing an animation at them.
  *
+ * SCRUBBED FORWARDS ONLY. The scroll progress is latched at its high-water mark
+ * (see `opened` below), so scrolling back up does not un-open a band that has
+ * already opened. Reversing was the literal reading of "scrubbed" and it was
+ * wrong: it made the reader feel they had undone something by looking back.
+ *
  * HOW, and why not the obvious way. `clip-path: inset()` on the slab itself,
  * in pixels off a measured box. The obvious way is `scale`, and it is wrong
  * twice over: scaling a slab from 7% to 100% stretches the icon and the type
@@ -171,8 +176,35 @@ export function PromiseBand({ icon: Icon, children, caption }: PromiseBandProps)
     offset: ["start 90%", "center 55%"],
   });
 
+  /**
+   * THE RATCHET.
+   *
+   * `scrollYProgress` is symmetric: it falls again on the way back up, so the
+   * band closed itself whenever the reader scrolled up past it. That is right
+   * for a parallax and wrong for this, because this is not decoration tracking
+   * the scrollbar — it is a slab being *opened*, and an opened thing does not
+   * re-close because you looked away. The reference recording only ever plays
+   * it forwards.
+   *
+   * So the value that drives the clip is a separate motion value holding the
+   * high-water mark. It is written from a subscription rather than derived with
+   * `useTransform`, because a transform is a pure function of its inputs and
+   * cannot remember anything; the memory is the point. No state and no
+   * re-render — the subscription runs on the scroll frame and writes straight
+   * to the motion value, which is what keeps this off the React render path.
+   */
+  const opened = useMotionValue(0);
+
+  useEffect(() => {
+    const latch = (value: number) => {
+      if (value > opened.get()) opened.set(value);
+    };
+    latch(scrollYProgress.get()); // a band already past on load starts open
+    return scrollYProgress.on("change", latch);
+  }, [scrollYProgress, opened]);
+
   const clipPath = useTransform(
-    [scrollYProgress, boxWidth, boxHeight, markCentre],
+    [opened, boxWidth, boxHeight, markCentre],
     ([progress, width, height, centre]: number[]) => {
       const closed = 1 - progress;
       const insetX = Math.max(0, ((width - PILL_W) / 2) * closed);
@@ -186,7 +218,9 @@ export function PromiseBand({ icon: Icon, children, caption }: PromiseBandProps)
   );
 
   // The sentence arrives while the edges are still moving, per the recording.
-  const copyOpacity = useTransform(scrollYProgress, [0.35, 0.78], [0, 1]);
+  // Driven by the latched value too, or the copy would fade back out on the way
+  // up while the slab it sits in stayed open.
+  const copyOpacity = useTransform(opened, [0.35, 0.78], [0, 1]);
 
   return (
     <div className="mx-auto w-full max-w-7xl px-4 md:px-6">

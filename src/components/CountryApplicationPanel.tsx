@@ -188,7 +188,7 @@ export function CountryApplicationPanel({
           same logic the promise bands and the hero plate use. The ribbon
           overhangs the right edge so the banner reads as a label attached to
           the card below rather than a second card stacked on it. */}
-      <div className="relative rounded-[20px] bg-[linear-gradient(100deg,#E6E6EE_0%,#F2F2F7_46%,#FDF6E7_100%)] px-5 py-4 pr-6 shadow-e1">
+      <div className="relative rounded-[20px] bg-[linear-gradient(100deg,#E6E6EE_0%,#F2F2F7_46%,#FDF6E7_100%)] px-4 py-3.5 pr-6 shadow-e1">
         <span
           style={{ clipPath: RIBBON_CLIP }}
           className="absolute right-0 top-4 hidden translate-x-2 bg-primary py-1.5 pl-5 pr-3 text-2xs font-semibold tracking-tight text-on-primary lg:block"
@@ -199,7 +199,7 @@ export function CountryApplicationPanel({
         <div className="flex items-start gap-3.5">
           <ShieldCheck
             aria-hidden
-            className="mt-0.5 h-8 w-8 flex-shrink-0 text-primary"
+            className="mt-0.5 h-7 w-7 flex-shrink-0 text-primary"
             strokeWidth={1.6}
           />
           <div className="min-w-0">
@@ -217,7 +217,7 @@ export function CountryApplicationPanel({
           Cut into the plate's top-left edge. `-mb-px` closes the seam that a
           fractional device-pixel ratio would otherwise open between the tab
           and the plate below it. */}
-      <div className="mt-5 flex items-stretch gap-4">
+      <div className="mt-4 flex items-stretch gap-4">
         <p
           style={{ clipPath: TAB_CLIP }}
           className="-mb-px inline-flex items-center gap-2 rounded-tl-[20px] bg-primary-subtle py-2.5 pl-4 pr-10 text-xs font-semibold text-primary-subtle-foreground"
@@ -234,7 +234,7 @@ export function CountryApplicationPanel({
       </div>
 
       {/* ── The plate, and the card inset in it ─────────────────────────── */}
-      <div className="rounded-[24px] rounded-tl-none bg-primary-subtle p-2 shadow-e1 ring-1 ring-inset ring-primary-border/50">
+      <div className="rounded-[24px] rounded-tl-none bg-primary-subtle p-1.5 shadow-e1 ring-1 ring-inset ring-primary-border/50">
         <div className="overflow-hidden rounded-[18px] bg-surface shadow-e2">
           {/* Resume — only when this browser has actually begun one. */}
           {draft && (
@@ -252,14 +252,14 @@ export function CountryApplicationPanel({
             </div>
           )}
 
-          <div className="p-5 md:p-6">
+          <div className="p-4 md:p-5">
             {/* 1 — the choices, as the reference's stacked rows.
                 The reference's first row is a "Visa Type" dropdown of travel
                 purposes. Keyrise records one visa type per destination and no
                 purpose at all, so the row that IS a real choice takes its
                 place: how fast it is processed. */}
             <div className="divide-y divide-border">
-              <label className="block pb-4">
+              <label className="block pb-3.5">
                 <span className="text-xs text-muted-foreground">
                   {config.visaType} · Processing
                 </span>
@@ -267,7 +267,7 @@ export function CountryApplicationPanel({
                   <select
                     value={plan}
                     onChange={(event) => setPlan(Number(event.target.value))}
-                    className="w-full cursor-pointer appearance-none bg-transparent pr-8 text-lg font-semibold tracking-tight text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                    className="w-full cursor-pointer appearance-none bg-transparent pr-8 text-base font-semibold tracking-tight text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                   >
                     <option value={0}>
                       Standard · {config.deliveryDays}{" "}
@@ -289,7 +289,7 @@ export function CountryApplicationPanel({
                 </span>
               </label>
 
-              <div className="flex items-center justify-between gap-3 py-4">
+              <div className="flex items-center justify-between gap-3 py-3.5">
                 <span className="flex items-center gap-2.5 text-base font-semibold tracking-tight text-foreground">
                   <User
                     aria-hidden
@@ -333,7 +333,7 @@ export function CountryApplicationPanel({
               <button
                 type="button"
                 onClick={onPickDate}
-                className="flex w-full cursor-pointer items-center justify-between gap-3 py-4 text-left"
+                className="flex w-full cursor-pointer items-center justify-between gap-3 py-3.5 text-left"
               >
                 <span className="flex items-center gap-2.5 text-sm font-medium text-subtle-foreground">
                   <CalendarDays
@@ -356,7 +356,7 @@ export function CountryApplicationPanel({
               </button>
 
               {!travelDate && (
-                <div className="grid grid-cols-2 gap-2 py-4">
+                <div className="grid grid-cols-2 gap-2 py-3.5">
                   {(
                     [
                       { key: "soon", label: "Within 30 days" },
@@ -386,11 +386,17 @@ export function CountryApplicationPanel({
             </div>
 
             {/* 2 — the price. One number, centred, with the rest of the money
-                deferred to the ledger below the button. */}
-            <div className="pt-7 text-center">
+                deferred to the ledger below the button.
+
+                48px, down from 60px. At the larger size the figure was taller
+                than the section heading two columns to its left, which made the
+                page read as though the price were its subject rather than the
+                visa. It is still by some distance the largest thing in the
+                card, which is the hierarchy that matters. */}
+            <div className="pt-6 text-center">
               <p
                 data-numeric
-                className="text-5xl font-bold tracking-[-0.03em] text-foreground"
+                className="text-4xl font-bold tracking-[-0.03em] text-foreground"
               >
                 {totals.payNow === 0 ? "Free" : inr(payNow)}
               </p>
@@ -402,7 +408,7 @@ export function CountryApplicationPanel({
             <button
               type="button"
               onClick={handleStart}
-              className="mt-5 flex w-full cursor-pointer items-center justify-center rounded-full bg-primary px-5 py-4 text-sm font-semibold tracking-tight text-on-primary shadow-e2 transition-[background-color,transform,box-shadow] duration-[--duration-fast] ease-[--ease-out] hover:bg-primary-hover hover:shadow-e3 active:scale-[0.99] active:bg-primary-active motion-reduce:transform-none"
+              className="mt-4 flex w-full cursor-pointer items-center justify-center rounded-full bg-primary px-5 py-3.5 text-sm font-semibold tracking-tight text-on-primary shadow-e2 transition-[background-color,transform,box-shadow] duration-[--duration-fast] ease-[--ease-out] hover:bg-primary-hover hover:shadow-e3 active:scale-[0.99] active:bg-primary-active motion-reduce:transform-none"
             >
               {draft ? "Resume Application" : "Start Application"}
             </button>
@@ -412,11 +418,11 @@ export function CountryApplicationPanel({
                 first two icons is the reference's, and it is doing work — it
                 is what says these are two moments in one transaction rather
                 than two separate charges. */}
-            <dl className="mt-7">
+            <dl className="mt-6">
               <div className="relative">
                 <span
                   aria-hidden
-                  className="absolute left-[9px] top-7 h-[calc(100%-3.25rem)] w-px bg-border"
+                  className="absolute left-[9px] top-7 h-[calc(100%-3rem)] w-px bg-border"
                 />
                 <LedgerRow
                   icon={Landmark}
@@ -424,7 +430,7 @@ export function CountryApplicationPanel({
                   sub="Government fee"
                   value={totals.payNow === 0 ? "Free" : inr(payNow)}
                 />
-                <div className="mt-5">
+                <div className="mt-4">
                   <LedgerRow
                     icon={Clock3}
                     label="Pay on approval"
@@ -438,7 +444,7 @@ export function CountryApplicationPanel({
                 </div>
               </div>
 
-              <div className="mt-5 border-t border-border pt-5">
+              <div className="mt-4 border-t border-border pt-4">
                 <LedgerRow
                   icon={ReceiptText}
                   label="Total amount"
@@ -460,7 +466,7 @@ export function CountryApplicationPanel({
       </div>
 
       {/* ── Support, beneath the card ───────────────────────────────────── */}
-      <div className="mt-5 flex flex-wrap items-center justify-between gap-4 px-1">
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-4 px-1">
         <div className="min-w-0">
           <p className="text-sm font-semibold tracking-tight text-foreground">
             Have queries?
