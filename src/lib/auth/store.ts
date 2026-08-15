@@ -1,5 +1,7 @@
 import "server-only";
 
+import { postgresStore } from "./stores/postgres";
+
 /**
  * WHERE CHALLENGES AND USERS LIVE — the second seam.
  * ---------------------------------------------------------------------------
@@ -17,8 +19,13 @@ import "server-only";
  * the limiter appears to work in testing and does nothing under load.
  *
  * It is here to unblock development, and it announces itself on first use.
- * Production needs a shared store: the Postgres table sketched in
- * `docs/backend/schema.sql`, or Redis if a dedicated one is already running.
+ *
+ * THE REPLACEMENT EXISTS. `stores/postgres.ts` implements this interface
+ * against the `auth_challenges`, `auth_sends` and `users` tables, and
+ * `authStore()` at the bottom of this file selects it whenever `DATABASE_URL`
+ * is set. The in-memory implementation now only runs on a machine that has not
+ * configured a database — which is a development machine, because `env.ts`
+ * makes `DATABASE_URL` mandatory in production.
  */
 
 export type Challenge = {
@@ -40,6 +47,14 @@ export type Challenge = {
 export type User = {
   id: string;
   phoneE164: string;
+  /**
+   * Incremented to invalidate every session this user holds. It travels inside
+   * the session token and is compared on each authenticated request, which is
+   * what makes "sign out everywhere" possible at all — a stateless signed
+   * cookie is otherwise revocable only by rotating `AUTH_SECRET`, and that
+   * signs out every applicant on the platform to deal with one lost phone.
+   */
+  tokenVersion: number;
   createdAt: number;
   lastLoginAt: number;
 };
@@ -154,6 +169,7 @@ export const memoryStore: AuthStore = {
     const user: User = {
       id: crypto.randomUUID(),
       phoneE164,
+      tokenVersion: 0,
       createdAt: now,
       lastLoginAt: now,
     };
@@ -167,10 +183,28 @@ export const memoryStore: AuthStore = {
   },
 };
 
+/* -------------------------------------------------------------------------- */
+/* Selection                                                                   */
+/* -------------------------------------------------------------------------- */
+
 /**
- * Selection point. When the real store lands it is swapped here and nothing
- * upstream changes.
+ * The selection point. Postgres when there is a database, memory otherwise, and
+ * no caller can tell the difference — which is what made it possible to write
+ * and verify every rule in `otp.ts` before the database existed.
+ *
+ * Importing `stores/postgres` costs nothing on a machine with no database: the
+ * connection pool in `db/client.ts` is created on first use, not on import, so
+ * a development clone with no `.env.local` never opens a socket.
  */
+let selected: AuthStore | null = null;
+
 export function authStore(): AuthStore {
-  return memoryStore;
+  selected ??= process.env.DATABASE_URL ? postgresStore : memoryStore;
+  return selected;
+}
+
+/** Test seam, so a suite can force the in-memory store regardless of what is in
+ *  the environment. Nothing in the application calls this. */
+export function setAuthStoreForTests(store: AuthStore | null): void {
+  selected = store;
 }

@@ -112,11 +112,48 @@ export function parsePhone(rawNational: string, iso: string): PhoneParseResult {
  * Used on the OTP screen so the applicant can check, before waiting for an SMS
  * that will never arrive, that they typed the number they meant.
  */
-export function formatE164(e164: string): string {
-  const match = /^\+(\d{1,3})(\d+)$/.exec(e164);
-  if (!match) return e164;
+/**
+ * SPLITTING OFF THE COUNTRY CODE.
+ *
+ * This used to be `/^\+(\d{1,3})(\d+)$/`, which is wrong for every number whose
+ * country code is shorter than three digits — the quantifier is greedy and
+ * there is nothing after it to force a backtrack, so `+919882515043` split as
+ * `919` and `882515043`. India, the default and the overwhelming majority of
+ * this site's traffic, rendered on the OTP screen as `+919 882515043`.
+ *
+ * That is worse than no formatting at all. The entire stated purpose of showing
+ * the number back is so the applicant can check they typed the one they meant
+ * before waiting for a message; a mis-grouped number invites them to conclude
+ * they made a mistake and start again, which costs another SMS.
+ *
+ * Codes are matched against the list we support, longest first, so `+1` and
+ * `+971` cannot be confused. A number from anywhere else falls through to the
+ * old guess, which is the right behaviour for a case we cannot do better on.
+ */
+function splitCountryCode(e164: string): { code: string; rest: string } | null {
+  const match = /^\+(\d+)$/.exec(e164);
+  if (!match) return null;
 
-  const [, code, rest] = match;
+  const digits = match[1];
+
+  const codes = [...new Set(CALLING_CODES.map((entry) => entry.code))].sort(
+    (a, b) => b.length - a.length,
+  );
+
+  for (const code of codes) {
+    if (digits.startsWith(code)) {
+      return { code, rest: digits.slice(code.length) };
+    }
+  }
+
+  return { code: digits.slice(0, 2), rest: digits.slice(2) };
+}
+
+export function formatE164(e164: string): string {
+  const split = splitCountryCode(e164);
+  if (!split) return e164;
+
+  const { code, rest } = split;
   if (rest.length === 10) return `+${code} ${rest.slice(0, 5)} ${rest.slice(5)}`;
   return `+${code} ${rest}`;
 }
@@ -127,9 +164,11 @@ export function formatE164(e164: string): string {
  * whole point is confirming the number is right.
  */
 export function maskE164(e164: string): string {
-  const match = /^\+(\d{1,3})(\d+)$/.exec(e164);
-  if (!match) return "•••";
+  // Same fix as `formatE164` — and it mattered here too, because a mask that
+  // splits the code wrongly reveals one more digit of the number than intended.
+  const split = splitCountryCode(e164);
+  if (!split) return "•••";
 
-  const [, code, rest] = match;
+  const { code, rest } = split;
   return `+${code} ${"•".repeat(Math.max(0, rest.length - 4))}${rest.slice(-4)}`;
 }

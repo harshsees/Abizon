@@ -1,13 +1,10 @@
 "use client";
 
 /**
- * The terminal step — READY TO SUBMIT.
+ * The terminal step.
  *
- * §21 in one sentence: this screen may only claim what actually happened, and
- * what actually happened is that a complete application now exists in this
- * browser. It has not been filed. Nothing has been charged. So the heading is
- * "Ready to submit" and the confirmation mark is neutral, not a green tick —
- * a green tick is the universal symbol for "done", and this is not done.
+ * §21 in one sentence: this screen may only claim what actually happened. That
+ * rule has not changed; what has changed is what can happen.
  *
  * WHAT THIS REPLACES. The deleted `MultiStepApplicationForm` ended on a 1400ms
  * `setTimeout`, then announced "Application submitted successfully", minted an
@@ -16,12 +13,25 @@
  * An applicant could have closed the tab believing a government application was
  * in progress, and only found out at the airport.
  *
- * There is no submit button because there is no submission endpoint. Adding a
- * disabled one, or one that opened a "coming soon" toast, would be a worse lie
- * than the absence: it would imply the button is the only missing piece.
+ * THE REBUILD THEN HAD NO SUBMIT BUTTON, and the header of this file used to
+ * explain why: there was no submission endpoint, and a disabled button — or one
+ * that opened a "coming soon" toast — would have been a worse lie than the
+ * absence, because it would imply the button was the only missing piece.
+ *
+ * THERE IS NOW AN ENDPOINT. `submitApplicationAction` writes a real status
+ * transition, records who made it, and returns a reference that resolves on the
+ * tracking page. So the button exists, and it appears **only** when it can do
+ * something: signed in, with a backend, with every document on the server.
+ * Without those the screen is exactly what it was, because in that case nothing
+ * about the old explanation has stopped being true.
+ *
+ * WHAT IS STILL NOT CLAIMED. Nothing is charged. Abizon cannot take a payment
+ * online — that is genuinely not built — and `pricingConfig.ts` still marks the
+ * service fee provisional. Submitting means the application reaches Abizon's
+ * queue, not that it reaches a consulate, and the copy says which.
  */
 
-import { CircleAlert, Info } from "lucide-react";
+import { CircleAlert, Info, Loader2, Send } from "lucide-react";
 import Link from "next/link";
 
 import { getCountrySlug } from "@/data/countries";
@@ -31,11 +41,78 @@ import { FEE_NOT_PUBLISHED } from "@/lib/pricingConfig";
 const inr = (value: number) => `₹${Math.round(value).toLocaleString("en-IN")}`;
 
 export function ApplicationComplete() {
-  const { summary, country, jumpTo } = useApplication();
+  const { summary, country, jumpTo, sync } = useApplication();
   if (!summary || !country) return null;
 
   const ready = summary.readiness === "ready-for-submission";
   const per = summary.fees.travellers;
+
+  /* ---------------------------------------------------------------------- */
+  /* Submitted                                                              */
+  /* ---------------------------------------------------------------------- */
+
+  if (sync.submittedReference) {
+    return (
+      <div className="space-y-5">
+        <div
+          role="status"
+          className="rounded-xl border border-border bg-surface p-5 sm:p-6"
+        >
+          <p className="text-sm font-semibold text-foreground">
+            Your {summary.country.displayName} application is with Abizon.
+          </p>
+          <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+            We have everything for{" "}
+            {summary.travellers.count === 1
+              ? "one traveller"
+              : `${summary.travellers.count} travellers`}
+            . Someone will check the documents and write to you when the status
+            changes. There is nothing else for you to do right now.
+          </p>
+
+          <div className="mt-5 rounded-lg bg-surface-sunken px-4 py-3">
+            <p className="text-2xs text-muted-foreground">Your reference</p>
+            <p
+              data-numeric
+              className="mt-0.5 font-mono text-lg font-bold tracking-tight text-foreground"
+            >
+              {sync.submittedReference}
+            </p>
+          </div>
+        </div>
+
+        {/* Still true, and still the most important sentence on the page. */}
+        <div className="flex gap-3 rounded-xl border border-border bg-surface-sunken p-5">
+          <Info aria-hidden className="mt-0.5 size-4 flex-shrink-0 text-muted-foreground" />
+          <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
+            <p className="text-sm font-semibold text-foreground">
+              Nothing has been charged.
+            </p>
+            <p>
+              Abizon cannot take a payment online yet. Fees are settled with you
+              directly before anything is filed with{" "}
+              {summary.country.displayName}.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap gap-3">
+          <Link
+            href={`/track/${sync.submittedReference}`}
+            className="inline-flex h-12 items-center rounded-xl bg-primary px-5 text-sm font-bold text-on-primary transition-colors hover:bg-primary-hover sm:h-11"
+          >
+            Track this application
+          </Link>
+          <Link
+            href="/profile"
+            className="inline-flex h-12 items-center rounded-xl border border-border bg-surface px-5 text-sm font-semibold text-foreground transition-colors hover:bg-surface-sunken sm:h-11"
+          >
+            Your applications
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   if (!ready) {
     return (
@@ -93,19 +170,31 @@ export function ApplicationComplete() {
         </p>
       </div>
 
-      {/* The most important block on the page. */}
+      {/* The most important block on the page, and the one that has to change
+          with the mode — because in one of them "nothing has left this device"
+          is true and in the other it is the opposite of true. */}
       <div className="flex gap-3 rounded-xl border border-border bg-surface-sunken p-5">
         <Info aria-hidden className="mt-0.5 size-4 flex-shrink-0 text-muted-foreground" />
         <div className="space-y-2.5 text-xs leading-relaxed text-muted-foreground">
           <p className="text-sm font-semibold text-foreground">
-            Nothing has been filed, and nothing has been charged.
+            {sync.mode === "synced"
+              ? "Nothing has been filed yet, and nothing has been charged."
+              : "Nothing has been filed, and nothing has been charged."}
           </p>
-          <p>
-            Abizon cannot yet accept a submission or a payment online. Your
-            answers are held in this browser tab and the documents you attached
-            have not left this device — closing the tab discards the files, and
-            the rest of your progress stays on this device only.
-          </p>
+          {sync.mode === "synced" ? (
+            <p>
+              Your application is saved to your account and your documents are
+              stored securely. It has not been sent to Abizon for filing until
+              you submit it below.
+            </p>
+          ) : (
+            <p>
+              Abizon cannot yet accept a submission or a payment online. Your
+              answers are held in this browser tab and the documents you attached
+              have not left this device — closing the tab discards the files, and
+              the rest of your progress stays on this device only.
+            </p>
+          )}
           <p>
             When filing opens,{" "}
             {summary.fees.payNow === 0
@@ -168,6 +257,14 @@ export function ApplicationComplete() {
         />
       </dl>
 
+      {/* THE SUBMIT BUTTON EXISTS ONLY WHERE IT CAN WORK.
+
+          Not disabled-and-visible in local mode: a greyed-out Submit implies
+          the button is the last missing piece, when in fact there is no account
+          to submit against. The absence is the honest signal, and the block
+          above says why. */}
+      {sync.mode === "synced" && <SubmitPanel />}
+
       <div className="flex flex-wrap gap-3">
         <button
           type="button"
@@ -183,6 +280,67 @@ export function ApplicationComplete() {
           Back to {summary.country.displayName}
         </Link>
       </div>
+    </div>
+  );
+}
+
+/**
+ * Submission is the one irreversible step in the flow, so it gets its own
+ * block, its own confirmation sentence, and a button that is disabled for
+ * reasons it names.
+ *
+ * The gate is `documentsStored`, not "documents attached". A document sitting
+ * in this tab because its upload failed would submit an application the ops
+ * queue sees as missing a passport — and the applicant would have been told it
+ * was filed. The server refuses that too (`submitApplication` counts document
+ * rows), and this is the same refusal said in advance rather than as an error.
+ */
+function SubmitPanel() {
+  const { summary, sync } = useApplication();
+  if (!summary) return null;
+
+  const needsDocuments = summary.documents.requiredCount > 0;
+  const waitingOnUploads = needsDocuments && !sync.documentsStored;
+
+  const reason = sync.uploading
+    ? "Waiting for your documents to finish uploading."
+    : waitingOnUploads
+      ? "One of your documents has not reached us yet. Open the documents step and check."
+      : undefined;
+
+  return (
+    <div className="rounded-xl border border-border bg-surface p-5 sm:p-6">
+      <p className="text-sm font-semibold text-foreground">Send this to Abizon</p>
+      <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
+        You will get a reference, and we will email you when the status changes.
+        You can still be contacted about anything that needs correcting.
+      </p>
+
+      {sync.error && (
+        <p role="alert" className="mt-3 text-xs font-semibold text-destructive">
+          {sync.error}
+        </p>
+      )}
+
+      <button
+        type="button"
+        onClick={() => void sync.submit()}
+        disabled={sync.submitting || Boolean(reason)}
+        className="mt-4 inline-flex h-12 cursor-pointer items-center gap-2 rounded-xl bg-primary px-6 text-sm font-bold text-on-primary shadow-e2 transition-[background-color,transform] duration-[--duration-fast] hover:bg-primary-hover active:scale-[0.98] disabled:pointer-events-none disabled:opacity-40 motion-reduce:transform-none sm:h-11"
+      >
+        {sync.submitting ? (
+          <Loader2 aria-hidden className="size-4 animate-spin" />
+        ) : (
+          <Send aria-hidden className="size-4" />
+        )}
+        {sync.submitting ? "Submitting…" : "Submit application"}
+      </button>
+
+      {reason && (
+        <p role="status" className="mt-2.5 text-2xs text-muted-foreground">
+          {reason}
+        </p>
+      )}
     </div>
   );
 }

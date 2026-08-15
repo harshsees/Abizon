@@ -62,15 +62,29 @@ export default function Home() {
    * `.js-magnetic-btn` any more.
    */
 
-  // Seed from the URL once on mount. The homepage owns this state; the header
-  // reads and writes it through props rather than keeping a second copy.
+  /**
+   * Seed from the URL once on mount. The homepage owns this state; the header
+   * reads and writes it through props rather than keeping a second copy.
+   *
+   * The lint rule below flags synchronous `setState` in an effect because it
+   * usually means state derived from props, which should be computed during
+   * render instead. This is the other case: the value comes from
+   * `window.location`, which does not exist during the server render.
+   *
+   * Seeding it in a lazy `useState` initialiser — the rule's normal remedy —
+   * would make the server render "" and the first client render the seeded
+   * value, which is a hydration mismatch. An effect after hydration is the
+   * correct shape here, and the extra render is the cost of the URL not being
+   * available to both sides.
+   */
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-
     const searchVal = params.get("search");
-    if (searchVal) setSearchQuery(searchVal);
-
     const tabVal = params.get("tab");
+
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (searchVal) setSearchQuery(searchVal);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (tabVal === "explore" || tabVal === "events") setActiveTab(tabVal);
   }, []);
 

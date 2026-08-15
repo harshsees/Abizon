@@ -135,11 +135,29 @@ export type Traveller = {
 };
 
 /**
+ * WHERE A DOCUMENT HAS GOT TO.
+ *
+ * There is still no "approved" or "reviewing" member — whether a passport scan
+ * is acceptable is a judgement, and it is made by a person in the ops console,
+ * not here. What these describe is only whether the bytes have reached the
+ * server, which is a fact this code can actually know.
+ *
+ *   local      chosen, held in this tab, not yet sent. The state everything
+ *              was in before the backend existed.
+ *   uploading  in flight.
+ *   stored     on the server, normalised, EXIF stripped, row written. This is
+ *              the only state that survives closing the tab.
+ *   failed     the attempt returned an error. `error` says which, in the
+ *              applicant's words, and the file is still in hand to retry with.
+ */
+export type DocumentUploadState = "local" | "uploading" | "stored" | "failed";
+
+/**
  * A supplied document.
  *
- * There is no "approved" or "reviewing" member. The previous uploader flipped
- * itself to "approved" on a 900ms timer, which told the applicant their
- * passport had passed a check that never ran.
+ * There is no "approved" member. The previous uploader flipped itself to
+ * "approved" on a 900ms timer, which told the applicant their passport had
+ * passed a check that never ran.
  */
 export type DocumentEntry = {
   source: "upload" | "capture";
@@ -154,6 +172,25 @@ export type DocumentEntry = {
    */
   previewDataUrl?: string;
   providedAt: number;
+
+  /* --- The server half ------------------------------------------------- */
+
+  /**
+   * The bytes, held only until the upload succeeds and then dropped.
+   *
+   * NEVER PERSISTED, and it cannot be: a `Blob` does not survive
+   * `JSON.stringify`, so the draft in `localStorage` gets `undefined` here by
+   * construction rather than by anybody remembering to strip it. That is the
+   * same property `applicationDraft.ts` argues for in its header — a passport
+   * scan has no business in a store readable by any script on the origin.
+   */
+  blob?: Blob;
+
+  upload: DocumentUploadState;
+  /** The `documents` row id, once there is one. */
+  documentId?: string;
+  /** Why the upload failed, written for the applicant. */
+  error?: string;
 };
 
 /** Keyed `${travellerId}:${kind}` so one map covers every traveller. */
@@ -232,9 +269,51 @@ export type ApplicationAction =
   | { type: "setTravelWindow"; travelWindow: "soon" | "later" }
   | { type: "setDocument"; travellerId: string; kind: DocumentKind; entry: DocumentEntry }
   | { type: "clearDocument"; travellerId: string; kind: DocumentKind }
+  /** Progress reported by the sync layer. Patches rather than replaces, so an
+   *  upload finishing cannot clobber a preview the applicant is looking at. */
+  | {
+      type: "setDocumentUpload";
+      travellerId: string;
+      kind: DocumentKind;
+      patch: Pick<DocumentEntry, "upload"> & Partial<DocumentEntry>;
+    }
   | { type: "setDetails"; travellerId: string; patch: Partial<TravellerDetails> }
   | { type: "setContact"; patch: Partial<ContactDetails> }
-  | { type: "goToStep"; step: ApplicationStepId; direction?: 1 | -1 };
+  | { type: "goToStep"; step: ApplicationStepId; direction?: 1 | -1 }
+  | { type: "restore"; payload: RestorePayload };
+
+/**
+ * What the server knows about an application already in progress.
+ *
+ * Positions rather than ids: the server keys travellers by their position in
+ * the party, and the client's traveller ids are generated in this tab and mean
+ * nothing to it. Matching on position is what lets a resume in a *different*
+ * browser line up with the party the applicant entered in the first one.
+ */
+export type RestorePayload = {
+  travellers: Array<{
+    position: number;
+    fullName?: string | null;
+    dateOfBirth?: string | null;
+    passportNumber?: string | null;
+    passportExpiry?: string | null;
+    nationality?: string | null;
+    gender?: string | null;
+    email?: string | null;
+    phone?: string | null;
+  }>;
+  documents: Array<{
+    id: string;
+    travellerPosition: number;
+    kind: string;
+    status: string;
+    rejectionReason: string | null;
+  }>;
+  plan: number | null;
+  travelDate: string | null;
+  travelWindow: string | null;
+  step: string | null;
+};
 
 /**
  * Traveller ids.
@@ -343,6 +422,32 @@ export function applicationReducer(
       return { ...state, documents };
     }
 
+    case "setDocumentUpload": {
+      const key = documentKey(action.travellerId, action.kind);
+      const existing = state.documents[key];
+
+      // The document was cleared while its upload was in flight. Writing the
+      // result back would resurrect a row the applicant has just removed.
+      if (!existing) return state;
+
+      return {
+        ...state,
+        documents: {
+          ...state.documents,
+          [key]: {
+            ...existing,
+            ...action.patch,
+            // A successful upload releases the bytes. Holding four passport
+            // scans in memory for the rest of the session costs tens of
+            // megabytes on the phone that is least able to spare it, and once
+            // the server has them there is nothing left to retry.
+            blob: action.patch.upload === "stored" ? undefined : existing.blob,
+            error: action.patch.upload === "failed" ? action.patch.error : undefined,
+          },
+        },
+      };
+    }
+
     case "setDetails":
       return {
         ...state,
@@ -361,6 +466,104 @@ export function applicationReducer(
 
     case "goToStep":
       return { ...state, step: action.step, direction: action.direction ?? 1 };
+
+    /**
+     * ADOPTING A SERVER APPLICATION.
+     *
+     * Fires once, shortly after mount, when the applicant is signed in and the
+     * server already holds an application for this destination. It is the
+     * mechanism behind resuming on a *different device* — which the on-device
+     * draft could never do, and which is the whole reason for the backend.
+     *
+     * THE MERGE IS CONSERVATIVE, and the asymmetry is deliberate.
+     *
+     * The server call resolves after the first paint, so the applicant may
+     * already be typing. Overwriting a field somebody is editing, a second
+     * after they started, is the worst thing this action could do — so:
+     *
+     *   - with no travellers yet, the server's party is adopted whole. This is
+     *     the ordinary case: a fresh tab, resuming.
+     *   - with travellers already present, only *empty* fields are filled.
+     *     Anything typed in this tab wins, because it is newer and because the
+     *     person who typed it is watching.
+     *
+     * Documents are adopted either way: a stored document is a fact about the
+     * server, there is no local edit to lose, and the alternative is asking
+     * for a passport scan that has already been uploaded.
+     */
+    case "restore": {
+      const { payload } = action;
+
+      const adoptParty = state.travellers.length === 0;
+
+      const travellers = adoptParty
+        ? payload.travellers.map((traveller) =>
+            // The card shows a first name; the passport carries a full one.
+            createTraveller(traveller.fullName?.trim().split(/\s+/)[0] ?? ""),
+          )
+        : state.travellers;
+
+      const details: Record<string, TravellerDetails> = { ...state.details };
+
+      payload.travellers.forEach((incoming) => {
+        const traveller = travellers[incoming.position];
+        if (!traveller) return;
+
+        const current = details[traveller.id] ?? EMPTY_DETAILS;
+
+        const prefer = (mine: string, theirs?: string | null) =>
+          mine.trim().length > 0 ? mine : (theirs ?? "");
+
+        details[traveller.id] = {
+          fullName: prefer(current.fullName, incoming.fullName),
+          dateOfBirth: prefer(current.dateOfBirth, incoming.dateOfBirth),
+          passportNumber: prefer(current.passportNumber, incoming.passportNumber),
+          passportExpiry: prefer(current.passportExpiry, incoming.passportExpiry),
+          nationality: prefer(current.nationality, incoming.nationality),
+          gender: prefer(current.gender, incoming.gender),
+        };
+      });
+
+      const documents: DocumentMap = { ...state.documents };
+
+      for (const incoming of payload.documents) {
+        const traveller = travellers[incoming.travellerPosition];
+        if (!traveller) continue;
+
+        const kind = incoming.kind as DocumentKind;
+
+        documents[documentKey(traveller.id, kind)] = {
+          source: "upload",
+          providedAt: Date.now(),
+          upload: "stored",
+          documentId: incoming.id,
+          // A document a reviewer has already rejected is not a document the
+          // applicant can leave alone, so the reason travels with it rather
+          // than being discovered in an email they may not have read.
+          error: incoming.status === "rejected" ? (incoming.rejectionReason ?? undefined) : undefined,
+        };
+      }
+
+      const lead = payload.travellers.find((traveller) => traveller.position === 0);
+
+      return {
+        ...state,
+        travellers,
+        details,
+        documents,
+        plan: state.plan || (payload.plan ?? 0),
+        travelDate: state.travelDate ?? payload.travelDate ?? undefined,
+        travelWindow:
+          state.travelWindow ??
+          (payload.travelWindow === "soon" || payload.travelWindow === "later"
+            ? payload.travelWindow
+            : undefined),
+        contact: {
+          email: state.contact.email || (lead?.email ?? ""),
+          phone: state.contact.phone || (lead?.phone ?? ""),
+        },
+      };
+    }
 
     default:
       return state;
@@ -439,9 +642,30 @@ export function blockingReason(
       const incomplete = state.travellers.filter(
         (traveller) => !travellerDocumentState(state, country, traveller).complete,
       );
-      if (incomplete.length === 0) return undefined;
-      const names = incomplete.map((t) => t.firstName || "an unnamed traveller");
-      return `Still missing documents for ${names.join(", ")}.`;
+
+      if (incomplete.length > 0) {
+        const names = incomplete.map((t) => t.firstName || "an unnamed traveller");
+        return `Still missing documents for ${names.join(", ")}.`;
+      }
+
+      // An upload that failed leaves a document attached in this tab and absent
+      // on the server. Treating that as complete would carry the applicant all
+      // the way to submission before anything noticed — and submission is the
+      // one place a failure is expensive, because by then they believe they
+      // have filed.
+      const failed = Object.values(state.documents).filter(
+        (entry) => entry.upload === "failed",
+      );
+      if (failed.length > 0) {
+        return failed[0].error ?? "A document did not upload. Open it and try again.";
+      }
+
+      const inFlight = Object.values(state.documents).some(
+        (entry) => entry.upload === "uploading",
+      );
+      if (inFlight) return "Still uploading. This takes a moment on a slow connection.";
+
+      return undefined;
     }
 
     case "details": {

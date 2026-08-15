@@ -18,17 +18,26 @@
  * Wiring a real backend means implementing `lookupApplicationStatus` — this
  * file does not change.
  *
- * WHY UNSUPPORTED STAGES ARE STILL SHOWN. Hiding the five stages Abizon cannot
- * observe would make the journey look shorter than it is. They are shown, and
- * marked as needing a status service, so the picture is complete and the limit
- * is legible.
+ * WHY UNSUPPORTED STAGES WERE STILL SHOWN. Hiding the five stages Abizon could
+ * not observe would have made the journey look shorter than it is, so they were
+ * drawn and marked "needs a status service".
+ *
+ * THAT MARKER IS GONE, because the condition it described is. Every stage is
+ * now observable: the first two from the application itself, the rest from a
+ * transition a named member of staff recorded in the ops console. A stage with
+ * no event against it means it has not been reached, which is what an unfilled
+ * circle already says — a second label saying so would be noise.
+ *
+ * `withdrawn` is excluded from the journey rather than drawn at the end of it.
+ * It is where an application stops, not a stage everybody passes through, and
+ * `SEQUENCE_STATUSES` is the list that knows the difference.
  */
 
 import { motion, useReducedMotion } from "framer-motion";
 import { Check, Circle } from "lucide-react";
 
 import {
-  APPLICATION_STATUSES,
+  SEQUENCE_STATUSES,
   statusIndex,
   type ApplicationStatusId,
   type TrackingEvent,
@@ -74,11 +83,11 @@ export function TrackingTimeline({
       variants={staggerContainer(0.05)}
       aria-label={
         status
-          ? `Application status: ${status}. Stage ${activeIndex + 1} of ${APPLICATION_STATUSES.length}.`
-          : `The ${APPLICATION_STATUSES.length} stages of a Abizon application. Current stage unknown.`
+          ? `Application status: ${status}. Stage ${activeIndex + 1} of ${SEQUENCE_STATUSES.length}.`
+          : `The ${SEQUENCE_STATUSES.length} stages of a Abizon application. Current stage unknown.`
       }
     >
-      {APPLICATION_STATUSES.map((stage, index) => {
+      {SEQUENCE_STATUSES.map((stage, index) => {
         const reached = activeIndex >= 0 && index <= activeIndex;
         const current = activeIndex >= 0 && index === activeIndex;
         const event = eventFor(stage.id);
@@ -127,14 +136,7 @@ export function TrackingTimeline({
                   >
                     {when.format(new Date(event.at))}
                   </time>
-                ) : (
-                  !stage.supported && (
-                    // Not a status. A statement about what Abizon can see.
-                    <span className="text-2xs text-muted-foreground">
-                      Needs a status service
-                    </span>
-                  )
-                )}
+                ) : null}
               </div>
 
               <p className="mt-0.5 text-2xs leading-relaxed text-muted-foreground">

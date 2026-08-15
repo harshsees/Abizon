@@ -6,6 +6,7 @@ import { AlertCircle, ArrowRight, MessageSquare, Pencil, ShieldCheck } from "luc
 import { loginAction } from "@/app/actions/auth";
 import { INITIAL_LOGIN_STATE, type LoginState } from "@/lib/auth/loginState";
 import { OtpInput } from "@/components/auth/OtpInput";
+import { TurnstileWidget } from "@/components/auth/TurnstileWidget";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
 import { CALLING_CODES, DEFAULT_ISO, formatE164 } from "@/lib/auth/phone";
@@ -157,6 +158,14 @@ function PhoneStep({
             </div>
           )}
         </Field>
+
+        {/* Renders nothing when no site key is configured, which is the same
+            condition under which the server skips the check — so the widget
+            cannot be missing while the server still demands a token. The reset
+            key is the current error: a rejected submit spends its token, and
+            resubmitting the spent one fails with a message about robots that
+            has nothing to do with what went wrong. */}
+        <TurnstileWidget resetKey={state.error} />
 
         <Button type="submit" size="lg" block loading={pending}>
           Send code

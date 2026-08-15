@@ -240,7 +240,7 @@ export async function resendCode(challengeId: string): Promise<RequestOutcome> {
 /* -------------------------------------------------------------------------- */
 
 export type VerifyOutcome =
-  | { ok: true; userId: string; phoneE164: string }
+  | { ok: true; userId: string; phoneE164: string; tokenVersion: number }
   | { ok: false; error: string; attemptsRemaining?: number; fatal?: boolean };
 
 export async function verifyCode(
@@ -291,5 +291,14 @@ export async function verifyCode(
   await store.updateChallenge(challengeId, { consumedAt: now });
 
   const user = await store.findOrCreateUser(challenge.phoneE164);
-  return { ok: true, userId: user.id, phoneE164: user.phoneE164 };
+
+  // The version travels into the session cookie so that a later revocation can
+  // invalidate it. Reading it here rather than in the action keeps the caller
+  // from having to know that sessions are versioned at all.
+  return {
+    ok: true,
+    userId: user.id,
+    phoneE164: user.phoneE164,
+    tokenVersion: user.tokenVersion,
+  };
 }

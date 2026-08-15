@@ -2,6 +2,7 @@ import { jwtVerify } from "jose";
 import { NextResponse, type NextRequest } from "next/server";
 
 import { SESSION_COOKIE_NAME } from "@/lib/auth/session";
+import { OPS_COOKIE_NAME } from "@/lib/ops/session";
 
 /**
  * ROUTE GATING — the fast, optimistic half.
@@ -35,25 +36,65 @@ function matches(pathname: string, prefixes: string[]): boolean {
   );
 }
 
-function key(): Uint8Array {
-  const secret = process.env.AUTH_SECRET ?? "development-only-insecure-secret";
-  return new TextEncoder().encode(secret);
+/**
+ * The ops console, gated the same way and with a different cookie and a
+ * different secret. `lib/ops/session.ts` explains why the two must not share
+ * one: rotating `AUTH_SECRET` after an applicant cookie leaks would otherwise
+ * lock out the people handling the incident, and a forgeable applicant token
+ * would become a staff token.
+ *
+ * Same caveat as everything else in this file — it is a redirect, not the
+ * boundary. `lib/ops/dal.ts` re-reads the row, checks the account is not
+ * disabled, compares the token version and requires confirmed TOTP.
+ */
+const OPS_PROTECTED = ["/ops"];
+const OPS_LOGIN = "/ops/login";
+
+function key(secret: string | undefined): Uint8Array {
+  return new TextEncoder().encode(secret ?? "development-only-insecure-secret");
 }
 
-async function hasValidSession(request: NextRequest): Promise<boolean> {
-  const token = request.cookies.get(SESSION_COOKIE_NAME)?.value;
+async function verifies(token: string | undefined, secret: string | undefined): Promise<boolean> {
   if (!token) return false;
 
   try {
-    await jwtVerify(token, key(), { algorithms: ["HS256"] });
+    await jwtVerify(token, key(secret), { algorithms: ["HS256"] });
     return true;
   } catch {
     return false;
   }
 }
 
+async function hasValidSession(request: NextRequest): Promise<boolean> {
+  return verifies(request.cookies.get(SESSION_COOKIE_NAME)?.value, process.env.AUTH_SECRET);
+}
+
 export async function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
+
+  /* --- Ops ------------------------------------------------------------- */
+
+  if (matches(pathname, OPS_PROTECTED)) {
+    // The login page is inside the protected prefix, so it has to be excepted
+    // first or signing in redirects to itself forever.
+    if (pathname === OPS_LOGIN) return NextResponse.next();
+
+    const staffSignedIn = await verifies(
+      request.cookies.get(OPS_COOKIE_NAME)?.value,
+      process.env.OPS_SESSION_SECRET,
+    );
+
+    if (!staffSignedIn) {
+      // No `?next=`. Unlike the applicant flow, there is no deep link worth
+      // preserving here and a redirect parameter on a staff console is one more
+      // thing that has to be validated.
+      return NextResponse.redirect(new URL(OPS_LOGIN, request.url));
+    }
+
+    return NextResponse.next();
+  }
+
+  /* --- Applicant -------------------------------------------------------- */
 
   const isProtected = matches(pathname, PROTECTED);
   const isAuthRoute = matches(pathname, AUTH_ROUTES);

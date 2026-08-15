@@ -81,6 +81,7 @@ export function ApplicationShell() {
     next,
     back,
     resume,
+    sync,
   } = useApplication();
 
   const headingRef = useRef<HTMLHeadingElement>(null);
@@ -193,6 +194,7 @@ export function ApplicationShell() {
         flagUrl={config.flagUrl}
         exitHref={countryHref}
         saved={resume !== "none" || state.travellers.length > 0}
+        savedTo={sync.mode === "synced" ? "account" : "device"}
         progressPercent={summary.progress.percent}
       />
 
@@ -207,17 +209,31 @@ export function ApplicationShell() {
           tabIndex={-1}
           className="min-w-0 max-w-[34rem] pb-28 outline-none md:pb-0"
         >
-          {/* Two different resumes, said differently. Silently rewinding
-              someone to step one after they had reached review is the kind of
-              thing that reads as a bug. */}
-          {resume === "restored" && isFirstStep && (
+          {/* RESUME NOTICES, and which of them can still be true.
+
+              `downgraded` existed because document files were deliberately not
+              persisted — passport scans have no business in localStorage — so a
+              draft that had reached review could not be honoured and the flow
+              said so rather than silently rewinding somebody.
+
+              With an account that no longer applies: documents are on the
+              server and come back with the application. So the notice is shown
+              only in local mode, where it is still exactly right. */}
+          {sync.mode === "synced" && resume !== "none" && isFirstStep && (
+            <p className="mb-7 rounded-xl border border-border bg-surface px-4 py-3 text-2xs leading-relaxed text-muted-foreground">
+              Picked up where you left off. This application is saved to your
+              account, so you can finish it on any device.
+            </p>
+          )}
+
+          {sync.mode !== "synced" && resume === "restored" && isFirstStep && (
             <p className="mb-7 rounded-xl border border-border bg-surface px-4 py-3 text-2xs leading-relaxed text-muted-foreground">
               Picked up where you left off. Your progress is saved on this device
               only — not to an account, and not to a server.
             </p>
           )}
 
-          {resume === "downgraded" && isFirstStep && (
+          {sync.mode !== "synced" && resume === "downgraded" && isFirstStep && (
             <p
               role="status"
               className="mb-7 rounded-xl border border-primary-border bg-primary-subtle px-4 py-3 text-2xs leading-relaxed text-primary-subtle-foreground"
@@ -226,6 +242,28 @@ export function ApplicationShell() {
               saved between visits — passport scans stay in the tab you opened
               them in. You will need to attach them again.
             </p>
+          )}
+
+          {/* Signed out, with a backend that would have saved this. Offered
+              once, at the first step, rather than as a wall in front of the
+              flow: somebody who wants to see what is asked for before creating
+              an account is a reasonable person, and the country page's own CTA
+              already brings most people here signed in. */}
+          {sync.mode === "local" && sync.localReason === "no-account" && isFirstStep && (
+            <div className="mb-7 rounded-xl border border-primary-border bg-primary-subtle px-4 py-3.5">
+              <p className="text-2xs leading-relaxed text-primary-subtle-foreground">
+                <span className="font-bold">You are not signed in.</span> You can
+                fill this in, but nothing will be saved and you will not be able
+                to submit it — documents in particular are discarded when this
+                tab closes.
+              </p>
+              <Link
+                href={`/login?next=${encodeURIComponent(`/apply?country=${getCountrySlug(country.name)}`)}`}
+                className="mt-2 inline-block text-2xs font-bold text-primary underline underline-offset-2"
+              >
+                Sign in to save this application
+              </Link>
+            </div>
           )}
 
           <StepHeader

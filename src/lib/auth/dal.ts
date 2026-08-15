@@ -31,7 +31,20 @@ export const getCurrentUser = cache(async (): Promise<User | null> => {
 
   // A valid signature over a user that no longer exists — deleted account, or
   // a store that was reset in development. Treat as signed out.
-  return user ?? null;
+  if (!user) return null;
+
+  // REVOCATION. A signature proves the cookie was issued by this server and
+  // says nothing about whether it should still work. `tokenVersion` is bumped
+  // by "sign out everywhere", by an erasure request, and by an operator dealing
+  // with a compromised account; a cookie carrying an older version is a session
+  // that has been withdrawn, and it stops here rather than at the next login.
+  //
+  // This is the read that makes `dal.ts` the security boundary rather than
+  // `proxy.ts`, which cannot make it — the proxy sees the cookie and no
+  // database.
+  if (session.ver !== user.tokenVersion) return null;
+
+  return user;
 });
 
 /**

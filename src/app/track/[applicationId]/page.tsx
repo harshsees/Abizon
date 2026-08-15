@@ -3,7 +3,9 @@ import Link from "next/link";
 import { Info } from "lucide-react";
 
 import { TrackingTimeline } from "@/components/TrackingTimeline";
-import { lookupApplicationStatus } from "@/lib/application/status";
+import { APPLICATION_STATUSES } from "@/lib/application/status";
+import { lookupApplicationStatus } from "@/lib/application/tracking";
+import { resolveCountry } from "@/lib/countryCatalogue";
 
 /**
  * /track/<reference>
@@ -45,16 +47,31 @@ export default async function TrackingPage({ params }: Props) {
     <main id="main-content" tabIndex={-1} className="flex-1 bg-background">
       <section className="mx-auto max-w-2xl px-5 py-12 md:px-6 md:py-16">
         <p className="text-2xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-          Reference you entered
+          {lookup.available ? "Application" : "Reference you entered"}
         </p>
         <h1
           data-numeric
           className="mt-2 break-all text-2xl font-bold tracking-tight text-foreground md:text-3xl"
         >
-          {applicationId}
+          {lookup.available ? lookup.reference : applicationId}
         </h1>
 
-        {!lookup.available && (
+        {lookup.available && (
+          <p className="mt-2 text-sm text-muted-foreground">
+            {resolveCountry(lookup.countrySlug)?.name ?? lookup.countrySlug} ·{" "}
+            <span className="font-semibold text-foreground">
+              {APPLICATION_STATUSES.find((status) => status.id === lookup.status)?.label ??
+                lookup.status}
+            </span>
+          </p>
+        )}
+
+        {/* THE DISTINCTION THIS PAGE EXISTS TO PRESERVE.
+            "We cannot look this up" and "we looked and found nothing" are
+            different sentences to someone with a flight booked, and before
+            there was a database only the first could honestly be said. Now both
+            can, so both are — and neither is used for the other. */}
+        {!lookup.available && lookup.reason === "no-status-service" && (
           <div
             role="status"
             className="mt-6 flex gap-3 rounded-xl border border-border bg-surface p-5"
@@ -65,17 +82,44 @@ export default async function TrackingPage({ params }: Props) {
             />
             <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
               <p className="text-sm font-semibold text-foreground">
-                Live tracking is not available yet
+                Live tracking is not available on this deployment
               </p>
               <p>
-                Abizon has no online status service, so this reference has not
-                been checked against anything — we are not reporting that it was
-                not found, only that we cannot look it up. Nothing below
-                describes your application.
+                This reference has not been checked against anything — we are not
+                reporting that it was not found, only that we cannot look it up.
+                Nothing below describes your application.
               </p>
               <p>
                 For the status of an application already filed, contact support
                 with your reference.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {!lookup.available && lookup.reason === "not-found" && (
+          <div
+            role="status"
+            className="mt-6 flex gap-3 rounded-xl border border-border bg-surface p-5"
+          >
+            <Info
+              aria-hidden
+              className="mt-0.5 size-4 shrink-0 text-muted-foreground"
+            />
+            <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
+              <p className="text-sm font-semibold text-foreground">
+                We have no application with that reference
+              </p>
+              <p>
+                We did check. References look like{" "}
+                <span data-numeric className="font-semibold text-foreground">
+                  ABZ-4K7P-2QRT
+                </span>{" "}
+                — it is worth confirming the characters, since a reference is
+                read aloud more often than it is typed.
+              </p>
+              <p>
+                If you are sure it is right, contact support and we will find it.
               </p>
             </div>
           </div>
@@ -86,9 +130,11 @@ export default async function TrackingPage({ params }: Props) {
             How a Abizon application progresses
           </h2>
           <p className="mt-1 text-2xs leading-relaxed text-muted-foreground">
-            The route every application takes. The first two stages are decided
-            on your own device; the rest need a status service Abizon does not
-            run yet.
+            The route every application takes. Everything from{" "}
+            <span className="font-semibold text-foreground">Submitted</span>{" "}
+            onward is recorded by the person at Abizon handling it — there is no
+            consulate that publishes a status feed, so each stage means somebody
+            here observed it.
           </p>
 
           <div className="mt-4">

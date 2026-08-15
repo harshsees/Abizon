@@ -1,0 +1,112 @@
+name: CI
+
+# Every push to a branch and every pull request. Not on tags: there is nothing
+# to check about a tag that was not already checked about the commit it points
+# at.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# A second push to the same branch makes the first run's answer irrelevant.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Typecheck, lint and unit tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Unit tests
+        run: npm test
+
+      # The schema and the committed migrations must agree. Without this, a
+      # column added to `schema.ts` without running `db:generate` typechecks,
+      # passes every test, and fails on the first query in production — because
+      # the table in the database never got the column.
+      #
+      # `generate` exits having written a new migration if there is a diff, so
+      # a dirty tree afterwards is the failure signal.
+      - name: Migrations are up to date with the schema
+        run: |
+          npx drizzle-kit generate
+          if [ -n "$(git status --porcelain src/lib/db/migrations)" ]; then
+            echo "::error::The schema has changed but no migration was committed."
+            echo "Run 'npm run db:generate' and commit the result."
+            git status --porcelain src/lib/db/migrations
+            exit 1
+          fi
+
+      # High and critical advisories fail the build. Moderate and below do not:
+      # a transitive dev-tooling advisory with no fix available should not stop
+      # a security patch from shipping.
+      - name: Audit
+        run: npm audit --audit-level=high
+
+  build:
+    name: Production build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # No secrets. `lib/env.ts` validates lazily, on first use, precisely so
+      # that the build is hermetic — a build that needs production credentials
+      # is a build that puts production credentials into CI.
+      - run: npm run build
+
+  e2e:
+    name: End-to-end
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - run: npx playwright install --with-deps chromium
+
+      # No DATABASE_URL. These tests assert flow, not persistence, and a suite
+      # that needs a live Postgres is a suite that stops being run. The one
+      # thing that must never be pointed at production is the database.
+      - run: npm run test:e2e
+        env:
+          SMS_PROVIDER: memory
+          AUTH_SECRET: ci-secret-that-is-at-least-thirty-two-characters
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7

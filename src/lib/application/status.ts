@@ -8,18 +8,26 @@
  *
  * `draft` and `ready` are determined entirely on this device, from the
  * application state itself: whether every step is satisfied is something
- * `buildSummary` already computes without asking anyone. They are `supported`.
+ * `buildSummary` already computes without asking anyone.
  *
- * `submitted` onward describe things that happen on a server and at a consulate.
- * Abizon has no submission endpoint, no applications API and no authority
- * integration, so nothing in this codebase can know whether an application was
- * received, is being processed, or has been decided. They are NOT supported,
- * and no code path may report them until a real source does.
+ * ── WHAT CHANGED, AND WHAT DID NOT ──
  *
- * That distinction is data, not a comment: `isStatusSupported` is what the UI
- * branches on, so adding a real service is a matter of flipping the flag and
- * implementing `lookupApplicationStatus` — not of hunting for hardcoded
- * assumptions in components.
+ * This file used to say that `submitted` onward "describe things that happen on
+ * a server and at a consulate", that Abizon had no submission endpoint and no
+ * applications API, and that no code path could report them. That was true and
+ * it is no longer: there is a submission endpoint, an applications table, and an
+ * ops console in which a named member of staff records what happened.
+ *
+ * So the flags flip. What has NOT changed is the standard they were set by —
+ * a status is `supported` when this system can genuinely determine it, and not
+ * when it would be convenient to display. `processing` is supported because a
+ * person at Abizon filed the application and said so, which is a real
+ * observation with an actor and a timestamp against it in `application_events`.
+ *
+ * There is still no authority integration, and there is no honest way to build
+ * one: consulates do not publish status APIs. Every status past `submitted`
+ * therefore means "a member of staff observed this", which is weaker than an
+ * API and is what the tracking page says.
  */
 
 export type ApplicationStatusId =
@@ -29,17 +37,27 @@ export type ApplicationStatusId =
   | "received"
   | "processing"
   | "decision"
-  | "completed";
+  | "completed"
+  /** Out of sequence. An application the applicant stopped, which is an ending
+   *  rather than a stage — see `inSequence`. */
+  | "withdrawn";
 
 export type ApplicationStatusMeta = {
   id: ApplicationStatusId;
   label: string;
   description: string;
   /**
-   * True only where THIS BUILD can genuinely determine the status. Everything
-   * from `submitted` on needs a backend that does not exist.
+   * True where THIS BUILD can genuinely determine the status. Every one of them
+   * now can — the first two from the application state, the rest from a
+   * transition a named member of staff recorded.
    */
   supported: boolean;
+  /**
+   * Whether it is a stage on the way through. `withdrawn` is not: it is where
+   * an application stops, and drawing it as a step everybody passes through
+   * would be wrong for the ninety-nine applications that never reach it.
+   */
+  inSequence: boolean;
 };
 
 /** Ordered. The index is the lifecycle position. */
@@ -47,49 +65,96 @@ export const APPLICATION_STATUSES: readonly ApplicationStatusMeta[] = [
   {
     id: "draft",
     label: "Draft",
-    description: "Started on this device. Not everything is filled in yet.",
+    description: "Started, but not everything is filled in yet.",
     supported: true,
+    inSequence: true,
   },
   {
     id: "ready",
     label: "Ready to submit",
     description: "Every step is complete. Nothing has been filed or charged.",
     supported: true,
+    inSequence: true,
   },
   {
     id: "submitted",
     label: "Submitted",
     description: "Sent to Abizon for filing.",
-    supported: false,
+    supported: true,
+    inSequence: true,
   },
   {
     id: "received",
     label: "Received",
-    description: "Abizon has the application and has begun document checks.",
-    supported: false,
+    description: "Abizon has checked the documents and accepted them.",
+    supported: true,
+    inSequence: true,
   },
   {
     id: "processing",
     label: "With the authority",
     description: "Filed with the destination's immigration authority.",
-    supported: false,
+    supported: true,
+    inSequence: true,
   },
   {
     id: "decision",
     label: "Decision issued",
     description: "The authority has decided.",
-    supported: false,
+    supported: true,
+    inSequence: true,
   },
   {
     id: "completed",
     label: "Delivered",
     description: "The outcome has been sent to you.",
-    supported: false,
+    supported: true,
+    inSequence: true,
+  },
+  {
+    id: "withdrawn",
+    label: "Withdrawn",
+    description: "Stopped at your request. Nothing further will be filed.",
+    supported: true,
+    inSequence: false,
   },
 ] as const;
 
+/** The stages drawn as a journey. Excludes `withdrawn` — see `inSequence`. */
+export const SEQUENCE_STATUSES = APPLICATION_STATUSES.filter(
+  (status) => status.inSequence,
+);
+
+/** Position in the journey, or -1 for a status that is not part of it. */
 export function statusIndex(id: ApplicationStatusId): number {
-  return APPLICATION_STATUSES.findIndex((status) => status.id === id);
+  return SEQUENCE_STATUSES.findIndex((status) => status.id === id);
+}
+
+/**
+ * The database speaks a slightly different vocabulary from the interface —
+ * `decided` and `closed` rather than `decision` and `delivered` — because the
+ * schema names an event and the interface names what the applicant sees. One
+ * translation, here, rather than a `switch` in every component.
+ */
+export function statusFromDatabase(value: string): ApplicationStatusId {
+  switch (value) {
+    case "decided":
+      return "decision";
+    case "closed":
+      return "completed";
+    case "draft":
+    case "ready":
+    case "submitted":
+    case "received":
+    case "processing":
+    case "withdrawn":
+      return value;
+    default:
+      // A status this build does not know about is a deployment where the
+      // schema moved ahead of the interface. Reporting the last thing that is
+      // certainly true beats inventing a stage.
+      return "submitted";
+  }
 }
 
 export function isStatusSupported(id: ApplicationStatusId): boolean {
@@ -125,36 +190,29 @@ export type TrackingEvent = {
 /* The data source seam                                                       */
 /* -------------------------------------------------------------------------- */
 
+/**
+ * THE TWO REASONS A LOOKUP CAN FAIL, and the distinction the whole tracking
+ * page was built around: "we cannot look this up" and "we looked and found
+ * nothing" are very different sentences to someone with a flight booked.
+ *
+ * Before there was a backend only the first could be returned, and the page was
+ * written to never imply the reference had been checked. Now both are real, and
+ * the page can finally say which one happened.
+ */
 export type TrackingLookup =
   | {
       available: false;
       /**
-       * `"no-status-service"` — there is no applications API in this build.
-       * This is the only reason that can be returned today, and it is about
-       * Abizon's capability, NOT about the reference the user typed. The page
-       * must not imply the reference was checked and not found.
+       * `"no-status-service"` — this deployment has no database, so nothing was
+       * consulted. A statement about Abizon, not about the reference.
+       * `"not-found"` — the reference was checked and no application has it.
        */
-      reason: "no-status-service";
+      reason: "no-status-service" | "not-found";
     }
   | {
       available: true;
+      reference: string;
+      countrySlug: string;
       status: ApplicationStatusId;
       events: TrackingEvent[];
     };
-
-/**
- * The one function to implement when an applications API exists.
- *
- * It returns `{ available: false }` unconditionally. Nothing is fetched,
- * nothing is matched, and the reference is not consulted — so the UI built on
- * it says "we cannot look this up" rather than "we looked and found nothing",
- * which are very different statements to someone with a flight booked.
- */
-export async function lookupApplicationStatus(
-  reference: string,
-): Promise<TrackingLookup> {
-  // Referenced so the signature a real lookup needs survives, and so this
-  // cannot be mistaken for a working implementation.
-  void reference;
-  return { available: false, reason: "no-status-service" };
-}

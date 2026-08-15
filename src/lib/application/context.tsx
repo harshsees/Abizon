@@ -42,6 +42,7 @@ import {
   useEffect,
   useMemo,
   useReducer,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -50,6 +51,8 @@ import { useSearchParams } from "next/navigation";
 import type { Country } from "@/data/countries";
 import { countryFromSlug, resolveCountryVisaConfig } from "@/lib/countryVisa";
 import { getDraft, saveDraft } from "@/lib/applicationDraft";
+
+import { useApplicationSync, type ApplicationSync } from "./sync";
 
 import {
   applicationReducer,
@@ -64,6 +67,7 @@ import {
   type ApplicationStepId,
   type ApplicationStepMeta,
   type ApplicationSummary,
+  type RestorePayload,
 } from "./state";
 
 /* -------------------------------------------------------------------------- */
@@ -185,6 +189,12 @@ export type ApplicationContextValue = {
    * honoured in full. See `ResumeKind`.
    */
   resume: ResumeKind;
+
+  /**
+   * The server half. `sync.mode` is what every piece of copy in the flow
+   * branches on to decide whether it may claim that anything is saved.
+   */
+  sync: ApplicationSync;
 };
 
 const ApplicationContext = createContext<ApplicationContextValue | null>(null);
@@ -271,6 +281,25 @@ export function ApplicationProvider({ children }: { children: ReactNode }) {
     state.step,
   ]);
 
+  /**
+   * Adopting a server application, once.
+   *
+   * The latch is a ref rather than state because it must not cause a render:
+   * this fires from inside the sync effect, and a re-render there would re-run
+   * the effect that called it. The reducer's `restore` case is where the actual
+   * merge policy lives — see the long note on it for why it is conservative
+   * about anything the applicant may already be typing.
+   */
+  const restored = useRef(false);
+
+  const onRestore = useCallback((payload: RestorePayload) => {
+    if (restored.current) return;
+    restored.current = true;
+    dispatch({ type: "restore", payload });
+  }, []);
+
+  const sync = useApplicationSync({ state, dispatch, country, onRestore });
+
   const jumpTo = useCallback(
     (target: ApplicationStepId) => {
       if (!canReachStep(state, country, target)) return;
@@ -312,6 +341,7 @@ export function ApplicationProvider({ children }: { children: ReactNode }) {
     jumpTo,
     canReach: (step) => canReachStep(state, country, step),
     resume,
+    sync,
   };
 
   return (

@@ -25,6 +25,12 @@ type ApplicationHeaderProps = {
   exitHref: string;
   /** Shown once there is something on this device worth resuming. */
   saved: boolean;
+  /**
+   * Where it is saved. `"device"` means localStorage and nothing else — closing
+   * the tab keeps the trip details and discards the documents. `"account"`
+   * means the server has all of it and closing the tab costs nothing.
+   */
+  savedTo: "device" | "account";
   progressPercent: number;
 };
 
@@ -33,6 +39,7 @@ export function ApplicationHeader({
   flagUrl,
   exitHref,
   saved,
+  savedTo,
   progressPercent,
 }: ApplicationHeaderProps) {
   return (
@@ -90,11 +97,12 @@ export function ApplicationHeader({
             <span className="truncate">{countryName}</span>
           </p>
 
-          {/* Says where it is saved, because it is not saved anywhere else. */}
+          {/* Says WHERE it is saved, because the two answers have very
+              different consequences for somebody about to close the tab. */}
           {saved && (
             <span className="hidden items-center gap-1.5 border-l border-border pl-3 text-2xs text-muted-foreground sm:flex">
               <Check aria-hidden className="size-3 text-success" />
-              Saved on this device
+              {savedTo === "account" ? "Saved to your account" : "Saved on this device"}
             </span>
           )}
         </div>

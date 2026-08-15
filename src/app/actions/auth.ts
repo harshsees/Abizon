@@ -1,5 +1,6 @@
 "use server";
 
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { INITIAL_LOGIN_STATE, type LoginState } from "@/lib/auth/loginState";
@@ -7,6 +8,9 @@ import { requestCode, resendCode, verifyCode, OTP_POLICY } from "@/lib/auth/otp"
 import { parsePhone } from "@/lib/auth/phone";
 import { createSession, destroySession } from "@/lib/auth/session";
 import { smsDriver } from "@/lib/auth/sms";
+import { verifyTurnstile } from "@/lib/auth/turnstile";
+import { checkLimit } from "@/lib/rateLimit";
+import { clientIp, ipPrefix } from "@/lib/request";
 
 /**
  * THE LOGIN SERVER ACTIONS.
@@ -47,9 +51,38 @@ async function start(formData: FormData): Promise<LoginState> {
   const iso = String(formData.get("iso") ?? "IN");
   const national = String(formData.get("national") ?? "");
 
+  // Shape first, then the bot check, then the send. Ordering matters: a
+  // malformed number is rejected without spending a Turnstile verification, and
+  // a bot is rejected without spending an SMS. Each gate is cheaper than the
+  // one after it.
   const parsed = parsePhone(national, iso);
   if (!parsed.ok) {
     return { step: "phone", error: parsed.error, iso, national };
+  }
+
+  const headerList = await headers();
+  const ip = clientIp(headerList);
+
+  // Per-address ceiling, above the per-number one in `otp.ts`. That one stops
+  // someone hammering a single handset; this one stops someone working through
+  // a list of numbers, which never trips a per-number limit and empties the SMS
+  // balance just the same.
+  const limit = await checkLimit("otpSendPerIp", ipPrefix(ip) ?? "unknown");
+  if (!limit.ok) {
+    return {
+      step: "phone",
+      error: `Too many sign-in attempts from this network. Try again in ${Math.ceil(
+        limit.retryAfterSeconds / 60,
+      )} minutes.`,
+      iso,
+      national,
+    };
+  }
+
+  const bot = await verifyTurnstile(formData.get("turnstileToken")?.toString(), ip);
+
+  if (!bot.ok) {
+    return { step: "phone", error: bot.error, iso, national };
   }
 
   const outcome = await requestCode(parsed.e164);
@@ -71,6 +104,19 @@ async function verify(previous: LoginState, formData: FormData): Promise<LoginSt
   // stale form or a probe. Either way there is nothing to verify against.
   if (previous.step !== "code") return INITIAL_LOGIN_STATE;
 
+  // The per-challenge ceiling is five wrong guesses, after which the challenge
+  // dies. That is bypassed by starting a fresh challenge for each batch of
+  // five, so the guessing budget is also capped per address.
+  const ip = ipPrefix(clientIp(await headers())) ?? "unknown";
+  const limit = await checkLimit("otpVerifyPerIp", ip);
+  if (!limit.ok) {
+    return {
+      ...previous,
+      error: "Too many attempts from this network. Try again later.",
+      fatal: true,
+    };
+  }
+
   const outcome = await verifyCode(previous.challengeId, String(formData.get("code") ?? ""));
 
   if (!outcome.ok) {
@@ -82,7 +128,7 @@ async function verify(previous: LoginState, formData: FormData): Promise<LoginSt
     };
   }
 
-  await createSession(outcome.userId);
+  await createSession(outcome.userId, outcome.tokenVersion);
 
   // The caller reads "code step, no error" as success and redirects. Clearing
   // the failure fields matters because a wrong guess followed by a right one

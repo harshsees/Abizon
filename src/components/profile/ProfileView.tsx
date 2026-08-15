@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
@@ -11,7 +11,6 @@ import {
   FileText,
   ChevronRight,
   ArrowRight,
-  ShieldCheck
 } from "lucide-react";
 
 import { signOut } from "@/app/actions/auth";
@@ -20,30 +19,73 @@ import { formatE164 } from "@/lib/auth/phone";
 /**
  * The signed-in profile screen.
  *
- * Split out of `app/profile/page.tsx` when login landed: the route is now a
- * Server Component that establishes who the user is, and this is the client
- * half that needs state for the tabs and the QR countdown. The identity is
- * passed in rather than fetched here, so there is exactly one place — the
- * route — where "who is signed in" is decided.
+ * Split out of `app/profile/page.tsx` when login landed: the route is a Server
+ * Component that establishes who the user is and what they have, and this is
+ * the client half that needs state for the tabs. Identity and data are both
+ * passed in rather than fetched here, so there is exactly one place — the route
+ * — where "who is signed in" and "what may they see" are decided.
+ *
+ * ── TWO THINGS WERE REMOVED WHEN THE APPLICATIONS BECAME REAL ──
+ *
+ * **The verification QR code and its countdown.** A hand-drawn SVG of a QR
+ * pattern that encodes nothing, under a timer counting down from 45 and
+ * resetting, labelled "Verification QR — expires in N". It verified nothing,
+ * expired nothing, and could not be scanned. It is the same class of thing the
+ * apply flow was rebuilt to remove — a 900ms timer that said "approved", a
+ * reference minted from a passport number — and it survived only because
+ * nothing in this file had been real enough to contrast it with.
+ *
+ * **The hardcoded zeroes.** "Purchased Applications: 0" and "Ongoing
+ * Applications: 0" were literals, correct only for as long as there were no
+ * applications. They are counts now.
+ *
+ * "Purchased" has gone with them: nothing here is purchased, because Abizon
+ * cannot take a payment online. The tabs say what the statuses actually are.
  */
-export function ProfileView({ phoneE164 }: { phoneE164: string }) {
+
+export type ProfileApplication = {
+  id: string;
+  reference: string;
+  countrySlug: string;
+  countryName: string;
+  status: string;
+  travellerCount: number;
+  travelDate: string | null;
+  updatedAt: number;
+  submittedAt: number | null;
+};
+
+const STATUS_LABEL: Record<string, string> = {
+  draft: "In progress",
+  ready: "Ready to submit",
+  submitted: "Submitted",
+  received: "Documents checked",
+  processing: "With the authority",
+  decided: "Decision issued",
+  closed: "Completed",
+  withdrawn: "Withdrawn",
+};
+
+export function ProfileView({
+  phoneE164,
+  applications,
+  backendReady,
+}: {
+  phoneE164: string;
+  applications: ProfileApplication[];
+  backendReady: boolean;
+}) {
   const router = useRouter();
 
-  // Tab control state
-  const [activeSubTab, setActiveSubTab] = useState<"purchased" | "ongoing">("purchased");
+  const [activeSubTab, setActiveSubTab] = useState<"open" | "submitted">("open");
 
-  // Timer State for QR Code (Mock dynamic countdown)
-  const [timeLeft, setTimeLeft] = useState(44);
-  const maxTime = 45;
+  // `draft` is the only status the applicant can still edit. Everything else is
+  // with Abizon, which is the line the two tabs are drawn along — not "paid"
+  // and "unpaid", which would describe a transaction that does not happen here.
+  const open = applications.filter((application) => application.status === "draft");
+  const submitted = applications.filter((application) => application.status !== "draft");
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => (prev <= 1 ? maxTime : prev - 1));
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
-
-  const strokeDashoffset = 75.4 - (75.4 * timeLeft) / maxTime;
+  const shown = activeSubTab === "open" ? open : submitted;
 
   return (
     <div className="min-h-screen bg-[#f7f7fa] flex flex-col font-sans antialiased text-slate-800 pb-20">
@@ -111,15 +153,19 @@ export function ProfileView({ phoneE164 }: { phoneE164: string }) {
             {/* Statistics */}
             <div className="w-full grid grid-cols-2 divide-x divide-slate-100 border-y border-slate-100 py-5 my-6 text-center">
               <div className="flex flex-col items-center">
-                <span className="text-2xl font-black text-slate-900 leading-none">0</span>
+                <span className="text-2xl font-black text-slate-900 leading-none tabular-nums">
+                  {open.length}
+                </span>
                 <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mt-1.5 leading-none">
-                  Purchased<br/>Applications
+                  In<br/>progress
                 </span>
               </div>
               <div className="flex flex-col items-center">
-                <span className="text-2xl font-black text-slate-900 leading-none">0</span>
+                <span className="text-2xl font-black text-slate-900 leading-none tabular-nums">
+                  {submitted.length}
+                </span>
                 <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mt-1.5 leading-none">
-                  Ongoing<br/>Applications
+                  With<br/>Abizon
                 </span>
               </div>
             </div>
@@ -144,116 +190,190 @@ export function ProfileView({ phoneE164 }: { phoneE164: string }) {
               </div>
             </div>
 
-            {/* Dynamic QR Code Card */}
-            <div className="w-full rounded-2xl border border-slate-200/80 p-4 bg-slate-50/50 flex flex-col items-center">
-              
-              {/* Animated Countdown Timer */}
-              <div className="w-full flex items-center justify-between mb-4 px-1">
-                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Verification QR</span>
-                
-                <div className="flex items-center gap-1.5 bg-white border border-slate-200/60 py-1 px-2.5 rounded-full shadow-sm">
-                  {/* Circular Loader SVG */}
-                  <svg className="w-3.5 h-3.5 transform -rotate-90 text-primary" viewBox="0 0 28 28">
-                    <circle cx="14" cy="14" r="12" fill="transparent" stroke="#f1f5f9" strokeWidth="2.5" />
-                    <circle cx="14" cy="14" r="12" fill="transparent" stroke="currentColor" strokeWidth="2.5" 
-                      strokeDasharray="75.4"
-                      strokeDashoffset={strokeDashoffset}
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                  <span className="text-[10px] font-extrabold text-slate-600">
-                    expires in <span className="text-primary">{timeLeft}</span>
-                  </span>
-                </div>
-              </div>
-
-              {/* Realistic SVG QR Code Mockup */}
-              <div className="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-sm w-full flex items-center justify-center aspect-square max-w-[200px]">
-                <svg className="w-full h-full text-slate-900" viewBox="0 0 100 100" fill="currentColor">
-                  {/* QR Corners */}
-                  <path d="M5 5h20v5H10v15H5V5zm5 5h10v10H10V10z" />
-                  <path d="M75 5h20v20h-5V10H75V5zm10 5H85v10h10V10z" />
-                  <path d="M5 75h5v15h15v5H5V75zm5 10h10v10H10V85z" />
-                  
-                  {/* QR Nested Centers */}
-                  <path d="M13 13h4v4h-4zM83 13h4v4h-4zM13 83h4v4h-4z" />
-
-                  {/* QR Random Matrix Blocks */}
-                  <path d="M35 5h5v5h-5zM45 5h10v5H45zM60 5h5v10h-5zM5 30h5v15H5zM15 30h10v5H15zM20 40h10v5H20zM35 20h10v5H35zM40 30h5v5h-5zM50 25h5v10h-5zM65 25h10v5H65zM80 30h15v5H80zM90 40h5v10h-5z" />
-                  <path d="M30 50h5v15h-5zM40 50h10v5H40zM55 50h5v10h-5zM65 45h5v15h-5zM75 50h10v5H75zM15 55h15v5H15zM5 65h10v5H5zM20 65h5v10h-5zM35 70h10v5H35zM50 70h5v15h-5zM60 70h15v5H60zM80 65h5v20h-5zM90 70h5v15h-5z" />
-                  <path d="M30 80h10v5H30zM45 85h5v10h-5zM65 85h10v5H65zM75 80h5v10h-5zM55 90h15v5H55z" />
-                </svg>
-              </div>
-
-            </div>
+            {/* The verification QR that used to sit here has been removed.
+                It was a hand-drawn SVG of a QR pattern encoding nothing,
+                under a countdown from 45 that reset forever, labelled
+                "Verification QR, expires in N". Nothing scanned it,
+                nothing expired, and nothing was verified. See the header. */}
 
           </div>
 
           {/* RIGHT CONTENT PANEL (Tabs, empty applications dashboard) */}
           <div className="lg:col-span-8 flex flex-col">
             
-            {/* Navigation Tabs */}
+            {/* Navigation Tabs. The counts are on the tabs because the whole
+                question somebody opens this page with is "how many of each",
+                and a tab that answers it saves the click that would. */}
             <div className="flex border-b border-slate-200">
-              <button
-                onClick={() => setActiveSubTab("purchased")}
-                className={`relative px-6 py-3.5 text-sm font-bold tracking-wide transition-colors cursor-pointer ${
-                  activeSubTab === "purchased" ? "text-primary" : "text-muted-foreground hover:text-slate-600"
-                }`}
+              <TabButton
+                active={activeSubTab === "open"}
+                count={open.length}
+                onClick={() => setActiveSubTab("open")}
               >
-                Purchased Applications
-                {activeSubTab === "purchased" && (
-                  <motion.div 
-                    layoutId="profile-tab-underline"
-                    className="absolute bottom-0 inset-x-0 h-0.75 bg-primary"
-                  />
-                )}
-              </button>
-              
-              <button
-                onClick={() => setActiveSubTab("ongoing")}
-                className={`relative px-6 py-3.5 text-sm font-bold tracking-wide transition-colors cursor-pointer ${
-                  activeSubTab === "ongoing" ? "text-primary" : "text-muted-foreground hover:text-slate-600"
-                }`}
+                In progress
+              </TabButton>
+
+              <TabButton
+                active={activeSubTab === "submitted"}
+                count={submitted.length}
+                onClick={() => setActiveSubTab("submitted")}
               >
-                Ongoing Applications
-                {activeSubTab === "ongoing" && (
-                  <motion.div 
-                    layoutId="profile-tab-underline"
-                    className="absolute bottom-0 inset-x-0 h-0.75 bg-primary"
-                  />
-                )}
-              </button>
+                With Abizon
+              </TabButton>
             </div>
 
-            {/* Dynamic content (Empty states) */}
-            <div className="bg-slate-50/45 border border-slate-200/50 rounded-3xl p-10 md:p-16 flex flex-col items-center justify-center text-center mt-6 min-h-[420px] shadow-sm">
-              <div className="h-16 w-16 rounded-2xl bg-white border border-slate-200/60 shadow-sm flex items-center justify-center text-muted-foreground mb-6">
-                <FileText className="w-7 h-7 stroke-[1.5]" />
-              </div>
-              
-              <h3 className="text-lg font-black text-slate-900">
-                No Applications Found
-              </h3>
-              
-              <p className="text-muted-foreground text-sm max-w-sm mt-2 leading-relaxed">
-                You haven&apos;t started any visa applications yet. Begin your journey to explore the world with Abizon.
-              </p>
+            {!backendReady ? (
+              <EmptyPanel
+                title="Applications are not stored on this deployment"
+                body="This environment has no database, so nothing you start is saved. That is a configuration state, not an empty account."
+              />
+            ) : shown.length === 0 ? (
+              <EmptyPanel
+                title={
+                  activeSubTab === "open"
+                    ? "Nothing in progress"
+                    : "Nothing with Abizon yet"
+                }
+                body={
+                  activeSubTab === "open"
+                    ? "Applications you start appear here and stay until you submit them. You can pick one up on any device."
+                    : "Once you submit an application it moves here, and you can follow it by reference."
+                }
+                action={
+                  activeSubTab === "open" ? (
+                    <button
+                      onClick={() => router.push("/")}
+                      className="mt-8 flex items-center justify-center gap-2 rounded-2xl bg-primary hover:bg-primary-hover px-8 py-3.5 text-center text-sm font-bold text-white shadow-md hover:shadow-lg transition duration-200 active:scale-98 cursor-pointer"
+                    >
+                      <span>Browse destinations</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+                  ) : null
+                }
+              />
+            ) : (
+              <ul className="mt-6 space-y-3">
+                {shown.map((application) => (
+                  <li key={application.id}>
+                    <Link
+                      href={
+                        // In progress goes back into the flow; submitted goes
+                        // to tracking. Two different intentions, and sending
+                        // both to the same place would mean one of them
+                        // arriving somewhere that cannot help.
+                        application.status === "draft"
+                          ? `/apply?country=${application.countrySlug}`
+                          : `/track/${application.reference}`
+                      }
+                      className="flex flex-wrap items-center gap-x-5 gap-y-2 rounded-2xl border border-slate-200/70 bg-white p-4 shadow-sm transition hover:border-slate-300"
+                    >
+                      <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-slate-100 text-muted-foreground">
+                        <FileText className="h-4.5 w-4.5" />
+                      </span>
 
-              {/* Start Journey CTA Button */}
-              <button
-                onClick={() => router.push("/")}
-                className="mt-8 flex items-center justify-center gap-2 rounded-2xl bg-primary hover:bg-primary-hover px-8 py-3.5 text-center text-sm font-bold text-white shadow-md hover:shadow-lg transition duration-200 active:scale-98 cursor-pointer"
-              >
-                <span>Start Journey</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
-            </div>
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-sm font-extrabold text-slate-900">
+                          {application.countryName}
+                        </span>
+                        <span
+                          data-numeric
+                          className="mt-0.5 block font-mono text-[11px] font-bold text-muted-foreground"
+                        >
+                          {application.reference} ·{" "}
+                          {application.travellerCount === 1
+                            ? "1 traveller"
+                            : `${application.travellerCount} travellers`}
+                          {application.travelDate ? ` · ${application.travelDate}` : ""}
+                        </span>
+                      </span>
+
+                      <span className="rounded-full bg-slate-100 px-3 py-1 text-[10px] font-extrabold uppercase tracking-wider text-slate-600">
+                        {STATUS_LABEL[application.status] ?? application.status}
+                      </span>
+
+                      <ChevronRight className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
 
           </div>
 
         </div>
       </main>
 
+    </div>
+  );
+}
+
+/**
+ * A tab with its count. Extracted because there are two of them and the
+ * animated underline needs a shared `layoutId` — exactly the kind of detail
+ * that drifts when the markup is duplicated.
+ */
+function TabButton({
+  active,
+  count,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  count: number;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`relative flex items-center gap-2 px-6 py-3.5 text-sm font-bold tracking-wide transition-colors cursor-pointer ${
+        active ? "text-primary" : "text-muted-foreground hover:text-slate-600"
+      }`}
+    >
+      {children}
+      <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-extrabold tabular-nums text-slate-600">
+        {count}
+      </span>
+      {active && (
+        <motion.div
+          layoutId="profile-tab-underline"
+          className="absolute bottom-0 inset-x-0 h-0.75 bg-primary"
+        />
+      )}
+    </button>
+  );
+}
+
+/**
+ * The empty state, which now has more than one cause.
+ *
+ * "No Applications Found" used to be hardcoded and was therefore always true.
+ * There are three distinct reasons the panel can be empty — no database,
+ * nothing in progress, nothing submitted — and they want different sentences,
+ * because only two of them are about the applicant at all.
+ */
+function EmptyPanel({
+  title,
+  body,
+  action,
+}: {
+  title: string;
+  body: string;
+  action?: React.ReactNode;
+}) {
+  return (
+    <div className="bg-slate-50/45 border border-slate-200/50 rounded-3xl p-10 md:p-16 flex flex-col items-center justify-center text-center mt-6 min-h-[420px] shadow-sm">
+      <div className="h-16 w-16 rounded-2xl bg-white border border-slate-200/60 shadow-sm flex items-center justify-center text-muted-foreground mb-6">
+        <FileText className="w-7 h-7 stroke-[1.5]" />
+      </div>
+
+      <h3 className="text-lg font-black text-slate-900">{title}</h3>
+
+      <p className="text-muted-foreground text-sm max-w-sm mt-2 leading-relaxed">
+        {body}
+      </p>
+
+      {action}
     </div>
   );
 }

@@ -20,7 +20,7 @@
  * reason data.
  */
 
-import { Check, ChevronRight, Circle } from "lucide-react";
+import { AlertCircle, Check, ChevronRight, CloudUpload, Circle, Loader2 } from "lucide-react";
 import { useState } from "react";
 
 import { useApplication } from "@/lib/application/context";
@@ -33,7 +33,7 @@ import { PassportCapture } from "./PassportCapture";
 type OpenDocument = { travellerId: string; kind: DocumentKind };
 
 export function DocumentsStep() {
-  const { state, dispatch, country } = useApplication();
+  const { state, dispatch, country, sync } = useApplication();
   const [open, setOpen] = useState<OpenDocument | null>(null);
 
   if (!country) return null;
@@ -78,6 +78,7 @@ export function DocumentsStep() {
             kind: requirement.kind,
           })
         }
+        onRetry={() => sync.retryDocument(traveller.id, requirement.kind)}
       />
     );
   }
@@ -139,7 +140,9 @@ export function DocumentsStep() {
                             : "bg-surface-sunken text-muted-foreground",
                         )}
                       >
-                        {entry?.previewDataUrl ? (
+                        {entry?.upload === "uploading" ? (
+                          <Loader2 className="size-4 animate-spin" />
+                        ) : entry?.previewDataUrl ? (
                           <img
                             src={entry.previewDataUrl}
                             alt=""
@@ -156,14 +159,41 @@ export function DocumentsStep() {
                         <span className="block truncate text-sm font-semibold text-foreground">
                           {requirement.label}
                         </span>
-                        <span className="mt-0.5 block truncate text-2xs text-muted-foreground">
-                          {provided
-                            ? (entry?.fileName ?? "Photographed with your camera")
-                            : requirement.detail}
+                        <span
+                          className={cn(
+                            "mt-0.5 block truncate text-2xs",
+                            entry?.upload === "failed"
+                              ? "text-destructive"
+                              : "text-muted-foreground",
+                          )}
+                        >
+                          {entry?.upload === "failed"
+                            ? (entry.error ?? "Upload failed — select to try again")
+                            : entry?.upload === "uploading"
+                              ? "Uploading…"
+                              : provided
+                                ? (entry?.fileName ?? "Photographed with your camera")
+                                : requirement.detail}
                         </span>
                       </span>
 
                       <span className="flex flex-shrink-0 items-center gap-2">
+                        {/* The one badge that is a state and not a label. It
+                            appears only once the bytes are on the server,
+                            because that is the only point at which closing the
+                            tab stops costing the applicant the file. */}
+                        {entry?.upload === "stored" && (
+                          <span
+                            title="Saved to your application"
+                            className="hidden items-center gap-1 rounded-full bg-success-subtle px-2 py-0.5 text-2xs font-semibold text-success-subtle-foreground sm:inline-flex"
+                          >
+                            <CloudUpload aria-hidden className="size-3" />
+                            Saved
+                          </span>
+                        )}
+                        {entry?.upload === "failed" && (
+                          <AlertCircle aria-hidden className="size-4 text-destructive" />
+                        )}
                         {!provided && (
                           <span className="hidden rounded-full bg-surface-sunken px-2 py-0.5 text-2xs font-semibold text-muted-foreground sm:inline">
                             Required
@@ -187,10 +217,28 @@ export function DocumentsStep() {
         );
       })}
 
-      <p className="text-2xs leading-relaxed text-muted-foreground">
-        Your files stay in this browser tab. Nothing is uploaded to a server yet,
-        and no document is saved to this device.
-      </p>
+      {/* THE COPY BRANCHES ON WHAT IS ACTUALLY TRUE.
+
+          Until this commit there was one sentence — "nothing is uploaded to a
+          server yet" — and it was correct. It is now correct for exactly one of
+          the two modes, and saying it in the other would be the same class of
+          lie the flow was rebuilt to remove: telling the applicant their
+          documents are safe, or telling them they are not, without either being
+          the case. */}
+      {sync.mode === "synced" ? (
+        <p className="text-2xs leading-relaxed text-muted-foreground">
+          Each document is uploaded to your account as you attach it, so you can
+          close this tab and finish on another device. Passport scans are
+          encrypted at rest and deleted on a schedule once your application
+          closes.
+        </p>
+      ) : (
+        <p className="text-2xs leading-relaxed text-muted-foreground">
+          Your files stay in this browser tab. Nothing is uploaded to a server,
+          and no document is saved to this device — closing the tab discards
+          them.
+        </p>
+      )}
     </div>
   );
 }

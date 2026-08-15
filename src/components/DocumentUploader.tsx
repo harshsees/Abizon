@@ -12,43 +12,41 @@
  *   provided   the file is held. Replace and Remove both available.
  *   error      failed validation; the previous file, if any, is untouched.
  *
- * There is deliberately no "uploading" and no "approved". Nothing is uploaded
- * — there is no endpoint — and nothing is approved, because no reviewer has
- * looked at it. The version this replaces flipped to "approved" on a 900ms
- * timer, telling applicants their passport had passed a check that never ran.
- * `setTimeout` is not a backend, and a spinner is not a result.
+ * There is deliberately no "approved". Whether a passport scan is acceptable is
+ * a judgement, and it is made by a person in the ops console. The version this
+ * replaces flipped to "approved" on a 900ms timer, telling applicants their
+ * passport had passed a check that never ran. `setTimeout` is not a backend,
+ * and a spinner is not a result.
  *
- * PDFs get no thumbnail: rendering one needs a PDF engine this project does
- * not ship. They show a file chip instead, which is honest about what is known.
+ * WHAT CHANGED WHEN THE BACKEND ARRIVED. Two things, and both are subtractions:
+ *
+ *   - **PDFs are no longer accepted.** The server re-encodes every upload
+ *     through `sharp` to strip EXIF — a passport photographed at home otherwise
+ *     carries the applicant's home coordinates — and there is no PDF engine in
+ *     this project to do that with. Accepting one meant a file the client said
+ *     was fine and the server rejected after it had been sent.
+ *   - **The limits come from `lib/storage/limits.ts`**, which the server reads
+ *     too. They were 5MB and PDF-inclusive here and 15MB and image-only there;
+ *     one definition is the only way they stay agreed.
+ *
+ * The file itself now travels with the entry, so the sync layer has bytes to
+ * upload. It is never persisted — see the note on `DocumentEntry.blob`.
  */
 
-import { FileText, Loader2, RefreshCw, Upload, X } from "lucide-react";
+import { Image as ImageIcon, Loader2, RefreshCw, Upload, X } from "lucide-react";
 import { useId, useRef, useState } from "react";
 
 import type { DocumentRequirement } from "@/lib/application/documents";
 import type { DocumentEntry } from "@/lib/application/state";
+import {
+  ACCEPTED_UPLOAD_EXTENSIONS,
+  formatBytes,
+  MAX_UPLOAD_BYTES,
+  validateUpload,
+} from "@/lib/storage/limits";
 import { cn } from "@/lib/utils";
 
-export const ACCEPTED_TYPES = ["image/jpeg", "image/png", "application/pdf"];
-export const ACCEPTED_EXTENSIONS = ".jpg,.jpeg,.png,.pdf";
-export const MAX_FILE_BYTES = 5 * 1024 * 1024;
-
-/** The one place the rules are applied. Returns a message, or `undefined`. */
-export function validateDocumentFile(file: File): string | undefined {
-  if (!ACCEPTED_TYPES.includes(file.type)) {
-    return "That file type is not accepted. Use a JPG, PNG or PDF.";
-  }
-  if (file.size > MAX_FILE_BYTES) {
-    return "That file is over 5MB. Try a JPG instead of a PDF, or a lower-resolution scan.";
-  }
-  return undefined;
-}
-
-export function formatBytes(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
+export { formatBytes };
 
 /** Resolves to a data URL for images, and to `undefined` for anything else. */
 function readImagePreview(file: File): Promise<string | undefined> {
@@ -91,7 +89,7 @@ export function DocumentUploader({
   const accept = async (file: File | null) => {
     if (!file) return;
 
-    const problem = validateDocumentFile(file);
+    const problem = validateUpload(file);
     if (problem) {
       setError(problem);
       return;
@@ -108,6 +106,11 @@ export function DocumentUploader({
       fileSize: file.size,
       previewDataUrl,
       providedAt: Date.now(),
+      // The bytes, for the sync layer to upload. A `File` is a `Blob`, so this
+      // is the original rather than a copy — the data URL above is a thumbnail
+      // for the interface and is not what gets sent.
+      blob: file,
+      upload: "local",
     });
   };
 
@@ -129,7 +132,7 @@ export function DocumentUploader({
                 className="size-full object-cover"
               />
             ) : (
-              <FileText aria-hidden className="size-5 text-muted-foreground" />
+              <ImageIcon aria-hidden className="size-5 text-muted-foreground" />
             )}
           </span>
 
@@ -137,10 +140,18 @@ export function DocumentUploader({
             <p className="truncate text-sm font-medium text-foreground">
               {entry.fileName ?? "Photographed with your camera"}
             </p>
-            {/* A fact, not a verdict. */}
+            {/* Facts, not verdicts. Which of them is true is decided by the
+                upload state, so this line cannot say "saved" about a file that
+                is still sitting in the tab. */}
             <p className="mt-0.5 text-2xs text-muted-foreground">
               {entry.fileSize ? `${formatBytes(entry.fileSize)} · ` : ""}
-              Attached — checked before filing
+              {entry.upload === "stored"
+                ? "Saved to your application — checked before filing"
+                : entry.upload === "uploading"
+                  ? "Uploading…"
+                  : entry.upload === "failed"
+                    ? (entry.error ?? "Upload failed")
+                    : "Attached — checked before filing"}
             </p>
           </div>
 
@@ -170,7 +181,7 @@ export function DocumentUploader({
         <input
           ref={inputRef}
           type="file"
-          accept={ACCEPTED_EXTENSIONS}
+          accept={ACCEPTED_UPLOAD_EXTENSIONS}
           className="sr-only"
           tabIndex={-1}
           aria-hidden="true"
@@ -238,14 +249,14 @@ export function DocumentUploader({
           Upload {requirement.shortLabel.toLowerCase()}
         </span>
         <span id={hintId} className="text-2xs text-muted-foreground">
-          Drag and drop, or choose a file · JPG, PNG, PDF · up to 5MB
+          Drag and drop, or choose a file · JPG, PNG or WebP · up to {formatBytes(MAX_UPLOAD_BYTES)}
         </span>
       </button>
 
       <input
         ref={inputRef}
         type="file"
-        accept={ACCEPTED_EXTENSIONS}
+        accept={ACCEPTED_UPLOAD_EXTENSIONS}
         className="sr-only"
         tabIndex={-1}
         aria-hidden="true"

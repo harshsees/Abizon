@@ -3,6 +3,13 @@
 Written 15 August 2026. This is the document a new engineer, or the client's own
 team, should be able to read once and then run the system.
 
+> **Since this was written, the backend has been built.** Everything except
+> payments now exists in the repository — including the Postgres auth store that
+> §4.2 below calls a landmine, which has been replaced. `stack.md` is the full
+> stack and the reasoning; `IMPLEMENTED.md` is what was built, what was verified,
+> and what is still outstanding. The architecture and the two warnings in §4
+> below are unchanged and still worth reading first.
+
 ---
 
 ## 1. Where things stand
@@ -133,7 +140,15 @@ variable. But the paperwork should be moving today.
 Also note: the registered template's variables must stay named `OTP` and `EXPIRY`
 to match `lib/auth/sms/msg91.ts`, or re-register the template.
 
-### 4.2 The in-memory store must be replaced before any deploy
+### 4.2 The in-memory store must be replaced before any deploy — DONE
+
+> **Resolved.** `src/lib/auth/stores/postgres.ts` implements the `AuthStore`
+> interface against Postgres, and `authStore()` selects it whenever
+> `DATABASE_URL` is set — which `lib/env.ts` makes mandatory in production. The
+> description below is kept because it is the clearest statement of *why* the
+> replacement was necessary, and because the in-memory store still runs on a
+> development machine that has not configured a database.
+
 
 `lib/auth/store.ts` currently keeps challenges, users and rate-limit counters in
 process memory. That is correct on one long-lived Node process and **silently

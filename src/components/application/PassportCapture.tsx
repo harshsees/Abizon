@@ -27,12 +27,13 @@
  * reason a modal is right for a payment.
  */
 
-import { ArrowLeft, Camera, Check, Upload } from "lucide-react";
+import { AlertCircle, ArrowLeft, Camera, Check, RotateCw, Upload } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { DocumentUploader } from "@/components/DocumentUploader";
 import type { DocumentRequirement } from "@/lib/application/documents";
 import type { DocumentEntry } from "@/lib/application/state";
+import { isRetryable } from "@/lib/application/sync";
 import { cn } from "@/lib/utils";
 
 import { LiveCapture } from "./LiveCapture";
@@ -47,6 +48,8 @@ type PassportCaptureProps = {
   onClear: () => void;
   /** Returns to the checklist. */
   onBack: () => void;
+  /** Re-queues a failed upload with the bytes already in hand. */
+  onRetry?: () => void;
 };
 
 export function PassportCapture({
@@ -56,6 +59,7 @@ export function PassportCapture({
   onProvide,
   onClear,
   onBack,
+  onRetry,
 }: PassportCaptureProps) {
   const cameraAvailable =
     requirement.capture === "camera" || requirement.capture === "either";
@@ -95,10 +99,37 @@ export function PassportCapture({
         </p>
       </div>
 
-      {entry && method === "choose" && (
+      {/* A FAILED UPLOAD IS OFFERED A RETRY, NOT A RE-CHOOSE.
+
+          The bytes are still in hand — `DocumentEntry.blob` is only released
+          once the upload succeeds — so a dropped connection costs one tap, not
+          a second trip through the file picker or another photograph of a
+          passport. Retrying is only offered where it can work: a file the
+          server rejected on its own merits will be rejected identically, and a
+          button that does nothing four times is worse than no button. */}
+      {entry?.upload === "failed" && onRetry && isRetryable(entry.error ?? "") && (
+        <div className="rounded-xl border border-destructive-border bg-destructive-subtle px-4 py-3">
+          <p className="flex items-start gap-2 text-2xs font-semibold text-destructive-subtle-foreground">
+            <AlertCircle aria-hidden className="mt-px size-3.5 flex-shrink-0" />
+            {entry.error ?? "That upload did not complete."}
+          </p>
+          <button
+            type="button"
+            onClick={onRetry}
+            className="mt-2 inline-flex cursor-pointer items-center gap-1.5 text-2xs font-bold text-destructive-subtle-foreground underline underline-offset-2"
+          >
+            <RotateCw aria-hidden className="size-3" />
+            Try uploading again
+          </button>
+        </div>
+      )}
+
+      {entry && entry.upload !== "failed" && method === "choose" && (
         <p className="flex items-center gap-2 rounded-xl border border-border bg-success-subtle px-4 py-2.5 text-2xs font-semibold text-success-subtle-foreground">
           <Check aria-hidden className="size-3.5" />
-          Already attached. Choosing again replaces it.
+          {entry.upload === "stored"
+            ? "Saved to your application. Choosing again replaces it."
+            : "Already attached. Choosing again replaces it."}
         </p>
       )}
 
@@ -111,7 +142,18 @@ export function PassportCapture({
           // than back at a chooser whose other option has just failed them.
           onUploadInstead={() => setMethod("upload")}
           onCapture={(previewDataUrl) => {
-            onProvide({ source: "capture", previewDataUrl, providedAt: Date.now() });
+            // No `blob` here, and that is not an omission. The camera produces
+            // a data URL because that is what a canvas gives and what the
+            // preview needs; the sync layer converts it to bytes when it
+            // uploads. Doing the conversion here would mean holding the image
+            // twice — once as base64, once as binary — on the device least able
+            // to spare the memory.
+            onProvide({
+              source: "capture",
+              previewDataUrl,
+              providedAt: Date.now(),
+              upload: "local",
+            });
             // Straight back to the checklist. The applicant already confirmed
             // this image in the camera's own preview, so returning them to the
             // Upload/Scan chooser would ask "how do you want to do this?" about
