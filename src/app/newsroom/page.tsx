@@ -10,14 +10,14 @@ import {
 } from "@/components/PageKit";
 
 export const metadata: Metadata = {
-  title: "Newsroom | Keyrise",
+  title: "Newsroom | Abizon",
   description:
-    "Company announcements, product launches, policy analysis and press resources from Keyrise.",
+    "Company announcements, product launches, policy analysis and press resources from Abizon.",
 };
 
 const releases = [
   {
-    title: "Keyrise adds 22 African destinations to instant e-Visa coverage",
+    title: "Abizon adds 22 African destinations to instant e-Visa coverage",
     description:
       "Tanzania, Rwanda, Zambia and 19 others move to same-week delivery, bringing total coverage to 155 destinations.",
     meta: "12 Jul 2026",
@@ -35,7 +35,7 @@ const releases = [
     meta: "03 Jun 2026",
   },
   {
-    title: "Keyrise publishes its first Fee Change Audit",
+    title: "Abizon publishes its first Fee Change Audit",
     description:
       "A public, permanent log of every government fee movement we observe, with the date we detected it and the date we passed it on.",
     meta: "19 May 2026",
@@ -82,11 +82,11 @@ export default function NewsroomPage() {
         actions={
           <>
             <a
-              href="mailto:press@keyrise.com"
+              href="mailto:press@abizon.com"
               className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-bold text-on-primary hover:bg-primary-hover"
             >
               <Mail className="h-4 w-4" />
-              press@keyrise.com
+              press@abizon.com
             </a>
             <a
               href="/press-kit.zip"

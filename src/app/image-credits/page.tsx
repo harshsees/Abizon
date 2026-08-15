@@ -34,9 +34,9 @@ import { COUNTRY_PHOTOS } from "@/lib/countryImagery";
 import { displayCountryName } from "@/lib/countryVisa";
 
 export const metadata: Metadata = {
-  title: "Image credits | Keyrise",
+  title: "Image credits | Abizon",
   description:
-    "Every destination photograph on Keyrise, with its photographer, licence and source.",
+    "Every destination photograph on Abizon, with its photographer, licence and source.",
 };
 
 type CreditRow = {
@@ -176,8 +176,8 @@ export default function ImageCreditsPage() {
         </div>
 
         <p className="mt-6 max-w-3xl text-2xs leading-relaxed text-muted-foreground">
-          Keyrise is not affiliated with the Wikimedia Foundation, and no
-          photographer listed here has endorsed Keyrise. If you are the author of
+          Abizon is not affiliated with the Wikimedia Foundation, and no
+          photographer listed here has endorsed Abizon. If you are the author of
           one of these photographs and want the credit corrected or the image
           removed, write to us and we will act on it.
         </p>

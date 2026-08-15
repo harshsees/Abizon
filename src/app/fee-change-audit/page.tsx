@@ -12,9 +12,9 @@ import {
 } from "@/components/PageKit";
 
 export const metadata: Metadata = {
-  title: "Fee Change Audit | Keyrise",
+  title: "Fee Change Audit | Abizon",
   description:
-    "A permanent public log of every government visa fee change Keyrise detects — when we saw it, and when we passed it on to travellers.",
+    "A permanent public log of every government visa fee change Abizon detects — when we saw it, and when we passed it on to travellers.",
 };
 
 type Change = {

@@ -11,9 +11,9 @@ import {
 } from "@/components/PageKit";
 
 export const metadata: Metadata = {
-  title: "Transparency Report | Keyrise",
+  title: "Transparency Report | Abizon",
   description:
-    "How Keyrise will publish approval rates, on-time delivery and refunds — the method, ahead of the first quarterly report.",
+    "How Abizon will publish approval rates, on-time delivery and refunds — the method, ahead of the first quarterly report.",
 };
 
 /**
@@ -70,7 +70,7 @@ export default function TransparencyPage() {
 
         <div className="mt-8">
           <Callout tone="warning" title="Why this page is empty">
-            Keyrise has not filed applications at volume yet, so there is nothing
+            Abizon has not filed applications at volume yet, so there is nothing
             measured to report. Publishing a figure before there is something to
             measure would defeat the point of the page. The first report covers
             the first full quarter of filing, and every quarter after it —

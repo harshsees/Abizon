@@ -12,9 +12,9 @@ import {
 } from "@/components/PageKit";
 
 export const metadata: Metadata = {
-  title: "Emergency Visa Helpline | Keyrise",
+  title: "Emergency Visa Helpline | Abizon",
   description:
-    "Flying in under 72 hours with a visa problem? The Keyrise emergency desk is staffed 24/7 and escalates straight to a filing specialist.",
+    "Flying in under 72 hours with a visa problem? The Abizon emergency desk is staffed 24/7 and escalates straight to a filing specialist.",
 };
 
 const situations = [
@@ -80,11 +80,11 @@ export default function EmergencyHelplinePage() {
               +91 11 4084 5678
             </a>
             <a
-              href="mailto:emergency@keyrise.com"
+              href="mailto:emergency@abizon.com"
               className="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900 px-6 py-3 text-sm font-bold text-white hover:border-slate-600"
             >
               <MessageSquare className="h-4 w-4" />
-              emergency@keyrise.com
+              emergency@abizon.com
             </a>
           </>
         }

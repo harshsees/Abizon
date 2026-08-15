@@ -12,9 +12,9 @@ import {
 } from "@/components/PageKit";
 
 export const metadata: Metadata = {
-  title: "Engineering | Keyrise",
+  title: "Engineering | Abizon",
   description:
-    "How Keyrise builds visa filing infrastructure — document intelligence, portal automation, and the systems that keep working when governments change theirs.",
+    "How Abizon builds visa filing infrastructure — document intelligence, portal automation, and the systems that keep working when governments change theirs.",
 };
 
 const systems = [

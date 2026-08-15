@@ -22,7 +22,7 @@ import {
 } from "@/components/PageKit";
 
 export const metadata: Metadata = {
-  title: "The Visa Bible | Keyrise",
+  title: "The Visa Bible | Abizon",
   description:
     "A complete reference on visa categories, documentation, refusals and appeals — written to be understood, not just followed.",
 };
@@ -154,7 +154,7 @@ export default function BiblePage() {
 
       <CTABand
         title="Apply with this already handled"
-        description="Every application through Keyrise is checked against the destination's requirements before it's submitted."
+        description="Every application through Abizon is checked against the destination's requirements before it's submitted."
         href="/"
         label="Browse destinations"
       />

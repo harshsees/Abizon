@@ -12,7 +12,7 @@ import {
 } from "@/components/PageKit";
 
 export const metadata: Metadata = {
-  title: "Japan Visa Guide for Indians | Keyrise",
+  title: "Japan Visa Guide for Indians | Abizon",
   description:
     "How to apply for a Japan tourist visa from India — the daily schedule requirement, documents, eVisa eligibility, fees and processing times.",
 };

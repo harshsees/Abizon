@@ -80,7 +80,7 @@ export function ApplicationComplete() {
           Your {summary.country.displayName} application is complete.
         </p>
         <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-          Everything Keyrise needs for{" "}
+          Everything Abizon needs for{" "}
           {summary.travellers.count === 1
             ? "one traveller"
             : `${summary.travellers.count} travellers`}{" "}
@@ -101,7 +101,7 @@ export function ApplicationComplete() {
             Nothing has been filed, and nothing has been charged.
           </p>
           <p>
-            Keyrise cannot yet accept a submission or a payment online. Your
+            Abizon cannot yet accept a submission or a payment online. Your
             answers are held in this browser tab and the documents you attached
             have not left this device — closing the tab discards the files, and
             the rest of your progress stays on this device only.
@@ -112,14 +112,14 @@ export function ApplicationComplete() {
               ? `${summary.country.displayName} charges no government fee`
               : `${inr(summary.fees.payNow * per)} government fee is payable up front`}
             {summary.fees.payOnApproval === null || summary.fees.total === null ? (
-              // The government fee is real and stays. The Keyrise side is not,
+              // The government fee is real and stays. The Abizon side is not,
               // so the sentence stops rather than completing itself with a
               // number nobody has agreed.
-              <>. The Keyrise fee is not yet published.</>
+              <>. The Abizon fee is not yet published.</>
             ) : (
               <>
                 {" "}
-                and {inr(summary.fees.payOnApproval * per)} to Keyrise once the
+                and {inr(summary.fees.payOnApproval * per)} to Abizon once the
                 visa is granted — {inr(summary.fees.total)} in total.
               </>
             )}

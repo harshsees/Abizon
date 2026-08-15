@@ -28,9 +28,9 @@ import { lookupApplicationStatus } from "@/lib/application/status";
  * change is that the `available: true` branch starts being taken.
  */
 export const metadata: Metadata = {
-  title: "Track Application | Keyrise",
+  title: "Track Application | Abizon",
   description:
-    "The stages a Keyrise visa application passes through, and what Keyrise can currently report.",
+    "The stages a Abizon visa application passes through, and what Abizon can currently report.",
 };
 
 type Props = {
@@ -68,7 +68,7 @@ export default async function TrackingPage({ params }: Props) {
                 Live tracking is not available yet
               </p>
               <p>
-                Keyrise has no online status service, so this reference has not
+                Abizon has no online status service, so this reference has not
                 been checked against anything — we are not reporting that it was
                 not found, only that we cannot look it up. Nothing below
                 describes your application.
@@ -83,11 +83,11 @@ export default async function TrackingPage({ params }: Props) {
 
         <section className="mt-8">
           <h2 className="text-sm font-semibold text-foreground">
-            How a Keyrise application progresses
+            How a Abizon application progresses
           </h2>
           <p className="mt-1 text-2xs leading-relaxed text-muted-foreground">
             The route every application takes. The first two stages are decided
-            on your own device; the rest need a status service Keyrise does not
+            on your own device; the rest need a status service Abizon does not
             run yet.
           </p>
 
@@ -101,7 +101,7 @@ export default async function TrackingPage({ params }: Props) {
 
         <div className="mt-8 flex flex-wrap gap-3">
           <a
-            href="mailto:support@keyrise.com"
+            href="mailto:support@abizon.com"
             className="inline-flex h-12 items-center rounded-xl border border-border bg-surface px-5 sm:h-11 text-sm font-semibold text-foreground transition-colors hover:bg-surface-sunken"
           >
             Contact support

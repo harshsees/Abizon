@@ -69,7 +69,7 @@ const OUT = path.join(DIR, "..", "..", "src", "lib", "countryPhotoManifest.ts");
 const API = "https://en.wikipedia.org/w/api.php";
 /** Wikimedia asks automated clients to identify themselves and say why. */
 const UA =
-  "KeyriseCountryPhotos/1.0 (https://keyrise.com; build-time asset sourcing) node-fetch";
+  "AbizonCountryPhotos/1.0 (https://abizon.com; build-time asset sourcing) node-fetch";
 
 /** The only thumbnail widths upload.wikimedia.org will serve to a hotlink. */
 const STANDARD_WIDTHS = [500, 960, 1280, 1920];

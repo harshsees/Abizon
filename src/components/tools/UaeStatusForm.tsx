@@ -3,18 +3,18 @@
 /**
  * UAE visa status lookup.
  *
- * This routes Keyrise-shaped references to our own tracking route. It
+ * This routes Abizon-shaped references to our own tracking route. It
  * deliberately does *not* pretend to query GDRFA or ICP directly — we have no
  * such integration on the client, and a form that returned invented government
  * status would be worse than useless to someone with a flight booked. For
- * non-Keyrise references it says so plainly and points at the official
+ * non-Abizon references it says so plainly and points at the official
  * channels.
  *
  * PHASE 6B: two sentences here promised live tracking ("open directly in your
  * tracking timeline", "we can only return live status for applications we
  * filed"). Neither was true — `lookupApplicationStatus` has no service behind
  * it and returns `available: false` for every reference. The copy now describes
- * the destination honestly: a Keyrise reference opens the lifecycle page, which
+ * the destination honestly: a Abizon reference opens the lifecycle page, which
  * itself states that nothing was looked up.
  */
 
@@ -27,8 +27,8 @@ import { DURATION, EASE } from "@/lib/motion";
 
 type Mode = "application" | "passport";
 
-/** Keyrise references look like KR-XXXXXXXX. */
-const KEYRISE_REF = /^KR-?[A-Z0-9]{6,10}$/i;
+/** Abizon references look like KR-XXXXXXXX. */
+const ABIZON_REF = /^KR-?[A-Z0-9]{6,10}$/i;
 /** Indian passports: one letter, seven digits. */
 const PASSPORT = /^[A-Z][0-9]{7}$/i;
 
@@ -50,7 +50,7 @@ export function UaeStatusForm() {
     }
 
     if (mode === "application") {
-      if (KEYRISE_REF.test(trimmed)) {
+      if (ABIZON_REF.test(trimmed)) {
         setError(null);
         router.push(`/track/${encodeURIComponent(trimmed.toUpperCase())}`);
         return;
@@ -149,15 +149,15 @@ export function UaeStatusForm() {
           <ArrowRight className="h-4 w-4 transition-transform duration-[var(--duration-base)] ease-out group-hover:translate-x-0.5" />
         </button>
 
-        {/* PHASE 6B corrected this. It read "Applications filed through Keyrise
+        {/* PHASE 6B corrected this. It read "Applications filed through Abizon
             open directly in your tracking timeline", which promises live
             tracking — there is no status service, so nothing opens and nothing
             is looked up. It now says what the button actually does. */}
         <p className="mt-3 flex items-start gap-2 text-xs text-muted-foreground">
           <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
           <span>
-            Keyrise does not have an online status service yet, so we cannot
-            report where an application has reached. A Keyrise reference opens
+            Abizon does not have an online status service yet, so we cannot
+            report where an application has reached. A Abizon reference opens
             the stages an application passes through; for anything filed
             elsewhere, we&apos;ll point you at the official channel.
           </span>
@@ -174,7 +174,7 @@ export function UaeStatusForm() {
             className="mt-4 rounded-2xl border border-accent-subtle bg-accent-subtle p-5"
           >
             <h3 className="text-sm font-bold text-accent-subtle-foreground">
-              That reference isn&apos;t a Keyrise application
+              That reference isn&apos;t a Abizon application
             </h3>
             <p className="mt-2 text-sm leading-relaxed text-accent-subtle-foreground">
               For a UAE visa filed through another agent, an airline or directly, the

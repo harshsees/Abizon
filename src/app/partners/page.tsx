@@ -12,9 +12,9 @@ import {
 } from "@/components/PageKit";
 
 export const metadata: Metadata = {
-  title: "Partners | Keyrise",
+  title: "Partners | Abizon",
   description:
-    "Embed visa applications into your booking flow. Keyrise partners with OTAs, airlines, corporate travel desks and universities.",
+    "Embed visa applications into your booking flow. Abizon partners with OTAs, airlines, corporate travel desks and universities.",
 };
 
 const segments = [

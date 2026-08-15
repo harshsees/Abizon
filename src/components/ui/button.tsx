@@ -4,7 +4,7 @@
  * Button — adapted from 21st.dev `@coss.com/coss-button`.
  *
  * Changes from source:
- *  - palette classes swapped for Keyrise semantic tokens
+ *  - palette classes swapped for Abizon semantic tokens
  *  - size ramp raised so mobile heights clear the 44px touch-target minimum
  *    (source used h-9/h-8, i.e. 36px/32px), tightening only at `sm:` and up
  *  - added `success` variant for confirm/approved actions

@@ -11,14 +11,14 @@
  * middle of a two-column layout that had already ended.
  *
  * Everything shown is still derived from `country.documents` — the only
- * requirement data Keyrise has — through `lib/application/documents.ts`, which
+ * requirement data Abizon has — through `lib/application/documents.ts`, which
  * is shared with the application flow so the two cannot disagree about what a
  * destination asks for. Dubai is "Passport Only", so Dubai renders one card,
  * and the heading says one.
  *
  * WHAT IS NOT REPRODUCED. The reference's figure strip reads "03 MIN fastest
  * time taken to apply / 07 MIN avg. time taken to apply". Those are telemetry
- * from a live product with real applicants; Keyrise has neither. The strip is
+ * from a live product with real applicants; Abizon has neither. The strip is
  * kept — it is load-bearing for the composition — carrying two figures the
  * dataset actually holds: how many documents, and how many days.
  *
@@ -157,7 +157,7 @@ export function VisaRequirements({
  * The card illustrations.
  *
  * Drawn here rather than sourced, because the reference's are photographs of a
- * real Indian passport and a real applicant's face — neither of which Keyrise
+ * real Indian passport and a real applicant's face — neither of which Abizon
  * has a licence to. `aria-hidden` throughout: the document's name sits directly
  * beneath in text.
  */

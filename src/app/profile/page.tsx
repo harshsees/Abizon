@@ -48,7 +48,7 @@ export default function ProfilePage() {
                 <path d="M50 20 L55 35" stroke="currentColor" strokeWidth="8" strokeLinecap="round" />
               </svg>
               <span className="text-xl font-black tracking-tighter text-slate-900 font-sans uppercase">
-                keyrise
+                abizon
               </span>
             </a>
             
@@ -218,7 +218,7 @@ export default function ProfilePage() {
               </h3>
               
               <p className="text-muted-foreground text-sm max-w-sm mt-2 leading-relaxed">
-                You haven't started any visa applications yet. Begin your journey to explore the world with Keyrise.
+                You haven't started any visa applications yet. Begin your journey to explore the world with Abizon.
               </p>
 
               {/* Start Journey CTA Button */}

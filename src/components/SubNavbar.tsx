@@ -39,7 +39,7 @@ export function SubNavbar({
    * set, and now the page's exact set.
    *
    * It used to be seven, because every informational block that had an anchor
-   * got a tab: "Gov. Fee Breakdown", "Why Keyrise" and "Additional" each
+   * got a tab: "Gov. Fee Breakdown", "Why Abizon" and "Additional" each
    * pointed at something that is now *inside* one of these five rather than
    * beside it. A tab per subsection made the rail scroll horizontally on
    * desktop and gave the reader seven destinations for a page with five ideas.

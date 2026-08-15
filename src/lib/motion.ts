@@ -1,5 +1,5 @@
 /**
- * KEYRISE MOTION SYSTEM
+ * ABIZON MOTION SYSTEM
  * ---------------------------------------------------------------------------
  * The JS counterpart to the `--duration-*` / `--ease-*` tokens in globals.css.
  * Both halves must agree, or a CSS hover and a Framer entrance on the same

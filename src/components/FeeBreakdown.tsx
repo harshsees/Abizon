@@ -27,7 +27,7 @@ import { DURATION, EASE } from "@/lib/motion";
 
 const inr = (value: number) => `₹${Math.round(value).toLocaleString("en-IN")}`;
 
-/** PHASE 8C: a fee Keyrise has not decided prints as words, never as a number. */
+/** PHASE 8C: a fee Abizon has not decided prints as words, never as a number. */
 const inrOrUnset = (value: number | null) =>
   value === null ? FEE_NOT_PUBLISHED : inr(value);
 
@@ -58,11 +58,11 @@ export function GovFeeBreakdown({
     },
     {
       icon: ShieldCheck,
-      label: "Keyrise service fee",
+      label: "Abizon service fee",
       // The hint carries the status. A traveller reading a fee table is
       // entitled to know which of these numbers is settled and which is not,
       // and the distinction disappears from here on its own the moment
-      // `KEYRISE_TERMS.status` becomes "verified".
+      // `ABIZON_TERMS.status` becomes "verified".
       hint: totals.provisional
         ? "Document checks, filing and the on-time guarantee. Provisional, not yet confirmed."
         : "Document checks, filing and the on-time guarantee.",
@@ -190,7 +190,7 @@ export function GovFeeBreakdown({
                 <span>
                   Government fees are set by the {countryName} authorities and
                   can change without notice. If the fee drops between payment
-                  and filing, Keyrise refunds the difference automatically.
+                  and filing, Abizon refunds the difference automatically.
                 </span>
               </p>
             </div>

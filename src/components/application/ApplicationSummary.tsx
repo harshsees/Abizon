@@ -116,7 +116,7 @@ export function ApplicationSummaryPanel({
             value={inr(fees.governmentFee * per)}
           />
           <Line
-            label={`Keyrise fee${per > 1 ? ` × ${per}` : ""}`}
+            label={`Abizon fee${per > 1 ? ` × ${per}` : ""}`}
             value={
               fees.baseServiceFee === null
                 ? FEE_NOT_PUBLISHED
@@ -148,14 +148,14 @@ export function ApplicationSummaryPanel({
             ? "No government fee"
             : `${inr(fees.payNow * per)} government fee up front`}
           {fees.payOnApproval === null
-            ? " · Keyrise fee not yet published."
-            : ` · ${inr(fees.payOnApproval * per)} to Keyrise on approval.`}
+            ? " · Abizon fee not yet published."
+            : ` · ${inr(fees.payOnApproval * per)} to Abizon on approval.`}
         </p>
       </div>
 
       <p className="mt-4 flex items-start gap-2 border-t border-border pt-4 text-2xs leading-relaxed text-muted-foreground">
         <ShieldCheck aria-hidden className="mt-px size-3.5 flex-shrink-0 text-success" />
-        On time or the Keyrise fee is waived. Refused and the government fee is
+        On time or the Abizon fee is waived. Refused and the government fee is
         refunded.
       </p>
     </aside>

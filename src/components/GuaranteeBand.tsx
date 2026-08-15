@@ -19,7 +19,7 @@
  * WHAT THEY SAY, and what they deliberately do not.
  *
  * The reference prints a date *and a clock time* ("14th Aug, 12:01 pm").
- * Keyrise has no delivery-time source — `VisaGuarantee` has carried that
+ * Abizon has no delivery-time source — `VisaGuarantee` has carried that
  * distinction since Phase 4, printing a time only when handed a real
  * `guaranteedAt` and a date alone otherwise. These follow the same rule: today
  * + `deliveryDays` is arithmetic on a real SLA, an hour would be invention.

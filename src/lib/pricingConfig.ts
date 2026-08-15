@@ -1,10 +1,10 @@
 /**
- * KEYRISE COMMERCIAL TERMS — the one place a business decision lands.
+ * ABIZON COMMERCIAL TERMS — the one place a business decision lands.
  *
  * WHAT THIS REPLACES. `PLACEHOLDER_PRICING` in `countryVisa.ts`, which held the
  * same two numbers with an honest comment above them. The comment said:
  *
- *   "UNVERIFIED. These two numbers are not Keyrise data. Centralising them here
+ *   "UNVERIFIED. These two numbers are not Abizon data. Centralising them here
  *    does not make them true; it makes them *one* lie instead of three."
  *
  * That was correct and it was not enough, because the status lived only in a
@@ -36,7 +36,7 @@ export type FeeStatus =
   | "provisional";
 
 export type CommercialTerms = {
-  /** Keyrise's handling charge per traveller. `null` when undecided. */
+  /** Abizon's handling charge per traveller. `null` when undecided. */
   serviceFee: number | null;
   /** Added to the service fee for expedited handling. `null` when undecided. */
   expressSurcharge: number | null;
@@ -66,12 +66,12 @@ export type CommercialTerms = {
  *   gstRate 0.18           This one is NOT provisional in the same sense. 18%
  *                          is the statutory Indian GST rate for this service
  *                          category; it is a rate set by law rather than by
- *                          Keyrise, so it does not need commercial sign-off.
+ *                          Abizon, so it does not need commercial sign-off.
  *                          It is grouped here because it belongs to the same
  *                          calculation, and it is why `status` describes the
  *                          two fees rather than the whole object.
  */
-export const KEYRISE_TERMS: CommercialTerms = {
+export const ABIZON_TERMS: CommercialTerms = {
   serviceFee: 1499,
   expressSurcharge: 1500,
   gstRate: 0.18,
@@ -79,7 +79,7 @@ export const KEYRISE_TERMS: CommercialTerms = {
 };
 
 /** True when the fees above are still awaiting commercial sign-off. */
-export const feesAreProvisional = KEYRISE_TERMS.status === "provisional";
+export const feesAreProvisional = ABIZON_TERMS.status === "provisional";
 
 /**
  * How an undecided fee prints, everywhere, in words.

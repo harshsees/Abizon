@@ -12,7 +12,7 @@ import {
 } from "@/components/PageKit";
 
 export const metadata: Metadata = {
-  title: "UK Visa Guide for Indians (Standard Visitor) | Keyrise",
+  title: "UK Visa Guide for Indians (Standard Visitor) | Abizon",
   description:
     "How to apply for a UK Standard Visitor visa from India — online application, biometrics, the cover letter that matters, fees and processing times.",
 };

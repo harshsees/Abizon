@@ -4,9 +4,9 @@ import { BookMarked, Compass, Map, Mountain, Ship, Utensils } from "lucide-react
 import { CTABand, FeatureGrid, PageHero, PageShell, Section } from "@/components/PageKit";
 
 export const metadata: Metadata = {
-  title: "Magazine Library | Keyrise",
+  title: "Magazine Library | Abizon",
   description:
-    "Destination guides, itineraries and travel writing from the Keyrise magazine library.",
+    "Destination guides, itineraries and travel writing from the Abizon magazine library.",
 };
 
 const issues = [

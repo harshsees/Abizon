@@ -19,7 +19,7 @@
 import { countriesData, getCountrySlug, type Country } from "@/data/countries";
 import { requiredDocuments } from "@/lib/application/documents";
 import { CATEGORY_PHOTO_IDS, countryPhoto } from "@/lib/countryImagery";
-import { KEYRISE_TERMS, feesAreProvisional } from "@/lib/pricingConfig";
+import { ABIZON_TERMS, feesAreProvisional } from "@/lib/pricingConfig";
 import { deriveVisaFlow, parseGovernmentFee, resolveHeroImage } from "@/lib/countryVisa";
 
 export type Severity = "error" | "warning" | "info";
@@ -49,7 +49,7 @@ export type CountryConfigReport = {
  *
  * §10 says do not fill these with guesses. §11 asks what each one *is*, because
  * "empty" is not one condition — a field that is derivable is a different
- * problem from a field that needs a data source Keyrise does not have, and both
+ * problem from a field that needs a data source Abizon does not have, and both
  * differ from a field that should never have existed.
  *
  * `classification`
@@ -77,7 +77,7 @@ export const CONFIG_FIELD_STATUS: Record<
   processingTime: {
     classification: "derived",
     presentFor: "all",
-    note: "`deliveryDays` is Keyrise's committed delivery, which is what the guarantee and the plan selector show. Government processing time is a different, unheld fact — and §12 forbids inventing it.",
+    note: "`deliveryDays` is Abizon's committed delivery, which is what the guarantee and the plan selector show. Government processing time is a different, unheld fact — and §12 forbids inventing it.",
   },
   entryType: {
     classification: "optional",
@@ -107,7 +107,7 @@ export const CONFIG_FIELD_STATUS: Record<
   applicationSteps: {
     classification: "not-applicable",
     presentFor: "none",
-    note: "§17: the shared Keyrise journey is the product UX and is already shown. Country-specific government steps would have to be sourced per destination.",
+    note: "§17: the shared Abizon journey is the product UX and is already shown. Country-specific government steps would have to be sourced per destination.",
   },
   faqs: {
     classification: "optional",
@@ -250,7 +250,7 @@ export function validateCountryConfig(country: Country): CountryConfigReport {
     push(
       "warning",
       "pricing.serviceFee",
-      `Keyrise service fee (₹${KEYRISE_TERMS.serviceFee}) and express surcharge (₹${KEYRISE_TERMS.expressSurcharge}) are provisional and require business confirmation. See lib/pricingConfig.ts.`,
+      `Abizon service fee (₹${ABIZON_TERMS.serviceFee}) and express surcharge (₹${ABIZON_TERMS.expressSurcharge}) are provisional and require business confirmation. See lib/pricingConfig.ts.`,
     );
   }
 
@@ -346,7 +346,7 @@ export function validateCountryDataset(
    * flattened into a dataset with one row per destination and no product axis.
    *
    * That means there is no correct row to keep. Picking one silently discards a
-   * product Keyrise may sell; merging them invents a price. So the validator
+   * product Abizon may sell; merging them invents a price. So the validator
    * names the differing fields and stops, and the catalogue's first-wins rule
    * stays an explicitly-labelled placeholder rather than a decision.
    */

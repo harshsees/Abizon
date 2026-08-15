@@ -3,9 +3,9 @@ import type { Metadata } from "next";
 import { Callout, PageHero, PageShell, Prose, Section } from "@/components/PageKit";
 
 export const metadata: Metadata = {
-  title: "Terms of Service | Keyrise",
+  title: "Terms of Service | Abizon",
   description:
-    "The terms governing use of Keyrise — what we do, what we guarantee, what we cannot control, and how disputes are resolved.",
+    "The terms governing use of Abizon — what we do, what we guarantee, what we cannot control, and how disputes are resolved.",
 };
 
 export default function TermsPage() {
@@ -14,7 +14,7 @@ export default function TermsPage() {
       <PageHero
         eyebrow="Legal"
         title="Terms of Service"
-        description="The agreement between you and Keyrise when you use this service."
+        description="The agreement between you and Abizon when you use this service."
         badge={
           <span className="rounded-full border border-border bg-surface px-4 py-2 text-xs font-semibold text-muted-foreground">
             Last updated 14 July 2026
@@ -36,7 +36,7 @@ export default function TermsPage() {
         <Prose>
           <h2>1. What this service is</h2>
           <p>
-            Keyrise prepares and submits visa applications on your behalf. We review your
+            Abizon prepares and submits visa applications on your behalf. We review your
             documents against the destination&apos;s requirements, complete the application,
             submit it to the relevant authority, and track it to an outcome.
           </p>

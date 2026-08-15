@@ -11,9 +11,9 @@ import {
 } from "@/components/PageKit";
 
 export const metadata: Metadata = {
-  title: "Refunds Policy | Keyrise",
+  title: "Refunds Policy | Abizon",
   description:
-    "When Keyrise refunds you, how much, and how fast — including the automatic refund that fires whenever a visa misses its committed delivery date.",
+    "When Abizon refunds you, how much, and how fast — including the automatic refund that fires whenever a visa misses its committed delivery date.",
 };
 
 const scenarios = [
@@ -152,7 +152,7 @@ export default function RefundsPolicyPage() {
           </p>
           <h3>If something is wrong</h3>
           <p>
-            Write to <a href="mailto:refunds@keyrise.com">refunds@keyrise.com</a> with your
+            Write to <a href="mailto:refunds@abizon.com">refunds@abizon.com</a> with your
             application ID. Refund queries are answered by the team that owns the filing, not
             a separate billing desk that has to go and ask them.
           </p>

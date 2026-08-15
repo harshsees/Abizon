@@ -5,7 +5,7 @@
  *
  * PLACEHOLDER CONTENT. Every review below is written copy, not a real customer
  * submission, and the names attached to them are invented. Nothing here is
- * sourced from a review platform or from Keyrise's own records.
+ * sourced from a review platform or from Abizon's own records.
  *
  * Phase 4.1 removed the provenance claims that made them read as verified:
  * the Google "G" mark on each card, the "Google Review" footer badge, and the
@@ -74,7 +74,7 @@ export function Reviews({ countryName = "Dubai" }: ReviewsProps) {
       avatarBg: "bg-indigo-500",
       rating: 5,
       time: "2 days ago",
-      text: "Keyrise made my [Country] visa application incredibly simple. I just uploaded my documents, and in 2 days it was approved! Highly recommended."
+      text: "Abizon made my [Country] visa application incredibly simple. I just uploaded my documents, and in 2 days it was approved! Highly recommended."
     },
     {
       name: "Sneha Patel",
@@ -98,7 +98,7 @@ export function Reviews({ countryName = "Dubai" }: ReviewsProps) {
       avatarBg: "bg-rose-500",
       rating: 5,
       time: "5 days ago",
-      text: "Fast, reliable, and completely paperless. Applying for a [Country] visa has never been this easy before. Will use Keyrise again!"
+      text: "Fast, reliable, and completely paperless. Applying for a [Country] visa has never been this easy before. Will use Abizon again!"
     },
     {
       name: "Amit Gupta",
@@ -106,7 +106,7 @@ export function Reviews({ countryName = "Dubai" }: ReviewsProps) {
       avatarBg: "bg-blue-500",
       rating: 5,
       time: "2 weeks ago",
-      text: "Keyrise service is gold standard. Highly structured, zero confusion. Got my [Country] visa on time as promised."
+      text: "Abizon service is gold standard. Highly structured, zero confusion. Got my [Country] visa on time as promised."
     },
     {
       name: "Karan Malhotra",
@@ -114,7 +114,7 @@ export function Reviews({ countryName = "Dubai" }: ReviewsProps) {
       avatarBg: "bg-teal-500",
       rating: 5,
       time: "4 days ago",
-      text: "Incredibly fast service. Got my [Country] visa in less than 48 hours. Keyrise is brilliant and totally stress-free!"
+      text: "Incredibly fast service. Got my [Country] visa in less than 48 hours. Abizon is brilliant and totally stress-free!"
     },
     {
       name: "Ritu Sen",
@@ -122,7 +122,7 @@ export function Reviews({ countryName = "Dubai" }: ReviewsProps) {
       avatarBg: "bg-purple-500",
       rating: 5,
       time: "1 week ago",
-      text: "Completely paperless and super simple. I highly recommend Keyrise for any international travel visa. Exceptional user interface."
+      text: "Completely paperless and super simple. I highly recommend Abizon for any international travel visa. Exceptional user interface."
     },
     {
       name: "Rajesh Patel",
@@ -157,7 +157,7 @@ export function Reviews({ countryName = "Dubai" }: ReviewsProps) {
       avatarBg: "bg-teal-500",
       rating: 5,
       time: "1 week ago",
-      text: "I got my visa for [Country] without any flight tickets confirmed beforehand. Keyrise guided me through the entire process. Top notch."
+      text: "I got my visa for [Country] without any flight tickets confirmed beforehand. Abizon guided me through the entire process. Top notch."
     },
     {
       name: "Ananya Das",
@@ -165,7 +165,7 @@ export function Reviews({ countryName = "Dubai" }: ReviewsProps) {
       avatarBg: "bg-orange-500",
       rating: 5,
       time: "3 days ago",
-      text: "Absolutely phenomenal service! Standard delivery promised 4 days, got it in 2. Keyrise is my go-to visa assistant now."
+      text: "Absolutely phenomenal service! Standard delivery promised 4 days, got it in 2. Abizon is my go-to visa assistant now."
     },
     {
       name: "Siddharth Mehta",
@@ -173,7 +173,7 @@ export function Reviews({ countryName = "Dubai" }: ReviewsProps) {
       avatarBg: "bg-sky-500",
       rating: 5,
       time: "6 days ago",
-      text: "Keyrise fee is worth every rupee. Completely stress-free. My [Country] business visa got approved without any consulate delays."
+      text: "Abizon fee is worth every rupee. Completely stress-free. My [Country] business visa got approved without any consulate delays."
     },
     {
       name: "Meera Krishnan",

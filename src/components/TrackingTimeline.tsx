@@ -18,7 +18,7 @@
  * Wiring a real backend means implementing `lookupApplicationStatus` — this
  * file does not change.
  *
- * WHY UNSUPPORTED STAGES ARE STILL SHOWN. Hiding the five stages Keyrise cannot
+ * WHY UNSUPPORTED STAGES ARE STILL SHOWN. Hiding the five stages Abizon cannot
  * observe would make the journey look shorter than it is. They are shown, and
  * marked as needing a status service, so the picture is complete and the limit
  * is legible.
@@ -75,7 +75,7 @@ export function TrackingTimeline({
       aria-label={
         status
           ? `Application status: ${status}. Stage ${activeIndex + 1} of ${APPLICATION_STATUSES.length}.`
-          : `The ${APPLICATION_STATUSES.length} stages of a Keyrise application. Current stage unknown.`
+          : `The ${APPLICATION_STATUSES.length} stages of a Abizon application. Current stage unknown.`
       }
     >
       {APPLICATION_STATUSES.map((stage, index) => {
@@ -129,7 +129,7 @@ export function TrackingTimeline({
                   </time>
                 ) : (
                   !stage.supported && (
-                    // Not a status. A statement about what Keyrise can see.
+                    // Not a status. A statement about what Abizon can see.
                     <span className="text-2xs text-muted-foreground">
                       Needs a status service
                     </span>

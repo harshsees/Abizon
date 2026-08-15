@@ -56,7 +56,7 @@ export function ApplicationHeader({
       <div className="mx-auto flex h-16 w-full max-w-[1400px] items-center justify-between gap-4 px-4 md:px-6">
         <Link
           href="/"
-          aria-label="Keyrise home"
+          aria-label="Abizon home"
           className="flex flex-shrink-0 items-center gap-2"
         >
           <svg
@@ -76,7 +76,7 @@ export function ApplicationHeader({
             <path d="M50 20 L55 35" stroke="currentColor" strokeWidth="8" strokeLinecap="round" />
           </svg>
           <span className="text-lg font-black tracking-tighter text-foreground">
-            keyrise
+            abizon
           </span>
         </Link>
 

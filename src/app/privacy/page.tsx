@@ -3,9 +3,9 @@ import type { Metadata } from "next";
 import { Callout, PageHero, PageShell, Prose, Section } from "@/components/PageKit";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy | Keyrise",
+  title: "Privacy Policy | Abizon",
   description:
-    "What personal data Keyrise collects, why, who it is shared with, how long it is kept, and the rights you have over it.",
+    "What personal data Abizon collects, why, who it is shared with, how long it is kept, and the rights you have over it.",
 };
 
 export default function PrivacyPage() {
@@ -35,10 +35,10 @@ export default function PrivacyPage() {
         <Prose>
           <h2>1. Who we are</h2>
           <p>
-            Keyrise operates this website and the visa filing service described on it. For the
-            purposes of Indian data protection law and the GDPR, Keyrise is the data
+            Abizon operates this website and the visa filing service described on it. For the
+            purposes of Indian data protection law and the GDPR, Abizon is the data
             controller for the personal data described below. Questions go to{" "}
-            <a href="mailto:privacy@keyrise.com">privacy@keyrise.com</a>.
+            <a href="mailto:privacy@abizon.com">privacy@abizon.com</a>.
           </p>
 
           <h2>2. What we collect</h2>
@@ -131,7 +131,7 @@ export default function PrivacyPage() {
             advertising. Our document intelligence models are trained on licensed and synthetic
             datasets. Our published research uses application metadata only, subject to a
             minimum aggregation threshold of 1,000 records — see{" "}
-            <a href="/atlas">Keyrise Atlas</a>.
+            <a href="/atlas">Abizon Atlas</a>.
           </p>
 
           <h2>7. Your rights</h2>
@@ -144,7 +144,7 @@ export default function PrivacyPage() {
             <li>Withdraw consent where processing relies on it</li>
           </ul>
           <p>
-            Write to <a href="mailto:privacy@keyrise.com">privacy@keyrise.com</a>. We respond
+            Write to <a href="mailto:privacy@abizon.com">privacy@abizon.com</a>. We respond
             within 30 days and do not charge for the first request in any 12-month period.
           </p>
 

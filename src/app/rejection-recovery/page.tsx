@@ -12,9 +12,9 @@ import {
 } from "@/components/PageKit";
 
 export const metadata: Metadata = {
-  title: "Rejection Recovery | Keyrise",
+  title: "Rejection Recovery | Abizon",
   description:
-    "Refused a visa? Keyrise identifies the likely reason and refiles at no service cost.",
+    "Refused a visa? Abizon identifies the likely reason and refiles at no service cost.",
 };
 
 const steps = [

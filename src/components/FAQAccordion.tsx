@@ -39,7 +39,7 @@ import { cn } from "@/lib/utils";
  *
  * The remaining four are genuinely generic and stay. Nothing here is
  * country-specific in the sense §18 warns against — no invented per-country
- * procedures — it is the shared Keyrise process, branched on real fields.
+ * procedures — it is the shared Abizon process, branched on real fields.
  */
 
 import type { VisaFlow } from "@/lib/countryVisa";
@@ -68,7 +68,7 @@ function buildFaqs({
     a: visaFree
       ? `No. Indian passport holders can enter ${countryName} without a visa for the stay length shown above. Carry a passport with enough remaining validity and any entry documents the border asks for.`
       : onArrival
-        ? `A visa is required, but it is issued on arrival in ${countryName} rather than before you fly. Keyrise prepares the paperwork you present at the border.`
+        ? `A visa is required, but it is issued on arrival in ${countryName} rather than before you fly. Abizon prepares the paperwork you present at the border.`
         : `Yes. Indian passport holders need a ${countryName} visa granted before travel.`,
   });
 
@@ -101,20 +101,20 @@ function buildFaqs({
   /* 5 — data handling. Describes what the software actually does today. */
   faqs.push({
     q: "Is my passport data secure?",
-    a: "Today your answers and documents stay in your own browser — nothing is uploaded, so nothing is stored on a Keyrise server. Closing the tab discards the files. When online filing opens, this answer will describe how they are transmitted and retained.",
+    a: "Today your answers and documents stay in your own browser — nothing is uploaded, so nothing is stored on a Abizon server. Closing the tab discards the files. When online filing opens, this answer will describe how they are transmitted and retained.",
   });
 
   /* 6 — tracking. Stated as what exists, which is a saved draft. */
   faqs.push({
     q: "Can I track my application?",
-    a: "Not yet. Keyrise cannot currently file an application online, so there is no status to follow. Your progress is saved on this device and you can pick it up where you left it.",
+    a: "Not yet. Abizon cannot currently file an application online, so there is no status to follow. Your progress is saved on this device and you can pick it up where you left it.",
   });
 
   /* 7 — the delay guarantee. Points at the policy rather than restating it. */
   if (!visaFree) {
     faqs.push({
       q: "What happens if my visa is delayed?",
-      a: "If the delay is ours, the Keyrise fee is waived under the on-time delivery guarantee. The refunds policy sets out exactly what is covered and what is not.",
+      a: "If the delay is ours, the Abizon fee is waived under the on-time delivery guarantee. The refunds policy sets out exactly what is covered and what is not.",
     });
   }
 
@@ -153,10 +153,10 @@ export function FAQAccordion({
 
   const deliveryAnswer =
     typeof deliveryDays === "number"
-      ? `Keyrise guarantees your ${countryName} visa within ${deliveryDays} ${
+      ? `Abizon guarantees your ${countryName} visa within ${deliveryDays} ${
           deliveryDays === 1 ? "day" : "days"
         } of a complete application, or our fee is waived.`
-      : `Keyrise guarantees your ${countryName} visa by the date shown on your application, or our fee is waived.`;
+      : `Abizon guarantees your ${countryName} visa by the date shown on your application, or our fee is waived.`;
 
   /**
    * No more `.replace(/Dubai/g, countryName)`. Substituting a country name into

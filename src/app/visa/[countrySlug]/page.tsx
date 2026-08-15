@@ -26,7 +26,7 @@ export async function generateMetadata({
   const { countrySlug } = await params;
   const country = resolveCountry(countrySlug);
 
-  if (!country) return { title: "Visa not found | Keyrise" };
+  if (!country) return { title: "Visa not found | Abizon" };
 
   // Was a second copy of this rule. One definition, imported.
   const displayName = displayCountryName(country);
@@ -47,8 +47,8 @@ export async function generateMetadata({
   const ogImage = countryOgImage(countrySlug);
 
   const title = isVisaFree
-    ? `${displayName} Visa Requirements for Indians — No Visa Needed | Keyrise`
-    : `${displayName} Visa for Indians — Fees, Documents & Processing Time | Keyrise`;
+    ? `${displayName} Visa Requirements for Indians — No Visa Needed | Abizon`
+    : `${displayName} Visa for Indians — Fees, Documents & Processing Time | Abizon`;
 
   const description = isVisaFree
     ? `Indian passport holders do not need a visa for ${displayName}. ` +

@@ -13,7 +13,7 @@
  *                      data; "4:05 pm" would be a number nobody has.
  *   3. neither         a plain, undated promise.
  *
- * The reference pairs its guarantee with a precise clock time. Keyrise cannot
+ * The reference pairs its guarantee with a precise clock time. Abizon cannot
  * honestly print one yet, so tier 2 prints the date alone rather than padding
  * it with a plausible-looking hour. When a real delivery-time source exists,
  * pass `guaranteedAt` and the component upgrades itself.

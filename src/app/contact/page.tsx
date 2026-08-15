@@ -10,9 +10,9 @@ import {
 } from "@/components/PageKit";
 
 export const metadata: Metadata = {
-  title: "Contact Keyrise | Support, Press, Partnerships",
+  title: "Contact Abizon | Support, Press, Partnerships",
   description:
-    "Reach the right team at Keyrise — 24/7 application support, emergency travel escalation, press, partnerships and security disclosure.",
+    "Reach the right team at Abizon — 24/7 application support, emergency travel escalation, press, partnerships and security disclosure.",
 };
 
 const channels = [
@@ -20,7 +20,7 @@ const channels = [
     icon: <LifeBuoy className="h-5 w-5" />,
     title: "Application support",
     description:
-      "Questions about a live application, documents or refunds. Answered in under 4 minutes on average, 24 hours a day. help@keyrise.com",
+      "Questions about a live application, documents or refunds. Answered in under 4 minutes on average, 24 hours a day. help@abizon.com",
   },
   {
     icon: <ShieldAlert className="h-5 w-5" />,
@@ -33,14 +33,14 @@ const channels = [
     icon: <Newspaper className="h-5 w-5" />,
     title: "Press",
     description:
-      "Interview requests, data requests and fact-checks. press@keyrise.com — usually same working day.",
+      "Interview requests, data requests and fact-checks. press@abizon.com — usually same working day.",
     href: "/newsroom",
   },
   {
     icon: <Briefcase className="h-5 w-5" />,
     title: "Partnerships",
     description:
-      "OTAs, airlines, corporate travel desks and universities embedding Keyrise. partners@keyrise.com",
+      "OTAs, airlines, corporate travel desks and universities embedding Abizon. partners@abizon.com",
     href: "/partners",
   },
   {
@@ -53,7 +53,7 @@ const channels = [
   {
     icon: <Mail className="h-5 w-5" />,
     title: "Everything else",
-    description: "hello@keyrise.com reaches a human who will route it properly.",
+    description: "hello@abizon.com reaches a human who will route it properly.",
   },
 ];
 

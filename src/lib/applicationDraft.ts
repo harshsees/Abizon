@@ -16,7 +16,7 @@
  * the panel needs no changes: it already treats the draft as "possibly absent".
  */
 
-const STORAGE_KEY = "keyrise.application.drafts.v1";
+const STORAGE_KEY = "abizon.application.drafts.v1";
 
 /** How long a draft stays offerable before it is treated as stale. */
 const MAX_AGE_MS = 1000 * 60 * 60 * 24 * 30; // 30 days

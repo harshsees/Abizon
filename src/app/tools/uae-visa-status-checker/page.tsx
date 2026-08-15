@@ -4,7 +4,7 @@ import { CTABand, Callout, PageHero, PageShell, Prose, Section } from "@/compone
 import { UaeStatusForm } from "@/components/tools/UaeStatusForm";
 
 export const metadata: Metadata = {
-  title: "UAE Visa Status Checker | Keyrise",
+  title: "UAE Visa Status Checker | Abizon",
   description:
     "Check the status of a UAE or Dubai visa application by application or passport number, and find the right official channel for visas filed elsewhere.",
 };
@@ -15,7 +15,7 @@ export default function UaeStatusCheckerPage() {
       <PageHero
         eyebrow="UAE Visa Status"
         title="Where is my Dubai visa?"
-        description="Look up an application filed through Keyrise, or find the right official channel for one filed elsewhere. UAE visas are issued by two different authorities depending on the emirate, which is why so many people check the wrong one."
+        description="Look up an application filed through Abizon, or find the right official channel for one filed elsewhere. UAE visas are issued by two different authorities depending on the emirate, which is why so many people check the wrong one."
       />
 
       <Section>

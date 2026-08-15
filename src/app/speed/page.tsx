@@ -11,7 +11,7 @@ import {
 } from "@/components/PageKit";
 
 export const metadata: Metadata = {
-  title: "Speed | Keyrise",
+  title: "Speed | Abizon",
   description:
     "Median and 95th-percentile visa delivery times by destination, measured from payment to visa in hand.",
 };

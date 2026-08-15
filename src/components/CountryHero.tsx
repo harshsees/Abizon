@@ -12,13 +12,13 @@
  *
  * WHAT IS DIFFERENT FROM THE REFERENCE, and why:
  *
- *   The reference's strip reads VALID / PURPOSE / MAX STAY. Keyrise's dataset
+ *   The reference's strip reads VALID / PURPOSE / MAX STAY. Abizon's dataset
  *   has `validity` and nothing for purpose or maximum stay — those were the
  *   exact fields Phase 8C §13/§14 and Phase 8D removed as unsupported. The
  *   strip therefore carries three facts the dataset actually holds: validity,
  *   visa type, and the government fee.
  *
- *   The green line is generated from `deliveryDays`, so it states Keyrise's own
+ *   The green line is generated from `deliveryDays`, so it states Abizon's own
  *   guarantee rather than a number copied from a competitor. Dubai is 1 day
  *   here, not 2.
  *

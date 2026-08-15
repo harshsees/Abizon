@@ -47,7 +47,7 @@
  *   the art        Stops 1 and 4 take real illustrations from
  *                  /images/process/. The reference's are photographs — a real
  *                  passport page, a real portrait, a photographed open book —
- *                  and none of them are Keyrise's to use, so these are drawn to
+ *                  and none of them are Abizon's to use, so these are drawn to
  *                  the same weight: near-white, one soft shadow, no colour but
  *                  a single warm accent.
  *   the outcomes   "What you pay, in each case" is gone. Three rows restating
@@ -75,7 +75,7 @@ const STEPS: Step[] = [
   },
   {
     num: 2,
-    title: "Keyrise reviews everything thoroughly",
+    title: "Abizon reviews everything thoroughly",
     body: "No scope for error.",
     art: <MagnifierArt />,
   },
@@ -313,7 +313,7 @@ export function VisaProcess({ countryName }: { countryName?: string }) {
               expression and the text that follows it across a line break,
               which rendered this as "a Dubaivisa is made by". */}
           The decision on a {countryName}{" "}
-          visa is made by the destination&rsquo;s immigration authority. Keyrise
+          visa is made by the destination&rsquo;s immigration authority. Abizon
           guarantees the timing of the filing, not the outcome.
         </p>
       )}

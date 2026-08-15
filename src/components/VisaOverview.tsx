@@ -11,7 +11,7 @@
  *
  * WHAT THE CARDS CARRY, and why it is not what the reference carries.
  *
- * The reference's three are Length of Stay / Validity / Entry. Keyrise holds
+ * The reference's three are Length of Stay / Validity / Entry. Abizon holds
  * only one of those. Phase 8D removed the other two and the note there explains
  * why at length: "Length of Stay" was rendering the same `validity` number as
  * the cell beside it under a tooltip claiming a different meaning, and "Entry:

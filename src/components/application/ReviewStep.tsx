@@ -169,7 +169,7 @@ export function ReviewStep() {
             value={inr(summary.fees.governmentFee * per)}
           />
           <Row
-            label={`Keyrise fee${per > 1 ? ` × ${per}` : ""}`}
+            label={`Abizon fee${per > 1 ? ` × ${per}` : ""}`}
             value={
               summary.fees.baseServiceFee === null
                 ? FEE_NOT_PUBLISHED
@@ -208,8 +208,8 @@ export function ReviewStep() {
             ? "No government fee"
             : `${inr(summary.fees.payNow * per)} government fee up front`}
           {summary.fees.payOnApproval === null
-            ? " · the Keyrise fee is not yet published."
-            : ` · ${inr(summary.fees.payOnApproval * per)} to Keyrise once the visa is granted.`}
+            ? " · the Abizon fee is not yet published."
+            : ` · ${inr(summary.fees.payOnApproval * per)} to Abizon once the visa is granted.`}
         </p>
       </Block>
     </div>

@@ -18,7 +18,7 @@
  *    names where: the guarantee, the fee breakdown, the document check.
  *
  * 2. The right column is headed "Doing it yourself", not "Others". Asserting
- *    that competitors lack these things is a claim about companies Keyrise has
+ *    that competitors lack these things is a claim about companies Abizon has
  *    not measured — the same class of unsupported comparative that Phase 8C
  *    spent its length removing. Comparing against the unaided process is both
  *    honest and the more useful comparison for someone deciding whether to use
@@ -28,12 +28,12 @@
 import { Check, X } from "lucide-react";
 
 /** Each row states a capability and, in the tooltip-free way, where it lives. */
-const ROWS: Array<{ claim: string; keyrise: boolean; alone: boolean }> = [
-  { claim: "A delivery date you see before you apply", keyrise: true, alone: false },
-  { claim: "Every fee itemised, including ours", keyrise: true, alone: false },
-  { claim: "Documents checked against the destination's rules", keyrise: true, alone: false },
-  { claim: "The fee waived if the date is missed", keyrise: true, alone: false },
-  { claim: "You pay the government fee directly", keyrise: true, alone: true },
+const ROWS: Array<{ claim: string; abizon: boolean; alone: boolean }> = [
+  { claim: "A delivery date you see before you apply", abizon: true, alone: false },
+  { claim: "Every fee itemised, including ours", abizon: true, alone: false },
+  { claim: "Documents checked against the destination's rules", abizon: true, alone: false },
+  { claim: "The fee waived if the date is missed", abizon: true, alone: false },
+  { claim: "You pay the government fee directly", abizon: true, alone: true },
 ];
 
 function Mark({ yes }: { yes: boolean }) {
@@ -68,7 +68,7 @@ export function VisaComparison() {
 
         {/* A real table: five claims across two conditions is tabular data, and
             a screen reader should be able to say "A delivery date you see
-            before you apply — Keyrise: Yes, Doing it yourself: No" rather than
+            before you apply — Abizon: Yes, Doing it yourself: No" rather than
             reading two disconnected columns of icons. */}
         <div className="mx-auto mt-9 max-w-3xl overflow-x-auto">
           <table className="w-full min-w-[420px] border-separate border-spacing-0">
@@ -79,7 +79,7 @@ export function VisaComparison() {
                   scope="col"
                   className="rounded-t-2xl bg-surface px-4 py-4 text-center text-sm font-bold text-foreground"
                 >
-                  Keyrise
+                  Abizon
                 </th>
                 <th
                   scope="col"
@@ -106,7 +106,7 @@ export function VisaComparison() {
                       i === ROWS.length - 1 ? "rounded-b-2xl" : ""
                     }`}
                   >
-                    <Mark yes={row.keyrise} />
+                    <Mark yes={row.abizon} />
                   </td>
                   <td className="px-4 py-4 text-center">
                     <Mark yes={row.alone} />

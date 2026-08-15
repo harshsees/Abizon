@@ -208,7 +208,7 @@ export function SiteHeader({
             <Link
               href="/"
               className="flex flex-shrink-0 items-center gap-2"
-              aria-label="Keyrise home"
+              aria-label="Abizon home"
             >
               <svg
                 className="h-7 w-7 text-foreground md:h-8 md:w-8"
@@ -237,7 +237,7 @@ export function SiteHeader({
                 />
               </svg>
               <span className="text-xl font-black tracking-tighter text-foreground">
-                keyrise
+                abizon
               </span>
             </Link>
 

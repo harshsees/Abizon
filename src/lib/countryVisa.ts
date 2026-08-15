@@ -1,5 +1,5 @@
 /**
- * KEYRISE COUNTRY VISA CONFIGURATION
+ * ABIZON COUNTRY VISA CONFIGURATION
  * ---------------------------------------------------------------------------
  * The data contract the country page is built against.
  *
@@ -11,7 +11,7 @@
  *
  * THE RULE THIS FILE ENFORCES
  *
- * Every field that Keyrise does not actually have is optional and defaults to
+ * Every field that Abizon does not actually have is optional and defaults to
  * `undefined` — never to a plausible-looking value. A component that receives
  * `undefined` must omit its section, not fill the gap. That is deliberate: a
  * fabricated processing time on a visa page is worse than a missing one,
@@ -35,7 +35,7 @@ import {
   countryHeroImage,
   countryPhotoCredit,
 } from "@/lib/countryImagery";
-import { KEYRISE_TERMS, feesAreProvisional } from "@/lib/pricingConfig";
+import { ABIZON_TERMS, feesAreProvisional } from "@/lib/pricingConfig";
 
 /* -------------------------------------------------------------------------- */
 /* Visa flow                                                                  */
@@ -91,9 +91,9 @@ export type ProcessingTime = {
 };
 
 export type VisaPricing = {
-  /** Paid to the destination's authority. The only figure Keyrise has today. */
+  /** Paid to the destination's authority. The only figure Abizon has today. */
   governmentFee?: Money;
-  /** Keyrise's handling charge. Not in the dataset — see PLACEHOLDER_PRICING. */
+  /** Abizon's handling charge. Not in the dataset — see PLACEHOLDER_PRICING. */
   serviceFee?: Money;
   /** Applied to the service component only, never to the government fee. */
   gstRate?: number;
@@ -208,7 +208,7 @@ export type CountryVisaConfig = {
    * Phase 4 gated a "Partners We Work With" block on one, so that only the UAE
    * pages showed the two UAE bodies and every page showed IATA. Phase 4.1
    * removed the block outright: the three marks were hand-drawn SVG
-   * approximations, not licensed logos, and Keyrise holds no record of a
+   * approximations, not licensed logos, and Abizon holds no record of a
    * partnership with the Ministry of Foreign Affairs, the Government of Dubai
    * or IATA. Showing an authority's name and crest on a commercial visa page
    * asserts an endorsement, and "it is a UAE body and this is a UAE page" is
@@ -234,7 +234,7 @@ export type CountryVisaConfig = {
  *
  * Re-exported so callers that only want the numbers keep one import.
  */
-export { KEYRISE_TERMS, feesAreProvisional };
+export { ABIZON_TERMS, feesAreProvisional };
 
 /**
  * `ApplicationCard` multiplied the government fee by 1.5 for a business visa,
@@ -242,7 +242,7 @@ export { KEYRISE_TERMS, feesAreProvisional };
  * a guess applied uniformly to 154 countries, and a user could budget on it.
  *
  * It is deliberately NOT reproduced here. Until a country supplies a real
- * `businessGovernmentFee`, the business option quotes the fee Keyrise actually
+ * `businessGovernmentFee`, the business option quotes the fee Abizon actually
  * knows rather than a scaled invention of one. This constant exists only to
  * record what was removed and why.
  */
@@ -274,7 +274,7 @@ export function computeTotals(
     ? (pricing.businessGovernmentFee ?? base)
     : base;
 
-  // Absent, not zero. `0` would be a claim that Keyrise charges nothing.
+  // Absent, not zero. `0` would be a claim that Abizon charges nothing.
   const baseServiceFee = pricing.serviceFee ?? null;
   const surcharge = options.express ? (pricing.expressSurcharge ?? null) : 0;
 
@@ -306,12 +306,12 @@ export function computeTotals(
     gst,
     /** What is owed up front — the authority's fee. Always known. */
     payNow: governmentFee,
-    /** What is owed once the visa is granted — Keyrise's fee plus tax. */
+    /** What is owed once the visa is granted — Abizon's fee plus tax. */
     payOnApproval,
-    /** `null` when any Keyrise component of the price is undecided. */
+    /** `null` when any Abizon component of the price is undecided. */
     perTraveller: payOnApproval === null ? null : governmentFee + payOnApproval,
     /**
-     * Whether the Keyrise components above are agreed commercial terms. Carried
+     * Whether the Abizon components above are agreed commercial terms. Carried
      * on the result so a component showing a price does not have to reach for a
      * second import to find out whether it may present it as final.
      */
@@ -435,7 +435,7 @@ export function formatShortDate(daysAhead: number): string {
  * Note what this does NOT do: it does not fill `stayDuration`, `entryType`,
  * `processingTime`, `requirements`, `appointmentRequired`, `biometricsRequired`,
  * `applicationSteps` or `faqs`. Every one of those is knowable only from a
- * source Keyrise does not have yet, and every consuming component is written to
+ * source Abizon does not have yet, and every consuming component is written to
  * render nothing when they are absent.
  */
 export function resolveCountryVisaConfig(country: Country): CountryVisaConfig {
@@ -461,9 +461,9 @@ export function resolveCountryVisaConfig(country: Country): CountryVisaConfig {
       // `?? undefined` rather than `?? 0`: an undecided fee is absent from the
       // pricing object, and `computeTotals` reports the total as unavailable
       // instead of quoting the government fee as if it were the whole price.
-      serviceFee: KEYRISE_TERMS.serviceFee ?? undefined,
-      gstRate: KEYRISE_TERMS.gstRate,
-      expressSurcharge: KEYRISE_TERMS.expressSurcharge ?? undefined,
+      serviceFee: ABIZON_TERMS.serviceFee ?? undefined,
+      gstRate: ABIZON_TERMS.gstRate,
+      expressSurcharge: ABIZON_TERMS.expressSurcharge ?? undefined,
       // Sticker visas are collected at the mission, which is a property of the
       // flow rather than of an individual country, so it is safe to derive.
       paidAtEmbassy: country.visaType === "Sticker Visa" || undefined,

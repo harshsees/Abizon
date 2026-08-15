@@ -10,9 +10,9 @@ import {
 } from "@/components/PageKit";
 
 export const metadata: Metadata = {
-  title: "Faultlines — Incident Post-mortems | Keyrise",
+  title: "Faultlines — Incident Post-mortems | Abizon",
   description:
-    "Every Keyrise incident that affected a traveller, written up in full: what broke, who it hit, what it cost, and what changed.",
+    "Every Abizon incident that affected a traveller, written up in full: what broke, who it hit, what it cost, and what changed.",
 };
 
 type Incident = {
@@ -44,7 +44,7 @@ type Incident = {
  * a smaller error than concealing one that did — it is the same failure of the
  * disclosure record, and it makes a real future disclosure unbelievable.
  *
- * The third is impossible on its own terms: Keyrise cannot take a payment, so
+ * The third is impossible on its own terms: Abizon cannot take a payment, so
  * it cannot have double-charged one.
  *
  * The page's editorial commitment survives. What is gone is the pretence of a
@@ -83,7 +83,7 @@ export default function FaultlinesPage() {
               No incidents published
             </h3>
             <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-              Keyrise has not filed applications at volume yet, so there is no
+              Abizon has not filed applications at volume yet, so there is no
               operational history to write up. When there is, every incident that
               affected a traveller appears here with its cause and what changed —
               including the ones that are embarrassing to publish.

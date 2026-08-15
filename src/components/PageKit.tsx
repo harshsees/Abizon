@@ -220,7 +220,7 @@ export function Section({
  * quarter" — rendered in the same heavy numeral as a real figure and captioned
  * with a measurement window that implied someone had measured it.
  *
- * The label is worth keeping even when the number is not: it says what Keyrise
+ * The label is worth keeping even when the number is not: it says what Abizon
  * intends to publish and be held to. The value is what must not be invented.
  * `null` renders the commitment without the fabrication.
  */

@@ -4,7 +4,7 @@ import { CTABand, Callout, PageHero, PageShell, Prose, Section } from "@/compone
 import { PassportIndexTable } from "@/components/tools/PassportIndexTable";
 
 export const metadata: Metadata = {
-  title: "Keyrise Passport Index — Passport Rankings | Keyrise",
+  title: "Abizon Passport Index — Passport Rankings | Abizon",
   description:
     "How far every passport takes you, ranked by visa-free and visa-on-arrival access across the world.",
 };

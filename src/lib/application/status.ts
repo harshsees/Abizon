@@ -11,7 +11,7 @@
  * `buildSummary` already computes without asking anyone. They are `supported`.
  *
  * `submitted` onward describe things that happen on a server and at a consulate.
- * Keyrise has no submission endpoint, no applications API and no authority
+ * Abizon has no submission endpoint, no applications API and no authority
  * integration, so nothing in this codebase can know whether an application was
  * received, is being processed, or has been decided. They are NOT supported,
  * and no code path may report them until a real source does.
@@ -59,13 +59,13 @@ export const APPLICATION_STATUSES: readonly ApplicationStatusMeta[] = [
   {
     id: "submitted",
     label: "Submitted",
-    description: "Sent to Keyrise for filing.",
+    description: "Sent to Abizon for filing.",
     supported: false,
   },
   {
     id: "received",
     label: "Received",
-    description: "Keyrise has the application and has begun document checks.",
+    description: "Abizon has the application and has begun document checks.",
     supported: false,
   },
   {
@@ -131,7 +131,7 @@ export type TrackingLookup =
       /**
        * `"no-status-service"` — there is no applications API in this build.
        * This is the only reason that can be returned today, and it is about
-       * Keyrise's capability, NOT about the reference the user typed. The page
+       * Abizon's capability, NOT about the reference the user typed. The page
        * must not imply the reference was checked and not found.
        */
       reason: "no-status-service";

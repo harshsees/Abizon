@@ -18,7 +18,7 @@ export function Footer() {
     { name: "Fee Change Audit", href: "/fee-change-audit" },
     { name: "Status", href: "/status" },
     { name: "Speed", href: "/speed" },
-    { name: "Keyrise Atlas", href: "/atlas" },
+    { name: "Abizon Atlas", href: "/atlas" },
   ];
 
   const productLinks = [
@@ -26,7 +26,7 @@ export function Footer() {
     { name: "Visa Requirements", href: "/tools/visa-requirements" },
     { name: "Schengen Appointment Checker", href: "/tools/schengen-appointment-checker" },
     { name: "Visa Photo Creator", href: "/tools/visa-photo-creator" },
-    { name: "Keyrise Emergency Helpline", href: "/emergency-helpline" },
+    { name: "Abizon Emergency Helpline", href: "/emergency-helpline" },
     { name: "Rejection Recovery", href: "/rejection-recovery" },
     { name: "Student Visa", href: "/student-visa" },
     { name: "Bible", href: "/bible" },
@@ -39,7 +39,7 @@ export function Footer() {
     { name: "US Visa", href: "/guides/us-visa" },
     { name: "UK Visa", href: "/guides/uk-visa" },
     { name: "Japan Visa", href: "/guides/japan-visa" },
-    { name: "Keyrise Passport Index", href: "/passport-index" },
+    { name: "Abizon Passport Index", href: "/passport-index" },
   ];
 
   const officeLocations = [
@@ -72,31 +72,31 @@ export function Footer() {
                 <path d="M50 20 L55 35" stroke="currentColor" strokeWidth="8" strokeLinecap="round" />
               </svg>
               <span className="text-xl font-black tracking-tighter text-slate-900 font-sans">
-                keyrise
+                abizon
               </span>
             </div>
 
             {/* Description */}
             <p className="text-[13px] font-medium text-muted-foreground leading-relaxed max-w-xs">
-              Keyrise helps you plan, apply, and track visas seamlessly across the world.
+              Abizon helps you plan, apply, and track visas seamlessly across the world.
             </p>
 
             {/* Ask AI Section */}
             <div className="space-y-2.5">
               <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">
-                Ask AI about Keyrise
+                Ask AI about Abizon
               </span>
               <div className="flex items-center gap-2">
-                <button type="button" aria-label="Chat with Keyrise AI" className="h-9 w-9 flex items-center justify-center rounded-full bg-slate-50 border border-slate-200 text-muted-foreground hover:text-slate-800 transition cursor-pointer">
+                <button type="button" aria-label="Chat with Abizon AI" className="h-9 w-9 flex items-center justify-center rounded-full bg-slate-50 border border-slate-200 text-muted-foreground hover:text-slate-800 transition cursor-pointer">
                   <MessageSquare className="w-4 h-4 fill-slate-400/10" />
                 </button>
-                <button type="button" aria-label="Keyrise AI suggestions" className="h-9 w-9 flex items-center justify-center rounded-full bg-slate-50 border border-slate-200 text-muted-foreground hover:text-slate-800 transition cursor-pointer">
+                <button type="button" aria-label="Abizon AI suggestions" className="h-9 w-9 flex items-center justify-center rounded-full bg-slate-50 border border-slate-200 text-muted-foreground hover:text-slate-800 transition cursor-pointer">
                   <Sparkles className="w-4 h-4 text-amber-500 fill-amber-500/10" />
                 </button>
-                <button type="button" aria-label="Keyrise AI knowledge base" className="h-9 w-9 flex items-center justify-center rounded-full bg-slate-50 border border-slate-200 text-muted-foreground hover:text-slate-800 transition cursor-pointer">
+                <button type="button" aria-label="Abizon AI knowledge base" className="h-9 w-9 flex items-center justify-center rounded-full bg-slate-50 border border-slate-200 text-muted-foreground hover:text-slate-800 transition cursor-pointer">
                   <Brain className="w-4 h-4 text-violet-500" />
                 </button>
-                <button type="button" aria-label="Keyrise AI assistant" className="h-9 w-9 flex items-center justify-center rounded-full bg-slate-50 border border-slate-200 text-muted-foreground hover:text-slate-800 transition cursor-pointer">
+                <button type="button" aria-label="Abizon AI assistant" className="h-9 w-9 flex items-center justify-center rounded-full bg-slate-50 border border-slate-200 text-muted-foreground hover:text-slate-800 transition cursor-pointer">
                   <Bot className="w-4 h-4 text-emerald-500" />
                 </button>
               </div>
@@ -225,7 +225,7 @@ export function Footer() {
           
           {/* Copyright details */}
           <div className="flex flex-wrap items-center gap-2 text-xs font-medium">
-            <span>&copy; {new Date().getFullYear()} Keyrise. All rights reserved.</span>
+            <span>&copy; {new Date().getFullYear()} Abizon. All rights reserved.</span>
             <span>&bull;</span>
             <Link href="/privacy" className="inline-block py-1.5 hover:text-slate-800 transition">Privacy</Link>
             <span>&bull;</span>
@@ -250,7 +250,7 @@ export function Footer() {
               <path d="M40 55 L60 55" stroke="currentColor" strokeWidth="10" strokeLinecap="round" />
             </svg>
             <span className="text-xs font-black tracking-tighter text-muted-foreground font-sans uppercase">
-              keyrise
+              abizon
             </span>
           </div>
 

@@ -21,12 +21,12 @@
  * THE PLATE is the piece that makes the composition read as one object rather
  * than three stacked boxes: the tab, the margin around the card and the ground
  * behind the ledger are all one shape, and the white card floats inside it.
- * The reference's plate is lavender because its brand is indigo; Keyrise's
+ * The reference's plate is lavender because its brand is indigo; Abizon's
  * brand is amber, so the same role is played by `primary-subtle`. Reproducing
  * the literal lavender would put a second brand hue on the page.
  *
  * WHAT IS DIFFERENT FROM THE REFERENCE, and why. Three of its elements are
- * claims Keyrise cannot make, so they are not reproduced:
+ * claims Abizon cannot make, so they are not reproduced:
  *
  *   "only platform with visa protection"  a superlative about a market nobody
  *                                         here has surveyed. The ribbon states
@@ -85,7 +85,7 @@ const inr = (value: number) => `₹${Math.round(value).toLocaleString("en-IN")}`
 const inrOrUnset = (value: number | null) =>
   value === null ? FEE_NOT_PUBLISHED : inr(value);
 
-/** Keyrise's support line, as published on /emergency-helpline. */
+/** Abizon's support line, as published on /emergency-helpline. */
 const SUPPORT_TEL = "+911140845678";
 const SUPPORT_TEL_DISPLAY = "+91 11 4084 5678";
 
@@ -255,7 +255,7 @@ export function CountryApplicationPanel({
           <div className="p-4 md:p-5">
             {/* 1 — the choices, as the reference's stacked rows.
                 The reference's first row is a "Visa Type" dropdown of travel
-                purposes. Keyrise records one visa type per destination and no
+                purposes. Abizon records one visa type per destination and no
                 purpose at all, so the row that IS a real choice takes its
                 place: how fast it is processed. */}
             <div className="divide-y divide-border">
@@ -436,8 +436,8 @@ export function CountryApplicationPanel({
                     label="Pay on approval"
                     sub={
                       totals.provisional
-                        ? "Keyrise fee · provisional"
-                        : "Keyrise fee"
+                        ? "Abizon fee · provisional"
+                        : "Abizon fee"
                     }
                     value={inrOrUnset(payOnApproval)}
                   />
@@ -485,7 +485,7 @@ export function CountryApplicationPanel({
 
       <p className="mt-3 px-1 text-2xs leading-relaxed text-muted-foreground">
         Nothing is charged until you reach checkout. Your {config.displayName}{" "}
-        visa is guaranteed by {formatShortDate(deliveryDays)} or the Keyrise fee
+        visa is guaranteed by {formatShortDate(deliveryDays)} or the Abizon fee
         is waived.
       </p>
     </aside>
