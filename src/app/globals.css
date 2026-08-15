@@ -567,6 +567,20 @@ button {
   );
 }
 
+/* OTP caret.
+   The code input is one transparent field over six drawn cells, so the real
+   caret is hidden and the active cell draws this one instead. A step blink
+   rather than a fade, because that is what a native caret does and anything
+   softer reads as a loading indicator. */
+@keyframes caret-blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+.animate-caret-blink {
+  animation: caret-blink 1.1s step-end infinite;
+}
+
 .marquee-row:hover .marquee-track,
 .marquee-row:focus-within .marquee-track,
 .marquee-row[data-paused="true"] .marquee-track {
@@ -599,6 +613,13 @@ button {
   .animate-marquee-right {
     animation: none !important;
     transform: none !important;
+  }
+
+  /* Without this the blink runs its single allowed iteration and ends on the
+     hidden keyframe, so the caret disappears entirely. Stopping the animation
+     leaves the element at its own opacity, which is what we want. */
+  .animate-caret-blink {
+    animation: none !important;
   }
 
   html.has-custom-cursor,
