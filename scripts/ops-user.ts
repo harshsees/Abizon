@@ -28,7 +28,20 @@
  * first real login because a QR scan silently failed.
  */
 
-import "dotenv/config";
+import { config } from "dotenv";
+
+/**
+ * `.env.local` first, matching Next's own precedence — `import "dotenv/config"`
+ * reads `.env` and nothing else, and every credential in this project lives in
+ * `.env.local`. Without this, `requireDb()` reports that `DATABASE_URL` is not
+ * set on a machine where it plainly is. Same fix as `drizzle.config.ts`.
+ *
+ * The other half of making this script runnable is in `package.json`: the
+ * modules below import `server-only`, which throws unless Node resolves with
+ * the `react-server` condition, so `ops:user` passes `--conditions=react-server`
+ * to tsx. Both were needed; neither had been exercised.
+ */
+config({ path: [".env.local", ".env"], quiet: true });
 
 import { and, eq, isNull } from "drizzle-orm";
 import QRCode from "qrcode";

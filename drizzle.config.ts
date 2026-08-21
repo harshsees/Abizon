@@ -1,5 +1,21 @@
-import "dotenv/config";
+import { config } from "dotenv";
 import { defineConfig } from "drizzle-kit";
+
+/**
+ * `.env.local` FIRST, and this is not a detail.
+ *
+ * `import "dotenv/config"` reads `.env` and nothing else. Next.js reads
+ * `.env.local` and gives it precedence, and `.env.example` tells everyone to
+ * put their credentials there — so the two disagreed, and `drizzle-kit`
+ * reported `url: ''` on a machine whose `.env.local` was correctly filled in.
+ * The message names the driver rather than the file, so it reads as a broken
+ * connection string rather than a file that was never opened.
+ *
+ * Listed in Next's own precedence order. `dotenv` keeps the first value it sees
+ * for a given key, so `.env.local` wins and `.env` fills any gaps — which is
+ * what the application itself does at runtime.
+ */
+config({ path: [".env.local", ".env"] });
 
 /**
  * MIGRATIONS.
