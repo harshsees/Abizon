@@ -11,13 +11,15 @@ import { defineConfig, devices } from "@playwright/test";
  * ── The environment is deliberately pinned ──
  *
  * `SMS_PROVIDER=memory` so the code is readable by the test rather than printed
- * to a terminal. No `DATABASE_URL`, so the in-memory store is used: these tests
- * assert flow, not persistence, and a suite that needs a live Postgres is a
- * suite that stops being run.
+ * to a terminal. `DATABASE_URL` blanked, so the in-memory store is used: these
+ * tests assert flow, not persistence, and a suite that needs a live Postgres is
+ * a suite that stops being run.
  *
- * The one thing that must never be pointed at production is the database. There
- * is no configuration here that could — but it is worth saying, because the
- * usual way this goes wrong is someone copying a `.env` to make a test pass.
+ * The one thing that must never be pointed at production is the database, and
+ * for a while this file claimed no configuration here could do that. It was
+ * wrong: `next dev` reads `.env.local`, so the suite followed whatever
+ * credentials happened to be in it. Every override the tests depend on is now
+ * set explicitly in `webServer.env` below rather than assumed to be missing.
  */
 export default defineConfig({
   testDir: "./e2e",
@@ -88,6 +90,34 @@ export default defineConfig({
     env: {
       SMS_PROVIDER: "memory",
       AUTH_SECRET: "e2e-secret-that-is-at-least-thirty-two-characters",
+
+      /**
+       * BLANKED, NOT OMITTED — and this is the whole hermetic guarantee.
+       *
+       * The header above used to say "No `DATABASE_URL`, so the in-memory store
+       * is used ... there is no configuration here that could" point the suite
+       * at a real database. That was true only while nobody had filled in
+       * `.env.local`. `next dev` loads that file, so the day real Supabase
+       * credentials landed the suite silently started running against the real
+       * project — writing users and auth challenges into it on every run, and
+       * failing once a test number hit the per-number OTP ceiling that is now
+       * persisted in Postgres rather than reset with the process.
+       *
+       * Absent from this object is not the same as absent from the process.
+       * These override `.env.local` with empty strings, which `lib/env.ts`
+       * treats as unset, so the fallbacks the suite is written against are the
+       * ones that actually run.
+       */
+      DATABASE_URL: "",
+      DIRECT_URL: "",
+      SUPABASE_URL: "",
+      SUPABASE_SERVICE_ROLE_KEY: "",
+
+      // Same reasoning: the suite asserts the shape of the login flow, not
+      // Cloudflare's availability, and the test keys in `.env.local` would make
+      // every run depend on a network call to siteverify.
+      NEXT_PUBLIC_TURNSTILE_SITE_KEY: "",
+      TURNSTILE_SECRET_KEY: "",
     },
   },
 });
