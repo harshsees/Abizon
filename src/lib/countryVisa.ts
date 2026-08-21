@@ -28,6 +28,7 @@
  * richer model can be populated country by country without a migration.
  */
 
+import { arrivalCardFor, type ArrivalCard } from "./arrivalCard";
 import { Country, countriesData, getCountrySlug } from "@/data/countries";
 import { resolveCountry } from "@/lib/countryCatalogue";
 import {
@@ -200,6 +201,14 @@ export type CountryVisaConfig = {
    * Country-scoped extra sections, keyed by name. Keeps destination-specific
    * content (the UAE's seven-emirates block) out of the universal shell.
    */
+  /**
+   * The destination's digital arrival card, when it operates one and the entry
+   * has been confirmed. Absent for everywhere else — and absent for an entry
+   * still marked unverified, so an unchecked claim cannot reach a page by
+   * someone forgetting to look. See `lib/arrivalCard.ts`.
+   */
+  arrivalCard?: ArrivalCard;
+
   additionalSections?: Array<"emirates">;
 
   /*
@@ -473,6 +482,8 @@ export function resolveCountryVisaConfig(country: Country): CountryVisaConfig {
     deliveryDays: country.deliveryDays,
 
     documentsLabel: country.documents,
+
+    arrivalCard: arrivalCardFor(getCountrySlug(country.name)),
 
     additionalSections:
       country.name === "United Arab Emirates" ? ["emirates"] : undefined,
