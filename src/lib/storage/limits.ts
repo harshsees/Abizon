@@ -36,6 +36,31 @@ export const ACCEPTED_UPLOAD_TYPES = ["image/jpeg", "image/png", "image/webp"] a
  *  some Android pickers ignore the MIME list entirely. */
 export const ACCEPTED_UPLOAD_EXTENSIONS = ".jpg,.jpeg,.png,.webp";
 
+/**
+ * The same list again, in the words an applicant reads.
+ *
+ * This module exists because the client and the server disagreed about PDFs —
+ * and the copy disagreed too, in a third place nobody thought of as code.
+ * `PassportCapture` offered "JPG, PNG or PDF" on the card that opens the file
+ * picker, months after PDF was removed, so an applicant was invited to choose a
+ * file the picker then greyed out. Two constants and one sentence, and the
+ * sentence was the one that reached the person.
+ *
+ * Derived rather than written, so a format added above cannot leave the copy
+ * behind a fourth time.
+ */
+const TYPE_LABELS: Record<string, string> = {
+  "image/jpeg": "JPG",
+  "image/png": "PNG",
+  "image/webp": "WebP",
+};
+
+export const ACCEPTED_UPLOAD_LABEL = ((): string => {
+  const names = ACCEPTED_UPLOAD_TYPES.map((type) => TYPE_LABELS[type] ?? type);
+  if (names.length < 2) return names.join("");
+  return `${names.slice(0, -1).join(", ")} or ${names.at(-1)}`;
+})();
+
 export type AcceptedUploadType = (typeof ACCEPTED_UPLOAD_TYPES)[number];
 
 export function isAcceptedUploadType(type: string): type is AcceptedUploadType {

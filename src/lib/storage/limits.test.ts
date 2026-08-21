@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   ACCEPTED_UPLOAD_EXTENSIONS,
+  ACCEPTED_UPLOAD_LABEL,
   ACCEPTED_UPLOAD_TYPES,
   isAcceptedUploadType,
   MAX_UPLOAD_BYTES,
@@ -67,5 +68,18 @@ describe("the accept attribute", () => {
   it("narrows the type", () => {
     expect(isAcceptedUploadType("image/jpeg")).toBe(true);
     expect(isAcceptedUploadType("application/pdf")).toBe(false);
+  });
+
+  it("says the same thing in the copy as in the accept list", () => {
+    // The third place the PDF disagreement lived. `PassportCapture` invited the
+    // applicant to "Choose a scan or photo … JPG, PNG or PDF" long after the
+    // picker had stopped accepting one, so the file they were told to choose
+    // was greyed out when they went to choose it. Two constants agreed and one
+    // sentence did not, and the sentence was what reached the person.
+    expect(ACCEPTED_UPLOAD_LABEL).not.toMatch(/pdf/i);
+
+    // Every accepted format is named, and nothing else is.
+    expect(ACCEPTED_UPLOAD_LABEL).toBe("JPG, PNG or WebP");
+    expect(ACCEPTED_UPLOAD_LABEL.split(/,| or /).length).toBe(ACCEPTED_UPLOAD_TYPES.length);
   });
 });

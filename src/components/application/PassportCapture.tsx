@@ -34,6 +34,7 @@ import { DocumentUploader } from "@/components/DocumentUploader";
 import type { DocumentRequirement } from "@/lib/application/documents";
 import type { DocumentEntry } from "@/lib/application/state";
 import { isRetryable } from "@/lib/application/sync";
+import { ACCEPTED_UPLOAD_LABEL } from "@/lib/storage/limits";
 import { cn } from "@/lib/utils";
 
 import { LiveCapture } from "./LiveCapture";
@@ -201,7 +202,7 @@ export function PassportCapture({
           <MethodCard
             Icon={Upload}
             title={`Upload ${requirement.shortLabel.toLowerCase()}`}
-            body="Choose a scan or photo already on this device. JPG, PNG or PDF."
+            body={`Choose a scan or photo already on this device. ${ACCEPTED_UPLOAD_LABEL}.`}
             onClick={() => setMethod("upload")}
           />
           <MethodCard

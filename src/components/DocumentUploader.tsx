@@ -40,6 +40,7 @@ import type { DocumentRequirement } from "@/lib/application/documents";
 import type { DocumentEntry } from "@/lib/application/state";
 import {
   ACCEPTED_UPLOAD_EXTENSIONS,
+  ACCEPTED_UPLOAD_LABEL,
   formatBytes,
   MAX_UPLOAD_BYTES,
   validateUpload,
@@ -249,7 +250,8 @@ export function DocumentUploader({
           Upload {requirement.shortLabel.toLowerCase()}
         </span>
         <span id={hintId} className="text-2xs text-muted-foreground">
-          Drag and drop, or choose a file · JPG, PNG or WebP · up to {formatBytes(MAX_UPLOAD_BYTES)}
+          Drag and drop, or choose a file · {ACCEPTED_UPLOAD_LABEL} · up to{" "}
+          {formatBytes(MAX_UPLOAD_BYTES)}
         </span>
       </button>
 
