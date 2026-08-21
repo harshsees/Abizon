@@ -39,8 +39,15 @@ import { cn } from "@/lib/utils";
 
 const GENDERS = ["Female", "Male", "Other"];
 
+/**
+ * The one control here that is not an `<Input>`, kept in step with the
+ * `underline` tone by hand. A native `<select>` cannot go through
+ * `inputVariants` without also inheriting the input's height and padding
+ * ramp, and the arrow the browser draws needs the right-hand room that
+ * `px-0` would take away — so the padding is asymmetric on purpose.
+ */
 const SELECT_CLASS =
-  "h-11 w-full rounded-md border border-input bg-surface px-3.5 text-sm text-foreground transition-[border-color] duration-[--duration-fast] hover:border-border-strong sm:h-10";
+  "h-11 w-full rounded-none border-0 border-b border-input bg-transparent pl-0 pr-6 text-sm text-foreground transition-[border-color] duration-[--duration-fast] hover:border-border-strong focus:border-foreground focus-visible:border-foreground focus-visible:outline-none sm:h-9";
 
 export function ApplicantDetailsStep() {
   const { state, dispatch } = useApplication();
@@ -106,7 +113,9 @@ export function ApplicantDetailsStep() {
 
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-semibold text-foreground">
-                      {details.fullName || traveller.firstName || `Traveller ${index + 1}`}
+                      {details.fullName ||
+                        traveller.firstName ||
+                        `Traveller ${index + 1}`}
                     </span>
                     <span className="mt-0.5 block truncate text-2xs text-muted-foreground">
                       {complete
@@ -134,6 +143,7 @@ export function ApplicantDetailsStep() {
                 >
                   <div className="grid gap-4 sm:grid-cols-2">
                     <Field
+                      labelTone="micro"
                       label="Full name"
                       required
                       className="sm:col-span-2"
@@ -142,31 +152,49 @@ export function ApplicantDetailsStep() {
                     >
                       {(field) => (
                         <Input
+                          tone="underline"
                           {...field}
                           type="text"
                           autoComplete="name"
                           value={details.fullName}
                           invalid={Boolean(errorFor("fullName"))}
                           onBlur={() => markTouched(`${traveller.id}:fullName`)}
-                          onChange={(event) => set({ fullName: event.target.value })}
+                          onChange={(event) =>
+                            set({ fullName: event.target.value })
+                          }
                         />
                       )}
                     </Field>
 
-                    <Field label="Date of birth" required error={errorFor("dateOfBirth")}>
+                    <Field
+                      labelTone="micro"
+                      label="Date of birth"
+                      required
+                      error={errorFor("dateOfBirth")}
+                    >
                       {(field) => (
                         <Input
+                          tone="underline"
                           {...field}
                           type="date"
                           value={details.dateOfBirth}
                           invalid={Boolean(errorFor("dateOfBirth"))}
-                          onBlur={() => markTouched(`${traveller.id}:dateOfBirth`)}
-                          onChange={(event) => set({ dateOfBirth: event.target.value })}
+                          onBlur={() =>
+                            markTouched(`${traveller.id}:dateOfBirth`)
+                          }
+                          onChange={(event) =>
+                            set({ dateOfBirth: event.target.value })
+                          }
                         />
                       )}
                     </Field>
 
-                    <Field label="Gender" required error={errorFor("gender")}>
+                    <Field
+                      labelTone="micro"
+                      label="Gender"
+                      required
+                      error={errorFor("gender")}
+                    >
                       {({ id, invalid, "aria-describedby": describedBy }) => (
                         <select
                           id={id}
@@ -174,7 +202,9 @@ export function ApplicantDetailsStep() {
                           aria-invalid={invalid || undefined}
                           value={details.gender}
                           onBlur={() => markTouched(`${traveller.id}:gender`)}
-                          onChange={(event) => set({ gender: event.target.value })}
+                          onChange={(event) =>
+                            set({ gender: event.target.value })
+                          }
                           className={SELECT_CLASS}
                         >
                           <option value="">Select</option>
@@ -188,26 +218,33 @@ export function ApplicantDetailsStep() {
                     </Field>
 
                     <Field
+                      labelTone="micro"
                       label="Passport number"
                       required
                       error={errorFor("passportNumber")}
                     >
                       {(field) => (
                         <Input
+                          tone="underline"
                           {...field}
                           type="text"
                           autoCapitalize="characters"
                           value={details.passportNumber}
                           invalid={Boolean(errorFor("passportNumber"))}
-                          onBlur={() => markTouched(`${traveller.id}:passportNumber`)}
+                          onBlur={() =>
+                            markTouched(`${traveller.id}:passportNumber`)
+                          }
                           onChange={(event) =>
-                            set({ passportNumber: event.target.value.toUpperCase() })
+                            set({
+                              passportNumber: event.target.value.toUpperCase(),
+                            })
                           }
                         />
                       )}
                     </Field>
 
                     <Field
+                      labelTone="micro"
                       label="Passport expiry"
                       required
                       helper="Six months beyond your travel date, for most destinations."
@@ -215,17 +252,23 @@ export function ApplicantDetailsStep() {
                     >
                       {(field) => (
                         <Input
+                          tone="underline"
                           {...field}
                           type="date"
                           value={details.passportExpiry}
                           invalid={Boolean(errorFor("passportExpiry"))}
-                          onBlur={() => markTouched(`${traveller.id}:passportExpiry`)}
-                          onChange={(event) => set({ passportExpiry: event.target.value })}
+                          onBlur={() =>
+                            markTouched(`${traveller.id}:passportExpiry`)
+                          }
+                          onChange={(event) =>
+                            set({ passportExpiry: event.target.value })
+                          }
                         />
                       )}
                     </Field>
 
                     <Field
+                      labelTone="micro"
                       label="Nationality"
                       required
                       className="sm:col-span-2"
@@ -233,12 +276,17 @@ export function ApplicantDetailsStep() {
                     >
                       {(field) => (
                         <Input
+                          tone="underline"
                           {...field}
                           type="text"
                           value={details.nationality}
                           invalid={Boolean(errorFor("nationality"))}
-                          onBlur={() => markTouched(`${traveller.id}:nationality`)}
-                          onChange={(event) => set({ nationality: event.target.value })}
+                          onBlur={() =>
+                            markTouched(`${traveller.id}:nationality`)
+                          }
+                          onChange={(event) =>
+                            set({ nationality: event.target.value })
+                          }
                         />
                       )}
                     </Field>
@@ -266,6 +314,7 @@ export function ApplicantDetailsStep() {
         </h2>
         <div className="grid gap-4 sm:grid-cols-2">
           <Field
+            labelTone="micro"
             label="Email"
             required
             helper="Your visa and every status update go here."
@@ -273,36 +322,49 @@ export function ApplicantDetailsStep() {
           >
             {(field) => (
               <Input
+                tone="underline"
                 {...field}
                 type="email"
                 autoComplete="email"
                 inputMode="email"
                 value={state.contact.email}
-                invalid={Boolean(touched["contact:email"] && contactErrors.email)}
+                invalid={Boolean(
+                  touched["contact:email"] && contactErrors.email,
+                )}
                 onBlur={() => markTouched("contact:email")}
                 onChange={(event) =>
-                  dispatch({ type: "setContact", patch: { email: event.target.value } })
+                  dispatch({
+                    type: "setContact",
+                    patch: { email: event.target.value },
+                  })
                 }
               />
             )}
           </Field>
 
           <Field
+            labelTone="micro"
             label="Phone"
             required
             error={touched["contact:phone"] ? contactErrors.phone : undefined}
           >
             {(field) => (
               <Input
+                tone="underline"
                 {...field}
                 type="tel"
                 autoComplete="tel"
                 inputMode="tel"
                 value={state.contact.phone}
-                invalid={Boolean(touched["contact:phone"] && contactErrors.phone)}
+                invalid={Boolean(
+                  touched["contact:phone"] && contactErrors.phone,
+                )}
                 onBlur={() => markTouched("contact:phone")}
                 onChange={(event) =>
-                  dispatch({ type: "setContact", patch: { phone: event.target.value } })
+                  dispatch({
+                    type: "setContact",
+                    patch: { phone: event.target.value },
+                  })
                 }
               />
             )}
