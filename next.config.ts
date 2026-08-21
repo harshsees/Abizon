@@ -30,6 +30,44 @@ const countryRedirects = [
 const isDev = process.env.NODE_ENV === "development";
 
 /**
+ * THE SUPABASE ORIGIN, and why the CSP has to know about it.
+ *
+ * Documents never pass through a function: the browser `PUT`s straight to a
+ * signed Storage URL, and the ops console renders each document from a
+ * sixty-second signed `GET`. Both are cross-origin requests to the project's
+ * own hostname, so without it here the upload is blocked by `connect-src` and
+ * the viewer by `img-src`.
+ *
+ * That failure is silent in exactly the way the `flagcdn.com` omission was: the
+ * server-side `uploadTicketAction` succeeds, the browser's request never
+ * leaves, `finaliseUploadAction` is never called, and the applicant is told
+ * "the upload did not complete — check your connection", which is a lie about
+ * their network. Nothing appears in any server log.
+ *
+ * Derived from `SUPABASE_URL` rather than wildcarded to `*.supabase.co`,
+ * because `https://*.supabase.co` would authorise every Supabase project on
+ * the internet as a destination for an injected upload — and the point of
+ * enumerating hosts is that the list is exhaustive. Read from `process.env`
+ * directly for the same reason `siteUrl()` does: this file is evaluated during
+ * `next build`, and going through `env()` would run the production requirement
+ * check on a CI runner that has no secrets.
+ */
+const supabaseOrigin = (() => {
+  const raw = process.env.SUPABASE_URL;
+  if (!raw) return null;
+
+  try {
+    return new URL(raw).origin;
+  } catch {
+    // A malformed value is `env.ts`'s problem to report properly. Here it just
+    // means no host to add, and a broken CSP entry would be worse than none.
+    return null;
+  }
+})();
+
+const supabaseSource = supabaseOrigin ? ` ${supabaseOrigin}` : "";
+
+/**
  * CONTENT SECURITY POLICY — and the trade-off that decided its shape.
  *
  * Next.js supports a nonce-based CSP, generated per request in `proxy.ts`. It is
@@ -84,14 +122,17 @@ const csp = [
   // end-to-end run reporting a CSP violation on `flagcdn.com/w80/th.png`, which
   // is the sort of breakage that shows up as "the flags stopped loading" three
   // days after a deploy and nowhere in any log.
-  "img-src 'self' data: blob: https://images.unsplash.com https://upload.wikimedia.org https://flagcdn.com",
+  // Supabase is appended for the document viewer in the ops console, which
+  // renders passport scans from signed Storage URLs.
+  `img-src 'self' data: blob: https://images.unsplash.com https://upload.wikimedia.org https://flagcdn.com${supabaseSource}`,
 
   "font-src 'self' data:",
   "media-src 'self' blob:",
 
   // Turnstile's verification calls; Sentry's ingest; PostHog's capture endpoint.
   // Each is only reached if the corresponding key is configured.
-  "connect-src 'self' https://challenges.cloudflare.com https://*.ingest.sentry.io https://*.ingest.de.sentry.io https://*.posthog.com",
+  // Supabase is appended for the direct browser-to-Storage upload.
+  `connect-src 'self' https://challenges.cloudflare.com https://*.ingest.sentry.io https://*.ingest.de.sentry.io https://*.posthog.com${supabaseSource}`,
 
   // The Turnstile challenge renders in an iframe. Without this the widget shows
   // an empty box and every login fails.

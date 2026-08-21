@@ -48,30 +48,69 @@ on conflict (id) do nothing;
 --> statement-breakpoint
 
 -- --------------------------------------------------------------------------
--- Policies
+-- Policies — asserted, not created, and the difference matters
 -- --------------------------------------------------------------------------
+--
+-- This section previously ran `alter table storage.objects enable row level
+-- security` and created two policies. Neither can work, and the second was
+-- worse than not working.
+--
+-- ── Why it cannot run ──
+--
+-- Supabase owns `storage.objects` as `supabase_storage_admin`. `alter table`
+-- and `create policy` both require table ownership, so the migration failed on
+-- a fresh project with `42501: must be owner of table objects` — after the
+-- buckets had already been inserted, leaving the schema half-applied.
+--
+-- ── Why it was wrong anyway ──
+--
+-- The two policies were PERMISSIVE, and permissive policies OR together. For a
+-- row in `incoming`: "bucket_id <> 'incoming'" is false, "bucket_id <>
+-- 'documents'" is TRUE, and false OR true grants access. Two policies each
+-- named "no anon access" would together have handed `anon` read and write on
+-- both buckets of passport scans. Restrictive policies (`as restrictive`) AND
+-- together and were what the intent required — but that is moot, because we
+-- cannot create either kind here.
+--
+-- ── What actually protects these objects ──
+--
+-- Supabase enables RLS on `storage.objects` by default, and RLS with no
+-- permissive policy is deny-all. `anon` and `authenticated` therefore have no
+-- path to these objects at all. The server reaches them with the service-role
+-- key, which bypasses RLS, and hands out sixty-second signed URLs.
+--
+-- That property is a default, which means it is exactly the kind of thing that
+-- is true until somebody clicks something in a dashboard. So rather than
+-- pretend to create it, this migration checks it — reading `pg_class` and
+-- `pg_policies` needs no ownership. RLS switched off is fatal here; a
+-- permissive policy is a warning, because a later bucket may legitimately have
+-- one and only a human can say whether it touches these two.
+do $$
+declare
+  rls_on boolean;
+  offenders text;
+begin
+  select relrowsecurity into rls_on from pg_class where oid = 'storage.objects'::regclass;
 
--- Everything is denied by default once RLS is on and no policy grants access.
--- The policies below grant nothing to `anon` and nothing to `authenticated`,
--- which is the intent stated explicitly rather than left implicit: there is no
--- path from a browser-held key to these objects at all. Access is exclusively
--- through signed URLs minted server-side, valid for sixty seconds.
-alter table storage.objects enable row level security;
---> statement-breakpoint
+  if not rls_on then
+    raise exception
+      'RLS is disabled on storage.objects. Every object in `incoming` and '
+      '`documents` is readable by any holder of the anon key. Re-enable it in '
+      'the Supabase dashboard before continuing.';
+  end if;
 
-drop policy if exists "no anon access to incoming" on storage.objects;
---> statement-breakpoint
-create policy "no anon access to incoming"
-  on storage.objects for all
-  to anon, authenticated
-  using (bucket_id <> 'incoming')
-  with check (bucket_id <> 'incoming');
---> statement-breakpoint
+  select string_agg(policyname, ', ') into offenders
+  from pg_policies
+  where schemaname = 'storage'
+    and tablename = 'objects'
+    and permissive = 'PERMISSIVE'
+    and (roles::text[] && array['anon', 'authenticated', 'public']);
 
-drop policy if exists "no anon access to documents" on storage.objects;
---> statement-breakpoint
-create policy "no anon access to documents"
-  on storage.objects for all
-  to anon, authenticated
-  using (bucket_id <> 'documents')
-  with check (bucket_id <> 'documents');
+  if offenders is not null then
+    raise warning
+      'Permissive policies on storage.objects grant anon or authenticated '
+      'access: %. Confirm none of them match bucket_id in (''incoming'', '
+      '''documents'') — permissive policies OR together.', offenders;
+  end if;
+end
+$$;
