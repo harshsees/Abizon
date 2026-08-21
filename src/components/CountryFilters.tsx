@@ -7,18 +7,23 @@
  * markup, same dropdown, four copies, so restyling meant editing the same
  * thing four times and the fourth one drifted. It is one config array now.
  *
- * Measured against the reference:
+ * Desktop geometry:
  *
- *   height    ~82px (was ~58px)
+ *   height    64px, matching --header-h-compact
  *   shape     fully rounded, surface background, hairline border, soft shadow
- *   badges    34px circles, one hue per facet (was 28px tinted-pale squares)
- *   label     sentence case with a colon, ~14px, muted, normal weight
- *             (was 10px uppercase, tracked)
- *   value     ~19px bold (was 13px)
+ *   badges    28px circles, one hue per facet
+ *   label     sentence case with a colon, 12px, muted, normal weight
+ *   value     15px bold
  *   dividers  hairlines between groups, inset from the capsule's edges
  *
- * Mobile does not get the 82px bar: it becomes a 2x2 grid in a rounded card at
- * a compact type scale. Forcing four 82px groups onto a 390px screen either
+ * It was built at 82px against a reference capture and cut to 64px, because at
+ * 82px it filled most of the gap between the header and the first row of cards
+ * to display four values that are one word each — two stacked bars of chrome
+ * before any content. Everything inside came down with the box; scaling the
+ * capsule alone would have padded the same contents.
+ *
+ * Mobile does not get the bar at all: it becomes a 2x2 grid in a rounded card
+ * at a compact type scale. Forcing four groups onto a 390px screen either
  * overflows or truncates every value, and the value is the part that matters.
  */
 
@@ -149,8 +154,18 @@ export function CountryFilters({ values, onChange }: CountryFiltersProps) {
     <div
       ref={rootRef}
       className={[
+        // 64px on desktop, down from 82. The capsule was reading as a second
+        // header rather than a control strip: at 82px it was most of the space
+        // between the real header and the first row of cards, for four values
+        // that are one word each. Everything inside steps down with it — badge,
+        // both type sizes, the glyph — because scaling the box alone would just
+        // pad the same contents.
+        //
+        // 64px is not arbitrary: it is `--header-h-compact`, so the strip and
+        // the condensed header are the same height and the page has one
+        // horizontal rhythm instead of two near-misses.
         "relative grid w-full grid-cols-2 gap-1 rounded-2xl border border-border bg-surface p-2 shadow-e2",
-        "md:flex md:h-[82px] md:items-stretch md:gap-0 md:rounded-full md:p-0",
+        "md:flex md:h-16 md:items-stretch md:gap-0 md:rounded-full md:p-0",
       ].join(" ")}
     >
       {FACETS.map((facet, index) => (
@@ -161,7 +176,7 @@ export function CountryFilters({ values, onChange }: CountryFiltersProps) {
           {index > 0 && (
             <span
               aria-hidden
-              className="hidden w-px flex-shrink-0 bg-border md:my-5 md:block"
+              className="hidden w-px flex-shrink-0 bg-border md:my-4 md:block"
             />
           )}
 
@@ -178,14 +193,14 @@ export function CountryFilters({ values, onChange }: CountryFiltersProps) {
               className={[
                 "flex w-full min-w-0 cursor-pointer items-center gap-2.5 rounded-xl px-3 py-2.5 text-left",
                 "transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)] hover:bg-surface-sunken",
-                "md:h-full md:gap-3 md:rounded-full md:px-5 md:py-0",
+                "md:h-full md:gap-2.5 md:rounded-full md:px-4 md:py-0",
               ].join(" ")}
             >
               <span
                 aria-hidden
                 className={[
                   "flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full text-white",
-                  "md:h-[34px] md:w-[34px]",
+                  "md:h-7 md:w-7",
                   facet.badge,
                 ].join(" ")}
               >
@@ -193,10 +208,10 @@ export function CountryFilters({ values, onChange }: CountryFiltersProps) {
               </span>
 
               <span className="flex min-w-0 flex-col">
-                <span className="truncate text-2xs font-normal leading-none text-muted-foreground md:text-sm">
+                <span className="truncate text-2xs font-normal leading-none text-muted-foreground md:text-xs">
                   {facet.label}:
                 </span>
-                <span className="mt-1 flex min-w-0 items-center gap-1.5 text-sm font-bold leading-none text-foreground md:mt-1.5 md:text-[19px]">
+                <span className="mt-1 flex min-w-0 items-center gap-1.5 text-sm font-bold leading-none text-foreground md:mt-1 md:text-[15px]">
                   <span className="truncate">{values[facet.key]}</span>
                   <ChevronDown
                     aria-hidden
@@ -267,5 +282,5 @@ export function CountryFilters({ values, onChange }: CountryFiltersProps) {
 
 /** Glyph sizing lives in one place so all four badges stay identical. */
 function Facet({ Icon }: { Icon: LucideIcon }) {
-  return <Icon className="h-4 w-4 md:h-[18px] md:w-[18px]" strokeWidth={2.25} />;
+  return <Icon className="h-4 w-4 md:h-[15px] md:w-[15px]" strokeWidth={2.25} />;
 }

@@ -205,11 +205,11 @@
      reference capture. At 160px the homepage spent a seventh of a 1080p
      viewport on chrome before the first card; each cut since has been buying
      the grid further up the fold.
-     96px is close to the floor. The stacked nav item measures ~72px — 4px top
+     96px is close to the floor. The stacked nav item measures ~71px — 4px top
      padding, a 36px glyph, a 6px gap, the label, 8px bottom padding — so this
-     leaves 12px of air above and below it. Going under 6rem starts crowding
-     that stack rather than trimming space, and the next real saving would be
-     collapsing the icons, which is what the condensed state already does.
+     leaves 12px of air above and below it. Going under 6rem means shrinking the
+     glyph rather than squeezing around it, and below 5rem the tall header stops
+     being a distinct state at all — it converges on the 64px compact one.
      Anything offsetting beneath the header reads this token, so nothing has to
      be re-measured. */
   --header-h-full: 6rem;
