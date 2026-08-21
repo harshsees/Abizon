@@ -22,7 +22,11 @@ const DRIVERS: Record<string, SmsDriver> = {
 };
 
 export function smsDriver(): SmsDriver {
-  const requested = process.env.SMS_PROVIDER ?? "console";
+  // `||` rather than `??`: a copied `.env.example` leaves `SMS_PROVIDER=`, and
+  // an empty string is a value that `??` passes straight through to the lookup
+  // below, where it fails as an unknown driver. Blank means unset here, as it
+  // does in `lib/env.ts`.
+  const requested = process.env.SMS_PROVIDER || "console";
   const driver = DRIVERS[requested];
 
   if (!driver) {

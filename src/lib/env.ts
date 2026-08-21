@@ -185,8 +185,39 @@ const CONDITIONAL: Array<{ when: (env: Env) => boolean; require: Array<keyof Env
 
 let cached: Env | null = null;
 
+/**
+ * AN EMPTY VARIABLE IS AN ABSENT ONE.
+ * ---------------------------------------------------------------------------
+ * `.env.example` tells the reader to copy this file and fill in what they need,
+ * which leaves every other line present with an empty value. To Zod that is a
+ * value, not an absence: `.optional()` permits `undefined` and says nothing
+ * about `""`, so `DATABASE_URL=` failed the `postgres://` refinement and
+ * `SUPABASE_URL=` failed the URL check — and because `load()` throws on the
+ * first invalid field, the whole of `env()` went down with them.
+ *
+ * The damage was nowhere near the database. `verifyTurnstile` is the first
+ * thing on the send-code path to call `env()`, so the login form answered 500
+ * on every submit, valid number or not, in a configuration the documentation
+ * had just recommended. Deleting the blank lines would also fix it and would
+ * fix it once, for one machine.
+ *
+ * Stripping here rather than per-field keeps the schema readable and makes the
+ * rule uniform: whitespace-only is absent too, because a trailing space after
+ * `=` is invisible in an editor and would otherwise pass the URL check and fail
+ * at connection time instead.
+ */
+function withoutBlanks(source: NodeJS.ProcessEnv): Record<string, string> {
+  const present: Record<string, string> = {};
+
+  for (const [key, value] of Object.entries(source)) {
+    if (typeof value === "string" && value.trim() !== "") present[key] = value;
+  }
+
+  return present;
+}
+
 function load(): Env {
-  const parsed = schema.safeParse(process.env);
+  const parsed = schema.safeParse(withoutBlanks(process.env));
 
   if (!parsed.success) {
     const detail = parsed.error.issues
