@@ -201,14 +201,18 @@
      ui/button.tsx and ui/field.tsx, which stay the authority for form
      controls. */
   --header-h-compact: 4rem;   /* 64px — every page except the homepage */
-  /* 112px. This was 10rem/160px, taken from a reference capture, and at that
-     height the homepage spent a seventh of a 1080p viewport on chrome before
-     the first card — the grid started below the fold on a laptop. 7rem still
-     clears the stacked icon-over-label nav (which now collapses to a 36px
-     glyph) and is in the band the category actually sits in. Anything that
-     offsets beneath the header reads this token, so nothing has to be
-     re-measured. */
-  --header-h-full: 7rem;
+  /* 96px, down from 112px, itself down from the 10rem/160px of the original
+     reference capture. At 160px the homepage spent a seventh of a 1080p
+     viewport on chrome before the first card; each cut since has been buying
+     the grid further up the fold.
+     96px is close to the floor. The stacked nav item measures ~72px — 4px top
+     padding, a 36px glyph, a 6px gap, the label, 8px bottom padding — so this
+     leaves 12px of air above and below it. Going under 6rem starts crowding
+     that stack rather than trimming space, and the next real saving would be
+     collapsing the icons, which is what the condensed state already does.
+     Anything offsetting beneath the header reads this token, so nothing has to
+     be re-measured. */
+  --header-h-full: 6rem;
   --control-h-sm: 2.25rem;    /* 36px */
   --control-h-md: 2.75rem;    /* 44px — the touch-target floor */
   --control-h-lg: 3.25rem;    /* 52px */

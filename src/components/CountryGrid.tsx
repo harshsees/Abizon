@@ -64,7 +64,11 @@ export function CountryGrid({
   }
 
   return (
-    <>
+    /* The width cap sits here rather than on the grid so that the count and the
+       "clear filters" link move with it. Capping only the grid centred the
+       cards and left "Showing 154 countries" stranded against the far left
+       margin, pointing at nothing. */
+    <div className="mx-auto w-full max-w-[1112px]">
       {/* Secondary by design: the count reports on the grid, it does not
           compete with it. */}
       <div className="mb-6 flex items-center justify-between gap-4">
@@ -89,7 +93,20 @@ export function CountryGrid({
 
       <motion.div
         layout
-        className="grid grid-cols-1 gap-5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 xl:gap-6 2xl:grid-cols-6"
+        // Four across is the ceiling — the ramp used to carry on to five at
+        // `xl` and six at `2xl`.
+        //
+        // The card size is held by the 1112px cap on the wrapper above — four
+        // 260px cards and three 24px gaps. Dropping to four columns without it
+        // does not shrink the grid, it widens every card to fill the same
+        // container: 260px became 402px at 1728, and because the card holds a
+        // 5:8 aspect that is also 643px tall instead of 416px. Fewer cards
+        // above the fold, from a change meant to give them more room.
+        //
+        // 260 is what the card measured at every width from 1440 up, under
+        // both the old five-column and six-column steps. Narrower viewports
+        // never reach the cap and keep shrinking as before.
+        className="grid grid-cols-1 gap-5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:gap-6"
       >
         {/* `initial={false}` so the first paint is instant. Animating 154
             cards in on mount buys nothing — they are below the fold within two
@@ -111,6 +128,6 @@ export function CountryGrid({
           ))}
         </AnimatePresence>
       </motion.div>
-    </>
+    </div>
   );
 }
