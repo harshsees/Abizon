@@ -164,18 +164,24 @@ export function ApplicationShell() {
         type="button"
         onClick={back}
         disabled={isFirstStep}
-        className="inline-flex h-12 flex-shrink-0 cursor-pointer items-center gap-1.5 rounded-xl border border-border bg-surface px-4 text-sm font-semibold text-foreground transition-[background-color,transform] duration-[--duration-fast] ease-[--ease-out] hover:bg-surface-sunken active:scale-[0.98] disabled:pointer-events-none disabled:opacity-35 motion-reduce:transform-none sm:h-11"
+        className="inline-flex h-12 flex-shrink-0 cursor-pointer items-center gap-1.5 rounded-full border border-border-strong bg-surface px-5 text-sm font-semibold text-foreground transition-[background-color,transform] duration-[--duration-fast] ease-[--ease-out] hover:bg-surface-sunken active:scale-[0.98] disabled:pointer-events-none disabled:opacity-35 motion-reduce:transform-none sm:h-11"
       >
         <ArrowLeft aria-hidden className="size-4" />
         <span className="sr-only sm:not-sr-only">Back</span>
       </button>
 
+      {/* THE PRIMARY ACTION IS INK, NOT AMBER, and only inside this flow.
+          Amber is the brand accent and stays that everywhere else. Here the
+          reference is the destination card: a near-black panel with the name
+          set over it, which is the product's own idea of what "premium" looks
+          like. An amber button on a white sheet reads as a promotion; the dark
+          pill reads as the one thing to press. Reverting is one class. */}
       <button
         type="button"
         onClick={next}
         disabled={Boolean(blocked)}
         aria-describedby={blocked ? describedById : undefined}
-        className="group inline-flex h-12 flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl bg-primary px-6 text-sm font-bold text-on-primary shadow-e2 transition-[background-color,transform,box-shadow] duration-[--duration-fast] ease-[--ease-out] hover:bg-primary-hover hover:shadow-e3 active:bg-primary-active active:scale-[0.98] active:shadow-e1 disabled:pointer-events-none disabled:opacity-40 motion-reduce:transform-none sm:h-11 sm:flex-none"
+        className="group inline-flex h-12 flex-1 cursor-pointer items-center justify-center gap-2 rounded-full bg-foreground px-7 text-sm font-bold text-background shadow-e2 transition-[background-color,transform,box-shadow] duration-[--duration-fast] ease-[--ease-out] hover:bg-subtle-foreground hover:shadow-e3 active:scale-[0.98] active:shadow-e1 disabled:pointer-events-none disabled:opacity-40 motion-reduce:transform-none sm:h-11 sm:flex-none"
       >
         {currentStep.cta}
         <ArrowRight
@@ -188,7 +194,7 @@ export function ApplicationShell() {
   );
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
+    <div className="flex min-h-screen flex-col bg-background bg-[image:var(--gradient-application)]">
       <ApplicationHeader
         countryName={config.displayName}
         flagUrl={config.flagUrl}
@@ -266,43 +272,62 @@ export function ApplicationShell() {
             </div>
           )}
 
-          <StepHeader
-            ref={headingRef}
-            eyebrow={currentStep.eyebrow}
-            heading={currentStep.title}
-            description={description}
-          />
+          {/* THE SHEET.
+              The step used to sit directly on the page, which left five
+              screens of form with nothing holding them together — the eye had
+              to infer where the application began and the page ended. One card
+              says it instead, and it is the same object the destination cards
+              already are: `rounded-card`, a hairline, one step of elevation.
 
-          <div className="mt-9">
-            <ApplicationStepTransition
-              stepKey={currentStep.id}
-              direction={state.direction}
-            >
-              {currentStep.id === "setup" && <SetupStep />}
-              {currentStep.id === "documents" && <DocumentsStep />}
-              {currentStep.id === "details" && <ApplicantDetailsStep />}
-              {currentStep.id === "review" && <ReviewStep />}
-              {currentStep.id === "ready" && <ApplicationComplete />}
-            </ApplicationStepTransition>
-          </div>
+              The resume notices and the collapsed summary stay outside it on
+              purpose. They are about the application rather than part of it,
+              and folding them in would make the sheet a container for
+              everything, which is how a card stops meaning anything. */}
+          <div className="overflow-hidden rounded-card border border-border bg-surface shadow-e2">
+            <div className="px-5 py-7 sm:px-8 sm:py-9">
+              <StepHeader
+                ref={headingRef}
+                eyebrow={currentStep.eyebrow}
+                heading={currentStep.title}
+                description={description}
+              />
 
-          {/* Desktop navigation. The mobile equivalent is the fixed bar. */}
-          {!isLastStep && (
-            <div className="mt-12 hidden border-t border-border pt-6 md:block">
-              <div className="flex items-center justify-between gap-4">
-                {renderNavigation(blockedId)}
-              </div>
-              {blocked && (
-                <p
-                  id={blockedId}
-                  role="status"
-                  className="mt-3 text-right text-2xs text-muted-foreground"
+              <div className="mt-8">
+                <ApplicationStepTransition
+                  stepKey={currentStep.id}
+                  direction={state.direction}
                 >
-                  {blocked}
-                </p>
-              )}
+                  {currentStep.id === "setup" && <SetupStep />}
+                  {currentStep.id === "documents" && <DocumentsStep />}
+                  {currentStep.id === "details" && <ApplicantDetailsStep />}
+                  {currentStep.id === "review" && <ReviewStep />}
+                  {currentStep.id === "ready" && <ApplicationComplete />}
+                </ApplicationStepTransition>
+              </div>
             </div>
-          )}
+
+            {/* The actions are a footer of the sheet rather than a rule drawn
+                across the page below it — the difference between "this card
+                has a next step" and "here is a button somewhere underneath".
+                Mobile keeps the fixed bar; a footer that scrolls away is not
+                an action bar on a phone. */}
+            {!isLastStep && (
+              <div className="hidden border-t border-border bg-surface-sunken px-5 py-4 sm:px-8 md:block">
+                <div className="flex items-center justify-between gap-4">
+                  {renderNavigation(blockedId)}
+                </div>
+                {blocked && (
+                  <p
+                    id={blockedId}
+                    role="status"
+                    className="mt-3 text-right text-2xs text-muted-foreground"
+                  >
+                    {blocked}
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
 
           {/* Summary, inline, below md and at md. Sticky column takes over at xl. */}
           <div className="mt-10 xl:hidden">

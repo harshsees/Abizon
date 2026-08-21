@@ -213,6 +213,24 @@
      Anything offsetting beneath the header reads this token, so nothing has to
      be re-measured. */
   --header-h-full: 6rem;
+  /* The ground the application sheet floats on.
+     A flat canvas behind a white card makes the card look like a mistake in
+     the layout rather than a deliberate object — there is nothing to tell the
+     eye the sheet is nearer than the page. Two very faint washes, cool at the
+     top-left and warm at the bottom-right, give it somewhere to sit.
+     Deliberately weak: at these alphas the tint is felt rather than seen, and
+     anything stronger competes with the destination photography that the rest
+     of the product is built around.
+
+     Layers only — no trailing `var(--canvas)`. This is a `background-image`,
+     and a bare colour is not a valid layer in one: it does not fall back, it
+     invalidates the whole declaration, and the result is a flat page that
+     looks like the token was never applied. The ground colour comes from
+     `bg-background` alongside it. */
+  --gradient-application:
+    radial-gradient(85% 60% at 8% 0%, color-mix(in oklab, var(--blue-50) 70%, transparent) 0%, transparent 60%),
+    radial-gradient(75% 55% at 100% 100%, color-mix(in oklab, var(--green-50) 65%, transparent) 0%, transparent 55%);
+
   --control-h-sm: 2.25rem;    /* 36px */
   --control-h-md: 2.75rem;    /* 44px — the touch-target floor */
   --control-h-lg: 3.25rem;    /* 52px */

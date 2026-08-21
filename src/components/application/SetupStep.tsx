@@ -117,18 +117,28 @@ export function SetupStep() {
               {travellers.map((traveller, index) => (
                 <li key={traveller.id} className="flex items-end gap-2.5">
                   <Field
+                    labelTone="micro"
                     label={`Traveller ${index + 1} first name`}
                     hideLabel={index > 0}
                     required
                     className="flex-1"
-                    helper={index === 0 ? "Exactly as printed in the passport." : undefined}
+                    helper={
+                      index === 0
+                        ? "Exactly as printed in the passport."
+                        : undefined
+                    }
                   >
                     {(field) => (
                       <Input
+                        tone="underline"
                         {...field}
                         type="text"
                         autoComplete="given-name"
-                        placeholder={index > 0 ? `Traveller ${index + 1} first name` : undefined}
+                        placeholder={
+                          index > 0
+                            ? `Traveller ${index + 1} first name`
+                            : undefined
+                        }
                         value={traveller.firstName}
                         onChange={(event) =>
                           dispatch({
@@ -142,7 +152,9 @@ export function SetupStep() {
                   </Field>
                   <button
                     type="button"
-                    onClick={() => dispatch({ type: "removeTraveller", id: traveller.id })}
+                    onClick={() =>
+                      dispatch({ type: "removeTraveller", id: traveller.id })
+                    }
                     className="flex size-11 flex-shrink-0 cursor-pointer items-center justify-center rounded-md border border-border text-muted-foreground transition-colors hover:border-destructive hover:text-destructive sm:size-10"
                   >
                     <Trash2 aria-hidden className="size-4" />
@@ -211,7 +223,10 @@ export function SetupStep() {
                 type="button"
                 aria-pressed={active}
                 onClick={() =>
-                  dispatch({ type: "setTravelWindow", travelWindow: option.key })
+                  dispatch({
+                    type: "setTravelWindow",
+                    travelWindow: option.key,
+                  })
                 }
                 className={cn(
                   "cursor-pointer rounded-xl border px-4 py-3 text-left text-sm font-semibold",
@@ -223,7 +238,9 @@ export function SetupStep() {
               >
                 <span className="flex items-center justify-between gap-2">
                   {option.label}
-                  {active && <Check aria-hidden className="size-4 flex-shrink-0" />}
+                  {active && (
+                    <Check aria-hidden className="size-4 flex-shrink-0" />
+                  )}
                 </span>
               </button>
             );
