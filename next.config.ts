@@ -103,9 +103,30 @@ const csp = [
   // Cloudflare: the Turnstile widget on the login form.
   // `unsafe-eval` in development only — React uses eval to rebuild server error
   // stacks in the browser, and neither React nor Next uses it in production.
-  `script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com${
+  /**
+   * `wasm-unsafe-eval` is for the passport scanner, and the name overstates it.
+   * It permits WebAssembly compilation and nothing else — it does not restore
+   * `eval` or `new Function` for JavaScript, which is what plain
+   * `unsafe-eval` would do. Without it a strict `script-src` blocks
+   * `WebAssembly.instantiate`, and the OCR engine cannot start at all.
+   *
+   * What it costs: an attacker who has already achieved script execution could
+   * also run WebAssembly. That is a marginal addition to what they could
+   * already do, and it is the narrowest grant that makes the feature possible.
+   * The alternative — sending every passport image to a server to be read —
+   * is a much larger change to where the data goes.
+   *
+   * The engine itself is served from this origin (see
+   * `scripts/setup-tesseract.mjs`), so no CDN is added alongside it.
+   */
+  `script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://challenges.cloudflare.com${
     isDev ? " 'unsafe-eval'" : ""
   }`,
+
+  // The OCR engine runs in a Worker created from a same-origin script. Without
+  // this the worker is blocked and the failure surfaces as a scan that never
+  // finishes rather than as an error.
+  "worker-src 'self' blob:",
 
   // Tailwind v4 emits inline custom properties, and framer-motion and GSAP both
   // animate by writing to `style`. There is no nonce-based version of this that

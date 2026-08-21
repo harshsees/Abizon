@@ -182,6 +182,20 @@ export function parseMrzDate(
  * what the passport's own machine-readable line says, and an application is
  * checked against the passport rather than against how someone writes their
  * name. Prettifying it here would be inventing data.
+ *
+ * ── THE NAME IS NOT COVERED BY ANY CHECK DIGIT ──
+ *
+ * Every check digit in the zone is on line 2. Line 1 — document code, issuing
+ * state, and this name field — has none at all, so `allChecksPassed` says
+ * nothing whatsoever about the name.
+ *
+ * That is not theoretical. The first end-to-end run against the ICAO specimen
+ * returned a verified read with the name `ANNA MARIAK ERIKSSON`: a stray `K`
+ * from a filler character, on a result reporting that every digit matched.
+ * The passport number, both dates and the composite were all genuinely
+ * verified; the name was a plain OCR guess wearing their credibility.
+ *
+ * Anything presenting this to a person has to say which half was checked.
  */
 export function parseNameField(field: string): {
   surname: string;

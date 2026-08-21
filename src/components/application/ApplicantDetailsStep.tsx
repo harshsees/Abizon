@@ -19,14 +19,22 @@
  * is `blockingReason`, which is coarse and always current — the two describe
  * the same state at different resolutions and cannot disagree.
  *
- * There is no OCR here, so nothing claims there is. The form the flow replaced
- * advertised "Passport upload can auto-fill some details" and then wrote the
- * literal string "Autofill from passport" into the name field.
+ * AUTOFILL. There is OCR here now, and it claims exactly what it does. The form
+ * this flow replaced advertised "Passport upload can auto-fill some details"
+ * and then wrote the literal string "Autofill from passport" into the name
+ * field; the bar set by that is low and worth clearing properly.
+ *
+ * `PassportAutofill` reads the machine-readable zone in the browser and fills
+ * only when every check digit verifies. A read that does not verify fills
+ * nothing and names the field that failed — see the note in that file for why
+ * partial autofill is worse than none. Father's and mother's names, address
+ * and place of issue are not in the zone and are still typed.
  */
 
 import { Check, ChevronDown } from "lucide-react";
 import { useState } from "react";
 
+import { PassportAutofill } from "@/components/application/PassportAutofill";
 import { Field, Input } from "@/components/ui/field";
 import { useApplication } from "@/lib/application/context";
 import { EMPTY_DETAILS, type TravellerDetails } from "@/lib/application/state";
@@ -146,6 +154,32 @@ export function ApplicantDetailsStep() {
                   id={`traveller-panel-${traveller.id}`}
                   className="pb-5 pt-1"
                 >
+                  {/* Above the fields it fills, per traveller — each person
+                      has their own passport, and a single scanner at the top
+                      of the step would have to ask which one it was for. */}
+                  <PassportAutofill
+                    className="mb-6"
+                    onFilled={(patch) => {
+                      set(patch);
+                      // Everything the scan wrote counts as touched, so
+                      // validation runs against it immediately. A field filled
+                      // by machine gets no more benefit of the doubt than one
+                      // typed by hand, and a passport that expires next month
+                      // should say so now rather than at review.
+                      for (const key of Object.keys(patch)) {
+                        markTouched(`${traveller.id}:${key}`);
+                      }
+                    }}
+                  />
+
+                  <div className="relative mb-6 flex items-center gap-3">
+                    <span className="h-px flex-1 bg-border" />
+                    <span className="text-2xs font-semibold uppercase tracking-[0.11em] text-muted-foreground">
+                      or type them
+                    </span>
+                    <span className="h-px flex-1 bg-border" />
+                  </div>
+
                   <div className="grid gap-4 sm:grid-cols-2">
                     <Field
                       labelTone="micro"

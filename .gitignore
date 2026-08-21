@@ -55,3 +55,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# OCR engine assets, placed by `scripts/setup-tesseract.mjs` before dev and
+# build. Reproducible from the lockfile and a pinned URL, so they are fetched
+# rather than committed — 8MB of binaries is paid for on every clone forever.
+public/tesseract/

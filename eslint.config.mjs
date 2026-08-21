@@ -12,6 +12,12 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+
+    // The OCR engine, placed here by `scripts/setup-tesseract.mjs`. Minified
+    // third-party code we neither wrote nor can fix: linting it produced 11
+    // errors and 587 warnings in files that are not ours, which is how a lint
+    // run stops being read at all.
+    "public/tesseract/**",
   ]),
 ]);
 

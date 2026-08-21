@@ -260,3 +260,20 @@ describe("documents that are not passports", () => {
     });
   });
 });
+
+describe("what the check digits do and do not cover", () => {
+  it("still reports all checks passed when the name is misread", () => {
+    // The property that has to be stated somewhere, because it is the one that
+    // will mislead someone. Every check digit is on line 2; line 1 carries the
+    // name and has none. A corrupted name therefore produces a fully
+    // "verified" result, and any interface showing it has to say so.
+    const misread = "P<UTOERIKSSON<<ANNA<MARIAK".padEnd(44, "<");
+    const result = parseMrz(misread, ICAO_LINE_2);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    expect(result.allChecksPassed).toBe(true);
+    expect(result.fields.givenNames).toBe("ANNA MARIAK");
+  });
+});

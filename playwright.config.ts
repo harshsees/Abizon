@@ -29,6 +29,19 @@ export default defineConfig({
   // everything else. Fine locally, fatal in CI.
   forbidOnly: Boolean(process.env.CI),
 
+  /**
+   * Ten seconds, not the default five.
+   *
+   * These run against `next dev`, which compiles a route the first time it is
+   * requested. With `fullyParallel` several workers hit a cold `/login` at
+   * once and the first Server Action can take longer than five seconds to come
+   * back — so one of the two sending tests failed on roughly every other run,
+   * in a different project each time, and passed on its own. That is the dev
+   * server's compile cost, not the application being slow, and raising the
+   * assertion timeout is the honest fix rather than retrying until it passes.
+   */
+  expect: { timeout: 10_000 },
+
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
   reporter: process.env.CI ? "github" : "list",
