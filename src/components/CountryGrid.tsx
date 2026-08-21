@@ -67,8 +67,15 @@ export function CountryGrid({
     /* The width cap sits here rather than on the grid so that the count and the
        "clear filters" link move with it. Capping only the grid centred the
        cards and left "Showing 154 countries" stranded against the far left
-       margin, pointing at nothing. */
-    <div className="mx-auto w-full max-w-[1112px]">
+       margin, pointing at nothing.
+
+       1176 = 1112 of cards plus the 32px of padding either side. The padding is
+       the indent at the start and end of each row, and the cap is raised to pay
+       for it so the card stays 260px rather than the inset being taken out of
+       its width. On a wide screen the indent is invisible inside the centring
+       space; it earns its place below ~1176px, where the grid would otherwise
+       run to the page margin. */
+    <div className="mx-auto w-full max-w-[1176px] px-8">
       {/* Secondary by design: the count reports on the grid, it does not
           compete with it. */}
       <div className="mb-6 flex items-center justify-between gap-4">
