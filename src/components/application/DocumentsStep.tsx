@@ -112,7 +112,12 @@ export function DocumentsStep() {
               </p>
             </header>
 
-            <ul className="overflow-hidden rounded-xl border border-border">
+            {/* A list separated by rules, not a bordered card. These rows now
+                sit inside the application sheet, and a white card with a
+                hairline drawn on a white card with a hairline is the same
+                boundary twice — the second one adds a box and no information.
+                The rules between rows carry the grouping on their own. */}
+            <ul className="border-t border-border">
               {status.required.map((requirement, index) => {
                 const entry =
                   state.documents[documentKey(traveller.id, requirement.kind)];
@@ -126,8 +131,8 @@ export function DocumentsStep() {
                         setOpen({ travellerId: traveller.id, kind: requirement.kind })
                       }
                       className={cn(
-                        "flex w-full cursor-pointer items-center gap-3.5 bg-surface p-4 text-left",
-                        "transition-colors duration-[--duration-fast] hover:bg-surface-sunken",
+                        "flex w-full cursor-pointer items-center gap-3.5 py-4 text-left",
+                        "-mx-2 rounded-lg px-2 transition-colors duration-[--duration-fast] hover:bg-surface-sunken",
                         index > 0 && "border-t border-border",
                       )}
                     >

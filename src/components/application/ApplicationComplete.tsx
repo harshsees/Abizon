@@ -56,7 +56,7 @@ export function ApplicationComplete() {
       <div className="space-y-5">
         <div
           role="status"
-          className="rounded-xl border border-border bg-surface p-5 sm:p-6"
+          className="rounded-xl border border-border bg-surface-sunken p-5 sm:p-6"
         >
           <p className="text-sm font-semibold text-foreground">
             Your {summary.country.displayName} application is with Abizon.
@@ -99,13 +99,13 @@ export function ApplicationComplete() {
         <div className="flex flex-wrap gap-3">
           <Link
             href={`/track/${sync.submittedReference}`}
-            className="inline-flex h-12 items-center rounded-xl bg-primary px-5 text-sm font-bold text-on-primary transition-colors hover:bg-primary-hover sm:h-11"
+            className="inline-flex h-12 items-center rounded-full bg-foreground px-6 text-sm font-bold text-background transition-colors hover:bg-subtle-foreground sm:h-11"
           >
             Track this application
           </Link>
           <Link
             href="/profile"
-            className="inline-flex h-12 items-center rounded-xl border border-border bg-surface px-5 text-sm font-semibold text-foreground transition-colors hover:bg-surface-sunken sm:h-11"
+            className="inline-flex h-12 items-center rounded-full border border-border-strong bg-surface px-5 text-sm font-semibold text-foreground transition-colors hover:bg-surface-sunken sm:h-11"
           >
             Your applications
           </Link>
@@ -119,7 +119,7 @@ export function ApplicationComplete() {
       <div className="space-y-5">
         <div
           role="status"
-          className="flex gap-3 rounded-xl border border-border bg-surface p-5"
+          className="flex gap-3 rounded-xl border border-border bg-surface-sunken p-5"
         >
           <CircleAlert
             aria-hidden
@@ -139,7 +139,7 @@ export function ApplicationComplete() {
         <button
           type="button"
           onClick={() => jumpTo("review")}
-          className="inline-flex h-12 cursor-pointer items-center rounded-xl border border-border bg-surface px-5 sm:h-11 text-sm font-semibold text-foreground transition-colors hover:bg-surface-sunken"
+          className="inline-flex h-12 cursor-pointer items-center rounded-full border border-border-strong bg-surface px-5 sm:h-11 text-sm font-semibold text-foreground transition-colors hover:bg-surface-sunken"
         >
           Back to review
         </button>
@@ -151,7 +151,7 @@ export function ApplicationComplete() {
     <div className="space-y-5">
       <div
         role="status"
-        className="rounded-xl border border-border bg-surface p-5 sm:p-6"
+        className="rounded-xl border border-border bg-surface-sunken p-5 sm:p-6"
       >
         <p className="text-sm font-semibold text-foreground">
           Your {summary.country.displayName} application is complete.
@@ -219,7 +219,7 @@ export function ApplicationComplete() {
       {/* §15 — the final state summarises the application, not just its total.
           Every value is read from the shared summary model, so this screen
           cannot disagree with the review step or the sticky aside. */}
-      <dl className="divide-y divide-border rounded-xl border border-border bg-surface px-4">
+      <dl className="divide-y divide-border rounded-xl border border-border bg-surface-sunken px-4">
         <FinalRow label="Destination" value={summary.country.displayName} />
         <FinalRow label="Visa" value={summary.country.visaType} />
         <FinalRow
@@ -269,7 +269,7 @@ export function ApplicationComplete() {
         <button
           type="button"
           onClick={() => jumpTo("review")}
-          className="inline-flex h-12 cursor-pointer items-center rounded-xl border border-border bg-surface px-5 sm:h-11 text-sm font-semibold text-foreground transition-colors hover:bg-surface-sunken"
+          className="inline-flex h-12 cursor-pointer items-center rounded-full border border-border-strong bg-surface px-5 sm:h-11 text-sm font-semibold text-foreground transition-colors hover:bg-surface-sunken"
         >
           Change something
         </button>
@@ -309,7 +309,7 @@ function SubmitPanel() {
       : undefined;
 
   return (
-    <div className="rounded-xl border border-border bg-surface p-5 sm:p-6">
+    <div className="rounded-xl border border-border bg-surface-sunken p-5 sm:p-6">
       <p className="text-sm font-semibold text-foreground">Send this to Abizon</p>
       <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
         You will get a reference, and we will email you when the status changes.

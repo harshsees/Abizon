@@ -40,21 +40,28 @@ function Block({
   editLabel: string;
   children: React.ReactNode;
 }) {
+  // Review is a summary, and a summary of five sections rendered as five
+  // bordered cards inside the sheet is five boxes to read past before any
+  // content. The section is a tracked heading over a rule instead — the same
+  // device the destination card uses over TYPE / VALID / FEES, which is where
+  // this page's vocabulary should come from.
   return (
-    <section className="rounded-xl border border-border bg-surface">
-      <header className="flex items-center justify-between gap-4 border-b border-border px-4 py-3">
-        <h2 className="text-sm font-semibold text-foreground">{title}</h2>
+    <section>
+      <header className="flex items-center justify-between gap-4 border-b border-border pb-2.5">
+        <h2 className="text-2xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+          {title}
+        </h2>
         <button
           type="button"
           onClick={onEdit}
-          className="flex h-9 cursor-pointer items-center gap-1.5 rounded-lg px-2.5 text-2xs font-semibold text-muted-foreground transition-colors hover:bg-surface-sunken hover:text-foreground"
+          className="-mr-2 flex h-8 cursor-pointer items-center gap-1.5 rounded-full px-2.5 text-2xs font-semibold text-muted-foreground transition-colors hover:bg-surface-sunken hover:text-foreground"
         >
           <Pencil aria-hidden className="size-3" />
           Edit
           <span className="sr-only"> {editLabel}</span>
         </button>
       </header>
-      <div className="px-4 py-3.5">{children}</div>
+      <div className="pt-3.5">{children}</div>
     </section>
   );
 }

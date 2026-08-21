@@ -86,8 +86,13 @@ export function ApplicantDetailsStep() {
           return (
             <div
               key={traveller.id}
+              // Rules, not a box. One traveller open at a time already tells
+              // you which panel you are in; a border around it inside the
+              // sheet just draws a second edge around the same thing. The top
+              // rule darkens on the open one, which is the whole indication
+              // needed and costs no extra geometry.
               className={cn(
-                "overflow-hidden rounded-xl border bg-surface transition-colors duration-[--duration-fast]",
+                "border-t transition-colors duration-[--duration-fast]",
                 expanded ? "border-border-strong" : "border-border",
               )}
             >
@@ -97,7 +102,7 @@ export function ApplicantDetailsStep() {
                   onClick={() => setOpenId(expanded ? undefined : traveller.id)}
                   aria-expanded={expanded}
                   aria-controls={`traveller-panel-${traveller.id}`}
-                  className="flex w-full cursor-pointer items-center gap-3 p-4 text-left transition-colors hover:bg-surface-sunken"
+                  className="-mx-2 flex w-full cursor-pointer items-center gap-3 rounded-lg px-2 py-4 text-left transition-colors hover:bg-surface-sunken"
                 >
                   <span
                     aria-hidden
@@ -139,7 +144,7 @@ export function ApplicantDetailsStep() {
               {expanded && (
                 <div
                   id={`traveller-panel-${traveller.id}`}
-                  className="border-t border-border p-4 sm:p-5"
+                  className="pb-5 pt-1"
                 >
                   <div className="grid gap-4 sm:grid-cols-2">
                     <Field
