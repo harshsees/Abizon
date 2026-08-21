@@ -7,11 +7,29 @@ import { authChallenges, authSends } from "@/lib/db/schema";
 import { BUCKETS, storage } from "@/lib/storage/client";
 
 /**
- * HOURLY HOUSEKEEPING.
+ * DAILY HOUSEKEEPING.
  * ---------------------------------------------------------------------------
  * Three tables and one bucket grow without limit unless something empties them.
  * None of this is urgent in any single hour, and all of it is expensive after a
  * year of nobody noticing.
+ *
+ * ── Why daily and not hourly, which is what this wants ──
+ *
+ * It was `17 * * * *`. Vercel's Hobby plan permits a cron to run at most once a
+ * day and rejects the *whole deployment* when one asks for more — so from the
+ * moment this file arrived, every deploy failed with "Hobby accounts are
+ * limited to daily cron jobs" and the site froze on its last good build. Days
+ * of unrelated work sat on `main` looking pushed and were never live. The
+ * schedule is the thing that has to give until the account is on Pro.
+ *
+ * WHAT THAT COSTS, precisely: raw camera output sits in `incoming` for up to
+ * 24 hours instead of up to one. Those are unprocessed passport photographs
+ * with EXIF intact, in a private bucket, readable only by the service role.
+ * The exposure is the retention window, not access — but it is a real change
+ * to a number the DPDP retention story quotes, so it belongs in that
+ * conversation rather than in a config file nobody rereads.
+ *
+ * On Pro, put `17 * * * *` back and delete this note.
  *
  * ── Why expired challenges are not deleted at expiry ──
  *

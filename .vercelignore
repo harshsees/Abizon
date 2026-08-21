@@ -1,0 +1,28 @@
+# What never gets uploaded to a deployment.
+#
+# The Vercel CLI falls back to `.gitignore` when this file is absent, which
+# covers `.env*` today — but that is a fallback, not a guarantee, and the thing
+# it would leak is `.env.local`: the Supabase service-role key, the database
+# password, and the key that decrypts every passport number. Stating it here
+# means the protection does not depend on which file the CLI decided to read.
+#
+# Environment variables belong in the Vercel project's own settings, where they
+# are encrypted and scoped per environment — never in an uploaded file.
+.env
+.env.*
+!.env.example
+
+# Build output and dependencies; Vercel produces its own.
+.next
+node_modules
+
+# Test artefacts and local scratch.
+test-results
+playwright-report
+*.tmp.mjs
+
+# Source imagery for the destination pages. Large, and the site serves the
+# processed copies from `public/` — uploading the originals adds minutes to
+# every deploy for files nothing requests.
+image_video
+video
