@@ -85,7 +85,23 @@ export default defineConfig({
      */
     command: "npm run dev -- --port 3100",
     url: "http://localhost:3100",
-    reuseExistingServer: !process.env.CI,
+    /**
+     * A fresh server every run, locally as well as in CI.
+     *
+     * Reusing it is faster and quietly breaks the suite. Two ceilings are held
+     * in the dev server's memory — five sends per number per hour, twenty per
+     * IP per hour — and neither resets while the process lives. Every local run
+     * spends four of the IP allowance, so about the fifth run of an hour starts
+     * failing in the two tests that send a code, with an error that reads
+     * exactly like a regression in the login flow.
+     *
+     * Deriving a fresh number per run (see `e2e/auth.spec.ts`) fixes the
+     * per-number half and not the per-IP half, because every test comes from
+     * localhost. Restarting the process is what actually makes a run
+     * independent of the runs before it. It costs about ten seconds, which is
+     * cheaper than one bisect for a failure that was never in the code.
+     */
+    reuseExistingServer: false,
     timeout: 180_000,
     env: {
       SMS_PROVIDER: "memory",
