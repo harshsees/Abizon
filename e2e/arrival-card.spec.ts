@@ -58,6 +58,14 @@ const OFF = ["singapore", "philippines", "cambodia", "france", "japan"];
  */
 test.describe("who gets an arrival card", () => {
   test("the five that were measured, and it names each destination", async ({ page }) => {
+    // Five destinations, each a first request for a different variant of a
+    // dynamic route, each therefore a compile before `next dev` answers. On a
+    // cold `.next` that is comfortably past the default 30s — not because the
+    // page is slow but because the server is building it, five times. Tripling
+    // the budget is the honest fix; splitting it into five parallel tests just
+    // moves the same compiles into a stampede.
+    test.slow();
+
     for (const slug of LIVE) {
       const response = await page.goto(`/arrival-card/${slug}`);
       expect(response?.status(), slug).toBe(200);
@@ -71,18 +79,30 @@ test.describe("who gets an arrival card", () => {
     }
   });
 
-  test("everywhere else is a 404, not an empty form", async ({ page }) => {
+  test("everywhere else is a 404, not an empty form", async ({ request }) => {
     for (const slug of OFF) {
+      // `request` rather than a page: the assertion is the status line, and
+      // rendering five not-found pages in a browser to read it costs the dev
+      // server five compiles and a lot of wall clock for nothing. This file is
+      // the heaviest one in the suite and every navigation it does not make is
+      // load the other specs do not have to share.
+      //
       // A page that loads and then says "unavailable" still tells a crawler
       // and a visitor that the URL means something. It does not.
-      const response = await page.goto(`/arrival-card/${slug}`);
-      expect(response?.status(), slug).toBe(404);
+      const response = await request.get(`/arrival-card/${slug}`);
+      expect(response.status(), slug).toBe(404);
     }
   });
 
   test("the destination page links to it only where there is one", async ({ page }) => {
     await page.goto("/visa/sri-lanka");
-    await expect(page.locator('a[href="/arrival-card/sri-lanka"]')).toHaveCount(1);
+
+    // Visible at rest, not behind a hover. It was written into the card's
+    // hover reveal first, which meant it did not exist for anyone on a touch
+    // screen — the majority — and could not be found by anyone else who did
+    // not already know to look. `toBeVisible` is the assertion that would
+    // have caught that; `toHaveCount` would not.
+    await expect(page.locator('a[href="/arrival-card/sri-lanka"]')).toBeVisible();
 
     await page.goto("/visa/france");
     await expect(page.locator('a[href^="/arrival-card/"]')).toHaveCount(0);

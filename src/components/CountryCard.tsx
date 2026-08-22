@@ -241,12 +241,10 @@ export function CountryCard({ country }: CountryCardProps) {
                 </span>
               </div>
 
-              {/* Space reserved for the links that are siblings of this one
-                  and overlay here — an <a> inside an <a> is invalid, so they
-                  cannot be children. Without the reserve they would sit on top
-                  of the documents pill. Taller where the arrival-card line is
-                  also present. */}
-              <div className={arrivalCard ? "h-12" : "h-6"} />
+              {/* Space reserved for the emergency link, which is a sibling of
+                  this Link and overlays here. Without the reserve it would sit
+                  on top of the documents pill. */}
+              <div className="h-6" />
             </div>
           </div>
         </div>
@@ -254,20 +252,27 @@ export function CountryCard({ country }: CountryCardProps) {
 
       {/* PHASE 9 §69. The arrival card, on the five cards that have one.
 
-          Secondary to the card itself by construction: the card is the visa
-          link and this is a small line inside the hover reveal, so the visa
-          stays the thing a click lands on. It is still a real link — reachable
-          by keyboard through `group-focus-within`, and on touch, where there
-          is no hover, it is reached from the destination page instead. */}
+          AT REST, and at every width. This was first written into the hover
+          reveal at the foot of the card alongside the emergency link, which
+          made it invisible until a mouse touched the card and invisible full
+          stop below `lg` — where most of the traffic is, and where there is no
+          hover to discover it with. A badge nobody sees is not a secondary
+          CTA, it is a missing one.
+
+          It stays secondary by size and position rather than by concealment:
+          a small mark in the top corner, well clear of the destination name
+          and the stats, on a card whose whole surface still goes to the visa.
+          A sibling of that link, not a child — an <a> inside an <a> is invalid
+          and browsers silently unnest it, breaking both. */}
       {arrivalCard && (
         <Link
           href={`/arrival-card/${slug}`}
-          className="absolute inset-x-0 bottom-11 z-raised hidden max-h-0 items-center justify-center gap-1 overflow-hidden text-center transition-all duration-[var(--duration-panel)] ease-out-back group-hover:max-h-10 group-focus-within:max-h-10 lg:flex"
+          className="absolute left-2.5 top-2.5 z-raised flex items-center gap-1 rounded-full bg-black/45 px-2 py-1 backdrop-blur-[6px] transition-colors duration-[--duration-fast] hover:bg-black/65 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
         >
-          <span className="whitespace-nowrap text-[10px] font-semibold text-white/85 underline decoration-white/45 decoration-dotted underline-offset-[3px] transition-colors hover:text-white">
+          <span className="whitespace-nowrap text-[9px] font-bold uppercase tracking-[0.06em] text-white">
             Free {arrivalCard.noun}
           </span>
-          <ArrowUpRight className="h-2.5 w-2.5 text-white/70" />
+          <ArrowUpRight aria-hidden className="h-2.5 w-2.5 text-white/80" />
         </Link>
       )}
 

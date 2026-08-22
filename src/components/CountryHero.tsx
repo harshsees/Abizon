@@ -192,15 +192,25 @@ export function CountryHero({ config, onCheckDocuments }: CountryHeroProps) {
               second front door to the same one, and the wording says so —
               a visitor who mistakes it for the visa has been misled by us. */}
           {config.arrivalCard && (
-            <div className="mt-5 flex justify-center">
+            <div className="mt-4 flex justify-center">
+              {/* Secondary to the white pill above it — outlined rather than
+                  filled, so the eye still lands on the primary action first —
+                  but a control, not a footnote.
+
+                  It began as a small dotted underline on the photograph, on
+                  the reasoning that the visa is what most visitors came for.
+                  That was too far: at 11px over a hero image it was legible
+                  only if you already knew it was there, which is not what
+                  "secondary" means. A free product nobody can find is the same
+                  as one that does not exist. */}
               <Link
                 href={`/arrival-card/${config.slug}`}
-                className="group inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-2xs font-semibold text-white/85 underline decoration-white/40 decoration-dotted underline-offset-4 transition-colors hover:text-white hover:decoration-white/70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                className="group inline-flex h-12 items-center gap-2 rounded-full border border-white/45 bg-white/12 px-6 text-sm font-bold text-white backdrop-blur-sm transition-[background-color,border-color,transform] duration-[--duration-fast] ease-[--ease-out] hover:border-white/70 hover:bg-white/20 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white motion-reduce:transform-none"
               >
-                Get your {config.displayName} {config.arrivalCard.noun} — free
+                Get your {config.arrivalCard.noun} — free
                 <ArrowUpRight
                   aria-hidden
-                  className="size-3.5 transition-transform duration-[--duration-fast] group-hover:translate-x-px group-hover:-translate-y-px motion-reduce:transform-none"
+                  className="size-4 transition-transform duration-[--duration-fast] group-hover:translate-x-px group-hover:-translate-y-px motion-reduce:transform-none"
                 />
               </Link>
             </div>
