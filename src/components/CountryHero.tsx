@@ -27,6 +27,8 @@
  * needs different wording.
  */
 
+import { ArrowUpRight } from "lucide-react";
+import Link from "next/link";
 import React from "react";
 
 import { CountryImagePlate } from "@/components/CountryImagePlate";
@@ -176,6 +178,31 @@ export function CountryHero({ config, onCheckDocuments }: CountryHeroProps) {
               >
                 {applicable ? "Check Required Documents" : "Check Entry Rules"}
               </button>
+            </div>
+          )}
+
+          {/* PHASE 9 §69. The arrival card, for the handful of destinations
+              that operate one — and only where `lib/arrivalCard.ts` has an
+              entry somebody has checked, so a hero cannot advertise a form
+              nobody confirmed exists.
+
+              Set below the hero's own action and in a quieter treatment,
+              because for most of these destinations the visa is still the
+              thing the visitor came for. It is a separate free product, not a
+              second front door to the same one, and the wording says so —
+              a visitor who mistakes it for the visa has been misled by us. */}
+          {config.arrivalCard && (
+            <div className="mt-5 flex justify-center">
+              <Link
+                href={`/arrival-card/${config.slug}`}
+                className="group inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-2xs font-semibold text-white/85 underline decoration-white/40 decoration-dotted underline-offset-4 transition-colors hover:text-white hover:decoration-white/70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+              >
+                Get your {config.displayName} {config.arrivalCard.noun} — free
+                <ArrowUpRight
+                  aria-hidden
+                  className="size-3.5 transition-transform duration-[--duration-fast] group-hover:translate-x-px group-hover:-translate-y-px motion-reduce:transform-none"
+                />
+              </Link>
             </div>
           )}
         </div>

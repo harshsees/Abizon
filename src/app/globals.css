@@ -589,6 +589,24 @@ button {
   );
 }
 
+/* Arrival-card loading track.
+   The reference's loading screen is a serif line over a hairline rule with a
+   soft luminous segment travelling along it — not a spinner. The track is a
+   dashed hairline; the segment is a blurred gradient that sweeps across it and
+   fades at both ends, so nothing about it reads as a determinate progress bar,
+   because there is no progress to report. Paired with the segment fading in
+   and out at the extremes it gives the screen a pulse without a percentage. */
+@keyframes arrival-load-sweep {
+  0%   { transform: translateX(-120%); opacity: 0; }
+  15%  { opacity: 1; }
+  85%  { opacity: 1; }
+  100% { transform: translateX(120%); opacity: 0; }
+}
+
+.animate-arrival-load-sweep {
+  animation: arrival-load-sweep 1.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
 /* OTP caret.
    The code input is one transparent field over six drawn cells, so the real
    caret is hidden and the active cell draws this one instead. A step blink
@@ -642,6 +660,15 @@ button {
      leaves the element at its own opacity, which is what we want. */
   .animate-caret-blink {
     animation: none !important;
+  }
+
+  /* Same reason as the caret: the sweep ends on opacity 0, so letting it run
+     its one allowed iteration would leave the loading screen with no
+     indicator at all. Stop it and centre it instead. */
+  .animate-arrival-load-sweep {
+    animation: none !important;
+    transform: none !important;
+    opacity: 1 !important;
   }
 
   html.has-custom-cursor,

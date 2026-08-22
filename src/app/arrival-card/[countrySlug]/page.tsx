@@ -30,6 +30,21 @@ import { resolveCountryVisaConfig } from "@/lib/countryVisa";
  * is optional when the airline will not board them without it is the failure
  * this refuses to risk, and a 404 is the honest alternative.
  */
+/**
+ * Anything not in `generateStaticParams` is a real 404, rather than a page
+ * rendered on demand that then calls `notFound()`.
+ *
+ * The distinction is the status code. A `notFound()` inside a dynamic segment
+ * renders the not-found body but — as `/visa/[countrySlug]` also does here —
+ * still answers 200, which tells a crawler the URL exists. There is no reason
+ * for this route to be reachable for a destination with no scheme, so the
+ * segment refuses the parameter outright and the server answers 404.
+ *
+ * The `notFound()` in the page body stays as the second guard: it covers an
+ * entry flipped back to unverified between a build and a request.
+ */
+export const dynamicParams = false;
+
 export function generateStaticParams() {
   return countrySlugs
     .filter((countrySlug) => {

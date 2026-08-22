@@ -60,6 +60,7 @@ import { ArrowUpRight, ShieldCheck } from "lucide-react";
 
 import { CountryImagePlate } from "@/components/CountryImagePlate";
 import { Country, getCountrySlug } from "@/data/countries";
+import { arrivalCardFor } from "@/lib/arrivalCard";
 import { countryCardImage } from "@/lib/countryImagery";
 import { formatGovernmentFee, isGovernmentFeeFree } from "@/lib/countryVisa";
 
@@ -92,7 +93,12 @@ interface CountryCardProps {
 }
 
 export function CountryCard({ country }: CountryCardProps) {
-  const photo = countryCardImage(getCountrySlug(country.name));
+  const slug = getCountrySlug(country.name);
+  const photo = countryCardImage(slug);
+  /* PHASE 9 §69. Five destinations operate a free arrival card that somebody
+     has checked; the other 149 show nothing here. A plain object lookup, which
+     matters when 154 of these render at once. */
+  const arrivalCard = arrivalCardFor(slug);
 
   const stats = [
     { label: "Type", value: country.visaType, align: "text-left" },
@@ -114,7 +120,7 @@ export function CountryCard({ country }: CountryCardProps) {
     // hover.
     <div className="group relative w-full select-none">
       <Link
-        href={`/visa/${getCountrySlug(country.name)}`}
+        href={`/visa/${slug}`}
         className="block rounded-card"
       >
         {/* PHASE 8B. This used to read `country.imageUrl` — whatever the
@@ -235,14 +241,35 @@ export function CountryCard({ country }: CountryCardProps) {
                 </span>
               </div>
 
-              {/* Space reserved for the emergency link, which is a sibling of
-                  this Link and overlays here. Without the reserve it would sit
-                  on top of the documents pill. */}
-              <div className="h-6" />
+              {/* Space reserved for the links that are siblings of this one
+                  and overlay here — an <a> inside an <a> is invalid, so they
+                  cannot be children. Without the reserve they would sit on top
+                  of the documents pill. Taller where the arrival-card line is
+                  also present. */}
+              <div className={arrivalCard ? "h-12" : "h-6"} />
             </div>
           </div>
         </div>
       </Link>
+
+      {/* PHASE 9 §69. The arrival card, on the five cards that have one.
+
+          Secondary to the card itself by construction: the card is the visa
+          link and this is a small line inside the hover reveal, so the visa
+          stays the thing a click lands on. It is still a real link — reachable
+          by keyboard through `group-focus-within`, and on touch, where there
+          is no hover, it is reached from the destination page instead. */}
+      {arrivalCard && (
+        <Link
+          href={`/arrival-card/${slug}`}
+          className="absolute inset-x-0 bottom-11 z-raised hidden max-h-0 items-center justify-center gap-1 overflow-hidden text-center transition-all duration-[var(--duration-panel)] ease-out-back group-hover:max-h-10 group-focus-within:max-h-10 lg:flex"
+        >
+          <span className="whitespace-nowrap text-[10px] font-semibold text-white/85 underline decoration-white/45 decoration-dotted underline-offset-[3px] transition-colors hover:text-white">
+            Free {arrivalCard.noun}
+          </span>
+          <ArrowUpRight className="h-2.5 w-2.5 text-white/70" />
+        </Link>
+      )}
 
       {/* Emergency assistance — the reference carries this on every card, and
           it is the one control it animates continuously. */}
