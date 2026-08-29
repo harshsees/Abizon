@@ -676,3 +676,246 @@ button {
     cursor: auto !important;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   7. PAYMENT CARD
+
+   The one part of the payment step that cannot be written as utilities. 3D
+   transforms with `backface-visibility`, the chip's contact lines, the two
+   radial gloss pools on the card face and the receipt's torn edge are all
+   pseudo-elements and stacked gradients — expressible in Tailwind only as a
+   wall of arbitrary values that would be harder to read than the CSS it
+   compiles to.
+
+   THE CARD HAS ITS OWN PALETTE, and that is deliberate rather than an escape
+   from the token system. Every other surface in the app is paper: `--canvas`,
+   `--color-surface`, a hairline border. This is a moulded plastic object lying
+   on that paper, and it reads as one because it has a material — a gradient, a
+   gloss sweep, a gold chip, an inner highlight. Painting it in `--color-accent`
+   would make it a blue rectangle. The values live on `.pay-card` so the whole
+   material is restyled from one block.
+   ------------------------------------------------------------------------ */
+
+.pay-scene {
+  perspective: 1200px;
+}
+
+.pay-card {
+  /* The card's own material. Nothing outside this component reads these. */
+  --pay-card-from: #5b8dfa;
+  --pay-card-to: #3864f1;
+  --pay-card-radius: 14px;
+
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  /* Overshoots slightly on arrival, the way a real card does when turned over
+     in the hand. Longer than --duration-slow because the whole point is that
+     you watch it happen; this is the one animation on the screen. */
+  transition: transform 700ms cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.pay-card[data-flipped="true"] {
+  transform: rotateY(180deg);
+}
+
+.pay-face {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: var(--pay-card-radius);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border: 1px solid rgb(255 255 255 / 0.2);
+  color: #fff;
+  background:
+    /* The gloss sweep sits above the base so the card catches a light. */
+    linear-gradient(
+      110deg,
+      rgb(255 255 255 / 0) 20%,
+      rgb(255 255 255 / 0.15) 35%,
+      rgb(255 255 255 / 0) 50%
+    ),
+    linear-gradient(135deg, var(--pay-card-from), var(--pay-card-to));
+  box-shadow: inset 0 0 10px rgb(255 255 255 / 0.1);
+}
+
+/* Two soft pools of light, top-right and bottom-left. Without them the
+   gradient reads as flat vinyl rather than a curved surface. */
+.pay-face::before,
+.pay-face::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.pay-face::before {
+  top: -40px;
+  right: -50px;
+  width: 220px;
+  height: 220px;
+  background: radial-gradient(circle, rgb(255 255 255 / 0.12) 0%, rgb(255 255 255 / 0) 70%);
+}
+
+.pay-face::after {
+  bottom: -60px;
+  left: -40px;
+  width: 240px;
+  height: 240px;
+  background: radial-gradient(circle, rgb(255 255 255 / 0.1) 0%, rgb(255 255 255 / 0) 70%);
+}
+
+.pay-face--back {
+  transform: rotateY(180deg);
+}
+
+/* The chip. A gold gradient with the contact pattern drawn over it — one
+   horizontal split and two verticals, which is what an EMV chip actually
+   looks like and is legible at 44px in a way a photograph would not be. */
+.pay-chip {
+  position: relative;
+  width: 44px;
+  height: 32px;
+  overflow: hidden;
+  border: 1px solid rgb(0 0 0 / 0.4);
+  border-radius: 5px;
+  background: linear-gradient(135deg, #e4c466 0%, #b78e2a 100%);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.2), inset 0 1px 1px rgb(255 255 255 / 0.5);
+}
+
+.pay-chip::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: rgb(0 0 0 / 0.3);
+  transform: translateY(-50%);
+}
+
+.pay-chip::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 28%;
+  right: 28%;
+  border-left: 1px solid rgb(0 0 0 / 0.3);
+  border-right: 1px solid rgb(0 0 0 / 0.3);
+  border-radius: 2px;
+}
+
+/* The contactless mark. Static by default; the waves ripple outward only
+   while a payment is actually in flight, so the animation means something
+   rather than decorating the card permanently. */
+.pay-wifi {
+  transform: rotate(90deg);
+  opacity: 0.8;
+  filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.4));
+}
+
+@keyframes pay-wifi-blink {
+  0%, 100% { opacity: 0.2; }
+  50% { opacity: 1; }
+}
+
+.pay-wifi[data-live="true"] [data-wave="0"] { animation: pay-wifi-blink 1.2s infinite 0s; }
+.pay-wifi[data-live="true"] [data-wave="1"] { animation: pay-wifi-blink 1.2s infinite 0.2s; }
+.pay-wifi[data-live="true"] [data-wave="2"] { animation: pay-wifi-blink 1.2s infinite 0.4s; }
+.pay-wifi[data-live="true"] [data-wave="3"] { animation: pay-wifi-blink 1.2s infinite 0.6s; }
+
+/* Authorising: a slow ring pushed out from the card edge. Deliberately a
+   shadow rather than a spinner — the card is the subject, and a spinner beside
+   it would put the waiting somewhere other than on the thing being waited on. */
+@keyframes pay-radar {
+  0% { box-shadow: 0 0 0 0 rgb(59 130 246 / 0.4); }
+  70% { box-shadow: 0 0 0 40px rgb(59 130 246 / 0); }
+  100% { box-shadow: 0 0 0 0 rgb(59 130 246 / 0); }
+}
+
+.pay-radar {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: var(--pay-card-radius, 14px);
+  pointer-events: none;
+  animation: pay-radar 1.5s infinite;
+}
+
+/* Settled: one green ring, once. Tighter spread than the radar so it reads as
+   a confirmation rather than another cycle of the same waiting. */
+@keyframes pay-settled {
+  0% { box-shadow: 0 0 0 0 rgb(34 197 94 / 0.8); }
+  100% { box-shadow: 0 0 0 15px rgb(34 197 94 / 0); }
+}
+
+.pay-settled {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: var(--pay-card-radius, 14px);
+  pointer-events: none;
+  animation: pay-settled 1s ease-out forwards;
+}
+
+/* A field that was rejected. Short, small travel, and it runs once — a field
+   that keeps moving is harder to correct than one that simply went red. */
+@keyframes pay-shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  50% { transform: translateX(4px); }
+  75% { transform: translateX(-4px); }
+}
+
+.animate-pay-shake {
+  animation: pay-shake 0.4s ease-in-out;
+}
+
+/* The receipt's torn top edge — a repeating radial that punches half-circles
+   out of the paper. Drawn rather than an image so it inherits the paper colour
+   and cannot come out a slightly different white. */
+.pay-receipt::before {
+  content: "";
+  position: absolute;
+  top: -6px;
+  left: 0;
+  width: 100%;
+  height: 6px;
+  background: radial-gradient(
+      circle,
+      transparent,
+      transparent 50%,
+      var(--pay-receipt-paper, #fdfdfd) 50%,
+      var(--pay-receipt-paper, #fdfdfd) 100%
+    )
+    0 0 / 12px 6px repeat-x;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* The flip still has to happen — it is how the CVV side is reached — but it
+     happens instantly rather than as a turn. */
+  .pay-card {
+    transition: none !important;
+  }
+
+  /* Same reason as the caret and the arrival sweep above: these keyframes end
+     on an invisible frame, so letting them run their one permitted iteration
+     would leave the contactless mark dimmed and the rings absent rather than
+     simply still. */
+  .pay-wifi[data-live="true"] [data-wave] {
+    animation: none !important;
+    opacity: 1 !important;
+  }
+
+  .pay-radar,
+  .pay-settled {
+    animation: none !important;
+  }
+
+  .animate-pay-shake {
+    animation: none !important;
+  }
+}

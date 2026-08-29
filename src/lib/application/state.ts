@@ -37,6 +37,7 @@ import {
   resolveCountryVisaConfig,
   type CountryVisaConfig,
 } from "@/lib/countryVisa";
+import { paymentEnabled } from "@/lib/paymentConfig";
 
 import { requiredDocuments, type DocumentKind, type DocumentRequirement } from "./documents";
 
@@ -51,7 +52,13 @@ import { requiredDocuments, type DocumentKind, type DocumentRequirement } from "
  * "No Documents Required" — around a dozen destinations in the dataset. The
  * previous flow had no way to express that and asked everyone for two files.
  */
-export type ApplicationStepId = "setup" | "documents" | "details" | "review" | "ready";
+export type ApplicationStepId =
+  | "setup"
+  | "documents"
+  | "details"
+  | "review"
+  | "payment"
+  | "ready";
 
 export type ApplicationStepMeta = {
   id: ApplicationStepId;
@@ -94,7 +101,15 @@ const STEP_META: Record<ApplicationStepId, Omit<ApplicationStepMeta, "id">> = {
     label: "Review",
     eyebrow: "Review",
     title: "Check everything over",
+    // Where review leads depends on whether there is a gateway to lead to, so
+    // this is resolved in `stepSequence` rather than fixed here.
     cta: "Confirm and finish",
+  },
+  payment: {
+    label: "Payment",
+    eyebrow: "Payment",
+    title: "Pay for your application",
+    cta: "",
   },
   ready: {
     label: "Ready",
@@ -106,19 +121,49 @@ const STEP_META: Record<ApplicationStepId, Omit<ApplicationStepMeta, "id">> = {
 
 /** The ordered steps for a destination. */
 export function stepSequence(country?: Country): ApplicationStepMeta[] {
-  const ids: ApplicationStepId[] = ["setup", "documents", "details", "review", "ready"];
+  const ids: ApplicationStepId[] = [
+    "setup",
+    "documents",
+    "details",
+    "review",
+    "payment",
+    "ready",
+  ];
 
   const needsDocuments = country
     ? requiredDocuments(country.documents).length > 0
     : true;
 
   return ids
-    .filter((id) => (id === "documents" ? needsDocuments : true))
+    .filter((id) => {
+      if (id === "documents") return needsDocuments;
+      /**
+       * THE PAYMENT STEP EXISTS ONLY WHERE IT CAN TAKE A PAYMENT.
+       *
+       * `paymentEnabled` is false while no gateway is integrated, and the step
+       * is dropped from the sequence entirely rather than shown disabled. A
+       * greyed-out payment screen implies the button is the last missing piece,
+       * when in fact there is nothing behind it — the same argument
+       * `ApplicationComplete` makes for hiding Submit in local mode.
+       *
+       * Dropping it here is enough: the rail, the progress percentage, the
+       * blocked-step gate and the draft-resume check all read the sequence from
+       * this function, so none of them needs to know payment exists.
+       */
+      if (id === "payment") return paymentEnabled;
+      return true;
+    })
     .map((id) => {
       const meta = { id, ...STEP_META[id] };
-      // Nothing should promise a documents step that will not appear.
+      // Nothing should promise a step that will not appear.
       if (id === "setup" && !needsDocuments) {
         return { ...meta, cta: "Continue to passport details" };
+      }
+      if (id === "review") {
+        return {
+          ...meta,
+          cta: paymentEnabled ? "Continue to payment" : "Confirm and finish",
+        };
       }
       return meta;
     });
@@ -684,6 +729,18 @@ export function blockingReason(
 
     case "review":
     case "ready":
+      return undefined;
+
+    /**
+     * Payment gates nothing.
+     *
+     * The step is left by the panel's own Pay action once a payment settles,
+     * not by the shell's Continue button — so there is no "you have not paid
+     * yet" reason to return here, and returning one would disable a control
+     * this step does not use. The shell hides its footer on this step for the
+     * same reason.
+     */
+    case "payment":
       return undefined;
 
     default:

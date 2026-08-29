@@ -42,6 +42,7 @@ import { ApplicationProgress } from "./ApplicationProgress";
 import { ApplicationStepTransition } from "./ApplicationStepTransition";
 import { ApplicationSummaryPanel } from "./ApplicationSummary";
 import { DocumentsStep } from "./DocumentsStep";
+import { PaymentStep } from "./payment/PaymentStep";
 import { ReviewStep } from "./ReviewStep";
 import { SetupStep } from "./SetupStep";
 import { StepHeader } from "./StepHeader";
@@ -147,6 +148,20 @@ export function ApplicationShell() {
   const isFirstStep = currentIndex === 0;
   const isLastStep = currentIndex === steps.length - 1;
 
+  /**
+   * WHICH STEPS SUPPLY THEIR OWN ACTION.
+   *
+   * The shared Back/Continue footer advances the flow, and two steps do not
+   * want that. `ready` ends it. `payment` leaves only when a payment settles,
+   * so its action is the Pay button inside the panel — a Continue beside it
+   * would be a second way forward that skips the thing the step exists for.
+   *
+   * Both the desktop footer and the fixed mobile bar are driven from this, and
+   * so is the scroll container's bottom padding, which exists solely to keep
+   * the last field clear of that bar.
+   */
+  const ownsItsAction = isLastStep || currentStep.id === "payment";
+
   const description = STEP_DESCRIPTIONS[currentStep.id]?.(
     config.displayName,
     summary.travellers.count,
@@ -213,7 +228,9 @@ export function ApplicationShell() {
         <main
           id="main-content"
           tabIndex={-1}
-          className="min-w-0 max-w-[34rem] pb-28 outline-none md:pb-0"
+          className={`min-w-0 max-w-[34rem] outline-none md:pb-0 ${
+            ownsItsAction ? "" : "pb-28"
+          }`}
         >
           {/* RESUME NOTICES, and which of them can still be true.
 
@@ -301,6 +318,7 @@ export function ApplicationShell() {
                   {currentStep.id === "documents" && <DocumentsStep />}
                   {currentStep.id === "details" && <ApplicantDetailsStep />}
                   {currentStep.id === "review" && <ReviewStep />}
+                  {currentStep.id === "payment" && <PaymentStep />}
                   {currentStep.id === "ready" && <ApplicationComplete />}
                 </ApplicationStepTransition>
               </div>
@@ -311,7 +329,7 @@ export function ApplicationShell() {
                 has a next step" and "here is a button somewhere underneath".
                 Mobile keeps the fixed bar; a footer that scrolls away is not
                 an action bar on a phone. */}
-            {!isLastStep && (
+            {!ownsItsAction && (
               <div className="hidden border-t border-border bg-surface-sunken px-5 py-4 sm:px-8 md:block">
                 <div className="flex items-center justify-between gap-4">
                   {renderNavigation(blockedId)}
@@ -372,7 +390,7 @@ export function ApplicationShell() {
       </div>
 
       {/* Mobile action bar. */}
-      {!isLastStep && (
+      {!ownsItsAction && (
         <div className="fixed inset-x-0 bottom-0 z-nav border-t border-border bg-surface/95 backdrop-blur-md pb-[env(safe-area-inset-bottom)] md:hidden">
           {blocked && (
             <p
@@ -406,4 +424,10 @@ const STEP_DESCRIPTIONS: Partial<
   details: () =>
     "Copy these straight from the passport. A mismatch is the most common reason an application is returned.",
   review: () => "Nothing is filed or charged until you say so.",
+  // Describes the amount and nothing else. An earlier draft added "your card
+  // details never reach us", which is a claim about an integration that has not
+  // been written yet — exactly the kind of sentence this flow does not print
+  // until the thing it describes exists.
+  payment: (countryName) =>
+    `The government fee for ${countryName} and Abizon's charge, in one payment.`,
 };
