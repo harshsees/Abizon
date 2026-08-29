@@ -3,15 +3,17 @@
 /**
  * The preview harness.
  *
- * THE SIMULATION IS HERE AND NOWHERE ELSE. `PaymentPanel` has no fake payment
- * path in it — it takes an `onPay` and has one only if something gives it one.
- * This file is the only thing in the repository that does, which is why it sits
- * inside a route that 404s in production rather than beside the component.
+ * WHAT THIS IS FOR NOW THAT THE STEP IS LIVE. The payment screen is in the
+ * application flow in preview mode, so it can be reached the ordinary way; what
+ * cannot be reached there is a payment that FAILS. `previewAuthorise` always
+ * succeeds, deliberately — a declined card the applicant cannot un-decline is a
+ * dead end on a screen with nothing behind it.
  *
- * It offers all three outcomes a gateway produces — settled, declined, and
- * unreachable — because the declined and unreachable paths are the ones that
- * are never exercised by clicking through a happy path, and they are the ones
- * where a payment screen actually has to behave.
+ * So the failure paths live here. Declined and provider-down are real branches
+ * in `PaymentPanel`, they are the ones a checkout is actually judged on, and
+ * this is the only place they can be exercised without an acquirer. That is
+ * also why the route still 404s in production: choosing your own payment
+ * outcome is a developer tool, not a page.
  */
 
 import { useState } from "react";
@@ -54,11 +56,13 @@ export function PaymentPreview() {
         </p>
         <p className="mt-1.5 text-2xs leading-relaxed text-warning-subtle-foreground">
           No gateway is connected and no card is charged. The result below is
-          chosen here, not by a bank. This page does not exist in production, and
-          the payment step is not part of the application flow until{" "}
-          <code className="font-mono">PAYMENT_GATEWAY</code> in{" "}
-          <code className="font-mono">lib/paymentConfig.ts</code> names a real
-          one.
+          chosen here, not by a bank, which is what this page is for — the
+          declined and provider-down branches cannot be reached from the live
+          step, where the simulated authorisation always succeeds. This page
+          does not exist in production. Set{" "}
+          <code className="font-mono">CONFIG.gateway</code> in{" "}
+          <code className="font-mono">lib/paymentConfig.ts</code> to take real
+          payments.
         </p>
 
         <div className="mt-3.5 flex flex-wrap gap-2">
@@ -101,6 +105,7 @@ export function PaymentPreview() {
             destination="United Arab Emirates e-Visa"
             fallbackName="Cardholder"
             onPay={onPay}
+            preview
             onComplete={() => setCompleted(true)}
             onBack={() => undefined}
           />

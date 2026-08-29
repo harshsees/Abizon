@@ -21,16 +21,20 @@
  * invented reference number. It shows what was charged, to which card, for
  * which destination, and nothing it cannot source.
  *
- * REACHING THIS STATE REQUIRES A REAL PAYMENT. `PaymentStep` only advances the
- * phase when the `onPay` it was given resolves, and in the shipped app there is
- * no `onPay` — see `paymentConfig.ts`. The dev preview supplies a simulated one
- * and says so on the page.
+ * IN PREVIEW MODE THE RECEIPT IS STAMPED. The screen is live ahead of a
+ * gateway, so this state is reachable without an acquirer having answered, and
+ * a document that looks like a payment record but is not one must say so on its
+ * face. `PAYMENT_PREVIEW_RECEIPT_STAMP` is printed across it the way a specimen
+ * receipt is printed — because the receipt outlives the screen it appeared on,
+ * in a screenshot or forwarded to somebody who never saw the notice on the
+ * form. Nothing else about the state changes: the design is the design.
  */
 
 import { motion } from "framer-motion";
 import { Loader2 } from "lucide-react";
 
 import { DURATION, EASE, SPRING } from "@/lib/motion";
+import { PAYMENT_PREVIEW_RECEIPT_STAMP } from "@/lib/paymentConfig";
 
 export type PaymentReceipt = {
   /** Formatted, e.g. "₹12,340". The overlay does no arithmetic. */
@@ -60,6 +64,7 @@ export function PaymentOverlay({
   phase,
   receipt,
   card,
+  preview = false,
   onDone,
   doneLabel = "Continue",
 }: {
@@ -67,6 +72,8 @@ export function PaymentOverlay({
   receipt: PaymentReceipt;
   /** The card, passed in so the shared-layout element has one owner. */
   card: React.ReactNode;
+  /** No acquirer answered. Stamps the receipt and softens the headline. */
+  preview?: boolean;
   onDone: () => void;
   doneLabel?: string;
 }) {
@@ -76,47 +83,57 @@ export function PaymentOverlay({
     <motion.div
       role="dialog"
       aria-modal="true"
-      aria-label={settled ? "Payment complete" : "Authorising payment"}
+      aria-label={
+        settled
+          ? preview
+            ? "Payment preview complete"
+            : "Payment complete"
+          : "Authorising payment"
+      }
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: DURATION.base, ease: EASE.out }}
       className="fixed inset-0 z-modal flex flex-col items-center justify-center bg-background/95 px-5 backdrop-blur-md"
     >
-      {/* CARD AND RECEIPT SHARE ONE BOX, and the receipt is positioned against
-          it rather than against the viewport centre.
+      {/* Everything the settled state draws lives inside one scaled stage, so a
+          laptop viewport shrinks the composition instead of cropping the top
+          off the receipt. See section 8 of globals.css. */}
+      <div className="pay-stage flex flex-col items-center">
+      {/* THE RECEIPT IS IN NORMAL FLOW, ABOVE THE CARD, and that is the whole
+          trick. Three earlier attempts positioned it absolutely — anchored to
+          the viewport centre, then to the card's box — and every one of them
+          clipped, because an absolutely positioned element contributes no
+          height, so the flex centring below had no idea the paper was there and
+          happily pushed 200-400px of it off the top of the screen. On a laptop
+          that took the "not a real payment" stamp with it.
 
-          The first attempt anchored the mask to the middle of the screen and
-          gave the paper a fixed 350px of travel, which worked only for a paper
-          of exactly the height the source design's was. Ours carries more rows,
-          so it over-travelled and came to rest with the amount — the one figure
-          the receipt exists to show — hidden behind the card.
+          In flow, the mask reserves the paper's own height, the column centres
+          around the whole composition, and nothing can be pushed out of view at
+          any viewport. `-mb-14` pulls the card up over the paper's last 56px —
+          the blank band `pb-16` leaves for exactly this — so it still reads as
+          printing out from under the card.
 
-          Now the paper is bottom-aligned in its mask and travels a full 100% of
-          its own height, so the geometry holds at any content length: it starts
-          entirely below the mask (invisible), and ends with its bottom edge at
-          the mask's bottom, which overlaps the card's top by 60px. That overlap
-          is the tuck that makes it read as printing out from under the card. */}
-      <div className="relative mb-10 h-[240px] w-full max-w-[420px]">
-        {settled && (
-          <div className="pointer-events-none absolute bottom-[180px] left-1/2 h-[480px] w-[320px] -translate-x-1/2 overflow-hidden">
-            <Receipt receipt={receipt} />
-          </div>
-        )}
+          The mask is only rendered once settled, so the card is centred on its
+          own while authorising and then eases down as the paper rises behind
+          it. That movement is the shared-layout animation doing its job, not a
+          jump: `layoutId` makes the card animate to its new place. */}
+      {settled && (
+        <div className="w-[320px] overflow-hidden pt-1.5 -mb-14">
+          <Receipt receipt={receipt} preview={preview} />
+        </div>
+      )}
 
-        {/* The card. `layoutId` matches the one in the step, so this is the
-            same object arriving here rather than a copy. */}
-        <motion.div
-          layoutId="payment-card"
-          transition={SPRING.gentle}
-          animate={{ scale: settled ? 0.97 : 1 }}
-          style={{ zIndex: 10 }}
-          className="pay-scene absolute inset-0 drop-shadow-[0_20px_40px_rgba(59,130,246,0.3)]"
-        >
-          {card}
-          {settled ? <span className="pay-settled" /> : <span className="pay-radar" />}
-        </motion.div>
-      </div>
+      <motion.div
+        layoutId="payment-card"
+        transition={SPRING.gentle}
+        animate={{ scale: settled ? 0.97 : 1 }}
+        style={{ zIndex: 10 }}
+        className="pay-scene relative mb-10 h-[240px] w-full max-w-[420px] drop-shadow-[0_20px_40px_rgba(59,130,246,0.3)]"
+      >
+        {card}
+        {settled ? <span className="pay-settled" /> : <span className="pay-radar" />}
+      </motion.div>
 
       {settled ? (
         <motion.div
@@ -127,12 +144,28 @@ export function PaymentOverlay({
           className="relative z-modal flex flex-col items-center text-center"
         >
           <SuccessTick />
+
+          {/* THE HEADLINE IS THE LOUDEST CLAIM ON THE SCREEN, so in preview it
+              is the one sentence that cannot be borrowed from the design. The
+              tick, the receipt, the timing and the layout are all exactly as
+              drawn — only the words change, because "Payment received" over a
+              payment nobody received is the whole failure this mode is guarding
+              against. One string, and it stops rendering when a gateway lands. */}
           <h2 className="mt-3 text-xl font-bold tracking-tight text-foreground">
-            Payment received
+            {preview ? "That is how payment will look" : "Payment received"}
           </h2>
           <p className="mt-1.5 text-xs text-muted-foreground">
-            {receipt.amount} paid
-            {receipt.lastFour ? ` with the card ending ${receipt.lastFour}` : ""}.
+            {preview ? (
+              <>
+                Nothing was charged and no card was used — card payment is not
+                switched on yet.
+              </>
+            ) : (
+              <>
+                {receipt.amount} paid
+                {receipt.lastFour ? ` with the card ending ${receipt.lastFour}` : ""}.
+              </>
+            )}
           </p>
 
           <button
@@ -162,6 +195,7 @@ export function PaymentOverlay({
           </p>
         </motion.div>
       )}
+      </div>
     </motion.div>
   );
 }
@@ -173,7 +207,13 @@ export function PaymentOverlay({
  * place rather than stopping dead — a receipt leaving a printer has weight. The
  * mask clips it; the card in front hides the last of its travel.
  */
-function Receipt({ receipt }: { receipt: PaymentReceipt }) {
+function Receipt({
+  receipt,
+  preview,
+}: {
+  receipt: PaymentReceipt;
+  preview: boolean;
+}) {
   return (
     <motion.div
       // 100% of its own height, so the travel is correct whatever the paper
@@ -181,13 +221,19 @@ function Receipt({ receipt }: { receipt: PaymentReceipt }) {
       initial={{ y: "100%" }}
       animate={{ y: 0 }}
       transition={{ delay: 0.1, type: "spring", stiffness: 70, damping: 15 }}
-      className="pay-receipt absolute inset-x-0 bottom-0 px-6 pb-7 pt-7 font-mono text-slate-800 shadow-[0_-10px_25px_rgba(0,0,0,0.1)]"
+      className="pay-receipt relative w-full px-6 pb-16 pt-7 font-mono text-slate-800 shadow-[0_-10px_25px_rgba(0,0,0,0.1)]"
       style={{ background: "var(--pay-receipt-paper, #fdfdfd)" }}
     >
       <p className="text-center text-lg font-bold tracking-wider">ABIZON</p>
       <p className="mt-0.5 text-center text-[11px] tracking-wide text-slate-500">
         PAYMENT RECEIPT
       </p>
+
+      {preview && (
+        <p className="mt-2 border-y-2 border-slate-900 py-1 text-center text-[11px] font-bold tracking-wide text-slate-900">
+          {PAYMENT_PREVIEW_RECEIPT_STAMP}
+        </p>
+      )}
 
       <Rule />
       <ReceiptRow label="Date" value={dateFormat.format(receipt.at)} />

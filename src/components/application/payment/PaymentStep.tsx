@@ -13,12 +13,18 @@
  * stops — the same rule `ApplicationSummary` follows, and the reason the fee
  * shown on this screen cannot disagree with the one in the sticky aside.
  *
- * THERE IS NO `onPay`. That is the entire reason this step is gated out of the
- * sequence, and the panel renders the "nothing will be charged" notice on its
- * own when the prop is missing. When a gateway is chosen, it is passed here.
+ * THE `onPay` IS SIMULATED, and only while `paymentIsPreview`. The step is on
+ * the live site ahead of a gateway, so the authorisation is `previewAuthorise`
+ * — which has its own file, and a header explaining what it is allowed to be.
+ * The two disclosures that make that honest travel with it through `preview`:
+ * the notice above the form and the stamp across the receipt. When a gateway is
+ * named, `paymentIsPreview` goes false, both disappear, and the import below is
+ * the one line that changes.
  */
 
+import { previewAuthorise } from "@/lib/application/previewPayment";
 import { useApplication } from "@/lib/application/context";
+import { paymentIsPreview } from "@/lib/paymentConfig";
 import { FEE_NOT_PUBLISHED } from "@/lib/pricingConfig";
 
 import { PaymentPanel } from "./PaymentPanel";
@@ -41,6 +47,8 @@ export function PaymentStep() {
         state.details[state.travellers[0]?.id]?.fullName ||
         summary.travellers.names[0]
       }
+      preview={paymentIsPreview}
+      onPay={previewAuthorise}
       onComplete={next}
       onBack={back}
     />

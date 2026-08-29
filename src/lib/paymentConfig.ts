@@ -6,33 +6,44 @@
  * `provisional` so no surface can quote them as settled. This holds something
  * blunter: whether there is a payment gateway at all.
  *
- * THERE IS NOT. `PAYMENT_GATEWAY` is `"none"`, and every claim the rest of the
- * app makes about money still stands because of it — `ApplicationComplete` says
- * "Abizon cannot take a payment online yet", and that sentence is true as long
- * as this constant is what it is.
+ * THERE IS NOT. `gateway` is `"none"`. What has changed is what that means for
+ * the flow: the screen was hidden while no gateway existed, and is now shown,
+ * because it was asked for on the live site. So the app is in a third state
+ * that needs naming rather than fudging —
  *
- * WHY THE UI SHIPS ANYWAY. The payment screen is built, in full, and gated
- * behind this flag rather than held back on a branch. The flow it belongs to is
- * five screens long and its layout, rail and summary all have to make room for
- * a sixth; discovering that after a gateway is chosen is discovering it late.
- * So the screen exists, `stepSequence` refuses to include it while the gateway
- * is `"none"`, and `/dev/payment-preview` renders it for review.
+ *   gateway: "razorpay" …  LIVE. A real acquirer answers. Money moves.
+ *   gateway: "none",
+ *   preview: true       …  PREVIEW. The step is in the flow, the form is real,
+ *                          the animation runs, and NOTHING IS CHARGED.
+ *   gateway: "none",
+ *   preview: false      …  OFF. `stepSequence` drops the step entirely.
  *
- * WHAT IS DELIBERATELY NOT HERE. Any code that moves money. `PaymentPanel`
- * collects card fields, validates their *shape*, and stops — its `onPay` prop
- * is optional, `PaymentStep` does not pass one, and without it the button is
- * disabled under a sentence saying why. There is no `setTimeout` anywhere that
- * resolves into a receipt, because that is precisely the lie the deleted
- * `MultiStepApplicationForm` told about submission, and this codebase treats
- * "nothing happened, but the screen says it did" as the worst outcome available
- * to it. The only simulated payment in the repository lives in
- * `app/dev/payment-preview`, which 404s in production.
+ * ── WHAT PREVIEW MODE OWES THE APPLICANT ───────────────────────────────────
  *
- * ── TO TURN PAYMENT ON ─────────────────────────────────────────────────────
- * 1. Set `CONFIG.gateway` below to the gateway that was actually integrated.
- * 2. Pass an `onPay` from `PaymentStep` into `PaymentPanel`. Nothing else in
- *    the flow needs editing: the rail, the progress percentage, the draft
- *    resume and the review step's CTA all read the sequence from here.
+ * A checkout that takes a card number, waits, and prints "Payment received" is
+ * indistinguishable from a real one. That is the whole problem: the deleted
+ * `MultiStepApplicationForm` announced a submission on a 1400ms timer and minted
+ * a reference for it, and somebody could have flown to an airport believing a
+ * visa was in progress. A fake receipt is the same failure with a number on it.
+ *
+ * So preview mode is never silent. Two things are non-negotiable while
+ * `paymentIsPreview` is true, and both are asserted by `paymentConfig.test.ts`:
+ *
+ *   1. `PAYMENT_PREVIEW_NOTICE` sits above the form, before a card is typed.
+ *   2. The receipt is stamped `PAYMENT_PREVIEW_RECEIPT_STAMP` — the same thing
+ *      a specimen receipt has printed across it, for the same reason.
+ *
+ * Neither is decoration and neither should be removed to tidy the screen up.
+ * They come out when `gateway` names a real integration, at which point they
+ * stop rendering on their own.
+ *
+ * ── TO GO LIVE ─────────────────────────────────────────────────────────────
+ * 1. Set `CONFIG.gateway` to the gateway that was actually integrated, and
+ *    `CONFIG.preview` to false.
+ * 2. Replace the simulated `onPay` in `lib/application/previewPayment.ts` with
+ *    the real call. Nothing else in the flow needs editing: the rail, the
+ *    progress percentage, the draft resume and the review step's CTA all read
+ *    the sequence from here.
  * 3. Build a panel for any non-card method the gateway supports. Only the card
  *    form was designed; the others say so on the step rather than guessing at
  *    screens the provider will supply itself.
@@ -69,17 +80,35 @@ export type PaymentGateway = "none" | "razorpay" | "stripe" | "payu" | "cashfree
  * for every member of the union. Checked by setting this to "razorpay" and
  * running `tsc` before putting it back.
  */
-const CONFIG: { gateway: PaymentGateway } = {
+const CONFIG: { gateway: PaymentGateway; preview: boolean } = {
   gateway: "none",
+  /**
+   * Show the payment step even though no gateway answers.
+   *
+   * On, deliberately: the screen is wanted on the live site before the gateway
+   * is chosen. Everything preview mode owes the applicant is described in the
+   * header, and enforced in `paymentConfig.test.ts` rather than left to whoever
+   * reads this next.
+   */
+  preview: true,
 };
 
 export const PAYMENT_GATEWAY = CONFIG.gateway;
 
 /**
- * The single gate. `stepSequence` reads it, and nothing else should branch on
- * the gateway's name directly.
+ * Whether the step appears in the flow at all. `stepSequence` reads it, and
+ * nothing else should branch on the gateway's name directly.
  */
-export const paymentEnabled: boolean = PAYMENT_GATEWAY !== "none";
+export const paymentEnabled: boolean = PAYMENT_GATEWAY !== "none" || CONFIG.preview;
+
+/**
+ * Whether the step is showing without an acquirer behind it.
+ *
+ * True means: simulate the authorisation, show the notice, stamp the receipt.
+ * It is derived from the gateway rather than stored separately, so it cannot be
+ * left true after a real integration lands — naming a gateway turns it off.
+ */
+export const paymentIsPreview: boolean = PAYMENT_GATEWAY === "none";
 
 /* -------------------------------------------------------------------------- */
 /* Methods                                                                    */
@@ -156,6 +185,28 @@ export function paymentMethod(id: PaymentMethodId): PaymentMethod {
  * What to say instead of taking a payment, in the applicant's words.
  *
  * One sentence, shown on the step itself, and it does not promise a date.
+ * Used where the button is disabled outright — no gateway and no preview.
  */
 export const PAYMENT_UNAVAILABLE_NOTICE =
   "Abizon cannot take a card payment online yet. Fees are settled with you directly before anything is filed.";
+
+/**
+ * THE PREVIEW NOTICE. Shown above the form whenever `paymentIsPreview`.
+ *
+ * Written for somebody who has just reached a checkout with their wallet out,
+ * so it leads with the fact that decides what they do next — the card will not
+ * be charged — and does not bury it behind an explanation. It says what will
+ * happen instead, because "you cannot pay" without "so how do I pay" is not a
+ * complete sentence on a payment screen.
+ */
+export const PAYMENT_PREVIEW_NOTICE =
+  "Card payment is not switched on yet. You can go through this screen, but no card is charged and no money moves — we will settle the fee with you directly before anything is filed.";
+
+/**
+ * Printed across the receipt in preview mode.
+ *
+ * A specimen receipt has exactly this, for exactly this reason: the document
+ * has to be readable as not-a-record even out of context, screenshotted, or
+ * forwarded to somebody who never saw the notice on the form.
+ */
+export const PAYMENT_PREVIEW_RECEIPT_STAMP = "PREVIEW — NOT A REAL PAYMENT";

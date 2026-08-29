@@ -919,3 +919,39 @@ button {
     animation: none !important;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   8. THE SETTLED PAYMENT STAGE
+
+   Receipt, card and message together stand about 900px tall — the source
+   design's own proportions, drawn for a desktop window and taller than the
+   viewport of an ordinary laptop. Measured: at 900px the receipt was clipped by
+   225px at the top, which takes the masthead and, in preview mode, the
+   "not a real payment" stamp off the screen.
+
+   That is not a cosmetic loss. The stamp is one of two disclosures the app
+   makes while it has no gateway (see `paymentConfig.ts`), and a disclosure that
+   only appears on tall monitors is not a disclosure. So the composition scales
+   as a whole rather than being cropped: the design keeps its proportions and
+   everything on it stays legible, which is the trade a receipt this tall was
+   always going to force.
+
+   Stepped rather than continuous, because `scale` on a transformed ancestor
+   affects the shared-element animation the card runs on arrival, and three
+   fixed values are easy to check by eye at each breakpoint.
+   ------------------------------------------------------------------------ */
+.pay-stage {
+  transform-origin: center center;
+}
+
+@media (max-height: 1040px) {
+  .pay-stage { transform: scale(0.84); }
+}
+
+@media (max-height: 880px) {
+  .pay-stage { transform: scale(0.72); }
+}
+
+@media (max-height: 760px) {
+  .pay-stage { transform: scale(0.62); }
+}

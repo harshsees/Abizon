@@ -23,11 +23,17 @@
  * phone the design's second column does not exist at all, and this arrangement
  * is the only one that survives the breakpoint.
  *
- * NOTHING HERE MOVES MONEY. `onPay` is optional and absent in the shipped app.
- * Without it the form is fully live — it formats, it validates, the card turns
- * over — and the button is disabled beneath a sentence saying why. That is the
- * honest arrangement: the screen does everything it can actually do, and stops
- * exactly where its ability to do things stops. See `paymentConfig.ts`.
+ * WHETHER ANY MONEY MOVES IS NOT DECIDED HERE. Two props settle it, and the
+ * panel is honest under every combination of them:
+ *
+ *   onPay absent    the button is disabled beneath a sentence saying why. The
+ *                   form still formats, validates and flips the card, because
+ *                   the screen should do everything it actually can.
+ *   preview         an `onPay` that no acquirer answers. The notice goes above
+ *                   the form and the receipt is stamped — both unconditional,
+ *                   both before a card is typed. See `paymentConfig.ts` for
+ *                   why they are not optional.
+ *   neither         a real gateway. Nothing is added and nothing is claimed.
  */
 
 import { AnimatePresence, motion } from "framer-motion";
@@ -37,6 +43,7 @@ import {
   Info,
   Lock,
   Smartphone,
+  TriangleAlert,
   User,
 } from "lucide-react";
 import { useId, useState } from "react";
@@ -59,6 +66,7 @@ import { DURATION, EASE } from "@/lib/motion";
 import {
   DEFAULT_PAYMENT_METHOD,
   PAYMENT_METHODS,
+  PAYMENT_PREVIEW_NOTICE,
   PAYMENT_UNAVAILABLE_NOTICE,
   paymentMethod,
   type PaymentMethodId,
@@ -89,6 +97,12 @@ export type PaymentPanelProps = {
    * state — the button disables itself and says so rather than pretending.
    */
   onPay?: (fields: CardFields) => Promise<PaymentOutcome>;
+  /**
+   * No acquirer is behind `onPay`. Renders the notice above the form and stamps
+   * the receipt — the two things that keep a live-but-unwired checkout from
+   * reading as a real one.
+   */
+  preview?: boolean;
   /** Where to go once a payment has settled. */
   onComplete: () => void;
   onBack?: () => void;
@@ -110,6 +124,7 @@ export function PaymentPanel({
   destination,
   fallbackName,
   onPay,
+  preview = false,
   onComplete,
   onBack,
   notice,
@@ -253,6 +268,25 @@ export function PaymentPanel({
             {paymentMethod(method).hint}
           </p>
         </fieldset>
+
+        {/* BEFORE THE FORM, not after it. Somebody who has already typed a card
+            number and pressed pay has been misled regardless of what the page
+            says underneath. */}
+        {preview && (
+          <div
+            role="note"
+            className="flex gap-3 rounded-xl border border-warning-subtle-foreground/30 bg-warning-subtle p-4"
+          >
+            <TriangleAlert
+              aria-hidden
+              className="mt-0.5 size-4 flex-shrink-0 text-warning-subtle-foreground"
+            />
+            <p className="text-2xs leading-relaxed text-warning-subtle-foreground">
+              <span className="font-bold">No card is charged.</span>{" "}
+              {PAYMENT_PREVIEW_NOTICE}
+            </p>
+          </div>
+        )}
 
         {notice}
 
@@ -406,6 +440,7 @@ export function PaymentPanel({
           <PaymentOverlay
             phase={phase === "settled" ? "settled" : "authorising"}
             card={card}
+            preview={preview}
             onDone={onComplete}
             receipt={{
               amount: amount ?? amountUnavailableLabel,
