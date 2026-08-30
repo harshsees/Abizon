@@ -112,6 +112,17 @@
   --color-primary-subtle-foreground: var(--amber-800);
   --color-primary-border: var(--amber-200);
 
+  /* The wordmark, and only the wordmark.
+     It is a role of its own rather than `--color-primary` because the two want
+     opposite things. `primary` is amber-700 so that body text and filled CTAs
+     clear 4.5:1, and at that step the amber has gone brown — correct for a
+     button, wrong for a logo that is supposed to read yellow. amber-600 is the
+     lightest step that still clears the 3:1 bar large text is held to, which is
+     the bar that applies: the mark is set at 20px/700, and the link around it
+     carries its own accessible name, so nothing is lost if the colour is not
+     read at all. */
+  --color-wordmark: var(--amber-600);
+
   /* Informational accent */
   --color-accent: var(--blue-600);
   --color-accent-hover: var(--blue-700);
@@ -213,6 +224,21 @@
      Anything offsetting beneath the header reads this token, so nothing has to
      be re-measured. */
   --header-h-full: 6rem;
+
+  /* Destination-card height — the first-paint estimate.
+     `CountryGrid` measures the real number on mount and sets this on the grid
+     itself; what is here is the value used for the render before that lands,
+     so the correction is a few pixels rather than a few hundred.
+
+     20rem is the tall header (6rem), the main padding, the 4rem filter
+     capsule, the margins between them, the result count, and the gutter below
+     the row — i.e. everything the first screen spends before the grid starts.
+     The clamp mirrors the floor and ceiling the measurement is held to.
+
+     It also stands as the value on every page that renders a card outside the
+     homepage grid, where there is no first row to complete. */
+  --country-card-h: clamp(20rem, calc(100svh - 20rem), 45rem);
+
   /* The ground the application sheet floats on.
      A flat canvas behind a white card makes the card look like a mistake in
      the layout rather than a deliberate object — there is nothing to tell the
@@ -297,11 +323,15 @@
   --color-input: var(--color-input);
   --color-ring: var(--color-ring);
 
+  --color-wordmark: var(--color-wordmark);
+
   --font-sans: var(--font-inter);
   /* Display family. Editorial voice only — headings and country names.
      Never navigation, filters, buttons, inputs, labels or metadata: those
      stay on --font-sans, which is what keeps the UI legible at small sizes. */
   --font-serif: var(--font-newsreader);
+  /* Wordmark face. One string in the whole app; see components/Wordmark.tsx. */
+  --font-wordmark: var(--font-poppins);
 
   /* Type scale — 11 steps, nothing below 12px.
      Replaces text-[8.5px] / [9px] / [9.5px] / [11.5px] / [17px] / [28px].
@@ -524,22 +554,17 @@ button {
 }
 
 /* ---------------------------------------------------------------------------
-   5. CUSTOM CURSOR
-   The `cursor: none` rule is now gated behind a class that CustomCursor adds
-   to <html> only after it successfully mounts. If JS fails, hydration stalls,
-   or the pointer is coarse, the real cursor stays visible.
+   5. CURSOR
+
+   Section 5 used to hide the system cursor (`cursor: none` on <html> and every
+   control) so a GSAP-driven dot and trailing ring could stand in for it. Both
+   the rule and `components/CustomCursor.tsx` are gone: the pointer is the
+   operating system's again, so it hits at the pixel the OS says it does, it
+   keeps its I-beam over text and its resize arrows on edges, and it costs
+   nothing. It also removes a `mousemove` listener that ran two GSAP tweens per
+   event on the same main thread the scroll was being interpolated on, which is
+   part of the answer to why scrolling stuttered.
    ------------------------------------------------------------------------ */
-@media (min-width: 768px) and (pointer: fine) {
-  html.has-custom-cursor,
-  html.has-custom-cursor a,
-  html.has-custom-cursor button,
-  html.has-custom-cursor input,
-  html.has-custom-cursor textarea,
-  html.has-custom-cursor select,
-  html.has-custom-cursor [role="button"] {
-    cursor: none;
-  }
-}
 
 /* ---------------------------------------------------------------------------
    6. MOTION
@@ -577,6 +602,20 @@ button {
   );
   background-size: 200% auto;
   animation: emergency-cta-shimmer 4.5s linear infinite;
+  /* PAUSED BY DEFAULT, and this is a scroll fix rather than a taste change.
+     The link this sits on is on every country card, collapsed to `max-h-0`
+     until the card is hovered — so on the homepage there were 154 of these
+     sweeping a gradient across clipped text, forever, all of them invisible.
+     Each one repaints its own text every frame whether or not anyone can see
+     it, and 154 repaints a frame is a budget the scroll needed back.
+     Running it only while the card is hovered costs nothing, because a hover
+     is also the only state in which the link is tall enough to be read. */
+  animation-play-state: paused;
+}
+
+.group:hover .animate-emergency-cta-shimmer,
+.group:focus-within .animate-emergency-cta-shimmer {
+  animation-play-state: running;
 }
 
 /* On the dark card the same effect needs a light base to read at all. */
@@ -636,6 +675,41 @@ button {
   will-change: transform, opacity;
 }
 
+/* ---------------------------------------------------------------------------
+   SCROLL COST — the destination grid
+
+   The homepage puts 154 cards in the document at once, and each one is an
+   expensive thing to paint: a photograph scaled to cover, a three-stop scrim, a
+   `backdrop-filter` panel running a 12px blur AND a brightness pass, and a
+   gradient mask on top of that filter. A backdrop-filter is the most expensive
+   thing on the page by some distance — it forces the browser to read back the
+   pixels behind the element and re-filter them — and the browser was doing all
+   of it for every card in the document, not just the handful on screen.
+
+   `content-visibility: auto` is the fix, and it is the whole of it: the
+   browser skips layout, style and paint for any card that is outside the
+   viewport (plus a margin it manages itself) and does the work only as one
+   scrolls into range. Nothing about the card changes; what changes is how many
+   of them are being drawn at a time.
+
+   `contain-intrinsic-size: auto <height>` is what stops that from wrecking the
+   scrollbar. A skipped element would otherwise measure zero and the page would
+   shrink as one scrolled; the length is the placeholder used before a card has
+   ever been rendered, and `auto` tells the browser to remember each card's real
+   size once it has been, so the estimate only ever matters once. Feeding it
+   `--country-card-h` means the placeholder is the same number the card will
+   actually measure, so there is nothing to correct.
+
+   Note this is on the wrapper `CountryGrid` renders, not on the card: the
+   wrapper is the grid item, and it is also what Framer animates on filter
+   changes, which needs a box with a size whether or not its contents were
+   painted.
+   ------------------------------------------------------------------------ */
+.js-country-card-wrapper {
+  content-visibility: auto;
+  contain-intrinsic-size: auto var(--country-card-h);
+}
+
 /* Reduced motion — global. Previously only ApplicationCard honoured this,
    while the app ran 2 marquees, a ping, a wave, a shine loop, GSAP reveals,
    magnetic hover and a custom cursor. */
@@ -671,10 +745,6 @@ button {
     opacity: 1 !important;
   }
 
-  html.has-custom-cursor,
-  html.has-custom-cursor * {
-    cursor: auto !important;
-  }
 }
 
 /* ---------------------------------------------------------------------------

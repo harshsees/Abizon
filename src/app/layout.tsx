@@ -1,22 +1,30 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Newsreader } from "next/font/google";
+import { Inter, Newsreader, Poppins } from "next/font/google";
 import { SmoothScroll } from "@/components/SmoothScroll";
-import { CustomCursor } from "@/components/CustomCursor";
 import "./globals.css";
 
 /**
- * Two families, two jobs.
+ * Three families, three jobs.
  *
  * Inter carries every control the user operates — nav, filters, buttons,
  * inputs, labels, metadata. Newsreader carries the editorial voice: display
  * headings, page titles, and (from Phase 2) country names on the cards.
  *
- * Both are declared as variable fonts with no `weight` array on purpose.
- * Naming weights explicitly makes next/font emit one static file per weight;
- * omitting it ships a single variable file covering the family's whole range,
- * which is both fewer requests and fewer bytes than the four static cuts this
- * design needs. `display: "swap"` plus next/font's automatic size-adjust
+ * Inter and Newsreader are declared as variable fonts with no `weight` array
+ * on purpose. Naming weights explicitly makes next/font emit one static file
+ * per weight; omitting it ships a single variable file covering the family's
+ * whole range, which is both fewer requests and fewer bytes than the four
+ * static cuts this design needs. `display: "swap"` plus next/font's automatic size-adjust
  * fallback metrics keeps the swap from shifting layout.
+ *
+ * Poppins is the exception, and it is loaded for exactly one string: the
+ * `Abizon` wordmark. The logo needs the geometric, circular-bowl grotesque the
+ * reference mark is set in, which neither Inter (neo-grotesque) nor Newsreader
+ * (serif) can imitate — `font-black tracking-tighter` on Inter was the previous
+ * attempt and it reads as bold UI text, not as a mark. It ships two static cuts
+ * rather than a variable file because Google serves Poppins as static only, and
+ * two weights for six words on a page is cheaper than the alternative of a
+ * hand-drawn SVG wordmark nobody can restyle.
  */
 const inter = Inter({
   variable: "--font-inter",
@@ -27,6 +35,13 @@ const inter = Inter({
 const newsreader = Newsreader({
   variable: "--font-newsreader",
   subsets: ["latin"],
+  display: "swap",
+});
+
+const poppins = Poppins({
+  variable: "--font-poppins",
+  subsets: ["latin"],
+  weight: ["600", "700"],
   display: "swap",
 });
 
@@ -64,16 +79,13 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${newsreader.variable} h-full antialiased`}
+      className={`${inter.variable} ${newsreader.variable} ${poppins.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         <a href="#main-content" className="skip-link">
           Skip to main content
         </a>
-        <SmoothScroll>
-          <CustomCursor />
-          {children}
-        </SmoothScroll>
+        <SmoothScroll>{children}</SmoothScroll>
       </body>
     </html>
   );

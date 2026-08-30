@@ -18,6 +18,8 @@
 import { Check, X } from "lucide-react";
 import Link from "next/link";
 
+import { Wordmark } from "@/components/Wordmark";
+
 type ApplicationHeaderProps = {
   countryName: string;
   flagUrl: string;
@@ -82,9 +84,7 @@ export function ApplicationHeader({
             <path d="M40 55 L60 55" stroke="currentColor" strokeWidth="8" strokeLinecap="round" />
             <path d="M50 20 L55 35" stroke="currentColor" strokeWidth="8" strokeLinecap="round" />
           </svg>
-          <span className="text-lg font-black tracking-tighter text-foreground">
-            abizon
-          </span>
+          <Wordmark className="text-lg" />
         </Link>
 
         <div className="flex min-w-0 items-center gap-3">

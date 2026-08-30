@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { MapPin, ArrowUpRight, MessageSquare, Bot, Sparkles, Brain } from "lucide-react";
 
+import { Wordmark } from "@/components/Wordmark";
+
 export function Footer() {
   const companyLinks = [
     { name: "Careers", href: "/careers" },
@@ -71,9 +73,7 @@ export function Footer() {
                 <path d="M40 55 L60 55" stroke="currentColor" strokeWidth="8" strokeLinecap="round" />
                 <path d="M50 20 L55 35" stroke="currentColor" strokeWidth="8" strokeLinecap="round" />
               </svg>
-              <span className="text-xl font-black tracking-tighter text-slate-900 font-sans">
-                abizon
-              </span>
+              <Wordmark className="text-xl" />
             </div>
 
             {/* Description */}
@@ -249,9 +249,7 @@ export function Footer() {
               <path d="M15 80 L50 20 L85 80 Z" stroke="currentColor" strokeWidth="10" strokeLinecap="round" strokeLinejoin="round" />
               <path d="M40 55 L60 55" stroke="currentColor" strokeWidth="10" strokeLinecap="round" />
             </svg>
-            <span className="text-xs font-black tracking-tighter text-muted-foreground font-sans uppercase">
-              abizon
-            </span>
+            <Wordmark tone="muted" className="text-xs" />
           </div>
 
         </div>

@@ -15,9 +15,17 @@ interface SmoothScrollProps {
 /**
  * Keeps GSAP's ScrollTrigger in step with Lenis, which drives scroll from rAF
  * rather than the native scroll event ScrollTrigger normally listens to.
+ *
+ * The callback runs on every Lenis frame, on every page, and until now it
+ * called into GSAP on all of them. Only the country pages register triggers
+ * (`usePremiumMotion`); the homepage — the page with 154 cards on it, and the
+ * one that felt heaviest to scroll — has none, and was paying for a GSAP
+ * update sixty times a second that had nothing to update. The count is a plain
+ * array length read, which is as close to free as a per-frame check gets.
  */
 function ScrollTriggerSync() {
   useLenis(() => {
+    if (ScrollTrigger.getAll().length === 0) return;
     ScrollTrigger.update();
   });
 

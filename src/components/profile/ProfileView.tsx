@@ -13,6 +13,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 
+import { Wordmark } from "@/components/Wordmark";
 import { signOut } from "@/app/actions/auth";
 import { formatE164 } from "@/lib/auth/phone";
 
@@ -102,9 +103,7 @@ export function ProfileView({
                 <path d="M40 55 L60 55" stroke="currentColor" strokeWidth="8" strokeLinecap="round" />
                 <path d="M50 20 L55 35" stroke="currentColor" strokeWidth="8" strokeLinecap="round" />
               </svg>
-              <span className="text-xl font-black tracking-tighter text-slate-900 font-sans uppercase">
-                abizon
-              </span>
+              <Wordmark className="text-xl" />
             </Link>
             
             {/* Slogan */}

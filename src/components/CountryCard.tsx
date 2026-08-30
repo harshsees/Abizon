@@ -133,12 +133,19 @@ export function CountryCard({ country }: CountryCardProps) {
             The card no longer resizes a URL by string replacement either: the
             manifest derives a 5:8 card rendition and a 16:9 hero rendition
             independently, so neither can ever become the other. */}
-        {/* 5:7, down from the reference's 5:8. At 260px wide that is 364px
-            tall rather than 416 — the same width, a shorter card, so a row
-            costs less vertical space and more of the grid clears the fold.
-            The resting panel is a percentage of this height, so it shortens
-            with it; see the note on `h-[46%]` below for what that costs. */}
-        <div className="relative aspect-[5/7] w-full overflow-hidden rounded-card shadow-e2">
+        {/* Height, not aspect.
+            This was `aspect-[5/7]`, which tied the card's height to the column
+            width and therefore stopped the first row short of the fold by
+            whatever the arithmetic happened to leave over. `--country-card-h`
+            is the height that makes the row finish level with the bottom of
+            the first screen; `CountryGrid` measures it and sets it on the grid,
+            and `globals.css` carries the estimate used until it does.
+
+            `w-full` is still here and the aspect is gone, because a box given
+            both dimensions ignores `aspect-ratio` anyway — leaving it in would
+            have been a rule that never applied. The panel, the scrim and the
+            reveal are all percentages of this height, so they grow with it. */}
+        <div className="relative h-[var(--country-card-h)] w-full overflow-hidden rounded-card shadow-e2">
           <CountryImagePlate seed={country.code} />
 
           {photo && (

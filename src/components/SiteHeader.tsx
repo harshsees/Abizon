@@ -28,9 +28,10 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
-import { Check, Compass, Search, Ticket, User, X } from "lucide-react";
+import { Compass, Search, Ticket, User, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
+import { Wordmark } from "@/components/Wordmark";
 import { countriesData, getCountrySlug } from "@/data/countries";
 
 export type HeaderTab = "explore" | "events";
@@ -98,23 +99,46 @@ export function SiteHeader({
     return () => clearInterval(id);
   }, []);
 
+  /**
+   * Scroll response, throttled to one frame.
+   *
+   * The listener used to read `scrollY` and call two setters on every scroll
+   * event. React bails out when the value is unchanged, but the read itself is
+   * not free: `window.scrollY` forces the browser to flush pending layout, and
+   * doing that from a listener that fires many times per frame — which is what
+   * a smooth-scroll library driving the page from rAF produces — is a layout
+   * thrash on the same thread Lenis is interpolating on. Coalescing to one
+   * read per frame is most of the fix; the `if` guards are the rest, because
+   * they stop a state update (and a re-render of the whole header, its nav and
+   * the search field) from being queued while the values are steady.
+   */
   useEffect(() => {
-    const handleScroll = () => {
+    let frame = 0;
+
+    const measure = () => {
+      frame = 0;
       const y = window.scrollY;
-      setIsAtTop(y < 50);
+      setIsAtTop((current) => (current === y < 50 ? current : y < 50));
 
       // Hide on the way down, return on the way up — unchanged from both of
       // the headers this replaces.
-      if (y < 100) setIsVisible(true);
-      else if (y > lastScrollY.current) setIsVisible(false);
-      else setIsVisible(true);
+      const next = y < 100 ? true : y <= lastScrollY.current;
+      setIsVisible((current) => (current === next ? current : next));
 
       lastScrollY.current = y;
     };
 
+    const handleScroll = () => {
+      if (frame) return;
+      frame = requestAnimationFrame(measure);
+    };
+
     window.addEventListener("scroll", handleScroll, { passive: true });
-    handleScroll();
-    return () => window.removeEventListener("scroll", handleScroll);
+    measure();
+    return () => {
+      if (frame) cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", handleScroll);
+    };
   }, []);
 
   // Escape closes the mobile search sheet, and the body must not scroll behind
@@ -236,9 +260,7 @@ export function SiteHeader({
                   strokeLinecap="round"
                 />
               </svg>
-              <span className="text-xl font-black tracking-tighter text-foreground">
-                abizon
-              </span>
+              <Wordmark className="text-xl md:text-[1.375rem]" />
             </Link>
 
             <span
@@ -246,21 +268,19 @@ export function SiteHeader({
               className="hidden h-9 w-px flex-shrink-0 bg-border sm:block"
             />
 
-            <div className="hidden items-center gap-2 sm:flex">
-              {/* A single outlined check, as in the reference. It is the only
-                  ornament the guarantee gets — the claim carries itself. */}
-              <span
-                aria-hidden="true"
-                className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full border border-border-strong text-subtle-foreground"
-              >
-                <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
-              </span>
+            {/* The claim, and nothing else.
+                It used to be two lines — "Visas On Time / Guaranteed" — behind
+                an outlined check in a 28px circle. Both are gone. "Guaranteed"
+                was the word doing the promising, and the promise is made
+                properly on the pages that can qualify it; a tick beside it was
+                a second ornament decorating a claim that no longer needs
+                decorating. What is left is one line at the height the wordmark
+                sits at, which is also why the `<br>` went with it. */}
+            <div className="hidden items-center sm:flex">
               {/* Underline inherits the text colour rather than taking a border
                   tint, which at 12px was too faint to read as an underline. */}
               <p className="text-2xs font-semibold leading-tight text-subtle-foreground underline decoration-1 underline-offset-4">
                 Visas On Time
-                <br />
-                Guaranteed
               </p>
             </div>
           </div>
