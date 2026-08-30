@@ -108,28 +108,28 @@ export function CaptureTakeover({
           matching the X's own inset. Below that width there is nowhere to put
           it that is not on top of something, so it is not put anywhere. */}
       {aside && (
-        <div className="pointer-events-none absolute right-8 top-24 hidden 2xl:block">
+        <div className="pointer-events-none absolute right-8 top-[88px] hidden min-[1340px]:block">
           {aside}
         </div>
       )}
 
-      <div className="mx-auto flex w-full max-w-[820px] flex-1 flex-col items-center px-5 pb-10 pt-20 md:pt-24">
-        <h1 className="text-center font-serif text-[34px] font-medium leading-[1.15] tracking-[-0.01em] text-foreground sm:text-[40px] md:text-[44px]">
+      <div className="mx-auto flex w-full max-w-[760px] flex-1 flex-col items-center px-5 pb-10 pt-[72px] md:pt-20">
+        <h1 className="text-center font-display text-[26px] font-medium leading-[1.16] tracking-[-0.015em] text-foreground sm:text-[30px] md:text-[34px]">
           {titleTop}
           <br />
           <span className="text-primary">{titleAccent}</span>
         </h1>
 
-        <div className="mt-10 flex w-full flex-1 flex-col items-center justify-center md:mt-12">
+        <div className="mt-8 flex w-full flex-1 flex-col items-center justify-center md:mt-9">
           {children}
         </div>
 
         {methods && methods.length > 1 && method && onMethodChange && (
-          <div className="mt-10 flex justify-center">
+          <div className="mt-8 flex justify-center">
             <div
               role="group"
               aria-label="How to supply this document"
-              className="flex items-center gap-1 rounded-full bg-surface-sunken p-1.5"
+              className="flex items-center gap-1 rounded-full bg-surface-sunken p-1"
             >
               {methods.map(({ id, label, Icon }) => {
                 const active = id === method;
@@ -140,14 +140,14 @@ export function CaptureTakeover({
                     onClick={() => onMethodChange(id)}
                     aria-pressed={active}
                     className={[
-                      "flex h-11 cursor-pointer items-center gap-2 rounded-full px-5 text-sm font-semibold",
+                      "flex h-[38px] cursor-pointer items-center gap-2 rounded-full px-4 text-[13px] font-semibold",
                       "transition-colors duration-[--duration-fast] ease-[--ease-out]",
                       active
                         ? "bg-foreground text-background shadow-e1"
                         : "text-subtle-foreground hover:text-foreground",
                     ].join(" ")}
                   >
-                    <Icon aria-hidden className="size-4" />
+                    <Icon aria-hidden className="size-3.5" />
                     {label}
                   </button>
                 );

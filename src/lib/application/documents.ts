@@ -125,7 +125,11 @@ export function requiredDocuments(
 ): DocumentRequirement[] {
   switch (documents) {
     case "Photo + Passport":
-      return [PASSPORT, PHOTOGRAPH];
+      // Photo first, which is the order the field itself names and the order
+      // the reference asks in. It also decides the order the capture screens
+      // chain in, and the photograph is the quicker of the two — finishing one
+      // before starting the passport's four-screen errand.
+      return [PHOTOGRAPH, PASSPORT];
     case "Passport Only":
       return [PASSPORT];
     case "No Documents Required":

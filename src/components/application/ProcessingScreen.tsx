@@ -75,14 +75,14 @@ export function ProcessingScreen({ onDone }: { onDone: () => void }) {
 
   return (
     <div className="flex min-h-[calc(100svh-4rem)] items-center justify-center px-5">
-      <div className="relative w-full max-w-[640px] overflow-hidden rounded-[26px] bg-surface px-8 py-7 shadow-e2">
+      <div className="relative w-full max-w-[520px] overflow-hidden rounded-[20px] bg-surface px-7 py-5 shadow-e2">
         <div className="flex items-center gap-4">
           <ChevronRight aria-hidden className="size-4 flex-shrink-0 text-success" />
           <p
             key={line}
             role="status"
             aria-live="polite"
-            className="flex-1 animate-processing-line text-center font-mono text-[15px] tracking-[-0.01em] text-subtle-foreground"
+            className="flex-1 animate-processing-line text-center font-mono text-[13px] tracking-[-0.01em] text-subtle-foreground"
           >
             {LINES[line]}
           </p>

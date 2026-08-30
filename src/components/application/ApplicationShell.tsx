@@ -172,7 +172,14 @@ export function ApplicationShell() {
   const showProcessing = state.step === "payment" && !handedOff;
 
   return (
-    <div className="relative min-h-screen bg-background bg-[image:var(--gradient-application)]">
+    <div className="relative min-h-screen">
+      {/* The ambient field. A fixed, -z-10 layer rather than a background on
+          this element: the capture takeovers cover the page with an opaque
+          white sheet, and a background painted here would vanish under them.
+          At -10 it sits behind everything and shows through anything that is
+          not opaque, which is every screen except those takeovers. */}
+      <div aria-hidden className="ambient-field" />
+
       {/* Back leaves the flow from the first step and walks it from the rest.
           A Back that is disabled on screen one is a control that spends the
           whole first screen looking broken. */}

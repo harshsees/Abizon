@@ -80,7 +80,6 @@ const HEADINGS: Record<string, { top: string; accent: string }> = {
 
 export function DocumentCapture({
   requirement,
-  travellerName,
   photoEntry,
   backEntry,
   details,
@@ -93,7 +92,6 @@ export function DocumentCapture({
   detailsComplete,
 }: {
   requirement: DocumentRequirement;
-  travellerName: string;
   /** The entry for `requirement.kind`, if one already exists. */
   photoEntry?: DocumentEntry;
   /** The passport's back page, if one has been supplied. */
@@ -179,6 +177,11 @@ export function DocumentCapture({
       if (outcome.status === "verified") {
         onDetailsChange(fieldsToDetails(outcome.fields));
         setVerified(true);
+      } else if (outcome.status === "partial" && outcome.trusted.length > 0) {
+        // Fill what the check digits vouch for and leave the rest blank. The
+        // countdown stays disarmed: a screen that half-filled itself is a
+        // screen somebody has to finish, not one that may advance on its own.
+        onDetailsChange(fieldsToDetails(outcome.fields, outcome.trusted));
       }
 
       setStage({ kind: "scanned", imageUrl, outcome });
@@ -262,7 +265,6 @@ export function DocumentCapture({
     return (
       <div className="fixed inset-0 z-modal overflow-y-auto bg-surface">
         <PassportReview
-          travellerName={travellerName}
           photoPageUrl={urls.photo ?? photoEntry?.previewDataUrl}
           backPageUrl={urls.back ?? backEntry?.previewDataUrl}
           details={details}
@@ -280,7 +282,13 @@ export function DocumentCapture({
     );
   }
 
-  const face: Face = stage.kind === "supply" ? stage.face : "photo";
+  const face: Face =
+    stage.kind === "supply"
+      ? stage.face
+      : // The scan and its result are both about the page just supplied, which
+        // is the photo page; the card only turns over when the back is asked
+        // for.
+        "photo";
   const headingKey = isPassport
     ? `passport:${face}`
     : `photograph:${method}`;
@@ -310,11 +318,11 @@ export function DocumentCapture({
         onExit();
       }}
       onClose={onExit}
-      aside={
-        isPassport && stage.kind === "supply" ? (
-          <PassportGuideCard face={face} />
-        ) : undefined
-      }
+      /* Mounted for the whole passport errand, not just while a page is being
+         chosen. If it unmounted during the scan it would remount already
+         turned over, and the flip — the one piece of motion that teaches
+         "now do the other side" — would never play. */
+      aside={isPassport ? <PassportGuideCard face={face} /> : undefined}
     >
       {stage.kind === "supply" &&
         (method === "camera" ? (
@@ -368,25 +376,33 @@ export function DocumentCapture({
  * and it is drawn in the same place here.
  */
 function outcomeToPhase(outcome: ScanOutcome): ScanStagePhase {
-  if (outcome.status === "verified") {
+  if (outcome.status === "verified" || outcome.status === "partial") {
     const fields = outcome.fields;
+    const trusted =
+      outcome.status === "verified"
+        ? (["passportNumber", "dateOfBirth", "dateOfExpiry"] as const)
+        : outcome.trusted;
+
     return {
       kind: "read",
+      boxes: outcome.boxes,
+      // Only what was actually taken. Listing a passport number whose check
+      // digit disagreed, beside five that passed, invites the applicant to
+      // believe it reached the form.
       fields: [
         { label: "Surname", value: fields.surname },
         { label: "Given names", value: fields.givenNames },
-        { label: "Passport number", value: fields.passportNumber },
-        { label: "Date of birth", value: fields.dateOfBirth },
-        { label: "Valid till", value: fields.dateOfExpiry },
+        ...(trusted.includes("passportNumber")
+          ? [{ label: "Passport no", value: fields.passportNumber }]
+          : []),
+        ...(trusted.includes("dateOfBirth")
+          ? [{ label: "Date of birth", value: fields.dateOfBirth }]
+          : []),
+        ...(trusted.includes("dateOfExpiry")
+          ? [{ label: "Valid till", value: fields.dateOfExpiry }]
+          : []),
         { label: "Nationality", value: fields.nationality },
       ],
-    };
-  }
-
-  if (outcome.status === "unverified") {
-    return {
-      kind: "failed",
-      reason: `The zone read, but ${outcome.failed.join(" and ")} did not pass its check digit — so we have not filled anything in.`,
     };
   }
 

@@ -78,7 +78,7 @@ export function UploadPane({
           accept(event.dataTransfer.files?.[0]);
         }}
         className={[
-          "flex min-h-[300px] w-full flex-col items-center justify-center rounded-[28px] border border-dashed px-6 py-14 text-center sm:min-h-[380px] md:min-h-[440px]",
+          "flex min-h-[240px] w-full flex-col items-center justify-center rounded-[22px] border border-dashed px-6 py-10 text-center sm:min-h-[300px] md:min-h-[340px]",
           "transition-colors duration-[--duration-base] ease-[--ease-out] motion-reduce:transition-none",
           dragging
             ? "border-success bg-success-subtle"
@@ -87,12 +87,12 @@ export function UploadPane({
       >
         <span
           aria-hidden
-          className="flex size-14 items-center justify-center rounded-full border border-border-strong text-foreground"
+          className="flex size-11 items-center justify-center rounded-full border border-border-strong text-foreground"
         >
-          <Upload className="size-5" />
+          <Upload className="size-4" />
         </span>
 
-        <p className="mt-5 text-lg font-bold text-foreground">
+        <p className="mt-4 text-[15px] font-bold text-foreground">
           {dragging ? "Drop it here" : "Upload your passport here"}
         </p>
 
@@ -101,7 +101,7 @@ export function UploadPane({
           disabled={busy}
           onClick={() => inputRef.current?.click()}
           aria-describedby={error ? errorId : undefined}
-          className="mt-7 inline-flex h-11 cursor-pointer items-center rounded-full border border-border-strong bg-surface px-6 text-sm font-bold text-foreground transition-[background-color,transform] duration-[--duration-fast] ease-[--ease-out] hover:bg-surface-sunken active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 motion-reduce:transform-none"
+          className="mt-5 inline-flex h-9 cursor-pointer items-center rounded-full border border-border-strong bg-surface px-5 text-[13px] font-bold text-foreground transition-[background-color,transform] duration-[--duration-fast] ease-[--ease-out] hover:bg-surface-sunken active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 motion-reduce:transform-none"
         >
           Browse files
         </button>
@@ -123,7 +123,7 @@ export function UploadPane({
       <p
         id={errorId}
         role={error ? "alert" : undefined}
-        className={`mt-3 text-center text-2xs ${error ? "text-destructive" : "text-muted-foreground"}`}
+        className={`mt-2.5 text-center text-[11px] ${error ? "text-destructive" : "text-muted-foreground"}`}
       >
         {error ?? ACCEPTED_UPLOAD_LABEL}
       </p>

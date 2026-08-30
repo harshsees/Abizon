@@ -77,10 +77,10 @@ export function TravellersStep() {
   return (
     <div className="flex min-h-[calc(100svh-4rem)] flex-col items-center px-5 pt-24 md:pt-28">
       <header className="text-center">
-        <h1 className="text-balance text-[26px] font-bold leading-tight tracking-[-0.02em] text-foreground sm:text-[30px] md:text-[34px]">
+        <h1 className="text-balance text-[23px] font-bold leading-[1.2] tracking-[-0.02em] text-foreground sm:text-[26px] md:text-[30px]">
           Who&rsquo;s going on this trip to {country?.name}?
         </h1>
-        <p className="mt-2 text-base text-muted-foreground sm:text-lg">
+        <p className="mt-2 text-[15px] text-muted-foreground sm:text-[17px]">
           You can add all travelers or continue solo
         </p>
       </header>
@@ -89,12 +89,12 @@ export function TravellersStep() {
           directly under the heading. The reference leaves ~300px of nothing
           between the two, and that space is what makes the field read as the
           thing to do rather than as the next item in a list. */}
-      <div className="flex w-full max-w-[720px] flex-1 flex-col justify-center pb-24">
+      <div className="flex w-full max-w-[640px] flex-1 flex-col justify-center pb-24">
         {state.travellers.length > 0 && (
-          <ul className="mb-9 flex flex-wrap justify-center gap-2">
+          <ul className="mb-7 flex flex-wrap justify-center gap-1.5">
             {state.travellers.map((traveller) => (
               <li key={traveller.id}>
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface py-1.5 pl-3.5 pr-1.5 text-2xs font-bold uppercase tracking-[0.04em] text-foreground shadow-e1">
+                <span className="inline-flex items-center gap-1 rounded-full border border-border bg-surface py-1 pl-3 pr-1 text-[11px] font-bold uppercase tracking-[0.04em] text-foreground shadow-e1">
                   {traveller.firstName || "Unnamed"}
                   <button
                     type="button"
@@ -132,6 +132,10 @@ export function TravellersStep() {
                 : "Traveller's first name"
             }
             placeholder="Enter traveler's first name"
+            /* Removes the app-wide focus ring, which is unlayered CSS and
+               therefore unreachable from a utility class. The rule below is
+               this field's indicator instead — see globals.css §4. */
+            data-focus-ring="none"
             /* `uppercase` applies to the value only — a placeholder is painted
                by the browser from the attribute, and `::placeholder` below
                puts its casing back so the prompt stays a sentence.
@@ -143,7 +147,7 @@ export function TravellersStep() {
                not have. The rule below thickens and takes the brand colour on
                focus instead, which is a visible indicator on the element's own
                boundary — what the outline was there to provide. */
-            className="w-full bg-transparent pb-4 text-center text-2xl font-medium uppercase tracking-[-0.01em] text-foreground caret-primary outline-none focus-visible:outline-none placeholder:normal-case placeholder:font-normal placeholder:text-muted-foreground/80 sm:text-[28px] md:text-[30px]"
+            className="w-full appearance-none border-0 bg-transparent pb-3.5 text-center text-[22px] font-medium uppercase tracking-[-0.01em] text-foreground caret-primary shadow-none outline-none ring-0 focus:border-0 focus:outline-none focus:ring-0 focus-visible:outline-none placeholder:normal-case placeholder:font-normal placeholder:text-muted-foreground/70 sm:text-[25px] md:text-[27px]"
           />
 
           {/* The rule. Dotted at rest — a solid border reads as an input's
@@ -158,12 +162,12 @@ export function TravellersStep() {
           <button
             type="submit"
             disabled={!canContinue}
-            className="group mt-16 inline-flex h-[58px] w-full max-w-[360px] cursor-pointer items-center justify-center gap-2.5 rounded-2xl bg-foreground text-lg font-bold text-background shadow-e2 transition-[background-color,transform,box-shadow] duration-[--duration-base] ease-[--ease-out] hover:bg-subtle-foreground hover:shadow-e3 active:scale-[0.99] disabled:cursor-default disabled:bg-muted-foreground/70 disabled:shadow-none motion-reduce:transform-none"
+            className="group mt-10 inline-flex h-[52px] w-full max-w-[340px] cursor-pointer items-center justify-center gap-2 rounded-xl bg-foreground text-[15px] font-bold text-background shadow-e2 transition-[background-color,transform,box-shadow] duration-[--duration-base] ease-[--ease-out] hover:bg-subtle-foreground hover:shadow-e3 active:scale-[0.99] disabled:cursor-default disabled:bg-muted-foreground/70 disabled:shadow-none motion-reduce:transform-none"
           >
             Continue
             <ArrowRight
               aria-hidden
-              className="size-5 transition-transform duration-[--duration-fast] group-enabled:group-hover:translate-x-1 motion-reduce:transition-none"
+              className="size-4 transition-transform duration-[--duration-fast] group-enabled:group-hover:translate-x-1 motion-reduce:transition-none"
             />
           </button>
         </form>

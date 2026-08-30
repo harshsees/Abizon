@@ -28,9 +28,19 @@
  * applicant walks a queue rather than returning to a list and choosing again.
  */
 
-import { Check, Loader2, Plus, RotateCw, TriangleAlert, Upload } from "lucide-react";
+import {
+  Check,
+  Loader2,
+  Lock,
+  Plus,
+  RotateCw,
+  ScanLine,
+  TriangleAlert,
+  Upload,
+} from "lucide-react";
 import { useState } from "react";
 
+import { getCountrySlug } from "@/data/countries";
 import { PASSPORT_BACK, type DocumentRequirement } from "@/lib/application/documents";
 import { useApplication } from "@/lib/application/context";
 import {
@@ -42,6 +52,7 @@ import {
 import { EMPTY_DETAILS } from "@/lib/application/state";
 
 import { DocumentCapture } from "./capture/DocumentCapture";
+import { PhoneHandoffSheet } from "./PhoneHandoffSheet";
 
 type Target = { travellerId: string; requirement: DocumentRequirement };
 
@@ -49,8 +60,16 @@ export function DocumentsStep() {
   const { state, dispatch, country, config, sync, blocked, next, jumpTo } =
     useApplication();
   const [target, setTarget] = useState<Target | null>(null);
+  const [phoneOpen, setPhoneOpen] = useState(false);
 
   if (!country || !config) return null;
+
+  const applyPath = `/apply?country=${getCountrySlug(country.name)}`;
+  // Absolute, because it is going into a QR code that a different device reads.
+  const applyUrl =
+    typeof window === "undefined"
+      ? applyPath
+      : `${window.location.origin}${applyPath}`;
 
   const traveller = target
     ? state.travellers.find((candidate) => candidate.id === target.travellerId)
@@ -85,7 +104,6 @@ export function DocumentsStep() {
     return (
       <DocumentCapture
         requirement={target.requirement}
-        travellerName={traveller.firstName}
         photoEntry={state.documents[documentKey(traveller.id, target.requirement.kind)]}
         backEntry={state.documents[documentKey(traveller.id, PASSPORT_BACK.kind)]}
         details={details}
@@ -111,17 +129,16 @@ export function DocumentsStep() {
 
   return (
     <div className="flex min-h-[calc(100svh-4rem)] flex-col items-center px-5 pb-40 pt-24 md:pt-28">
-      <header className="max-w-[740px] text-center">
-        <h1 className="text-balance text-[26px] font-bold leading-tight tracking-[-0.02em] text-foreground sm:text-[30px] md:text-[34px]">
+      <header className="max-w-[620px] text-center">
+        <h1 className="text-balance text-[23px] font-bold leading-[1.2] tracking-[-0.02em] text-foreground sm:text-[26px] md:text-[30px]">
           The Essential Documents
         </h1>
-        <p className="mt-2 text-balance text-base text-muted-foreground sm:text-lg">
-          These are as per the official {config.displayName} requirements for
-          visa processing
+        <p className="mt-2 text-balance text-[15px] text-muted-foreground sm:text-[17px]">
+          As required by {config.displayName} for visa processing
         </p>
       </header>
 
-      <div className="mt-12 flex w-full flex-wrap justify-center gap-6">
+      <div className="mt-9 flex w-full flex-wrap justify-center gap-5">
         {state.travellers.map((person) => (
           <TravellerCard
             key={person.id}
@@ -138,15 +155,49 @@ export function DocumentsStep() {
       </div>
 
       {/* -------------------------------------------------------------------
+          OR / Upload from phone.
+          Under the cards, not inside them: it applies to every traveller on
+          the screen, and repeating it per card would offer the same handset
+          five times.
+          ------------------------------------------------------------------- */}
+      <div className="mt-8 flex w-[312px] max-w-full flex-col items-center">
+        <div className="flex w-full items-center gap-3" aria-hidden>
+          <span className="h-px flex-1 bg-border" />
+          <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+            or
+          </span>
+          <span className="h-px flex-1 bg-border" />
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setPhoneOpen(true)}
+          className="mt-4 inline-flex h-9 cursor-pointer items-center gap-2 rounded-full px-3 text-[14px] font-bold text-primary transition-colors hover:bg-primary-subtle"
+        >
+          <ScanLine aria-hidden className="size-4" />
+          Upload from phone
+        </button>
+      </div>
+
+      {phoneOpen && (
+        <PhoneHandoffSheet
+          applyUrl={applyUrl}
+          signedIn={sync.mode === "synced"}
+          signInHref={`/login?next=${encodeURIComponent(applyPath)}`}
+          onClose={() => setPhoneOpen(false)}
+        />
+      )}
+
+      {/* -------------------------------------------------------------------
           The bar. Fixed, because it is the only way out of this screen and a
           screen with five travellers on it scrolls.
           ------------------------------------------------------------------- */}
       <div className="fixed inset-x-0 bottom-0 z-nav border-t border-border bg-surface/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-md md:border-none md:bg-transparent md:pb-0 md:backdrop-blur-none">
-        <div className="mx-auto flex max-w-[740px] items-center gap-3 px-5 py-4 md:px-0 md:pb-8">
+        <div className="mx-auto flex max-w-[600px] items-center gap-3 px-5 py-3.5 md:px-0 md:pb-7">
           <button
             type="button"
             onClick={() => jumpTo("travellers")}
-            className="inline-flex h-[52px] flex-1 cursor-pointer items-center justify-center gap-2 rounded-2xl border border-border bg-surface text-sm font-bold text-primary shadow-e1 transition-[background-color,transform] duration-[--duration-fast] hover:bg-surface-sunken active:scale-[0.99] motion-reduce:transform-none"
+            className="inline-flex h-[48px] flex-1 cursor-pointer items-center justify-center gap-2 rounded-full border border-border bg-surface text-[14px] font-bold text-primary shadow-e1 transition-[background-color,transform] duration-[--duration-fast] hover:bg-surface-sunken active:scale-[0.99] motion-reduce:transform-none"
           >
             <Plus aria-hidden className="size-4" />
             Add travelers
@@ -157,8 +208,9 @@ export function DocumentsStep() {
             onClick={next}
             disabled={Boolean(blocked)}
             title={blocked}
-            className="inline-flex h-[52px] flex-1 cursor-pointer items-center justify-center gap-2 rounded-2xl bg-foreground text-sm font-bold text-background shadow-e2 transition-[background-color,transform] duration-[--duration-fast] hover:bg-subtle-foreground active:scale-[0.99] disabled:cursor-default disabled:bg-muted-foreground/60 disabled:shadow-none motion-reduce:transform-none"
+            className="inline-flex h-[48px] flex-1 cursor-pointer items-center justify-center gap-2 rounded-full bg-foreground text-[14px] font-bold text-background shadow-e2 transition-[background-color,transform] duration-[--duration-fast] hover:bg-subtle-foreground active:scale-[0.99] disabled:cursor-default disabled:bg-muted-foreground/60 disabled:shadow-none motion-reduce:transform-none"
           >
+            <Lock aria-hidden className="size-3.5" />
             Proceed to checkout
           </button>
         </div>
@@ -169,7 +221,7 @@ export function DocumentsStep() {
         {blocked && (
           <p
             role="status"
-            className="pb-3 text-center text-2xs text-muted-foreground md:pb-6"
+            className="pb-3 text-center text-[12px] text-muted-foreground md:pb-5"
           >
             {blocked}
           </p>
@@ -199,29 +251,35 @@ function TravellerCard({
   return (
     <section
       aria-label={`Documents for ${traveller.firstName || "this traveller"}`}
-      className="flex w-full max-w-[340px] flex-col rounded-[26px] bg-surface p-5 shadow-e3"
+      /* 312x315 and an 18px inset, measured off the reference. The height is
+         a minimum rather than fixed so a destination asking for one document
+         keeps the proportion and one asking for three grows instead of
+         clipping. */
+      className="flex min-h-[300px] w-[312px] max-w-full flex-col rounded-[20px] bg-surface p-[18px] shadow-e3"
     >
-      <div className="flex items-center gap-3.5">
+      <div className="flex items-center gap-3">
         <span
           aria-hidden
-          className="flex size-12 flex-shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold tracking-[0.02em] text-on-primary"
+          className="flex size-[46px] flex-shrink-0 items-center justify-center rounded-full bg-primary text-[15px] font-bold tracking-[0.02em] text-on-primary"
         >
           {initials}
         </span>
         <div className="min-w-0">
-          <p className="truncate text-lg font-medium uppercase tracking-[0.01em] text-foreground underline decoration-border-strong decoration-1 underline-offset-4">
+          <p className="truncate text-[19px] font-medium uppercase leading-tight tracking-[0.01em] text-foreground underline decoration-border-strong decoration-1 underline-offset-[5px]">
             {traveller.firstName || "Unnamed"}
           </p>
-          <p className="mt-0.5 text-sm text-muted-foreground" data-numeric>
+          <p className="mt-1 text-[14px] leading-none text-muted-foreground" data-numeric>
             {provided.length}/{required.length} docs uploaded
           </p>
         </div>
       </div>
 
-      {/* The gap. The reference leaves a good third of the card empty between
-          the person and their documents, and it is what stops the card reading
-          as a dense list item. */}
-      <div className="mt-10 space-y-2.5">
+      {/* `mt-auto` rather than a fixed gap. The reference leaves a good third
+          of the card empty between the person and their documents, and that
+          space is what stops the card reading as a dense list item — but it is
+          the space LEFT OVER, so it has to be pushed rather than measured, or a
+          two-document card and a one-document card stop lining up. */}
+      <div className="mt-auto space-y-2 pt-9">
         {required.map((requirement) => (
           <RequirementRow
             key={requirement.kind}
@@ -233,9 +291,8 @@ function TravellerCard({
         ))}
 
         {required.length === 0 && (
-          <p className="rounded-2xl bg-surface-sunken px-4 py-3.5 text-2xs text-muted-foreground">
-            {country.name} asks for no documents from Indian passport holders.
-            There is nothing to attach.
+          <p className="rounded-[14px] bg-surface-sunken px-4 py-3 text-[13px] leading-relaxed text-muted-foreground">
+            {country.name} asks for no documents. There is nothing to attach.
           </p>
         )}
       </div>
@@ -272,7 +329,7 @@ function RequirementRow({
   return (
     <div
       className={[
-        "flex items-center gap-3 rounded-2xl px-3.5 py-3 transition-colors duration-[--duration-fast]",
+        "flex h-[46px] items-center gap-3 rounded-[14px] px-3 transition-colors duration-[--duration-fast]",
         failed ? "bg-destructive-subtle" : "bg-surface-sunken",
       ].join(" ")}
     >
@@ -284,7 +341,7 @@ function RequirementRow({
         <span
           aria-hidden
           className={[
-            "flex size-7 flex-shrink-0 items-center justify-center rounded-lg",
+            "flex size-[26px] flex-shrink-0 items-center justify-center rounded-lg",
             done
               ? "bg-success-subtle text-success"
               : failed
@@ -293,18 +350,18 @@ function RequirementRow({
           ].join(" ")}
         >
           {done ? (
-            <Check className="size-3.5" strokeWidth={3} />
+            <Check className="size-[13px]" strokeWidth={3} />
           ) : failed ? (
-            <TriangleAlert className="size-3.5" />
+            <TriangleAlert className="size-[13px]" />
           ) : uploading ? (
-            <Loader2 className="size-3.5 animate-spin" />
+            <Loader2 className="size-[13px] animate-spin" />
           ) : (
-            <Upload className="size-3.5" />
+            <Upload className="size-[13px]" />
           )}
         </span>
 
         <span className="min-w-0">
-          <span className="block truncate text-[15px] font-medium text-foreground">
+          <span className="block truncate text-[15px] font-medium leading-none text-foreground">
             {requirement.shortLabel}
           </span>
           {(uploading || failed) && (

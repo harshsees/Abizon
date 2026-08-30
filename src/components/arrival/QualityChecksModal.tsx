@@ -175,8 +175,8 @@ export function QualityChecksModal({
     ? "Reading your passport"
     : outcome?.status === "verified"
       ? "Passport read"
-      : outcome?.status === "unverified"
-        ? "That read did not check out"
+      : outcome?.status === "partial"
+        ? "Some of that read did not check out"
         : "Could not read this image";
 
   const description = scanning
@@ -185,14 +185,17 @@ export function QualityChecksModal({
       ? filledCount === 1
         ? "One field was filled in. Check it against your passport before you submit."
         : `${filledCount} fields were filled in. Check them against your passport before you submit.`
-      : outcome?.status === "unverified"
-        ? // Naming the field matters: a checksum failure means at least one
-          // character is wrong and we cannot tell which of the rest to trust,
-          // so nothing is filled. Saying which one failed is the difference
-          // between "try again" and knowing what to look at.
+      : outcome?.status === "partial"
+        ? // Naming the field matters. Each value in the zone carries its own
+          // check digit, so a failure is specific: that field is wrong and was
+          // left out, and the ones that passed were still filled in. Saying
+          // which failed is the difference between "try again" and knowing
+          // what to look at.
           `The ${formatList(outcome.failed)} did not match ${
             outcome.failed.length === 1 ? "its" : "their"
-          } check ${outcome.failed.length === 1 ? "digit" : "digits"}, so nothing was filled in. ` +
+          } check ${outcome.failed.length === 1 ? "digit" : "digits"}, so ${
+            outcome.trusted.length > 0 ? "that field was" : "nothing was"
+          } left out. ` +
           "A sharper photo of the two lines at the bottom of the page usually fixes it."
         : "No machine-readable zone was found. Photograph the whole photo page, including the two lines of " +
           "letters and chevrons along the bottom, with no glare.";

@@ -66,7 +66,6 @@ const FIELDS: ReviewField[] = [
 ];
 
 export function PassportReview({
-  travellerName,
   photoPageUrl,
   backPageUrl,
   details,
@@ -80,7 +79,6 @@ export function PassportReview({
   onClose,
   canContinue,
 }: {
-  travellerName: string;
   photoPageUrl?: string;
   backPageUrl?: string;
   details: TravellerDetails;
@@ -125,7 +123,7 @@ export function PassportReview({
   const counting = remaining !== null && remaining > 0;
 
   return (
-    <div className="mx-auto w-full max-w-[1180px] px-5 pb-24 pt-20 md:px-8 md:pt-24">
+    <div className="mx-auto w-full max-w-[1080px] px-5 pb-24 pt-[72px] md:px-8 md:pt-20">
       {/* The same two controls every other screen in the errand carries, in
           the same two places. A screen that drops them is a screen the
           applicant has to scroll to work out how to leave. */}
@@ -139,16 +137,14 @@ export function PassportReview({
         <X aria-hidden className="size-4" />
       </button>
 
-      <h1 className="font-serif text-[30px] font-medium leading-tight tracking-[-0.01em] text-foreground md:text-[36px]">
+      <h1 className="font-display text-[24px] font-medium leading-tight tracking-[-0.015em] text-foreground md:text-[28px]">
         Review passport details
       </h1>
-      <p className="mt-2 max-w-xl text-sm text-muted-foreground">
-        Read from {travellerName ? `${travellerName}'s` : "the"} passport. Check
-        every value against the page beside it — a single wrong character is the
-        most common reason an application comes back.
+      <p className="mt-1.5 max-w-md text-[13px] text-muted-foreground">
+        Check each value against the page beside it.
       </p>
 
-      <div className="mt-9 grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,440px)_minmax(0,1fr)] lg:gap-14">
+      <div className="mt-7 grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,380px)_minmax(0,1fr)] lg:gap-12">
         {/* ---------------------------------------------------------------
             The pages.
             --------------------------------------------------------------- */}
@@ -190,7 +186,7 @@ export function PassportReview({
             The values.
             --------------------------------------------------------------- */}
         <div>
-          <div className="grid grid-cols-1 gap-x-8 gap-y-7 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-x-7 gap-y-6 sm:grid-cols-2">
             {FIELDS.map((field) => (
               <RuledField
                 key={field.key}
@@ -204,14 +200,13 @@ export function PassportReview({
             ))}
           </div>
 
-          <div className="mt-11">
-            <h2 className="text-base font-bold text-foreground">Contact details</h2>
-            <p className="mt-1 text-2xs text-muted-foreground">
-              Where the decision and any request for more documents will reach
-              you.
+          <div className="mt-9">
+            <h2 className="text-[15px] font-bold text-foreground">Contact details</h2>
+            <p className="mt-1 text-[12px] text-muted-foreground">
+              Where the decision will reach you.
             </p>
 
-            <div className="mt-6 grid grid-cols-1 gap-x-8 gap-y-7 sm:grid-cols-2">
+            <div className="mt-5 grid grid-cols-1 gap-x-7 gap-y-6 sm:grid-cols-2">
               <RuledField
                 field={{ key: "fullName", label: "Email address", required: true }}
                 inputType="email"
@@ -237,7 +232,7 @@ export function PassportReview({
             type="button"
             onClick={onContinue}
             disabled={!canContinue}
-            className="group relative mt-11 flex h-[54px] w-full cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-2xl bg-foreground text-base font-bold text-background shadow-e2 transition-[background-color,transform] duration-[--duration-fast] ease-[--ease-out] hover:bg-subtle-foreground active:scale-[0.99] disabled:cursor-default disabled:bg-muted-foreground/60 disabled:shadow-none motion-reduce:transform-none"
+            className="group relative mt-9 flex h-[50px] w-full cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-xl bg-foreground text-[15px] font-bold text-background shadow-e2 transition-[background-color,transform] duration-[--duration-fast] ease-[--ease-out] hover:bg-subtle-foreground active:scale-[0.99] disabled:cursor-default disabled:bg-muted-foreground/60 disabled:shadow-none motion-reduce:transform-none"
           >
             {/* The countdown, drawn as the button filling rather than as a
                 number alone — a bare "(3)" beside a label reads as a quantity
@@ -312,7 +307,7 @@ function RuledField({
 
   return (
     <label className={field.wide ? "sm:col-span-2" : undefined}>
-      <span className="block text-[11px] font-bold uppercase tracking-[0.07em] text-subtle-foreground">
+      <span className="block text-[10.5px] font-bold uppercase tracking-[0.07em] text-subtle-foreground">
         {field.label}
         {field.required && <span className="text-destructive"> *</span>}
       </span>
@@ -321,7 +316,7 @@ function RuledField({
         <select
           value={value}
           onChange={(event) => onChange(event.target.value)}
-          className="mt-2.5 h-9 w-full cursor-pointer appearance-none border-b border-border bg-transparent text-[15px] font-medium text-foreground outline-none transition-colors focus:border-primary"
+          className="mt-2 h-8 w-full cursor-pointer appearance-none border-b border-border bg-transparent text-[14px] font-medium text-foreground outline-none transition-colors focus:border-primary"
         >
           <option value="">Select</option>
           {field.options.map((option) => (
@@ -337,7 +332,7 @@ function RuledField({
           onChange={(event) => onChange(event.target.value)}
           onBlur={() => setVisited(true)}
           aria-invalid={invalid || undefined}
-          className="mt-2.5 h-9 w-full border-b border-border bg-transparent text-[15px] font-medium text-foreground outline-none transition-colors placeholder:text-muted-foreground/70 focus:border-primary aria-[invalid=true]:border-destructive/60"
+          className="mt-2 h-8 w-full border-b border-border bg-transparent text-[14px] font-medium text-foreground outline-none transition-colors placeholder:text-muted-foreground/70 focus:border-primary aria-[invalid=true]:border-destructive/60"
         />
       )}
     </label>

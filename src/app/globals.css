@@ -332,6 +332,13 @@
   --font-serif: var(--font-newsreader);
   /* Wordmark face. One string in the whole app; see components/Wordmark.tsx. */
   --font-wordmark: var(--font-poppins);
+  /* Display face — the application flow's three physical-task screens only.
+     Newsreader is a reading serif and stays that; this is the one that has to
+     hold a page on its own at 36px. */
+  --font-display: var(--font-playfair);
+  /* The technical register: the scan status line, the machine-readable zone,
+     reference numbers. Previously whatever the OS happened to have. */
+  --font-mono: var(--font-jetbrains-mono);
 
   /* Type scale — 11 steps, nothing below 12px.
      Replaces text-[8.5px] / [9px] / [9.5px] / [11.5px] / [17px] / [28px].
@@ -519,11 +526,23 @@ button {
    The previous rule set `outline:none !important` on inputs, which removed
    the indicator entirely — WCAG 2.4.7 failure. Inputs now ring like
    everything else. */
-*:focus-visible {
+*:focus-visible:not([data-focus-ring="none"]) {
   outline: 2px solid var(--color-ring);
   outline-offset: 2px;
   border-radius: var(--radius-sm);
 }
+
+/* THE OPT-OUT, and why it has to exist as one.
+   This rule is unlayered, and unlayered CSS beats everything in a layer no
+   matter how specific — so `focus-visible:outline-none` from a utility class
+   cannot touch it. That is the correct default: a focus indicator should be
+   hard to remove by accident.
+   `data-focus-ring="none"` is how an element removes it ON PURPOSE, and the
+   contract is that it must then draw its own. There is exactly one user: the
+   traveller-name field, which is 640px of bare type with no box, where a 2px
+   rounded rectangle invents a border the design does not have. It replaces the
+   ring with its own rule turning solid and amber — a visible indicator on the
+   element's own boundary, which is what the outline was there to provide. */
 
 ::selection {
   background: var(--color-primary-subtle);
@@ -661,6 +680,156 @@ button {
   animation: passport-scan-sweep 1.9s cubic-bezier(0.45, 0, 0.55, 1) infinite;
 }
 
+/* ---------------------------------------------------------------------------
+   THE PASSPORT GUIDE CARD
+
+   The schematic passport floated beside the drop zone, and the flip it plays
+   when the flow asks for the other side of the document.
+
+   Same technique as `.pay-card` below: a `preserve-3d` parent, two faces
+   stacked absolutely, and `backface-visibility: hidden` so each is invisible
+   while turned away. The back face starts pre-rotated 180deg, so when the
+   parent turns it arrives facing the reader.
+
+   The parent is what rotates, NOT the faces. Rotating the faces individually
+   is the version that half-works: the two pass through each other mid-turn and
+   the card visibly comes apart at 90deg.
+   ------------------------------------------------------------------------ */
+.pass-guide {
+  position: relative;
+  width: 268px;
+  padding: 22px 22px 16px;
+  border-radius: 24px;
+  background: var(--color-surface);
+  box-shadow: var(--elevation-4);
+  perspective: 1100px;
+}
+
+.pass-guide-flip {
+  position: relative;
+  aspect-ratio: 240 / 200;
+  transform-style: preserve-3d;
+  /* Slightly past a straight turn on the way in, which is what makes it read
+     as a hand turning something over rather than a panel swapping. 900ms is
+     long for UI and right here: it is a demonstration, and a demonstration
+     that finishes before you have looked at it has not demonstrated anything. */
+  transition: transform 900ms cubic-bezier(0.66, 0, 0.24, 1);
+}
+
+.pass-guide-flip[data-flipped="true"] {
+  transform: rotateY(180deg);
+}
+
+.pass-guide-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: 14px;
+  /* The object sits on the page rather than being pasted to it. */
+  filter: drop-shadow(0 8px 14px rgb(15 23 42 / 0.14))
+    drop-shadow(0 1px 3px rgb(15 23 42 / 0.10));
+}
+
+.pass-guide-face--back {
+  transform: rotateY(180deg);
+}
+
+.pass-guide-caption {
+  margin-top: 16px;
+  text-align: center;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--color-muted-foreground);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pass-guide-flip {
+    transition: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   THE AMBIENT FIELD — the application flow's background.
+
+   Two very large, very faint colour pools that drift across the page. The
+   whole effect is meant to be felt rather than seen: on a still frame it is
+   indistinguishable from a flat off-white, and the only way to notice it is to
+   look away and look back.
+
+   THE NUMBERS ARE THE DESIGN, so they are worth stating.
+
+     alpha      the pools sit at ~4-6% against a page that is already near
+                white. Anything stronger and the flow acquires a mood, which is
+                wrong for a screen somebody is photographing a passport on.
+     duration   90s and 120s, deliberately coprime-ish so the two never settle
+                into a visible shared rhythm. A single 20s loop reads as an
+                animation; two slow ones that never line up read as weather.
+     distance   ~12% of the viewport. Far enough that the light has moved when
+                you look back, near enough that nothing sweeps past.
+
+   It is painted on two pseudo-elements of a fixed, `pointer-events-none`,
+   `-z-10` layer rather than on the page itself, so it cannot affect layout,
+   cannot intercept a click, and cannot repaint anything above it — the whole
+   thing composites on the GPU as two transformed layers.
+   ------------------------------------------------------------------------ */
+.ambient-field {
+  position: fixed;
+  inset: 0;
+  z-index: -10;
+  overflow: hidden;
+  pointer-events: none;
+  background: var(--canvas);
+}
+
+.ambient-field::before,
+.ambient-field::after {
+  content: "";
+  position: absolute;
+  width: 70vmax;
+  height: 70vmax;
+  border-radius: 50%;
+  filter: blur(90px);
+  will-change: transform;
+}
+
+.ambient-field::before {
+  top: -18vmax;
+  left: -12vmax;
+  background: radial-gradient(
+    circle at center,
+    color-mix(in oklab, var(--blue-100) 34%, transparent) 0%,
+    transparent 70%
+  );
+  animation: ambient-drift-a 90s ease-in-out infinite alternate;
+}
+
+.ambient-field::after {
+  right: -16vmax;
+  bottom: -20vmax;
+  background: radial-gradient(
+    circle at center,
+    color-mix(in oklab, var(--green-100) 28%, transparent) 0%,
+    transparent 68%
+  );
+  animation: ambient-drift-b 120s ease-in-out infinite alternate;
+}
+
+/* Translation only — no scale, no opacity, no filter animation. A blurred
+   70vmax disc is expensive to rasterise once and free to move afterwards, so
+   long as nothing asks the compositor to redraw it. */
+@keyframes ambient-drift-a {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(9vw, 7vh, 0); }
+}
+
+@keyframes ambient-drift-b {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(-11vw, -6vh, 0); }
+}
+
 /* The hand-off screen, between the documents and the checkout.
    Two parts: the status line fades up as it changes, and a short segment
    sweeps the foot of the pill. The sweep is deliberately not a progress bar —
@@ -790,6 +959,13 @@ button {
   .animate-processing-sweep {
     animation: none !important;
     transform: none !important;
+  }
+
+  /* The ambient field stops where it is. The colour stays — it is part of the
+     page, not part of the motion — and only the drift is switched off. */
+  .ambient-field::before,
+  .ambient-field::after {
+    animation: none !important;
   }
 
   /* This one ends on the visible keyframe, so it only needs to not move. */
