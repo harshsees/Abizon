@@ -51,12 +51,29 @@ import { requiredDocuments, type DocumentKind, type DocumentRequirement } from "
  * `documents` drops out entirely where `country.documents` is
  * "No Documents Required" — around a dozen destinations in the dataset. The
  * previous flow had no way to express that and asked everyone for two files.
+ *
+ * THREE STEPS, DOWN FROM FIVE.
+ *
+ * `setup`, `details` and `review` are gone, and none of what they asked for
+ * went with them:
+ *
+ *   setup    asked for the plan and the travel window. Both are already
+ *            answered on the destination page — `CountryApplicationPanel`
+ *            seeds them through the URL — so the flow was re-asking a question
+ *            the applicant had just answered, as its opening screen.
+ *   details  is the passport fields. They are read off the passport by the
+ *            scan, so they belong to the document that produced them: the
+ *            review screen now appears inside `documents`, immediately after
+ *            the scan, while the passport is still the thing being discussed.
+ *   review   re-listed what the two screens above had just shown, and led to a
+ *            checkout that lists it again.
+ *
+ * What is left is what the rail names, and what the applicant experiences as
+ * distinct pieces of work: who is going, what they need to supply, and paying.
  */
 export type ApplicationStepId =
-  | "setup"
+  | "travellers"
   | "documents"
-  | "details"
-  | "review"
   | "payment"
   | "ready";
 
@@ -79,34 +96,23 @@ export type ApplicationStepMeta = {
 };
 
 const STEP_META: Record<ApplicationStepId, Omit<ApplicationStepMeta, "id">> = {
-  setup: {
-    label: "Trip",
-    eyebrow: "Your trip",
-    title: "Confirm your trip",
-    cta: "Continue to documents",
+  travellers: {
+    label: "Travelers",
+    eyebrow: "Travellers",
+    // Resolved against the destination in `stepSequence` — the screen asks
+    // "Who's going on this trip to United Arab Emirates?", not "to your
+    // destination".
+    title: "Who's going on this trip?",
+    cta: "Continue",
   },
   documents: {
     label: "Documents",
     eyebrow: "Documents",
-    title: "Prepare your documents",
-    cta: "Continue to passport details",
-  },
-  details: {
-    label: "Details",
-    eyebrow: "Passport details",
-    title: "Enter passport details",
-    cta: "Review application",
-  },
-  review: {
-    label: "Review",
-    eyebrow: "Review",
-    title: "Check everything over",
-    // Where review leads depends on whether there is a gateway to lead to, so
-    // this is resolved in `stepSequence` rather than fixed here.
-    cta: "Confirm and finish",
+    title: "The Essential Documents",
+    cta: "Proceed to checkout",
   },
   payment: {
-    label: "Payment",
+    label: "Pay",
     eyebrow: "Payment",
     title: "Pay for your application",
     cta: "",
@@ -121,14 +127,7 @@ const STEP_META: Record<ApplicationStepId, Omit<ApplicationStepMeta, "id">> = {
 
 /** The ordered steps for a destination. */
 export function stepSequence(country?: Country): ApplicationStepMeta[] {
-  const ids: ApplicationStepId[] = [
-    "setup",
-    "documents",
-    "details",
-    "review",
-    "payment",
-    "ready",
-  ];
+  const ids: ApplicationStepId[] = ["travellers", "documents", "payment", "ready"];
 
   const needsDocuments = country
     ? requiredDocuments(country.documents).length > 0
@@ -155,15 +154,14 @@ export function stepSequence(country?: Country): ApplicationStepMeta[] {
     })
     .map((id) => {
       const meta = { id, ...STEP_META[id] };
-      // Nothing should promise a step that will not appear.
-      if (id === "setup" && !needsDocuments) {
-        return { ...meta, cta: "Continue to passport details" };
+      if (id === "travellers" && country) {
+        return { ...meta, title: `Who's going on this trip to ${country.name}?` };
       }
-      if (id === "review") {
-        return {
-          ...meta,
-          cta: paymentEnabled ? "Continue to payment" : "Confirm and finish",
-        };
+      // Nothing should promise a step that will not appear: with no gateway
+      // there is no checkout to proceed to, and with no documents the previous
+      // step is the last one that asks for anything.
+      if (id === "documents" && !paymentEnabled) {
+        return { ...meta, cta: "Finish" };
       }
       return meta;
     });
@@ -384,7 +382,7 @@ export function initialState(seed: Partial<ApplicationState> = {}): ApplicationS
   return {
     travellers: [],
     plan: 0,
-    step: "setup",
+    step: "travellers",
     direction: 1,
     documents: {},
     details: {},
@@ -675,7 +673,7 @@ export function blockingReason(
   if (!country) return "Choose a destination before continuing.";
 
   switch (step) {
-    case "setup": {
+    case "travellers": {
       if (state.travellers.length === 0) return "Add at least one traveller.";
       if (state.travellers.some((t) => t.firstName.trim().length === 0)) {
         return "Every traveller needs a first name.";
@@ -710,24 +708,40 @@ export function blockingReason(
       );
       if (inFlight) return "Still uploading. This takes a moment on a slow connection.";
 
-      return undefined;
-    }
-
-    case "details": {
-      const incomplete = state.travellers.filter(
-        (traveller) => !detailsComplete(state.details[traveller.id]),
+      /**
+       * The passport fields, which used to gate a `details` step of their own.
+       *
+       * They are asked for here because they are read off the passport: the
+       * review screen opens the moment the scan finishes, inside this step,
+       * with the two page images beside the fields they came from. So this
+       * step is not complete until that review has been passed.
+       *
+       * Only for travellers whose destination actually asks for a passport. On
+       * a photograph-only destination there is nothing to read fields off, and
+       * demanding a passport number would block a step that never asked for a
+       * passport.
+       */
+      const wantsPassport = requiredDocuments(country.documents).some(
+        (requirement) => requirement.kind === "passport",
       );
-      if (incomplete.length > 0) {
-        const names = incomplete.map((t) => t.firstName || "an unnamed traveller");
-        return `Passport details are incomplete for ${names.join(", ")}.`;
+
+      if (wantsPassport) {
+        const unconfirmed = state.travellers.filter(
+          (traveller) => !detailsComplete(state.details[traveller.id]),
+        );
+        if (unconfirmed.length > 0) {
+          const names = unconfirmed.map((t) => t.firstName || "an unnamed traveller");
+          return `Passport details are incomplete for ${names.join(", ")}.`;
+        }
       }
+
       if (!contactComplete(state.contact)) {
         return "Add an email address and phone number we can reach you on.";
       }
+
       return undefined;
     }
 
-    case "review":
     case "ready":
       return undefined;
 
@@ -793,7 +807,24 @@ export function progressPercent(
   const gated = sequence.filter((s) => s.id !== "ready");
   if (gated.length === 0) return 0;
 
-  const done = gated.filter((s) => isStepComplete(state, country, s.id)).length;
+  const done = gated.filter((step) => {
+    /**
+     * Payment is the exception, and without it the meter never reads zero.
+     *
+     * `blockingReason` returns nothing for `payment` — deliberately, because
+     * the step is left by the Pay button rather than by a Continue this code
+     * could gate — so `isStepComplete` says it is done from the first render.
+     * On a three-step flow that put the floor at 33%: an applicant who had
+     * typed nothing was told a third of the work was behind them.
+     *
+     * There is no payment state to consult, so the honest test is whether the
+     * flow has come out the other side of it. `ready` is the step after
+     * payment and nothing reaches it without passing through.
+     */
+    if (step.id === "payment") return state.step === "ready";
+    return isStepComplete(state, country, step.id);
+  }).length;
+
   return Math.round((done / gated.length) * 100);
 }
 

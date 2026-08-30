@@ -138,10 +138,10 @@ export function ApplicationComplete() {
 
         <button
           type="button"
-          onClick={() => jumpTo("review")}
+          onClick={() => jumpTo("documents")}
           className="inline-flex h-12 cursor-pointer items-center rounded-full border border-border-strong bg-surface px-5 sm:h-11 text-sm font-semibold text-foreground transition-colors hover:bg-surface-sunken"
         >
-          Back to review
+          Back to your documents
         </button>
       </div>
     );
@@ -268,7 +268,7 @@ export function ApplicationComplete() {
       <div className="flex flex-wrap gap-3">
         <button
           type="button"
-          onClick={() => jumpTo("review")}
+          onClick={() => jumpTo("documents")}
           className="inline-flex h-12 cursor-pointer items-center rounded-full border border-border-strong bg-surface px-5 sm:h-11 text-sm font-semibold text-foreground transition-colors hover:bg-surface-sunken"
         >
           Change something

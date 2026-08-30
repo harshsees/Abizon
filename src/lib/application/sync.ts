@@ -13,7 +13,7 @@ import {
 import type { Country } from "@/data/countries";
 import { getCountrySlug } from "@/data/countries";
 
-import type { DocumentKind } from "./documents";
+import { STORED_DOCUMENT_KINDS, type StoredDocumentKind } from "./documents";
 import {
   documentKey,
   type ApplicationAction,
@@ -97,7 +97,7 @@ export type ApplicationSync = {
   submit: () => Promise<void>;
   submitting: boolean;
   /** Re-attempts one failed upload. */
-  retryDocument: (travellerId: string, kind: DocumentKind) => void;
+  retryDocument: (travellerId: string, kind: StoredDocumentKind) => void;
 };
 
 /** What the restore payload carries back, mirrored from the action. */
@@ -434,7 +434,7 @@ export function useApplicationSync(input: SyncInput): ApplicationSync {
   const inFlight = useRef<Set<string>>(new Set());
 
   const uploadOne = useCallback(
-    async (travellerId: string, kind: DocumentKind, entry: DocumentEntry) => {
+    async (travellerId: string, kind: StoredDocumentKind, entry: DocumentEntry) => {
       const key = documentKey(travellerId, kind);
       if (inFlight.current.has(key)) return;
 
@@ -522,7 +522,7 @@ export function useApplicationSync(input: SyncInput): ApplicationSync {
     if (travellersStale.current) return;
 
     for (const traveller of state.travellers) {
-      for (const kind of ["passport", "photograph"] as DocumentKind[]) {
+      for (const kind of STORED_DOCUMENT_KINDS) {
         const entry = state.documents[documentKey(traveller.id, kind)];
         if (entry?.upload === "local") {
           void uploadOne(traveller.id, kind, entry);
@@ -532,7 +532,7 @@ export function useApplicationSync(input: SyncInput): ApplicationSync {
   }, [mode, applicationId, submittedReference, state.documents, state.travellers, uploadOne]);
 
   const retryDocument = useCallback(
-    (travellerId: string, kind: DocumentKind) => {
+    (travellerId: string, kind: StoredDocumentKind) => {
       const entry = state.documents[documentKey(travellerId, kind)];
       if (!entry) return;
 

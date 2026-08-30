@@ -13,7 +13,7 @@
  * The design is a two-panel checkout: methods and the form on the left, a
  * summary on the right with the card tucked inside a "Payment method"
  * accordion. This flow already has that right-hand column — the sticky
- * `ApplicationSummaryPanel`, which has shown a running total since step one and
+ * the summary panel that used to show a running total from step one, and
  * would be actively worse if a second summary appeared beside it.
  *
  * So the card moves. It goes directly above the form rather than into a panel

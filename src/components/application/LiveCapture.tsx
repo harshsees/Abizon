@@ -36,7 +36,7 @@
  * screen says "detected", "scanning", "verified" or "approved" (§4, §19, §29).
  */
 
-import { Camera, RotateCcw, X } from "lucide-react";
+import { Camera, RotateCcw } from "lucide-react";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { CaptureCountdown } from "@/components/application/countdown/CaptureCountdown";
@@ -463,8 +463,7 @@ export function LiveCapture({
 
   if (phase.kind === "error") {
     return (
-      <div className="space-y-4">
-        <Header requirement={requirement} mode={mode} onClose={leave} />
+      <div className="w-full max-w-md">
         <CameraErrorPanel
           problem={phase.problem}
           onRetry={restart}
@@ -486,20 +485,43 @@ export function LiveCapture({
     phase.kind === "capturing" || phase.kind === "review" ? phase.image : undefined;
 
   return (
-    <div className="space-y-4">
-      <Header requirement={requirement} mode={mode} onClose={leave} />
+    <div className="flex w-full flex-col items-center gap-8">
+      {/*
+        THE APERTURE.
 
-      {/* §6 — dark, centred, uncluttered. The stage is capped so the camera is
-          never "unnecessarily huge on desktop" (§23) and fills the width it is
-          given on a phone (§22). */}
-      <div
-        ref={stageRef}
-        className={[
-          "relative mx-auto w-full overflow-hidden rounded-2xl bg-slate-950 shadow-e3",
-          mode === "face" ? "max-w-sm" : "max-w-lg",
-          "aspect-[3/4] sm:aspect-[4/3]",
-        ].join(" ")}
-      >
+        A circle for a face and a rectangle for a document, because the shape
+        IS the instruction: a circle tells you to centre your head in it
+        without a caption, and a 125x88 rectangle tells you the passport goes
+        corner to corner. The old stage was one 4:3 dark box for both, with the
+        difference explained in a line of text underneath.
+
+        The chrome around it — the Back pill, the two-line heading, the method
+        switcher — belongs to `CaptureTakeover`, which is why the internal
+        header this used to render is gone. Two headings on one screen, one of
+        them 44px of serif and the other 14px of sans, is not a hierarchy.
+      */}
+      <div className="relative flex items-center justify-center">
+        {/* The halo. A soft green bloom behind the aperture, which is the one
+            piece of pure decoration on this screen and earns its place: it is
+            what stops a circular video from reading as a hole cut in the page.
+            Rendered as a blurred disc rather than a box-shadow so it stays
+            round at every size. */}
+        {mode === "face" && (
+          <span
+            aria-hidden
+            className="pointer-events-none absolute size-[118%] rounded-full bg-success/15 blur-3xl"
+          />
+        )}
+
+        <div
+          ref={stageRef}
+          className={[
+            "relative overflow-hidden bg-slate-950 shadow-e2",
+            mode === "face"
+              ? "size-[280px] rounded-full ring-1 ring-border sm:size-[380px] lg:size-[440px]"
+              : "aspect-[125/88] w-full max-w-lg rounded-2xl",
+          ].join(" ")}
+        >
         {live && (
           <video
             ref={videoRef}
@@ -526,14 +548,21 @@ export function LiveCapture({
           />
         )}
 
-        {/* The guide is the crop. Hidden once there is a still to look at. */}
-        {live && (
-          <CaptureFrameGuide
-            ref={guideRef}
-            shape={mode === "face" ? "face" : "passport"}
-            dimmed={phase.kind !== "ready" && phase.kind !== "counting"}
-          />
-        )}
+        {/* The guide is the crop, and only a rectangle needs one drawn: the
+            circular aperture IS the crop, so a frame inside it would be a
+            second boundary competing with the one already on screen. The face
+            path still needs the ref — the framing analysis measures against
+            it — so it renders, invisibly, at the aperture's own bounds. */}
+        {live &&
+          (mode === "face" ? (
+            <div ref={guideRef} aria-hidden className="absolute inset-[8%] rounded-full" />
+          ) : (
+            <CaptureFrameGuide
+              ref={guideRef}
+              shape="passport"
+              dimmed={phase.kind !== "ready" && phase.kind !== "counting"}
+            />
+          ))}
 
         {phase.kind === "capturing" && (
           <ScanSweep onDone={() => void settleCapture(phase.image)} />
@@ -559,11 +588,15 @@ export function LiveCapture({
           </div>
         )}
 
-        {/* Instructions live over the scrim, not in a floating pill stack. */}
+        {/* The guidance pill, on the aperture's centre line rather than at its
+            foot. In a circle the foot is the narrowest part of the frame and a
+            pill placed there either overflows the curve or shrinks to fit it;
+            the middle is also where the eye already is, since that is where
+            the camera is asking the face to be. */}
         {phase.kind === "ready" && (
           <p
             role="status"
-            className="absolute inset-x-0 bottom-4 z-raised mx-auto w-fit max-w-[85%] rounded-full bg-black/65 px-3.5 py-1.5 text-center text-2xs font-semibold text-white backdrop-blur-sm"
+            className="absolute inset-x-0 top-1/2 z-raised mx-auto w-fit max-w-[80%] -translate-y-1/2 rounded-full bg-foreground/80 px-4 py-2 text-center text-[11px] font-bold uppercase tracking-[0.1em] text-background backdrop-blur-sm"
           >
             {mode === "face" ? guidance : "Line the photo page up inside the frame"}
           </p>
@@ -571,10 +604,11 @@ export function LiveCapture({
 
         {/* §19 — states what happened. Not "verified", not "accepted". */}
         {phase.kind === "review" && (
-          <p className="absolute inset-x-0 bottom-4 z-raised mx-auto w-fit rounded-full bg-black/65 px-3.5 py-1.5 text-2xs font-semibold text-white backdrop-blur-sm">
+          <p className="absolute inset-x-0 bottom-6 z-raised mx-auto w-fit rounded-full bg-foreground/80 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.1em] text-background backdrop-blur-sm">
             Photo captured
           </p>
         )}
+        </div>
       </div>
 
       {phase.kind === "rejected" && (
@@ -586,13 +620,15 @@ export function LiveCapture({
         </p>
       )}
 
-      {/* Controls. 44px minimum touch targets throughout (§22). */}
+      {/* Controls. Two pills, side by side, at the reference's weights: the
+          undo is quiet and outlined, the commit is solid ink. 44px minimum
+          touch targets throughout (§22). */}
       <div className="flex flex-wrap items-center justify-center gap-3">
         {phase.kind === "ready" && mode === "document" && (
           <button
             type="button"
             onClick={() => setPhase({ kind: "counting" })}
-            className="inline-flex h-12 cursor-pointer items-center gap-2 rounded-xl bg-primary px-7 sm:h-11 text-sm font-bold text-on-primary transition-colors hover:bg-primary-hover"
+            className="inline-flex h-12 cursor-pointer items-center gap-2 rounded-full bg-foreground px-8 text-sm font-bold text-background shadow-e2 transition-[background-color,transform] duration-[--duration-fast] hover:bg-subtle-foreground active:scale-[0.98] motion-reduce:transform-none"
           >
             <Camera aria-hidden className="size-4" />
             Capture
@@ -604,7 +640,7 @@ export function LiveCapture({
             <button
               type="button"
               onClick={restart}
-              className="inline-flex h-12 cursor-pointer items-center gap-2 rounded-xl border border-border bg-surface px-5 sm:h-11 text-sm font-semibold text-foreground transition-colors hover:bg-surface-sunken"
+              className="inline-flex h-12 cursor-pointer items-center gap-2 rounded-full border border-border-strong bg-surface px-7 text-sm font-semibold text-foreground transition-colors hover:bg-surface-sunken"
             >
               <RotateCcw aria-hidden className="size-4" />
               Retake
@@ -617,9 +653,9 @@ export function LiveCapture({
                   stopEverything();
                   onCapture(phase.image);
                 }}
-                className="inline-flex h-12 cursor-pointer items-center rounded-xl bg-primary px-7 sm:h-11 text-sm font-bold text-on-primary transition-colors hover:bg-primary-hover"
+                className="inline-flex h-12 cursor-pointer items-center rounded-full bg-foreground px-9 text-sm font-bold text-background shadow-e2 transition-[background-color,transform] duration-[--duration-fast] hover:bg-subtle-foreground active:scale-[0.98] motion-reduce:transform-none"
               >
-                Use this photo
+                Confirm
               </button>
             ) : (
               <button
@@ -628,7 +664,7 @@ export function LiveCapture({
                   stopEverything();
                   onUploadInstead();
                 }}
-                className="inline-flex h-12 cursor-pointer items-center rounded-xl bg-primary px-6 sm:h-11 text-sm font-bold text-on-primary transition-colors hover:bg-primary-hover"
+                className="inline-flex h-12 cursor-pointer items-center rounded-full bg-foreground px-8 text-sm font-bold text-background shadow-e2 transition-colors hover:bg-subtle-foreground"
               >
                 Upload instead
               </button>
@@ -636,34 +672,6 @@ export function LiveCapture({
           </>
         )}
       </div>
-    </div>
-  );
-}
-
-function Header({
-  requirement,
-  mode,
-  onClose,
-}: {
-  requirement: DocumentRequirement;
-  mode: CaptureMode;
-  onClose: () => void;
-}) {
-  return (
-    <div className="flex items-center justify-between gap-3">
-      <p className="text-sm font-semibold text-foreground">
-        {mode === "face"
-          ? "Take your photograph"
-          : `Photograph your ${requirement.shortLabel.toLowerCase()}`}
-      </p>
-      <button
-        type="button"
-        onClick={onClose}
-        className="flex size-11 cursor-pointer items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-surface-sunken hover:text-foreground sm:size-9"
-      >
-        <X aria-hidden className="size-4" />
-        <span className="sr-only">Close the camera</span>
-      </button>
     </div>
   );
 }

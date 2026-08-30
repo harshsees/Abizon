@@ -155,7 +155,7 @@ function seedState(
 
   // There was a draft, and it pointed further on than the restored state can
   // support. Say so.
-  const wasAhead = Boolean(resumed && known && resumed !== "setup");
+  const wasAhead = Boolean(resumed && known && resumed !== "travellers");
   return { state, resume: wasAhead ? "downgraded" : "restored" };
 }
 
@@ -261,7 +261,7 @@ export function ApplicationProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!state.countrySlug) return;
 
-    const worthResuming = state.travellers.length > 0 || state.step !== "setup";
+    const worthResuming = state.travellers.length > 0 || state.step !== "travellers";
     if (!worthResuming) return;
 
     saveDraft(state.countrySlug, {

@@ -646,6 +646,44 @@ button {
   animation: arrival-load-sweep 1.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 
+/* Passport scan sweep.
+   The bar that travels down a passport page while its machine-readable zone is
+   being read. Translated by 300% rather than 100% because the element is a
+   third of the frame tall and has to clear the whole of it: starting fully
+   above the page and finishing fully below is what makes it read as a pass
+   over the document rather than a band parked on it. */
+@keyframes passport-scan-sweep {
+  0%   { transform: translateY(-100%); }
+  100% { transform: translateY(300%); }
+}
+
+.animate-passport-scan-sweep {
+  animation: passport-scan-sweep 1.9s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+
+/* The hand-off screen, between the documents and the checkout.
+   Two parts: the status line fades up as it changes, and a short segment
+   sweeps the foot of the pill. The sweep is deliberately not a progress bar —
+   there is no percentage to report, and drawing one would be inventing a
+   number. */
+@keyframes processing-line {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-processing-line {
+  animation: processing-line var(--duration-slow, 400ms) var(--ease-out, ease-out) both;
+}
+
+@keyframes processing-sweep {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(400%); }
+}
+
+.animate-processing-sweep {
+  animation: processing-sweep 1.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
 /* OTP caret.
    The code input is one transparent field over six drawn cells, so the real
    caret is hidden and the active cell draws this one instead. A step blink
@@ -740,6 +778,22 @@ button {
      its one allowed iteration would leave the loading screen with no
      indicator at all. Stop it and centre it instead. */
   .animate-arrival-load-sweep {
+    animation: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+  }
+
+  /* Same reasoning as the arrival sweep: the last keyframe parks the bar off
+     the bottom of the passport, so letting it run once would leave the scan
+     with no visible indicator at all. */
+  .animate-passport-scan-sweep,
+  .animate-processing-sweep {
+    animation: none !important;
+    transform: none !important;
+  }
+
+  /* This one ends on the visible keyframe, so it only needs to not move. */
+  .animate-processing-line {
     animation: none !important;
     transform: none !important;
     opacity: 1 !important;

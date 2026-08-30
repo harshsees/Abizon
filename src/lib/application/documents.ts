@@ -24,8 +24,40 @@
 
 import type { Country } from "@/data/countries";
 
-/** Stable key. Used in state maps and as a React key — never displayed. */
-export type DocumentKind = "passport" | "photograph";
+/**
+ * Stable key. Used in state maps and as a React key — never displayed.
+ *
+ * `passportBack` is a client-only member and deliberately so. The reference
+ * flow asks for the passport's back page straight after the photo page ("Now
+ * flip to the back page"), and this flow does too — but `document_kind` in the
+ * database is a Postgres enum with two values, so there is nowhere on the
+ * server to put a third. Until that enum gains a value, the back page is held
+ * in the tab like every document was before the backend existed: shown on the
+ * review screen beside the photo page, and gone when the tab closes.
+ *
+ * Two consequences, both intentional:
+ *
+ *   - It is NOT returned by `requiredDocuments`, so it gates nothing. A step
+ *     cannot be blocked by a document that cannot be stored.
+ *   - `sync.ts` iterates a literal `["passport", "photograph"]`, so it is never
+ *     queued for upload. Nothing needs to know to skip it.
+ */
+export type DocumentKind = "passport" | "passportBack" | "photograph";
+
+/**
+ * The kinds the server has somewhere to put.
+ *
+ * `document_kind` is a Postgres enum, and it has two values. Naming the subset
+ * here means the sync layer's signatures say which kinds they can actually
+ * handle, so a back page cannot be passed to an upload that has no column to
+ * write it to — the compiler stops it rather than the database.
+ */
+export type StoredDocumentKind = Exclude<DocumentKind, "passportBack">;
+
+export const STORED_DOCUMENT_KINDS: readonly StoredDocumentKind[] = [
+  "passport",
+  "photograph",
+];
 
 /**
  * How a document can be supplied.
@@ -61,6 +93,22 @@ const PHOTOGRAPH: DocumentRequirement = {
   shortLabel: "Photo",
   detail:
     "Plain light background, face square to the camera, no headwear or tinted glasses. You can take this in the application.",
+  capture: "either",
+};
+
+/**
+ * The passport's back page.
+ *
+ * Not part of `requiredDocuments` — see the note on `DocumentKind`. It is
+ * exported on its own because exactly one caller wants it: the passport
+ * capture, which walks photo page → back page → review.
+ */
+export const PASSPORT_BACK: DocumentRequirement = {
+  kind: "passportBack",
+  label: "Passport back page",
+  shortLabel: "Back page",
+  detail:
+    "The page carrying your address and the details of your parents or guardian.",
   capture: "either",
 };
 

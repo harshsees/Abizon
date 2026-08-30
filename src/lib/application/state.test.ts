@@ -32,17 +32,67 @@ function withTravellers(names: string[]): ApplicationState {
   });
 }
 
+/**
+ * Everything the documents step asks for BESIDES the files.
+ *
+ * The passport fields and the contact pair used to gate a `details` step of
+ * their own. They gate `documents` now, because the screen that collects them
+ * — the review of what the scan read — happens inside the passport capture
+ * rather than after it. A test about uploads should not have to know that, so
+ * it says it here once.
+ */
+function withConfirmedDetails(state: ApplicationState): ApplicationState {
+  for (const traveller of state.travellers) {
+    state.details[traveller.id] = {
+      fullName: "ASHA KUMARI",
+      dateOfBirth: "1994-03-02",
+      passportNumber: "Z1234567",
+      passportExpiry: "2032-09-01",
+      nationality: "Indian",
+      gender: "Female",
+    };
+  }
+  state.contact = { email: "asha@example.com", phone: "+919876543210" };
+  return state;
+}
+
 /* -------------------------------------------------------------------------- */
 
 describe("blockingReason — documents", () => {
-  it("passes when every required document is attached", () => {
-    const state = withTravellers(["ASHA"]);
+  it("passes when every required document is attached and confirmed", () => {
+    const state = withConfirmedDetails(withTravellers(["ASHA"]));
     const [traveller] = state.travellers;
 
     state.documents[documentKey(traveller.id, "passport")] = stored();
     state.documents[documentKey(traveller.id, "photograph")] = stored();
 
     expect(blockingReason(state, country, "documents")).toBeUndefined();
+  });
+
+  it("blocks until the passport fields have been reviewed", () => {
+    // Both files attached, nothing confirmed. The review screen lives inside
+    // this step, so this is the state somebody is in the moment a scan
+    // finishes and before they have looked at what it read.
+    const state = withTravellers(["ASHA"]);
+    const [traveller] = state.travellers;
+
+    state.documents[documentKey(traveller.id, "passport")] = stored();
+    state.documents[documentKey(traveller.id, "photograph")] = stored();
+
+    expect(blockingReason(state, country, "documents")).toMatch(
+      /passport details are incomplete for ASHA/i,
+    );
+  });
+
+  it("blocks without an email and phone number, and asks for both", () => {
+    const state = withConfirmedDetails(withTravellers(["ASHA"]));
+    const [traveller] = state.travellers;
+
+    state.documents[documentKey(traveller.id, "passport")] = stored();
+    state.documents[documentKey(traveller.id, "photograph")] = stored();
+    state.contact = { email: "", phone: "" };
+
+    expect(blockingReason(state, country, "documents")).toMatch(/email address/i);
   });
 
   it("blocks on a failed upload, and says why", () => {
@@ -79,7 +129,7 @@ describe("blockingReason — documents", () => {
   });
 
   it("still allows a purely local flow, where nothing has been uploaded", () => {
-    const state = withTravellers(["ASHA"]);
+    const state = withConfirmedDetails(withTravellers(["ASHA"]));
     const [traveller] = state.travellers;
 
     // Signed out, or no database. `local` is not a failure and must not block —

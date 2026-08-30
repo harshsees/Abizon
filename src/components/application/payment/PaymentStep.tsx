@@ -10,7 +10,7 @@
  *
  * NO ARITHMETIC HERE (§16). The amount comes from `summary.fees.total`, which
  * `buildSummary` computed on top of `computeTotals`. This file formats it and
- * stops — the same rule `ApplicationSummary` follows, and the reason the fee
+ * stops — the same rule the rest of the flow follows, and the reason the fee
  * shown on this screen cannot disagree with the one in the sticky aside.
  *
  * THE `onPay` IS SIMULATED, and only while `paymentIsPreview`. The step is on
