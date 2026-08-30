@@ -62,13 +62,23 @@
  *                    rather than only for the 153 that are not the UAE.
  */
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 
 import { AppointmentRequirements } from "@/components/AppointmentRequirements";
 import { CountryApplicationPanel } from "@/components/CountryApplicationPanel";
 import { CountryHero } from "@/components/CountryHero";
+import {
+  ApplicationEntryDialog,
+  type EntryChoice,
+} from "@/components/ApplicationEntryDialog";
 import { DatePickerModal } from "@/components/DatePickerModal";
+import {
+  getDraftsSnapshot,
+  getServerDraftsSnapshot,
+  selectDraft,
+  subscribeDrafts,
+} from "@/lib/applicationDraft";
 import { EmiratesCoverage } from "@/components/EmiratesCoverage";
 import { FAQAccordion } from "@/components/FAQAccordion";
 import { GuaranteeBand, NoChargeBand } from "@/components/GuaranteeBand";
@@ -95,6 +105,39 @@ export function CountryVisaPage({ country }: { country: Country }) {
   const [travelDate, setTravelDate] = useState<Date | undefined>();
   const [scrolledPastHero, setScrolledPastHero] = useState(false);
 
+  /**
+   * The entry dialog, and what opened it.
+   *
+   * `seed` carries the panel's configuration when the panel is what opened
+   * it, and is absent for the hero and the sub-nav — which is also what
+   * decides whether the travel question gets asked, since the panel has a
+   * date control of its own and asking twice is the thing this replaces.
+   */
+  const [entry, setEntry] = useState<
+    | null
+    | {
+        seed?: {
+          travellers?: number;
+          plan?: number;
+          travelDate?: string;
+          travelWindow?: "soon" | "later";
+        };
+        askTravelWindow: boolean;
+      }
+  >(null);
+
+  /**
+   * Read here rather than inside the dialog so the dialog stays a pure
+   * presentation of a decision, and so the page can decide whether there is
+   * a decision to present at all.
+   */
+  const drafts = useSyncExternalStore(
+    subscribeDrafts,
+    getDraftsSnapshot,
+    getServerDraftsSnapshot,
+  );
+  const draft = selectDraft(drafts, config.slug);
+
   const pageContainerRef = useRef<HTMLDivElement>(null);
 
   useHeadingReveal(pageContainerRef, ".js-reveal-heading");
@@ -120,36 +163,55 @@ export function CountryVisaPage({ country }: { country: Country }) {
     travellers: number;
     plan: number;
     travelWindow?: "soon" | "later";
+    travelDate?: string;
   }) => {
     const query = new URLSearchParams({
       country: config.slug,
       travellers: String(details.travellers),
       plan: String(details.plan),
     });
-    if (travelDate) query.set("date", travelDate.toISOString().split("T")[0]);
+    // The dialog's own answer wins over the page's picker: it is the more
+    // recent one, and on a resume it is the one that came back with the draft.
+    const isoDate =
+      details.travelDate ?? travelDate?.toISOString().split("T")[0];
+    if (isoDate) query.set("date", isoDate);
     // `when` carries the loose travel answer. Without it the application asked
     // "when do you plan to travel?" again, one screen after the panel had.
     if (details.travelWindow) query.set("when", details.travelWindow);
     router.push(`/apply?${query.toString()}`);
   };
 
-  /** The hero and the mobile bar send the user to the panel to configure. */
-  const focusApplication = () => {
-    document
-      .getElementById(APPLICATION_ANCHOR)
-      ?.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
-
   /**
-   * The hero's primary action. The reference makes "Check Required Documents"
-   * the hero CTA and keeps "Start Application" in the sub-nav — the hero asks
-   * for a look, not a decision, which is the right order for a page whose job
-   * is to answer "can I even do this" before "shall I".
+   * Every control that means "begin" opens the same dialog.
+   *
+   * The hero's `Check Required Documents` used to scroll to the requirements
+   * section and the sub-nav's `Start Application` used to scroll to the
+   * panel, so the page had two front doors that both led to more page. They
+   * lead to the application now, through the two questions that have to be
+   * answered before it can start.
    */
-  const focusDocuments = () => {
-    document
-      .getElementById("documents")
-      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+  const openEntry = (options?: {
+    seed?: {
+      travellers?: number;
+      plan?: number;
+      travelDate?: string;
+      travelWindow?: "soon" | "later";
+    };
+    askTravelWindow?: boolean;
+  }) =>
+    setEntry({
+      seed: options?.seed,
+      askTravelWindow: options?.askTravelWindow ?? true,
+    });
+
+  const handleEntry = (choice: EntryChoice) => {
+    setEntry(null);
+    startApplication({
+      travellers: choice.travellers,
+      plan: choice.plan,
+      travelWindow: choice.travelWindow,
+      travelDate: choice.travelDate,
+    });
   };
 
   /**
@@ -166,12 +228,32 @@ export function CountryVisaPage({ country }: { country: Country }) {
    */
   const applicable = config.flow !== "visa-free";
 
+  /**
+   * The date the entry dialog's two travel buttons are phrased around.
+   *
+   * The same one the guarantee band, the plan selector and the hero all print
+   * — today plus the destination's SLA — so "Before 23 Sep" in the dialog and
+   * "guaranteed by 23 Sep" on the page are the same promise, not two dates the
+   * reader has to reconcile.
+   */
+  const guaranteeDate = (() => {
+    const date = new Date();
+    date.setDate(date.getDate() + config.deliveryDays);
+    return date;
+  })();
+
   const applicationPanel = (
     <CountryApplicationPanel
       config={config}
       travelDate={travelDate}
       onPickDate={() => setIsDatePickerOpen(true)}
-      onStart={startApplication}
+      /* The panel has already asked everything the dialog would, so it opens
+         it only for the one question it cannot answer for itself: whether
+         there is a saved application to carry on with. With no draft the
+         dialog has nothing to ask and gets out of the way. */
+      onStart={(details) =>
+        openEntry({ seed: details, askTravelWindow: false })
+      }
     />
   );
 
@@ -181,12 +263,15 @@ export function CountryVisaPage({ country }: { country: Country }) {
 
       <main id="main-content" tabIndex={-1} className="flex-1 pb-24 md:pb-0">
         <div id="destinations" className="scroll-mt-28">
-          <CountryHero config={config} onCheckDocuments={focusDocuments} />
+          <CountryHero
+            config={config}
+            onCheckDocuments={applicable ? () => openEntry() : undefined}
+          />
         </div>
 
         <SubNavbar
           isSticky={scrolledPastHero}
-          onStart={applicable ? focusApplication : undefined}
+          onStart={applicable ? () => openEntry() : undefined}
           guaranteeLabel={
             applicable
               ? `Visa guaranteed in exactly ${config.deliveryDays} ${
@@ -271,7 +356,6 @@ export function CountryVisaPage({ country }: { country: Country }) {
           <VisaRequirements
             country={country}
             deliveryDays={applicable ? config.deliveryDays : undefined}
-            onStart={applicable ? focusApplication : undefined}
           />
 
           {/* The band that closes the section: what the reader has just been
@@ -337,7 +421,7 @@ export function CountryVisaPage({ country }: { country: Country }) {
       <div className="fixed inset-x-0 bottom-0 z-nav border-t border-border bg-surface/95 p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur-md md:hidden">
         <button
           type="button"
-          onClick={focusApplication}
+          onClick={() => openEntry()}
           className="block w-full cursor-pointer rounded-xl bg-primary px-4 py-3.5 text-center text-sm font-bold text-on-primary hover:bg-primary-hover"
         >
           Start {config.displayName} application
@@ -346,6 +430,19 @@ export function CountryVisaPage({ country }: { country: Country }) {
       )}
 
       <Footer />
+
+      {entry && (
+        <ApplicationEntryDialog
+          countryName={config.displayName}
+          countrySlug={config.slug}
+          guaranteeDate={guaranteeDate}
+          draft={draft}
+          seed={entry.seed}
+          askTravelWindow={entry.askTravelWindow}
+          onGo={handleEntry}
+          onClose={() => setEntry(null)}
+        />
+      )}
 
       <DatePickerModal
         isOpen={isDatePickerOpen}

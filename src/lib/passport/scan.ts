@@ -54,6 +54,7 @@
  * decision before it is a technical one.
  */
 
+import { refineName } from "./names";
 import { decodeOnce, prepare } from "./preprocess";
 import { recoverMrz, score, trustedFields, type TrustedField } from "./recover";
 import type { MrzChecks, MrzFailure, MrzFields } from "./mrz";
@@ -271,12 +272,26 @@ export class BrowserMrzScanner implements PassportScanner {
 
       const { fields, checks } = recovered.result;
 
-      // Pass 3 — where those values are printed. Best-effort by design: a scan
-      // that verified is a success whether or not the page can be annotated.
+      /**
+       * Pass 3 — read the printed page.
+       *
+       * It does two jobs, and the second is the more valuable. It finds where
+       * the verified values are printed, which is what the annotation draws.
+       * And it gives the NAME a second opinion: line 1 of the zone carries no
+       * check digit, so a misread name is undetectable from the zone alone,
+       * while the same name is printed above it in a large clean face. See
+       * `names.ts` for the rules on when the page's spelling is preferred.
+       *
+       * Best-effort by design: a scan that verified is a success whether or not
+       * the page could be read as well.
+       */
       onProgress?.({ phase: "locating" });
       let boxes: FieldBox[] = [];
+      let refined = fields;
       try {
-        boxes = await this.#locate(worker, bitmap, fields);
+        const located = await this.#locate(worker, bitmap, fields);
+        boxes = located.boxes;
+        refined = located.fields;
       } catch {
         boxes = [];
       }
@@ -288,13 +303,15 @@ export class BrowserMrzScanner implements PassportScanner {
       // Every field that has a check digit passed it. The composite may still
       // have failed — it also covers the personal number, which nothing here
       // reads — and that is not a reason to withhold three verified values.
-      if (trusted.length === 3) return { status: "verified", fields, boxes };
+      if (trusted.length === 3) {
+        return { status: "verified", fields: refined, boxes };
+      }
 
       const failed = (Object.keys(checks) as Array<keyof MrzChecks>)
         .filter((key) => !checks[key])
         .map((key) => CHECK_LABELS[key]);
 
-      return { status: "partial", fields, checks, trusted, failed, boxes };
+      return { status: "partial", fields: refined, checks, trusted, failed, boxes };
     } catch {
       bitmap.close();
       return { status: "failed", reason: "engine-error" };
@@ -314,21 +331,32 @@ export class BrowserMrzScanner implements PassportScanner {
     worker: TesseractWorker,
     bitmap: ImageBitmap,
     fields: MrzFields,
-  ): Promise<FieldBox[]> {
+  ): Promise<{ boxes: FieldBox[]; fields: MrzFields }> {
     await this.#configureForPage(worker);
     const prepared = await prepare(bitmap);
     const result = await worker.recognize(prepared.blob, undefined, { blocks: true });
     await this.#configureForMrz(worker);
 
     const words = collectWords(result.data.blocks);
-    if (words.length === 0) return [];
+    if (words.length === 0) return { boxes: [], fields };
+
+    // The names, corrected against the printed page before anything else uses
+    // them — so the boxes below are matched on the CORRECTED spelling, which
+    // is the spelling actually on the page and therefore the one that will
+    // match a word box exactly.
+    const vocabulary = words.map((word) => word.text);
+    const refined: MrzFields = {
+      ...fields,
+      surname: refineName(fields.surname, vocabulary),
+      givenNames: refineName(fields.givenNames, vocabulary),
+    };
 
     const wanted: Array<{ key: FieldBox["key"]; label: string; value: string }> = [
-      { key: "surname", label: "Last name", value: fields.surname },
-      { key: "givenNames", label: "First name", value: fields.givenNames.split(" ")[0] ?? "" },
-      { key: "passportNumber", label: "Passport no", value: fields.passportNumber },
-      { key: "dateOfBirth", label: "Date of birth", value: fields.dateOfBirth },
-      { key: "dateOfExpiry", label: "Valid till", value: fields.dateOfExpiry },
+      { key: "surname", label: "Last name", value: refined.surname },
+      { key: "givenNames", label: "First name", value: refined.givenNames.split(" ")[0] ?? "" },
+      { key: "passportNumber", label: "Passport no", value: refined.passportNumber },
+      { key: "dateOfBirth", label: "Date of birth", value: refined.dateOfBirth },
+      { key: "dateOfExpiry", label: "Valid till", value: refined.dateOfExpiry },
     ];
 
     const boxes: FieldBox[] = [];
@@ -359,7 +387,7 @@ export class BrowserMrzScanner implements PassportScanner {
       });
     }
 
-    return boxes;
+    return { boxes, fields: refined };
   }
 
   async dispose(): Promise<void> {

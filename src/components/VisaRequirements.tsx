@@ -34,14 +34,11 @@ type VisaRequirementsProps = {
   country: Country;
   /** The dataset's SLA, for the second figure in the strip. */
   deliveryDays?: number;
-  /** Renders the section's closing action. Omitted where nothing is applicable. */
-  onStart?: () => void;
 };
 
 export function VisaRequirements({
   country,
   deliveryDays,
-  onStart,
 }: VisaRequirementsProps) {
   const displayName = displayCountryName(country);
   const requirements = requiredDocuments(country.documents);
@@ -138,17 +135,12 @@ export function VisaRequirements({
         </>
       )}
 
-      {onStart && (
-        <div className="mt-10 flex justify-center">
-          <button
-            type="button"
-            onClick={onStart}
-            className="inline-flex h-13 cursor-pointer items-center rounded-full border border-border-strong bg-surface px-9 text-sm font-bold text-foreground shadow-e1 transition-[background-color,transform] duration-[--duration-fast] ease-[--ease-out] hover:bg-surface-sunken active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring motion-reduce:transform-none"
-          >
-            Start Application
-          </button>
-        </div>
-      )}
+      {/* There was a second `Start Application` here, under the document
+          list. It has gone, and nothing replaced it: the sub-nav carries
+          the application CTA from the moment the hero leaves the screen, so
+          this one sat a few hundred pixels below a control saying the same
+          thing, and the reader who had just finished reading what to bring
+          was offered the same door twice. */}
     </div>
   );
 }

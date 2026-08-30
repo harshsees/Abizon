@@ -255,7 +255,7 @@ function TravellerCard({
          a minimum rather than fixed so a destination asking for one document
          keeps the proportion and one asking for three grows instead of
          clipping. */
-      className="flex min-h-[300px] w-[312px] max-w-full flex-col rounded-[20px] bg-surface p-[18px] shadow-e3"
+      className="flex min-h-[300px] w-[312px] max-w-full flex-col rounded-[20px] bg-surface p-[18px] shadow-e4"
     >
       <div className="flex items-center gap-3">
         <span
