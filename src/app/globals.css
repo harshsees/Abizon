@@ -853,6 +853,60 @@ button {
   animation: processing-sweep 1.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 
+/* The opening screen's wordmark.
+   A slow breath rather than a spinner. The mark is the one element carried
+   over from the page the applicant just left, so it should read as the same
+   object still there rather than as a loading indicator that replaced it —
+   which is what a spinning or pulsing-to-transparent mark would read as.
+   Scale only, and only 3%: enough to be alive, not enough to be an event. */
+@keyframes boot-mark {
+  0%, 100% { transform: scale(1); opacity: 0.9; }
+  50%      { transform: scale(1.03); opacity: 1; }
+}
+
+.animate-boot-mark {
+  display: inline-block;
+  animation: boot-mark 1.8s var(--ease-in-out, ease-in-out) infinite;
+}
+
+/* THE TRAVELLER CARD'S ENTRANCE.
+
+   The card turns in from its own left edge rather than fading up. It is the
+   one object on the documents screen and it represents a person, so it is
+   worth the extra 400ms of arrival that a list row would not be.
+
+   Written here rather than as Framer variants because the whole thing is one
+   keyframe on one element — the 3D is `perspective` on the wrapper and
+   `rotateY` on the card, and expressing that as an animated `transform` string
+   in JS costs a motion library on a screen that otherwise needs none.
+
+   `backface-visibility` is deliberately NOT hidden: the card never passes 90°,
+   so its back is never toward the viewer, and hiding the backface would only
+   add a compositing layer for a face that cannot be seen.
+
+   The stagger is set per card as `--flip-delay`, so a party of four arrives as
+   four people rather than as one block of cards. */
+.traveller-card-scene {
+  perspective: 1400px;
+}
+
+@keyframes traveller-card-flip {
+  from {
+    opacity: 0;
+    transform: rotateY(-72deg) translateZ(-40px);
+  }
+  to {
+    opacity: 1;
+    transform: rotateY(0deg) translateZ(0);
+  }
+}
+
+.animate-traveller-card {
+  transform-origin: left center;
+  animation: traveller-card-flip 620ms var(--ease-out-back, cubic-bezier(0.34, 1.4, 0.64, 1))
+    var(--flip-delay, 0ms) both;
+}
+
 /* OTP caret.
    The code input is one transparent field over six drawn cells, so the real
    caret is hidden and the active cell draws this one instead. A step blink
@@ -970,6 +1024,22 @@ button {
 
   /* This one ends on the visible keyframe, so it only needs to not move. */
   .animate-processing-line {
+    animation: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+  }
+
+  /* Loops around a resting state, so stopping it anywhere is correct. */
+  .animate-boot-mark {
+    animation: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+  }
+
+  /* A rotation across three quarters of a right angle is exactly the kind of
+     movement this query exists to switch off. The card ends visible and
+     square, which is the only state that matters. */
+  .animate-traveller-card {
     animation: none !important;
     transform: none !important;
     opacity: 1 !important;

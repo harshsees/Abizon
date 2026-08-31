@@ -125,11 +125,22 @@ export function requiredDocuments(
 ): DocumentRequirement[] {
   switch (documents) {
     case "Photo + Passport":
-      // Photo first, which is the order the field itself names and the order
-      // the reference asks in. It also decides the order the capture screens
-      // chain in, and the photograph is the quicker of the two — finishing one
-      // before starting the passport's four-screen errand.
-      return [PHOTOGRAPH, PASSPORT];
+      /**
+       * PASSPORT FIRST, FACE LAST.
+       *
+       * The field names the photo first and the first build followed it, which
+       * put the live face capture — a camera permission prompt, a countdown and
+       * a framing heuristic — in front of an applicant who had so far typed one
+       * name. It is the heaviest ask in the flow and it was the opening one.
+       *
+       * The order here also decides the order the capture screens chain in, so
+       * flipping it makes the passport errand (upload → scan → back page → scan
+       * → review) run first and lands the face scan at the end, as the last
+       * thing between the applicant and checkout. Everything the face capture
+       * needs — the camera, both hands, the applicant's attention — is
+       * available then and was not at the start.
+       */
+      return [PASSPORT, PHOTOGRAPH];
     case "Passport Only":
       return [PASSPORT];
     case "No Documents Required":

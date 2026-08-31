@@ -151,7 +151,24 @@ export function ScanStage({
           </p>
         )}
 
-        {phase.kind === "read" && (
+        {/* A READ THAT FOUND NOTHING.
+            Reachable only from the back page, which has no machine-readable
+            zone and on many designs carries a handwritten address and little
+            else. The page WAS read; there was simply nothing on it in a shape
+            the reader recognises, and saying so is different from saying the
+            scan failed — the failure state offers "try another image", which
+            here would send somebody to retake a photograph that was fine. */}
+        {phase.kind === "read" && phase.fields.length === 0 && (
+          <div className="rounded-xl border border-border bg-surface-sunken p-4">
+            <p className="text-[14px] font-bold text-foreground">Page saved</p>
+            <p className="mt-1.5 text-[12px] leading-relaxed text-muted-foreground">
+              Nothing on this side needed reading — it is attached to your
+              application as it is.
+            </p>
+          </div>
+        )}
+
+        {phase.kind === "read" && phase.fields.length > 0 && (
           <>
             <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-success">
               Read from the passport

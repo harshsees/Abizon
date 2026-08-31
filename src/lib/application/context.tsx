@@ -11,15 +11,32 @@
  *   `country`     ALWAYS. It is the one piece of state that changes what the
  *                 application IS. A shared or refreshed link has to resolve to
  *                 the same destination or the flow is meaningless.
- *   `travellers`  Seed only. Written by `CountryApplicationPanel` so the
- *   `plan`        choices made on the country page are not asked for twice.
- *   `date`        Read once on entry; the flow owns them from then on.
+ *   `plan`        Seed only. Written by `CountryApplicationPanel` so the
+ *   `date`        choices made on the country page are not asked for twice.
+ *                 Read once on entry; the flow owns them from then on.
+ *   `travellers`  Parsed and validated, but no longer seeds anything — see
+ *                 the note in `seedState`. A party size with no names in it
+ *                 cannot be turned into travellers without inventing blanks.
  *
- * Deliberately NOT in the URL: the current step, traveller names, passport
- * numbers, contact details and document files. A step in the URL is a way to
- * deep-link past validation. The rest is personal data, and a URL is the least
+ * Deliberately NOT in the URL: traveller names, passport numbers, contact
+ * details and document files. Those are personal data, and a URL is the least
  * private thing on the web — it lands in history, in referrer headers, and in
  * whatever a user pastes into a chat window.
+ *
+ * THE HAND-OFF PARAMS ARE THE ONE EXCEPTION, and they are the exception under
+ * conditions. `step`, `t` and `doc` are written into the QR code that carries
+ * an application from a laptop to a phone, and they name a screen rather than
+ * any value on it: which step, which traveller by POSITION in the party, and
+ * which kind of document. There is no name, no number and no image in any of
+ * them, and none is a secret — someone who photographs the code learns that
+ * an application exists and which screen it is on, which is what they would
+ * learn by looking over the applicant's shoulder anyway.
+ *
+ * The original note here said a step in the URL is a way to deep-link past
+ * validation. That is still true and it is still refused: `seedState` runs the
+ * requested step through `canReachStep` and drops it on the floor if the steps
+ * before it are not satisfied — exactly the check a restored draft goes
+ * through. The parameter asks; it does not authorise.
  *
  * WHY HYDRATION IS SAFE HERE
  *
@@ -49,6 +66,7 @@ import {
 import { useSearchParams } from "next/navigation";
 
 import type { Country } from "@/data/countries";
+import type { DocumentKind } from "@/lib/application/documents";
 import { countryFromSlug, resolveCountryVisaConfig } from "@/lib/countryVisa";
 import { getDraft, saveDraft } from "@/lib/applicationDraft";
 
@@ -87,12 +105,55 @@ function readDateParam(value: string | null): string | undefined {
   return Number.isNaN(new Date(value).getTime()) ? undefined : value;
 }
 
+const STEP_IDS: readonly ApplicationStepId[] = [
+  "travellers",
+  "documents",
+  "payment",
+  "ready",
+];
+
+/** A step id, or nothing. Never a cast: this value comes off a QR code. */
+function readStepParam(value: string | null): ApplicationStepId | undefined {
+  return STEP_IDS.find((id) => id === value);
+}
+
+const DOCUMENT_KINDS: readonly DocumentKind[] = [
+  "passport",
+  "passportBack",
+  "photograph",
+];
+
+function readHandoffParams(
+  traveller: string | null,
+  document: string | null,
+): HandoffTarget | undefined {
+  const index = readIntParam(traveller, 0, 9);
+  const kind = DOCUMENT_KINDS.find((candidate) => candidate === document);
+  if (index === undefined || !kind) return undefined;
+  return { traveller: index, document: kind };
+}
+
 type SeedInput = {
   slug?: string;
   travellers?: number;
   plan?: number;
   travelDate?: string;
   travelWindow?: "soon" | "later";
+  /** From a phone hand-off. Honoured only if `canReachStep` allows it. */
+  step?: ApplicationStepId;
+};
+
+/**
+ * Where a phone hand-off asked to land, once it has been read off the URL.
+ *
+ * Positions and kinds only — see the note at the top of this file on why that
+ * is all the QR is allowed to carry. `traveller` is an index into the party as
+ * the laptop had it, because traveller ids are minted per tab and mean nothing
+ * on another device.
+ */
+export type HandoffTarget = {
+  traveller: number;
+  document: DocumentKind;
 };
 
 /**
@@ -123,12 +184,24 @@ function seedState(
 ): { state: ApplicationState; resume: ResumeKind } {
   const draft = input.slug ? getDraft(input.slug) : undefined;
 
-  const travellerCount = input.travellers ?? draft?.travellers ?? 0;
-
-  const names = draft?.travellerNames ?? [];
-  const travellers = Array.from({ length: travellerCount }, (_, index) =>
-    createTraveller(names[index] ?? ""),
-  );
+  /**
+   * ONLY TRAVELLERS WHOSE NAMES ARE KNOWN.
+   *
+   * This used to be `Array.from({ length: travellerCount })`, filling any
+   * shortfall with `createTraveller("")` — so a country page that sent
+   * `?travellers=2` put two nameless travellers into the flow before the
+   * applicant had typed anything, and the opening screen showed a chip
+   * reading "Unnamed" as its default state.
+   *
+   * It was also self-defeating: `blockingReason` refuses to leave the
+   * travellers step while any traveller has an empty name, so those seeded
+   * blanks were the very thing preventing Continue from working. The party
+   * size arrives again as names are typed, one per traveller, which is the
+   * only place it can arrive from with a name attached.
+   */
+  const travellers = (draft?.travellerNames ?? [])
+    .filter((name) => name.trim().length > 0)
+    .map((name) => createTraveller(name));
 
   const travelDate = input.travelDate ?? draft?.travelDate;
   const state = initialState({
@@ -141,12 +214,23 @@ function seedState(
     travelWindow: travelDate ? undefined : (input.travelWindow ?? draft?.travelWindow),
   });
 
-  if (!draft) return { state, resume: "none" };
+  if (!draft) {
+    // A phone opening the hand-off link for the first time has no draft, so
+    // the step below would never be considered. The same gate applies: ask,
+    // and be refused if the steps before it are not satisfied. Without an
+    // account there is nothing to satisfy them WITH, so this is normally a
+    // no-op — it matters when the phone is signed in and `sync.ts` has
+    // already adopted the server's copy of the application.
+    if (input.step && canReachStep(state, country, input.step)) {
+      return { state: { ...state, step: input.step }, resume: "restored" };
+    }
+    return { state, resume: "none" };
+  }
 
   // Only resume onto a step whose way in is actually satisfied. A draft that
   // recorded "review" but whose names are the only thing restored must not
   // drop the applicant past the document step.
-  const resumed = draft.step as ApplicationStepId | undefined;
+  const resumed = input.step ?? (draft.step as ApplicationStepId | undefined);
   const known = stepSequence(country).some((step) => step.id === resumed);
 
   if (resumed && known && canReachStep(state, country, resumed)) {
@@ -191,6 +275,17 @@ export type ApplicationContextValue = {
   resume: ResumeKind;
 
   /**
+   * The screen a phone hand-off asked to open on, or `undefined`.
+   *
+   * A REQUEST, not a destination. `DocumentsStep` opens it once and only if
+   * the traveller and the document it names both exist in the application this
+   * device actually has — a laptop's third traveller does not exist on a phone
+   * that resumed a two-person party, and opening a capture for nobody is
+   * worse than opening the list.
+   */
+  handoff?: HandoffTarget;
+
+  /**
    * The server half. `sync.mode` is what every piece of copy in the flow
    * branches on to decide whether it may claim that anything is saved.
    */
@@ -206,6 +301,17 @@ export function ApplicationProvider({ children }: { children: ReactNode }) {
   const country = countryFromSlug(slugParam);
 
   const windowParam = searchParams.get("when");
+
+  /**
+   * The hand-off. Read once and validated against the real unions rather than
+   * cast — every one of these values arrives from a QR code that anybody could
+   * have edited before scanning it.
+   */
+  const stepParam = readStepParam(searchParams.get("step"));
+  const handoff = readHandoffParams(
+    searchParams.get("t"),
+    searchParams.get("doc"),
+  );
 
   /**
    * The seed is computed ONCE and both halves of it are kept — the state and
@@ -225,6 +331,7 @@ export function ApplicationProvider({ children }: { children: ReactNode }) {
         travelDate: readDateParam(searchParams.get("date")),
         travelWindow:
           windowParam === "soon" || windowParam === "later" ? windowParam : undefined,
+        step: stepParam,
       },
       country,
     ),
@@ -341,6 +448,7 @@ export function ApplicationProvider({ children }: { children: ReactNode }) {
     jumpTo,
     canReach: (step) => canReachStep(state, country, step),
     resume,
+    handoff,
     sync,
   };
 

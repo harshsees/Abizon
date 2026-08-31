@@ -32,16 +32,23 @@ import {
   Check,
   Loader2,
   Lock,
+  MoreVertical,
+  Pencil,
   Plus,
   RotateCw,
   ScanLine,
+  Trash2,
   TriangleAlert,
   Upload,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { getCountrySlug } from "@/data/countries";
-import { PASSPORT_BACK, type DocumentRequirement } from "@/lib/application/documents";
+import {
+  PASSPORT_BACK,
+  requiredDocuments,
+  type DocumentRequirement,
+} from "@/lib/application/documents";
 import { useApplication } from "@/lib/application/context";
 import {
   documentKey,
@@ -57,19 +64,70 @@ import { PhoneHandoffSheet } from "./PhoneHandoffSheet";
 type Target = { travellerId: string; requirement: DocumentRequirement };
 
 export function DocumentsStep() {
-  const { state, dispatch, country, config, sync, blocked, next, jumpTo } =
+  const { state, dispatch, country, config, sync, blocked, next, jumpTo, handoff } =
     useApplication();
-  const [target, setTarget] = useState<Target | null>(null);
+  /**
+   * A phone that arrived on a hand-off link opens the capture it was sent to.
+   *
+   * THE OPENING VALUE OF `target`, not an effect that sets it. An effect would
+   * paint the document list for one frame and then replace it with the capture
+   * takeover, which on a phone is a visible flash of a screen the applicant
+   * never asked for; it would also need a ref to stop it firing again the
+   * moment the capture was closed, since the URL still says what it said. As
+   * an initialiser there is nothing to guard: it runs once, before the first
+   * paint, and closing the capture sets `null` like any other close.
+   *
+   * Resolved only when the traveller and the document it names both exist
+   * here. The link carries a POSITION in the party, and a phone that resumed a
+   * two-person application has no third traveller for a laptop's third
+   * position to point at — an unresolvable target opens the list instead,
+   * which is the honest fallback.
+   */
+  const [target, setTarget] = useState<Target | null>(() => {
+    if (!handoff || !country) return null;
+
+    const person = state.travellers[handoff.traveller];
+    if (!person) return null;
+
+    const requirement = requiredDocuments(country.documents).find(
+      (candidate) => candidate.kind === handoff.document,
+    );
+    if (!requirement) return null;
+
+    return { travellerId: person.id, requirement };
+  });
+
   const [phoneOpen, setPhoneOpen] = useState(false);
 
   if (!country || !config) return null;
 
+  /**
+   * The hand-off link.
+   *
+   * Absolute, because it is going into a QR code that a different device
+   * reads, and aimed, because a code that only says "open the apply page"
+   * makes the phone repeat every screen the laptop has already finished. The
+   * params name a screen and nothing else — see the note at the top of
+   * `context.tsx`. `pending` is the first traveller with something still
+   * outstanding, which is the screen the applicant reached for their phone in
+   * order to do.
+   */
   const applyPath = `/apply?country=${getCountrySlug(country.name)}`;
-  // Absolute, because it is going into a QR code that a different device reads.
+  const pending = state.travellers
+    .map((person, index) => ({
+      index,
+      missing: travellerDocumentState(state, country, person).missing[0],
+    }))
+    .find((candidate) => candidate.missing);
+
+  const handoffPath =
+    `${applyPath}&step=documents` +
+    (pending ? `&t=${pending.index}&doc=${pending.missing!.kind}` : "");
+
   const applyUrl =
     typeof window === "undefined"
-      ? applyPath
-      : `${window.location.origin}${applyPath}`;
+      ? handoffPath
+      : `${window.location.origin}${handoffPath}`;
 
   const traveller = target
     ? state.travellers.find((candidate) => candidate.id === target.travellerId)
@@ -139,10 +197,12 @@ export function DocumentsStep() {
       </header>
 
       <div className="mt-9 flex w-full flex-wrap justify-center gap-5">
-        {state.travellers.map((person) => (
+        {state.travellers.map((person, index) => (
           <TravellerCard
             key={person.id}
             traveller={person}
+            /* One card in, then the next. See `.animate-traveller-card`. */
+            flipDelay={index * 110}
             onOpen={(requirement) =>
               setTarget({ travellerId: person.id, requirement })
             }
@@ -150,6 +210,15 @@ export function DocumentsStep() {
               if (requirement.kind === "passportBack") return;
               sync.retryDocument(person.id, requirement.kind);
             }}
+            onRename={(firstName) =>
+              dispatch({ type: "renameTraveller", id: person.id, firstName })
+            }
+            onRemove={() => dispatch({ type: "removeTraveller", id: person.id })}
+            /* The last traveller cannot be removed from here: an application
+               with nobody on it is not a state this step can render, and the
+               way to start over is Back, not deleting yourself out of the
+               screen you are looking at. */
+            removable={state.travellers.length > 1}
           />
         ))}
       </div>
@@ -183,7 +252,6 @@ export function DocumentsStep() {
         <PhoneHandoffSheet
           applyUrl={applyUrl}
           signedIn={sync.mode === "synced"}
-          signInHref={`/login?next=${encodeURIComponent(applyPath)}`}
           onClose={() => setPhoneOpen(false)}
         />
       )}
@@ -233,70 +301,298 @@ export function DocumentsStep() {
 
 /* -------------------------------------------------------------------------- */
 
+/**
+ * ONE TRAVELLER.
+ *
+ * -- The entrance --
+ *
+ * The card turns in on its own left edge instead of fading up. That is not
+ * decoration for its own sake: this screen is one card on an otherwise empty
+ * page, and something arriving with weight is what stops the screen reading as
+ * a form that failed to load the rest of itself. Parties stagger, so four
+ * travellers arrive as four people.
+ *
+ * The animation is CSS (`.animate-traveller-card`), not Framer. It is one
+ * keyframe on one element and the 3D lives in a `perspective` on the wrapper;
+ * there is nothing here for a motion library to interpolate that a keyframe
+ * cannot.
+ *
+ * -- The menu --
+ *
+ * Rename and remove, behind the three dots in the corner, restored after the
+ * rebuild dropped them and put back in the same place. Renaming happens in
+ * place: the name turns into an input on the card rather than opening a
+ * dialog, because the value being changed is one word long and a modal to edit
+ * one word is a modal too many. Escape abandons it, Enter and blur commit, and
+ * an empty name is refused rather than stored -- a nameless traveller blocks
+ * the step, so accepting one would break the screen from inside the control
+ * that is supposed to fix it.
+ */
 function TravellerCard({
   traveller,
+  flipDelay = 0,
+  removable,
   onOpen,
   onRetry,
+  onRename,
+  onRemove,
 }: {
   traveller: Traveller;
+  /** Milliseconds to hold before the flip-in starts. */
+  flipDelay?: number;
+  /** False for the last traveller standing -- see the call site. */
+  removable: boolean;
   onOpen: (requirement: DocumentRequirement) => void;
   onRetry: (requirement: DocumentRequirement) => void;
+  onRename: (firstName: string) => void;
+  onRemove: () => void;
 }) {
   const { state, country } = useApplication();
+  const [editing, setEditing] = useState(false);
+
   if (!country) return null;
 
   const { required, provided } = travellerDocumentState(state, country, traveller);
   const initials = traveller.firstName.slice(0, 2).toUpperCase() || "?";
 
   return (
-    <section
-      aria-label={`Documents for ${traveller.firstName || "this traveller"}`}
-      /* 312x315 and an 18px inset, measured off the reference. The height is
-         a minimum rather than fixed so a destination asking for one document
-         keeps the proportion and one asking for three grows instead of
-         clipping. */
-      className="flex min-h-[300px] w-[312px] max-w-full flex-col rounded-[20px] bg-surface p-[18px] shadow-e4"
-    >
-      <div className="flex items-center gap-3">
-        <span
-          aria-hidden
-          className="flex size-[46px] flex-shrink-0 items-center justify-center rounded-full bg-primary text-[15px] font-bold tracking-[0.02em] text-on-primary"
-        >
-          {initials}
-        </span>
-        <div className="min-w-0">
-          <p className="truncate text-[19px] font-medium uppercase leading-tight tracking-[0.01em] text-foreground underline decoration-border-strong decoration-1 underline-offset-[5px]">
-            {traveller.firstName || "Unnamed"}
-          </p>
-          <p className="mt-1 text-[14px] leading-none text-muted-foreground" data-numeric>
-            {provided.length}/{required.length} docs uploaded
-          </p>
-        </div>
-      </div>
+    <div className="traveller-card-scene w-[312px] max-w-full">
+      <section
+        aria-label={`Documents for ${traveller.firstName || "this traveller"}`}
+        style={{ "--flip-delay": `${flipDelay}ms` } as React.CSSProperties}
+        /* 312x315 and an 18px inset, measured off the reference. The height is
+           a minimum rather than fixed so a destination asking for one document
+           keeps the proportion and one asking for three grows instead of
+           clipping. */
+        className="animate-traveller-card flex min-h-[300px] w-full flex-col rounded-[20px] bg-surface p-[18px] shadow-e4"
+      >
+        <div className="flex items-start gap-3">
+          <span
+            aria-hidden
+            className="flex size-[46px] flex-shrink-0 items-center justify-center rounded-full bg-primary text-[15px] font-bold tracking-[0.02em] text-on-primary"
+          >
+            {initials}
+          </span>
 
-      {/* `mt-auto` rather than a fixed gap. The reference leaves a good third
-          of the card empty between the person and their documents, and that
-          space is what stops the card reading as a dense list item — but it is
-          the space LEFT OVER, so it has to be pushed rather than measured, or a
-          two-document card and a one-document card stop lining up. */}
-      <div className="mt-auto space-y-2 pt-9">
-        {required.map((requirement) => (
-          <RequirementRow
-            key={requirement.kind}
-            requirement={requirement}
-            entry={state.documents[documentKey(traveller.id, requirement.kind)]}
-            onOpen={() => onOpen(requirement)}
-            onRetry={() => onRetry(requirement)}
+          <div className="min-w-0 flex-1 pt-0.5">
+            {editing ? (
+              <NameEditor
+                value={traveller.firstName}
+                onCommit={(next) => {
+                  if (next.trim().length > 0) onRename(next);
+                  setEditing(false);
+                }}
+                onCancel={() => setEditing(false)}
+              />
+            ) : (
+              <p className="truncate text-[19px] font-medium uppercase leading-tight tracking-[0.01em] text-foreground underline decoration-border-strong decoration-1 underline-offset-[5px]">
+                {traveller.firstName}
+              </p>
+            )}
+            <p className="mt-1 text-[14px] leading-none text-muted-foreground" data-numeric>
+              {provided.length}/{required.length} docs uploaded
+            </p>
+          </div>
+
+          <CardMenu
+            name={traveller.firstName}
+            removable={removable}
+            onEdit={() => setEditing(true)}
+            onRemove={onRemove}
           />
-        ))}
+        </div>
 
-        {required.length === 0 && (
-          <p className="rounded-[14px] bg-surface-sunken px-4 py-3 text-[13px] leading-relaxed text-muted-foreground">
-            {country.name} asks for no documents. There is nothing to attach.
-          </p>
-        )}
-      </div>
-    </section>
+        {/* `mt-auto` rather than a fixed gap. The reference leaves a good third
+            of the card empty between the person and their documents, and that
+            space is what stops the card reading as a dense list item -- but it
+            is the space LEFT OVER, so it has to be pushed rather than measured,
+            or a two-document card and a one-document card stop lining up. */}
+        <div className="mt-auto space-y-2 pt-9">
+          {required.map((requirement) => (
+            <RequirementRow
+              key={requirement.kind}
+              requirement={requirement}
+              entry={state.documents[documentKey(traveller.id, requirement.kind)]}
+              onOpen={() => onOpen(requirement)}
+              onRetry={() => onRetry(requirement)}
+            />
+          ))}
+
+          {required.length === 0 && (
+            <p className="rounded-[14px] bg-surface-sunken px-4 py-3 text-[13px] leading-relaxed text-muted-foreground">
+              {country.name} asks for no documents. There is nothing to attach.
+            </p>
+          )}
+        </div>
+      </section>
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Rename in place.
+ *
+ * Sized and cased to sit exactly where the name was, so opening the editor
+ * does not move the card's contents by a pixel -- the text simply becomes
+ * editable. Uppercase because the reducer uppercases on commit anyway, and a
+ * field that shows one thing and stores another is a field that surprises.
+ */
+function NameEditor({
+  value,
+  onCommit,
+  onCancel,
+}: {
+  value: string;
+  onCommit: (value: string) => void;
+  onCancel: () => void;
+}) {
+  const [draft, setDraft] = useState(value);
+  const ref = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    ref.current?.focus();
+    ref.current?.select();
+  }, []);
+
+  return (
+    <input
+      ref={ref}
+      value={draft}
+      onChange={(event) => setDraft(event.target.value)}
+      onBlur={() => onCommit(draft)}
+      onKeyDown={(event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          onCommit(draft);
+        }
+        if (event.key === "Escape") {
+          event.preventDefault();
+          onCancel();
+        }
+      }}
+      aria-label="Traveller's first name"
+      autoComplete="off"
+      spellCheck={false}
+      className="w-full border-b border-border-strong bg-transparent pb-0.5 text-[19px] font-medium uppercase leading-tight tracking-[0.01em] text-foreground outline-none"
+    />
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+
+/**
+ * The three dots.
+ *
+ * A plain popover rather than a library menu: two items, no submenus, no
+ * typeahead. What it does owe the keyboard is an escape hatch and a click-away,
+ * both of which are here -- a popover that can only be closed by choosing
+ * something from it is a trap.
+ *
+ * Remove asks first. It discards a person and every document attached to them,
+ * and it sits one row away from Edit; an undo would be better, but this flow
+ * has nowhere to put one, and a confirm is what is available.
+ */
+function CardMenu({
+  name,
+  removable,
+  onEdit,
+  onRemove,
+}: {
+  name: string;
+  removable: boolean;
+  onEdit: () => void;
+  onRemove: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [confirming, setConfirming] = useState(false);
+  const wrap = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const dismiss = () => {
+      setConfirming(false);
+      setOpen(false);
+    };
+
+    const onPointer = (event: PointerEvent) => {
+      if (!wrap.current?.contains(event.target as Node)) dismiss();
+    };
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") dismiss();
+    };
+
+    document.addEventListener("pointerdown", onPointer);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", onPointer);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+
+  return (
+    <div ref={wrap} className="relative flex-shrink-0">
+      <button
+        type="button"
+        onClick={() => {
+          // The confirmation belongs to one opening of the menu, not to the
+          // card: reopening it must not show "Tap again to remove" still
+          // armed from last time. Cleared on the toggle rather than in an
+          // effect watching `open`, which is the same reset one render later
+          // and one cascading render more expensive.
+          setConfirming(false);
+          setOpen((value) => !value);
+        }}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-label={`Options for ${name || "this traveller"}`}
+        className="flex size-8 cursor-pointer items-center justify-center rounded-full text-muted-foreground transition-colors duration-[--duration-fast] hover:bg-surface-sunken hover:text-foreground"
+      >
+        <MoreVertical aria-hidden className="size-4" />
+      </button>
+
+      {open && (
+        <div
+          role="menu"
+          className="absolute right-0 top-9 z-raised w-[188px] overflow-hidden rounded-xl border border-border bg-surface py-1 shadow-e3"
+        >
+          <button
+            type="button"
+            role="menuitem"
+            onClick={() => {
+              setOpen(false);
+              onEdit();
+            }}
+            className="flex w-full cursor-pointer items-center gap-2.5 px-3 py-2.5 text-left text-[13px] font-medium text-foreground transition-colors hover:bg-surface-sunken"
+          >
+            <Pencil aria-hidden className="size-3.5 text-muted-foreground" />
+            Edit name
+          </button>
+
+          {removable && (
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                if (!confirming) {
+                  setConfirming(true);
+                  return;
+                }
+                setOpen(false);
+                onRemove();
+              }}
+              className="flex w-full cursor-pointer items-center gap-2.5 px-3 py-2.5 text-left text-[13px] font-medium text-destructive transition-colors hover:bg-destructive-subtle"
+            >
+              <Trash2 aria-hidden className="size-3.5" />
+              {confirming ? "Tap again to remove" : "Remove traveller"}
+            </button>
+          )}
+        </div>
+      )}
+    </div>
   );
 }
 

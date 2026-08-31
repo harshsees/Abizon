@@ -88,20 +88,25 @@ export function TravellersStep() {
       {/* The field and its button sit on the page's middle third rather than
           directly under the heading. The reference leaves ~300px of nothing
           between the two, and that space is what makes the field read as the
-          thing to do rather than as the next item in a list. */}
-      <div className="flex w-full max-w-[640px] flex-1 flex-col justify-center pb-24">
+          thing to do rather than as the next item in a list.
+
+          `pt-16` nudges the whole block below the optical centre. Centred
+          exactly, the field and the heading read as two items with a gap
+          between them; a little lower and the heading owns the top of the page
+          and the field owns the middle, which is the reference's proportion. */}
+      <div className="flex w-full max-w-[640px] flex-1 flex-col justify-center pb-24 pt-16 md:pt-24">
         {state.travellers.length > 0 && (
           <ul className="mb-7 flex flex-wrap justify-center gap-1.5">
             {state.travellers.map((traveller) => (
               <li key={traveller.id}>
                 <span className="inline-flex items-center gap-1 rounded-full border border-border bg-surface py-1 pl-3 pr-1 text-[11px] font-bold uppercase tracking-[0.04em] text-foreground shadow-e1">
-                  {traveller.firstName || "Unnamed"}
+                  {traveller.firstName}
                   <button
                     type="button"
                     onClick={() =>
                       dispatch({ type: "removeTraveller", id: traveller.id })
                     }
-                    aria-label={`Remove ${traveller.firstName || "this traveller"}`}
+                    aria-label={`Remove ${traveller.firstName}`}
                     className="flex size-5 cursor-pointer items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-surface-sunken hover:text-foreground"
                   >
                     <X aria-hidden className="size-3" />
@@ -124,7 +129,21 @@ export function TravellersStep() {
             type="text"
             value={name}
             onChange={(event) => setName(event.target.value)}
-            autoComplete="given-name"
+            /* NO SUGGESTION LIST.
+               `autoComplete="given-name"` asked the browser to offer saved
+               names here, so clicking the field dropped a native dropdown of
+               everything previously typed into it over the page — on a screen
+               whose entire design is one line of type on empty space, that is
+               the most intrusive thing that can appear on it. `off` alone is
+               not always honoured for a text field with a recognisable name,
+               so the field is also named something no heuristic matches and
+               the two common password managers are told to stay out. */
+            autoComplete="off"
+            autoCorrect="off"
+            name="traveller-first-name"
+            data-lpignore="true"
+            data-1p-ignore
+            data-form-type="other"
             spellCheck={false}
             aria-label={
               state.travellers.length > 0
@@ -147,16 +166,24 @@ export function TravellersStep() {
                not have. The rule below thickens and takes the brand colour on
                focus instead, which is a visible indicator on the element's own
                boundary — what the outline was there to provide. */
-            className="w-full appearance-none border-0 bg-transparent pb-3.5 text-center text-[22px] font-medium uppercase tracking-[-0.01em] text-foreground caret-primary shadow-none outline-none ring-0 focus:border-0 focus:outline-none focus:ring-0 focus-visible:outline-none placeholder:normal-case placeholder:font-normal placeholder:text-muted-foreground/70 sm:text-[25px] md:text-[27px]"
+            className="w-full appearance-none border-0 bg-transparent pb-3.5 text-center text-[22px] font-medium uppercase tracking-[-0.01em] text-foreground caret-foreground shadow-none outline-none ring-0 focus:border-0 focus:outline-none focus:ring-0 focus-visible:outline-none placeholder:normal-case placeholder:font-normal placeholder:text-muted-foreground/70 sm:text-[25px] md:text-[27px]"
           />
 
           {/* The rule. Dotted at rest — a solid border reads as an input's
-              underline, dotted reads as a writing line — and solid, doubled and
-              amber while the field has focus, which is this field's focus
-              indicator. */}
+              underline, dotted reads as a writing line — and solid and darker
+              while the field has focus.
+
+              IT USED TO GO AMBER. `--color-primary` is this product's brand
+              yellow, and a 640px yellow line under the one thing on the screen
+              read as a validation warning rather than as focus: yellow means
+              "look at this, something is wrong" everywhere else in the app.
+              The indicator is now weight and ink — dashed hairline to solid
+              2px in `border-strong` — which is still a visible, non-colour
+              change on the element's own boundary, so WCAG 2.4.7 is satisfied
+              without the field appearing to complain about what is in it. */}
           <div
             aria-hidden
-            className="h-0.5 w-full border-t border-dashed border-border-strong transition-colors duration-[--duration-fast] group-focus-within/field:border-t-2 group-focus-within/field:border-solid group-focus-within/field:border-primary motion-reduce:transition-none"
+            className="h-0.5 w-full border-t border-dashed border-border-strong transition-[border] duration-[--duration-fast] group-focus-within/field:border-t-2 group-focus-within/field:border-solid group-focus-within/field:border-foreground motion-reduce:transition-none"
           />
 
           <button

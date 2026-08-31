@@ -21,20 +21,23 @@
  * invented reference number. It shows what was charged, to which card, for
  * which destination, and nothing it cannot source.
  *
- * IN PREVIEW MODE THE RECEIPT IS STAMPED. The screen is live ahead of a
- * gateway, so this state is reachable without an acquirer having answered, and
- * a document that looks like a payment record but is not one must say so on its
- * face. `PAYMENT_PREVIEW_RECEIPT_STAMP` is printed across it the way a specimen
- * receipt is printed — because the receipt outlives the screen it appeared on,
- * in a screenshot or forwarded to somebody who never saw the notice on the
- * form. Nothing else about the state changes: the design is the design.
+ * THE PREVIEW STAMP HAS BEEN REMOVED at the product owner's request, along
+ * with the banner that used to sit above the form. `preview` is still threaded
+ * through this component and still softens the headline — "That is how payment
+ * will look" rather than "Payment received", which is the one claim on the
+ * screen that would be false — but nothing is printed across the receipt any
+ * more.
+ *
+ * `PAYMENT_PREVIEW_RECEIPT_STAMP` still exists in `paymentConfig.ts`, is still
+ * argued for in that file's header, and is still checked by
+ * `paymentConfig.test.ts` for wording. Putting the stamp back is rendering one
+ * constant in one place; nothing here was rebuilt around its absence.
  */
 
 import { motion } from "framer-motion";
 import { Loader2 } from "lucide-react";
 
 import { DURATION, EASE, SPRING } from "@/lib/motion";
-import { PAYMENT_PREVIEW_RECEIPT_STAMP } from "@/lib/paymentConfig";
 
 export type PaymentReceipt = {
   /** Formatted, e.g. "₹12,340". The overlay does no arithmetic. */
@@ -120,7 +123,7 @@ export function PaymentOverlay({
           jump: `layoutId` makes the card animate to its new place. */}
       {settled && (
         <div className="w-[320px] overflow-hidden pt-1.5 -mb-14">
-          <Receipt receipt={receipt} preview={preview} />
+          <Receipt receipt={receipt} />
         </div>
       )}
 
@@ -207,13 +210,7 @@ export function PaymentOverlay({
  * place rather than stopping dead — a receipt leaving a printer has weight. The
  * mask clips it; the card in front hides the last of its travel.
  */
-function Receipt({
-  receipt,
-  preview,
-}: {
-  receipt: PaymentReceipt;
-  preview: boolean;
-}) {
+function Receipt({ receipt }: { receipt: PaymentReceipt }) {
   return (
     <motion.div
       // 100% of its own height, so the travel is correct whatever the paper
@@ -228,12 +225,6 @@ function Receipt({
       <p className="mt-0.5 text-center text-[11px] tracking-wide text-slate-500">
         PAYMENT RECEIPT
       </p>
-
-      {preview && (
-        <p className="mt-2 border-y-2 border-slate-900 py-1 text-center text-[11px] font-bold tracking-wide text-slate-900">
-          {PAYMENT_PREVIEW_RECEIPT_STAMP}
-        </p>
-      )}
 
       <Rule />
       <ReceiptRow label="Date" value={dateFormat.format(receipt.at)} />

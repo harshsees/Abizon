@@ -146,11 +146,40 @@ function normalise(data: ImageData): ImageData {
 }
 
 /**
- * Crop, scale and normalise.
+ * Crop, scale and — optionally — normalise.
  *
  * `region` is in fractions of the source so callers can say "the bottom third"
  * without knowing the pixel size, and so the result can be mapped back onto the
  * original for drawing.
+ *
+ * ── WHY THE CONTRAST PASS IS OPTIONAL ──
+ *
+ * `normalise` stretches the histogram between its 5th and 95th percentiles,
+ * and that is the right stretch FOR A MACHINE-READABLE ZONE. A crop of the
+ * zone is two dense lines of monospaced text on a narrow band: ink is a large
+ * fraction of the pixels, so the 5th percentile lands inside the ink, the 95th
+ * lands in the paper, and the stretch separates them.
+ *
+ * On a WHOLE PAGE it does the opposite. A data page is around ninety-five per
+ * cent background, so both percentiles land in the paper, the span between
+ * them collapses to a few levels, and the lookup table turns every pixel into
+ * pure black or pure white — with the threshold sitting in the middle of the
+ * paper rather than between paper and ink. Thin printed glyphs disintegrate.
+ *
+ * That was not a theoretical concern. It was measured: the printed-page pass
+ * on a clean 900x600 render came back as
+ *
+ *     ["ws","E|","if","|","|","7","ASLELr","Te","CE","m4","a)","bd",...]
+ *
+ * with two of seventeen words legible. Every caller that reads a printed page
+ * — the field-locating pass behind the scan annotation, the name's second
+ * opinion in `names.ts`, and the back page reader — was running on that. The
+ * name refinement in particular could not have worked: it was being handed a
+ * vocabulary of noise and correctly declining to match anything in it.
+ *
+ * So the flag is not a tuning knob. `contrast: false` is what a page read
+ * needs, and the default stays `true` because the MRZ crop is the caller this
+ * function was written for.
  */
 export async function prepare(
   source: Blob | ImageBitmap,
@@ -160,6 +189,7 @@ export async function prepare(
     width: 1,
     height: 1,
   },
+  { contrast = true }: { contrast?: boolean } = {},
 ): Promise<PreparedImage> {
   const bitmap = source instanceof Blob ? await decode(source) : source;
 
@@ -198,13 +228,15 @@ export async function prepare(
   context.imageSmoothingQuality = "high";
   context.drawImage(bitmap, sx, sy, sw, sh, 0, 0, width, height);
 
-  try {
-    const data = context.getImageData(0, 0, width, height);
-    context.putImageData(normalise(data), 0, 0);
-  } catch {
-    // A tainted canvas cannot be read back. Every path here uses a Blob the
-    // page itself produced, so this should not happen — but an unreadable
-    // canvas is a reason to skip the contrast pass, not to fail the scan.
+  if (contrast) {
+    try {
+      const data = context.getImageData(0, 0, width, height);
+      context.putImageData(normalise(data), 0, 0);
+    } catch {
+      // A tainted canvas cannot be read back. Every path here uses a Blob the
+      // page itself produced, so this should not happen — but an unreadable
+      // canvas is a reason to skip the contrast pass, not to fail the scan.
+    }
   }
 
   if (source instanceof Blob) bitmap.close();

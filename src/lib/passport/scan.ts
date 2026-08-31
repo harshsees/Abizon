@@ -55,6 +55,7 @@
  */
 
 import { refineName } from "./names";
+import { nationalityFromPageText } from "./nationality";
 import { decodeOnce, prepare } from "./preprocess";
 import { recoverMrz, score, trustedFields, type TrustedField } from "./recover";
 import type { MrzChecks, MrzFailure, MrzFields } from "./mrz";
@@ -69,8 +70,30 @@ export type ScanProgress =
  * Where a value is printed on the page, in fractions of the image, with the
  * label to put beside it. Empty when pass 3 found nothing — never a guess.
  */
+/**
+ * The values a scan can point at on a page.
+ *
+ * The first five come off the photo page and are cross-checked against the
+ * machine-readable zone. The rest come off the BACK page, which has no zone,
+ * and are found by their printed label rather than by matching a verified
+ * value — see `#readBackPage`. They are annotated and shown; none of them
+ * reaches the form.
+ */
+export type FieldBoxKey =
+  | "surname"
+  | "givenNames"
+  | "passportNumber"
+  | "dateOfBirth"
+  | "dateOfExpiry"
+  | "fatherName"
+  | "motherName"
+  | "spouseName"
+  | "address"
+  | "fileNumber"
+  | "oldPassport";
+
 export type FieldBox = {
-  key: "surname" | "givenNames" | "passportNumber" | "dateOfBirth" | "dateOfExpiry";
+  key: FieldBoxKey;
   label: string;
   value: string;
   /** Fractions of the original image, top-left origin. */
@@ -109,8 +132,48 @@ export type ScanOutcome =
     }
   | { status: "failed"; reason: MrzFailure | "engine-error" };
 
+/**
+ * WHAT A BACK PAGE READ COMES BACK AS.
+ *
+ * A deliberately smaller answer than `ScanOutcome`, because a back page is a
+ * deliberately smaller read. There is no machine-readable zone on it and
+ * therefore no check digit anywhere on the page, so there is no `verified`
+ * state to report and nothing here is presented as verified.
+ *
+ *   read    OCR found the page and something on it. `values` is what it found,
+ *           `boxes` is where. Either may be empty — a back page whose fields
+ *           are all handwritten is still a successfully read back page.
+ *   failed  the engine could not run, or the image could not be decoded.
+ *
+ * `nationality` is the ONE value that leaves this module for the form, and it
+ * is the one value on the page drawn from a closed list. See
+ * `backPageToDetails` for why the rest stays here.
+ */
+export type BackPageOutcome =
+  | {
+      status: "read";
+      /** Label/value pairs for the screen, in printed order. */
+      values: Array<{ label: string; value: string }>;
+      boxes: FieldBox[];
+      /** Resolved from the issuing state printed on the page, if it is there. */
+      nationality?: string;
+    }
+  | { status: "failed"; reason: "engine-error" };
+
 export interface PassportScanner {
   scan(image: Blob, onProgress?: (progress: ScanProgress) => void): Promise<ScanOutcome>;
+  /**
+   * Read the passport's back page.
+   *
+   * Shares the worker with `scan`, which is the whole reason it lives on the
+   * same object: the engine costs several megabytes and a second or two to
+   * start, and the back page is read moments after the photo page in the same
+   * errand. A separate scanner instance would pay that twice.
+   */
+  scanBackPage(
+    image: Blob,
+    onProgress?: (progress: ScanProgress) => void,
+  ): Promise<BackPageOutcome>;
   /** Release the worker. Cheap to call when it was never started. */
   dispose(): Promise<void>;
 }
@@ -333,7 +396,9 @@ export class BrowserMrzScanner implements PassportScanner {
     fields: MrzFields,
   ): Promise<{ boxes: FieldBox[]; fields: MrzFields }> {
     await this.#configureForPage(worker);
-    const prepared = await prepare(bitmap);
+    // No contrast pass. See the note on `prepare` — the percentile stretch is
+    // built for the zone's crop and reduces a whole page to noise.
+    const prepared = await prepare(bitmap, undefined, { contrast: false });
     const result = await worker.recognize(prepared.blob, undefined, { blocks: true });
     await this.#configureForMrz(worker);
 
@@ -390,12 +455,241 @@ export class BrowserMrzScanner implements PassportScanner {
     return { boxes, fields: refined };
   }
 
+  /**
+   * READ THE BACK PAGE.
+   *
+   * ── Why it is a different method and not a flag on `scan` ──
+   *
+   * Because it is a different problem. `scan` is built around a
+   * machine-readable zone: it crops to the bottom third, constrains the
+   * alphabet to the MRZ's thirty-seven characters, and lets the check digits
+   * decide whether the read may be believed. A back page has none of that. It
+   * is ordinary printed text in ordinary type, with labels beside values, and
+   * running the MRZ configuration over it would return a page of nonsense with
+   * nothing to catch it.
+   *
+   * So this is one pass with the PAGE configuration — no whitelist, normal
+   * layout analysis, word boxes on — and everything downstream of it treats
+   * what comes back as unverified, because it is.
+   *
+   * ── How values are found ──
+   *
+   * By their printed label, not by matching something already known. The photo
+   * page could match against MRZ values whose check digits had passed; here
+   * there is nothing to match against, so the reader looks for `FATHER`,
+   * `MOTHER`, `ADDRESS`, `FILE NO` and their common variants, and takes what
+   * is printed after them on the same line.
+   *
+   * That is a weaker technique and it is treated as one. A label that is not
+   * found yields nothing rather than a guess, the values are shown on the scan
+   * screen and go no further, and the applicant is not asked to confirm any of
+   * them — the review screen's fields all come from the photo page.
+   *
+   * ── The one exception ──
+   *
+   * Nationality, via `nationalityFromPageText`, which only ever returns a
+   * member of a closed list of country names. A misread produces no answer
+   * rather than a wrong one, which is the property that makes it safe to put
+   * in the form — and it fills the gap left when the MRZ's three-letter code
+   * came back as noise.
+   */
+  async scanBackPage(
+    image: Blob,
+    onProgress?: (progress: ScanProgress) => void,
+  ): Promise<BackPageOutcome> {
+    let worker: TesseractWorker;
+    let bitmap: ImageBitmap;
+
+    try {
+      worker = await this.#ensureWorker(onProgress);
+      bitmap = await decodeOnce(image);
+    } catch {
+      // As in `scan`: never logged with the error attached, because an OCR
+      // stack can carry image data and this runs on a passport.
+      return { status: "failed", reason: "engine-error" };
+    }
+
+    try {
+      onProgress?.({ phase: "locating" });
+
+      await this.#configureForPage(worker);
+      // As in `#locate`: a printed page is read without the MRZ contrast pass.
+      const prepared = await prepare(bitmap, undefined, { contrast: false });
+      const result = await worker.recognize(prepared.blob, undefined, { blocks: true });
+      // Left as it was found, so the next photo-page scan does not inherit a
+      // page configuration it did not ask for.
+      await this.#configureForMrz(worker);
+
+      bitmap.close();
+
+      const words = collectWords(result.data.blocks);
+      const lines = groupIntoLines(words);
+
+      const found: FieldBox[] = [];
+      const values: Array<{ label: string; value: string }> = [];
+
+      for (const field of BACK_PAGE_FIELDS) {
+        const hit = findLabelledValue(lines, field.match);
+        if (!hit) continue;
+
+        values.push({ label: field.label, value: hit.text });
+        found.push({
+          key: field.key,
+          label: field.label,
+          value: hit.text,
+          x: hit.bbox.x0 / prepared.width,
+          y: hit.bbox.y0 / prepared.height,
+          width: (hit.bbox.x1 - hit.bbox.x0) / prepared.width,
+          height: (hit.bbox.y1 - hit.bbox.y0) / prepared.height,
+        });
+      }
+
+      return {
+        status: "read",
+        values,
+        boxes: found,
+        nationality: nationalityFromPageText(words.map((word) => word.text)),
+      };
+    } catch {
+      bitmap.close();
+      return { status: "failed", reason: "engine-error" };
+    }
+  }
+
   async dispose(): Promise<void> {
     const worker = this.#worker;
     this.#worker = null;
     this.#starting = null;
     await worker?.terminate().catch(() => {});
   }
+}
+
+/* -------------------------------------------------------------------------- */
+/* The back page                                                              */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * What to look for, and the words it is printed under.
+ *
+ * The variants are not padding. `FATHER` alone misses "NAME OF FATHER" on some
+ * designs and "FATHER'S NAME" on others once the apostrophe has been OCR'd as
+ * a comma or dropped entirely, which is why matching is done on letters only.
+ * Ordered as the fields appear on the page, so the list beside the image reads
+ * top to bottom.
+ */
+const BACK_PAGE_FIELDS: Array<{
+  key: FieldBoxKey;
+  label: string;
+  /** Normalised label fragments. Any one of them matching is a hit. */
+  match: string[];
+}> = [
+  { key: "fatherName", label: "Father", match: ["FATHER", "LEGALGUARDIAN", "GUARDIAN"] },
+  { key: "motherName", label: "Mother", match: ["MOTHER"] },
+  { key: "spouseName", label: "Spouse", match: ["SPOUSE", "HUSBAND", "WIFE"] },
+  { key: "address", label: "Address", match: ["ADDRESS"] },
+  { key: "oldPassport", label: "Previous passport", match: ["OLDPASSPORT", "PREVIOUSPASSPORT"] },
+  { key: "fileNumber", label: "File number", match: ["FILENO", "FILENUMBER"] },
+];
+
+type TesseractLine = { words: TesseractWord[]; bbox: Rect };
+
+/**
+ * Words grouped into lines by vertical overlap.
+ *
+ * The recognition tree does have a `lines` level, but this walks words instead,
+ * for the same reason `collectWords` does: tesseract.js has moved the shape of
+ * that tree between versions, and word nodes are recognisable by carrying a
+ * `symbols` array rather than by their depth. Grouping by geometry is a few
+ * lines and cannot be broken by a library upgrade.
+ *
+ * Two words are on the same line when their vertical extents overlap by more
+ * than half the shorter one's height. That is more forgiving than comparing
+ * baselines, which matters on a photographed page that is never quite square.
+ */
+function groupIntoLines(words: TesseractWord[]): TesseractLine[] {
+  const sorted = [...words].sort((a, b) => a.bbox.y0 - b.bbox.y0);
+  const lines: TesseractLine[] = [];
+
+  for (const word of sorted) {
+    const height = word.bbox.y1 - word.bbox.y0;
+    const line = lines.find((candidate) => {
+      const overlap =
+        Math.min(candidate.bbox.y1, word.bbox.y1) -
+        Math.max(candidate.bbox.y0, word.bbox.y0);
+      return overlap > Math.min(height, candidate.bbox.y1 - candidate.bbox.y0) * 0.5;
+    });
+
+    if (line) {
+      line.words.push(word);
+      line.bbox = {
+        x0: Math.min(line.bbox.x0, word.bbox.x0),
+        y0: Math.min(line.bbox.y0, word.bbox.y0),
+        x1: Math.max(line.bbox.x1, word.bbox.x1),
+        y1: Math.max(line.bbox.y1, word.bbox.y1),
+      };
+    } else {
+      lines.push({ words: [word], bbox: { ...word.bbox } });
+    }
+  }
+
+  // Left to right within each line: the words arrived sorted by height alone.
+  for (const line of lines) line.words.sort((a, b) => a.bbox.x0 - b.bbox.x0);
+
+  return lines;
+}
+
+/**
+ * The value printed after a label, and the box around it.
+ *
+ * Walks each line looking for a word whose letters start one of the label
+ * fragments, then takes everything to its right as the value. A colon, where
+ * OCR kept one, is dropped along with any leading `NAME` or `OF` left over
+ * from a multi-word label.
+ *
+ * Returns nothing rather than a guess when the label is found but there is
+ * nothing to its right — on many designs the value is on the NEXT line, and
+ * reaching down to grab it would as often grab the following label.
+ */
+function findLabelledValue(
+  lines: TesseractLine[],
+  match: string[],
+): { text: string; bbox: Rect } | undefined {
+  for (const line of lines) {
+    const index = line.words.findIndex((word) => {
+      const letters = word.text.toUpperCase().replace(/[^A-Z]/g, "");
+      return letters.length >= 4 && match.some((fragment) => fragment.startsWith(letters));
+    });
+    if (index === -1) continue;
+
+    // Everything to the right of the label, minus the connective words a
+    // multi-word label leaves behind.
+    const rest = line.words
+      .slice(index + 1)
+      .filter((word) => {
+        const letters = word.text.toUpperCase().replace(/[^A-Z]/g, "");
+        return !["NAME", "OF", "S", "NO"].includes(letters);
+      });
+
+    const text = rest
+      .map((word) => word.text)
+      .join(" ")
+      .replace(/^[:\-\s]+/, "")
+      .trim();
+
+    if (text.length < 2) continue;
+
+    return {
+      text,
+      bbox: {
+        x0: Math.min(...rest.map((word) => word.bbox.x0)),
+        y0: Math.min(...rest.map((word) => word.bbox.y0)),
+        x1: Math.max(...rest.map((word) => word.bbox.x1)),
+        y1: Math.max(...rest.map((word) => word.bbox.y1)),
+      },
+    };
+  }
+
+  return undefined;
 }
 
 /* -------------------------------------------------------------------------- */

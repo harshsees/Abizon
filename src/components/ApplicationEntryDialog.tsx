@@ -38,7 +38,7 @@ import { ArrowRight, CalendarDays, Clock3, RotateCcw, X } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import type { ApplicationDraft } from "@/lib/applicationDraft";
-import { clearDraft, describeAge } from "@/lib/applicationDraft";
+import { clearDraft } from "@/lib/applicationDraft";
 
 export type EntryChoice = {
   travellers: number;
@@ -133,7 +133,7 @@ export function ApplicationEntryDialog({
       <div
         role="dialog"
         aria-modal="true"
-        aria-labelledby="entry-title"
+        aria-label={`Start your ${countryName} application`}
         onClick={(event) => event.stopPropagation()}
         className="relative w-full max-w-[400px] rounded-[22px] bg-surface p-6 shadow-e4"
       >
@@ -148,15 +148,7 @@ export function ApplicationEntryDialog({
 
         {step === "choice" && draft ? (
           <>
-            <h2 id="entry-title" className="pr-8 text-[17px] font-bold text-foreground">
-              You have a {countryName} application in progress
-            </h2>
-            <p className="mt-1.5 text-[13px] leading-relaxed text-muted-foreground">
-              Started {describeAge(draft.startedAt)}. Carry on where you left
-              off, or begin a new one.
-            </p>
-
-            <div className="mt-5 space-y-2.5">
+            <div className="mt-6 space-y-2.5">
               <button
                 type="button"
                 onClick={() => go({ resumed: true })}
@@ -216,15 +208,7 @@ export function ApplicationEntryDialog({
           </>
         ) : (
           <>
-            <h2 id="entry-title" className="pr-8 text-[17px] font-bold text-foreground">
-              When do you plan to travel?
-            </h2>
-            <p className="mt-1.5 text-[13px] leading-relaxed text-muted-foreground">
-              {countryName} is guaranteed by {dateLabel} on an application
-              started today.
-            </p>
-
-            <div className="mt-5 space-y-2.5">
+            <div className="mt-6 space-y-2.5">
               {(
                 [
                   {

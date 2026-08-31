@@ -36,16 +36,35 @@
  * documents step plays `ProcessingScreen` before the payment step appears; the
  * flag records that it has been played, so returning to checkout from the rail
  * does not replay it. It resets whenever the step is not `payment`.
+ *
+ * ── The opening beat ──
+ *
+ * `booting` is the second. `ApplicationBoot` holds the screen for about two
+ * seconds when the flow first mounts, so arriving from the destination page is
+ * a transition rather than a cut. It plays once per mount and never again —
+ * moving between steps must not replay it, which is why it is a plain flag
+ * here and not derived from the step.
+ *
+ * ── The notices that used to live here ──
+ *
+ * A floating strip at the foot of the page carried four of them: picked up
+ * where you left off, progress saved on this device only, your documents are
+ * not saved between visits, and you are not signed in. They are gone at the
+ * product owner's request. The behaviour they described has not changed —
+ * `sync.ts` still decides what is persisted and where — so if they come back
+ * they come back as the same sentences; nothing else needs to be rebuilt to
+ * carry them.
  */
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useLenis } from "lenis/react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { getCountrySlug } from "@/data/countries";
 import { useApplication } from "@/lib/application/context";
 
+import { ApplicationBoot } from "./ApplicationBoot";
 import { ApplicationComplete } from "./ApplicationComplete";
 import { ApplicationStepTransition } from "./ApplicationStepTransition";
 import { ApplyBack, ApplyProgress, ApplyRail, ApplyRailMobile, type RailStep } from "./ApplyChrome";
@@ -88,8 +107,6 @@ export function ApplicationShell() {
     back,
     jumpTo,
     canReach,
-    resume,
-    sync,
   } = useApplication();
 
   const router = useRouter();
@@ -106,6 +123,10 @@ export function ApplicationShell() {
    */
   const [handedOff, setHandedOff] = useState(false);
   const [handedOffStep, setHandedOffStep] = useState(state.step);
+
+  /** The opening screen. Once per mount — see the header. */
+  const [booting, setBooting] = useState(true);
+  const finishBoot = useCallback(() => setBooting(false), []);
 
   if (handedOffStep !== state.step) {
     setHandedOffStep(state.step);
@@ -159,6 +180,18 @@ export function ApplicationShell() {
     );
   }
 
+  /**
+   * The opening screen, after the two guards above and before anything else.
+   *
+   * Placed here on purpose. Above the guards it would hold a loading screen in
+   * front of "Pick a destination first" — two seconds of nothing on the way to
+   * an error, which is the worst possible order for those two screens. Below
+   * them, it only ever precedes an application that is actually going to run.
+   */
+  if (booting) {
+    return <ApplicationBoot countryName={country.name} onDone={finishBoot} />;
+  }
+
   /** The rail's three, without `ready` — see the note in `ApplyChrome`. */
   const railSteps: RailStep[] = steps
     .filter((step) => step.id !== "ready")
@@ -195,11 +228,6 @@ export function ApplicationShell() {
       <ApplyRailMobile steps={railSteps} current={state.step} onJump={jumpTo} />
 
       <main id="main-content" tabIndex={-1} className="outline-none">
-        {/* The notices. Kept, and kept quiet: a floating strip at the foot of
-            the page rather than a block above the question, because none of
-            them is the thing the applicant came here to do. */}
-        <ResumeNotice resume={resume} sync={sync} country={country} step={state.step} />
-
         <ApplicationStepTransition
           stepKey={showProcessing ? "processing" : currentStep.id}
           direction={state.direction}
@@ -210,8 +238,12 @@ export function ApplicationShell() {
             <>
               {currentStep.id === "travellers" && <TravellersStep />}
               {currentStep.id === "documents" && <DocumentsStep />}
+              {/* The widest step in the flow. `PaymentPanel` is two columns
+                  now — the card and the total on the left, everything that is
+                  operated on the right — and 560px was the width of the single
+                  column it used to be. */}
               {currentStep.id === "payment" && (
-                <div className="mx-auto w-full max-w-[560px] px-5 pb-24 pt-24 md:pt-28">
+                <div className="mx-auto w-full max-w-[1000px] px-5 pb-24 pt-24 md:px-8 md:pt-28">
                   <PaymentStep />
                 </div>
               )}
@@ -224,87 +256,6 @@ export function ApplicationShell() {
           )}
         </ApplicationStepTransition>
       </main>
-    </div>
-  );
-}
-
-/* -------------------------------------------------------------------------- */
-
-/**
- * Resume and sign-in notices.
- *
- * All three of these used to sit above the form as full-width blocks, which on
- * the travellers screen meant the first thing under the heading was a
- * paragraph about localStorage. They are the same sentences, moved to the foot
- * of the page and shown only on the first step, where they are relevant and
- * where there is empty page to put them in.
- */
-function ResumeNotice({
-  resume,
-  sync,
-  country,
-  step,
-}: {
-  resume: ReturnType<typeof useApplication>["resume"];
-  sync: ReturnType<typeof useApplication>["sync"];
-  country: NonNullable<ReturnType<typeof useApplication>["country"]>;
-  step: string;
-}) {
-  if (step !== "travellers") return null;
-
-  const shell =
-    "pointer-events-auto mx-auto w-full max-w-[560px] rounded-2xl border px-4 py-3 text-2xs leading-relaxed shadow-e1";
-
-  let body: React.ReactNode = null;
-
-  if (sync.mode === "synced" && resume !== "none") {
-    body = (
-      <p className={`${shell} border-border bg-surface text-muted-foreground`}>
-        Picked up where you left off. This application is saved to your account,
-        so you can finish it on any device.
-      </p>
-    );
-  } else if (sync.mode !== "synced" && resume === "restored") {
-    body = (
-      <p className={`${shell} border-border bg-surface text-muted-foreground`}>
-        Picked up where you left off. Your progress is saved on this device only
-        — not to an account, and not to a server.
-      </p>
-    );
-  } else if (sync.mode !== "synced" && resume === "downgraded") {
-    body = (
-      <p
-        role="status"
-        className={`${shell} border-primary-border bg-primary-subtle text-primary-subtle-foreground`}
-      >
-        We kept your trip details, but your uploaded documents are not saved
-        between visits — passport scans stay in the tab you opened them in. You
-        will need to attach them again.
-      </p>
-    );
-  } else if (sync.mode === "local" && sync.localReason === "no-account") {
-    body = (
-      <div className={`${shell} border-primary-border bg-primary-subtle`}>
-        <p className="text-primary-subtle-foreground">
-          <span className="font-bold">You are not signed in.</span> You can fill
-          this in, but nothing will be saved and you will not be able to submit
-          it — documents in particular are discarded when this tab closes.
-        </p>
-        <Link
-          href={`/login?next=${encodeURIComponent(`/apply?country=${getCountrySlug(country.name)}`)}`}
-          className="mt-1.5 inline-block font-bold text-primary underline underline-offset-2"
-        >
-          Sign in to save this application
-        </Link>
-      </div>
-    );
-  }
-
-  if (!body) return null;
-
-  return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-5 z-sticky px-5">
-      {body}
     </div>
   );
 }

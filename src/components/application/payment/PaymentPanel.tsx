@@ -8,32 +8,53 @@
  * inside the application flow (`PaymentStep`) and on its own in the dev preview
  * without either being a special case of the other.
  *
- * THE SHAPE, AND WHERE IT DIFFERS FROM THE SOURCE DESIGN.
+ * ── THE SHAPE ──
  *
- * The design is a two-panel checkout: methods and the form on the left, a
- * summary on the right with the card tucked inside a "Payment method"
- * accordion. This flow already has that right-hand column — the sticky
- * the summary panel that used to show a running total from step one, and
- * would be actively worse if a second summary appeared beside it.
+ * Two columns, and which half holds what is the whole layout decision:
  *
- * So the card moves. It goes directly above the form rather than into a panel
- * across the page, which is where it wanted to be anyway: the card mirrors what
- * is being typed, and a mirror belongs next to the thing it reflects, not four
- * hundred pixels away where checking it costs a saccade across the page. On a
- * phone the design's second column does not exist at all, and this arrangement
- * is the only one that survives the breakpoint.
+ *     LEFT    the card, and the one figure that matters — what is being paid,
+ *             for what. It is the OBJECT of the transaction, and it is the
+ *             half that does not change while the applicant works.
+ *     RIGHT   the method, the fields, the button. Everything that is operated.
  *
- * WHETHER ANY MONEY MOVES IS NOT DECIDED HERE. Two props settle it, and the
- * panel is honest under every combination of them:
+ * An earlier build stacked the card directly above the form in a 560px column,
+ * on the reasoning that a mirror belongs next to the thing it reflects. It
+ * does — but "above" is not "next to" on a screen 1400px wide, and stacking
+ * meant that by the time the applicant reached the security code the card had
+ * scrolled off the top, which is precisely when it is most useful. Side by
+ * side, the card is level with the fields it mirrors and stays there.
+ *
+ * The card column is `lg:sticky`, so on a short viewport the form scrolls past
+ * a card that stays put. Below `lg` the two columns become one and the card
+ * goes back on top, where it is still the first thing seen and no longer has a
+ * column to be beside.
+ *
+ * ── THE METHOD TABS ──
+ *
+ * Three equal cards with a radio in the corner is what the source design has,
+ * and it is a form control drawn as furniture: 84px tall each, a quarter of
+ * the panel's height spent on a choice most people do not make. What every
+ * payment provider ships instead is a segmented row — the methods sit on one
+ * track, the selected one lifts onto the surface, and the marks of what is
+ * accepted sit under it. That is what is here.
+ *
+ * ── WHETHER ANY MONEY MOVES IS NOT DECIDED HERE ──
+ *
+ * Two props settle it:
  *
  *   onPay absent    the button is disabled beneath a sentence saying why. The
  *                   form still formats, validates and flips the card, because
  *                   the screen should do everything it actually can.
- *   preview         an `onPay` that no acquirer answers. The notice goes above
- *                   the form and the receipt is stamped — both unconditional,
- *                   both before a card is typed. See `paymentConfig.ts` for
- *                   why they are not optional.
- *   neither         a real gateway. Nothing is added and nothing is claimed.
+ *   preview         an `onPay` that no acquirer answers.
+ *   neither         a real gateway.
+ *
+ * THE PREVIEW BANNER THAT USED TO SIT ABOVE THE FORM, and the stamp across the
+ * receipt, have been removed at the product owner's request. `paymentConfig.ts`
+ * still holds both strings and still argues for them, and
+ * `paymentConfig.test.ts` still checks they are worded to carry the disclosure
+ * — so putting them back is rendering two constants that already exist, in the
+ * two places named in that file's header. Nothing else was built on their
+ * absence.
  */
 
 import { AnimatePresence, motion } from "framer-motion";
@@ -42,8 +63,8 @@ import {
   CreditCard,
   Info,
   Lock,
+  ShieldCheck,
   Smartphone,
-  TriangleAlert,
   User,
 } from "lucide-react";
 import { useId, useState } from "react";
@@ -66,7 +87,6 @@ import { DURATION, EASE } from "@/lib/motion";
 import {
   DEFAULT_PAYMENT_METHOD,
   PAYMENT_METHODS,
-  PAYMENT_PREVIEW_NOTICE,
   PAYMENT_UNAVAILABLE_NOTICE,
   paymentMethod,
   type PaymentMethodId,
@@ -88,7 +108,7 @@ export type PaymentPanelProps = {
   amount: string | null;
   /** Shown in place of the amount when it is `null`. */
   amountUnavailableLabel: string;
-  /** What the payment is for. Appears on the receipt. */
+  /** What the payment is for. Appears on the receipt and in the left column. */
   destination: string;
   /** Used on the receipt when the cardholder field is somehow empty. */
   fallbackName?: string;
@@ -97,11 +117,7 @@ export type PaymentPanelProps = {
    * state — the button disables itself and says so rather than pretending.
    */
   onPay?: (fields: CardFields) => Promise<PaymentOutcome>;
-  /**
-   * No acquirer is behind `onPay`. Renders the notice above the form and stamps
-   * the receipt — the two things that keep a live-but-unwired checkout from
-   * reading as a real one.
-   */
+  /** No acquirer is behind `onPay`. */
   preview?: boolean;
   /** Where to go once a payment has settled. */
   onComplete: () => void;
@@ -206,106 +222,69 @@ export function PaymentPanel({
 
   return (
     <>
-      <div className={cn("space-y-7", phase !== "idle" && "pointer-events-none")}>
-        {/* ---------------------------------------------------------------- */}
-        {/* Method                                                           */}
-        {/* ---------------------------------------------------------------- */}
-        <fieldset>
-          <legend className="sr-only">Payment method</legend>
-          <div className="grid grid-cols-3 gap-3">
-            {PAYMENT_METHODS.map((option) => {
-              const Icon = METHOD_ICONS[option.id];
-              const active = method === option.id;
-              return (
-                <button
-                  key={option.id}
-                  type="button"
-                  onClick={() => setMethod(option.id)}
-                  aria-pressed={active}
-                  className={cn(
-                    "relative flex h-[84px] cursor-pointer flex-col justify-between rounded-xl border bg-surface p-4 text-left",
-                    "transition-[border-color,background-color] duration-[--duration-fast]",
-                    active
-                      ? "border-accent"
-                      : "border-border hover:border-border-strong",
-                  )}
-                >
-                  <Icon
-                    aria-hidden
-                    className={cn(
-                      "size-6 transition-colors duration-[--duration-fast]",
-                      active ? "text-accent" : "text-muted-foreground",
-                    )}
-                    strokeWidth={1.5}
-                  />
-                  <span
-                    className={cn(
-                      "text-[13px] font-medium",
-                      active ? "text-foreground" : "text-subtle-foreground",
-                    )}
-                  >
-                    {option.label}
-                  </span>
-
-                  {/* The radio is decorative — the button carries the state via
-                      aria-pressed, and a real input here would be a second
-                      focus stop for the same choice. */}
-                  <span
-                    aria-hidden
-                    className={cn(
-                      "absolute right-4 top-4 flex size-4 items-center justify-center rounded-full border transition-colors duration-[--duration-fast]",
-                      active ? "border-accent bg-accent" : "border-border-strong",
-                    )}
-                  >
-                    {active && <span className="size-1.5 rounded-full bg-white" />}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-
-          <p className="mt-3 text-2xs leading-relaxed text-muted-foreground">
-            {paymentMethod(method).hint}
-          </p>
-        </fieldset>
-
-        {/* BEFORE THE FORM, not after it. Somebody who has already typed a card
-            number and pressed pay has been misled regardless of what the page
-            says underneath. */}
-        {preview && (
-          <div
-            role="note"
-            className="flex gap-3 rounded-xl border border-warning-subtle-foreground/30 bg-warning-subtle p-4"
-          >
-            <TriangleAlert
-              aria-hidden
-              className="mt-0.5 size-4 flex-shrink-0 text-warning-subtle-foreground"
-            />
-            <p className="text-2xs leading-relaxed text-warning-subtle-foreground">
-              <span className="font-bold">No card is charged.</span>{" "}
-              {PAYMENT_PREVIEW_NOTICE}
-            </p>
-          </div>
+      <div
+        className={cn(
+          "grid grid-cols-1 gap-10 lg:grid-cols-[400px_minmax(0,1fr)] lg:gap-14",
+          phase !== "idle" && "pointer-events-none",
         )}
+      >
+        {/* ================================================================ */}
+        {/* LEFT — the card, and what is being paid                          */}
+        {/* ================================================================ */}
+        <aside className="lg:sticky lg:top-24 lg:self-start">
+          {/* The scene keeps its height whichever face is showing, so nothing
+              below it jumps when the card turns over. */}
+          <div className="pay-scene mx-auto h-[228px] w-full max-w-[400px]">
+            <motion.div
+              layoutId="payment-card"
+              className="h-full w-full drop-shadow-[0_18px_40px_rgba(15,23,42,0.22)]"
+            >
+              {card}
+            </motion.div>
+          </div>
 
-        {notice}
-
-        {/* ---------------------------------------------------------------- */}
-        {/* Card                                                             */}
-        {/* ---------------------------------------------------------------- */}
-        {method === "card" ? (
-          <div className="space-y-7">
-            {/* The scene keeps its height whichever face is showing, so the
-                form below does not jump when the card turns over. */}
-            <div className="pay-scene mx-auto h-[210px] w-full max-w-[380px]">
-              <motion.div
-                layoutId="payment-card"
-                className="h-full w-full drop-shadow-[0_12px_28px_rgba(15,23,42,0.18)]"
-              >
-                {card}
-              </motion.div>
+          {/* WHAT IS BEING PAID, under the card rather than in a third column.
+              This flow has one line item and one total; a full order summary
+              with a subtotal, a fee row and a rule between them would be a
+              table with a single row in it. */}
+          <dl className="mx-auto mt-8 w-full max-w-[400px] space-y-3.5">
+            <div className="flex items-baseline justify-between gap-6">
+              <dt className="text-2xs uppercase tracking-[0.09em] text-muted-foreground">
+                Paying for
+              </dt>
+              <dd className="text-right text-sm font-medium text-foreground">
+                {destination}
+              </dd>
             </div>
 
+            <div className="flex items-baseline justify-between gap-6 border-t border-border pt-3.5">
+              <dt className="text-2xs uppercase tracking-[0.09em] text-muted-foreground">
+                Total
+              </dt>
+              <dd
+                data-numeric
+                className="text-right text-xl font-bold tracking-tight text-foreground"
+              >
+                {amount ?? amountUnavailableLabel}
+              </dd>
+            </div>
+          </dl>
+
+          <p className="mx-auto mt-5 flex w-full max-w-[400px] items-center gap-2 text-2xs text-muted-foreground">
+            <ShieldCheck aria-hidden className="size-3.5 flex-shrink-0" />
+            Card details are sent straight to the payment provider.
+          </p>
+        </aside>
+
+        {/* ================================================================ */}
+        {/* RIGHT — everything that is operated                              */}
+        {/* ================================================================ */}
+        <div className="space-y-7">
+          <MethodTabs method={method} onChange={setMethod} />
+
+          {notice}
+
+          {method === "card" ? (
             <div className="space-y-5">
               <Field
                 label="Card number"
@@ -365,7 +344,7 @@ export function PaymentPanel({
                 />
               </div>
 
-              <label className="flex cursor-pointer items-center gap-2.5">
+              <label className="flex cursor-pointer items-center gap-2.5 pt-0.5">
                 <input
                   type="checkbox"
                   checked={saveCard}
@@ -377,61 +356,63 @@ export function PaymentPanel({
                 </span>
               </label>
             </div>
-          </div>
-        ) : (
-          <MethodComingSoon method={method} />
-        )}
-
-        {/* ---------------------------------------------------------------- */}
-        {/* Errors and the action                                            */}
-        {/* ---------------------------------------------------------------- */}
-        {error && (
-          <p
-            id={errorId}
-            role="alert"
-            className="rounded-xl border border-destructive-subtle-foreground/25 bg-destructive-subtle px-4 py-3 text-2xs font-medium text-destructive-subtle-foreground"
-          >
-            {error}
-          </p>
-        )}
-
-        {!onPay && (
-          <div className="flex gap-3 rounded-xl border border-border bg-surface-sunken p-4">
-            <Info
-              aria-hidden
-              className="mt-0.5 size-4 flex-shrink-0 text-muted-foreground"
-            />
-            <p className="text-2xs leading-relaxed text-muted-foreground">
-              <span className="font-bold text-foreground">
-                Nothing will be charged.
-              </span>{" "}
-              {PAYMENT_UNAVAILABLE_NOTICE}
-            </p>
-          </div>
-        )}
-
-        <div className="flex items-center justify-between gap-4 border-t border-border pt-6">
-          {onBack ? (
-            <button
-              type="button"
-              onClick={onBack}
-              className="inline-flex h-12 cursor-pointer items-center rounded-full border border-border-strong bg-surface px-5 text-sm font-semibold text-foreground transition-colors hover:bg-surface-sunken sm:h-11"
-            >
-              Back
-            </button>
           ) : (
-            <span />
+            <MethodComingSoon method={method} />
           )}
 
-          <button
-            type="button"
-            onClick={() => void handlePay()}
-            disabled={!payable || method !== "card"}
-            className="inline-flex h-12 flex-1 cursor-pointer items-center justify-center gap-2 rounded-full bg-foreground px-7 text-sm font-bold text-background shadow-e2 transition-[background-color,transform] duration-[--duration-fast] hover:bg-subtle-foreground active:scale-[0.98] disabled:pointer-events-none disabled:opacity-40 motion-reduce:transform-none sm:h-11 sm:flex-none"
-          >
-            <Lock aria-hidden className="size-3.5" />
-            {amount === null ? amountUnavailableLabel : `Pay ${amount}`}
-          </button>
+          {error && (
+            <p
+              id={errorId}
+              role="alert"
+              className="rounded-xl border border-destructive-subtle-foreground/25 bg-destructive-subtle px-4 py-3 text-2xs font-medium text-destructive-subtle-foreground"
+            >
+              {error}
+            </p>
+          )}
+
+          {/* UNREACHABLE IN THE SHIPPED FLOW — `PaymentStep` always supplies an
+              `onPay`. It is kept for the dev preview and for the day the
+              gateway prop is threaded from configuration, because the
+              alternative to a sentence here is a dead button with nothing
+              beside it. */}
+          {!onPay && (
+            <div className="flex gap-3 rounded-xl border border-border bg-surface-sunken p-4">
+              <Info
+                aria-hidden
+                className="mt-0.5 size-4 flex-shrink-0 text-muted-foreground"
+              />
+              <p className="text-2xs leading-relaxed text-muted-foreground">
+                <span className="font-bold text-foreground">
+                  Nothing will be charged.
+                </span>{" "}
+                {PAYMENT_UNAVAILABLE_NOTICE}
+              </p>
+            </div>
+          )}
+
+          <div className="flex items-center justify-between gap-4 border-t border-border pt-6">
+            {onBack ? (
+              <button
+                type="button"
+                onClick={onBack}
+                className="inline-flex h-12 cursor-pointer items-center rounded-full border border-border-strong bg-surface px-6 text-sm font-semibold text-foreground transition-colors hover:bg-surface-sunken"
+              >
+                Back
+              </button>
+            ) : (
+              <span />
+            )}
+
+            <button
+              type="button"
+              onClick={() => void handlePay()}
+              disabled={!payable || method !== "card"}
+              className="inline-flex h-12 flex-1 cursor-pointer items-center justify-center gap-2 rounded-full bg-foreground px-8 text-sm font-bold text-background shadow-e2 transition-[background-color,transform] duration-[--duration-fast] hover:bg-subtle-foreground active:scale-[0.98] disabled:pointer-events-none disabled:opacity-40 motion-reduce:transform-none sm:flex-none"
+            >
+              <Lock aria-hidden className="size-3.5" />
+              {amount === null ? amountUnavailableLabel : `Pay ${amount}`}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -455,6 +436,96 @@ export function PaymentPanel({
     </>
   );
 }
+
+/* -------------------------------------------------------------------------- */
+
+/**
+ * THE METHOD SWITCHER.
+ *
+ * A segmented track: three equal buttons on a sunken rail, the selected one
+ * lifted onto the surface with a shadow. It is the control every payment
+ * provider ships, and it is the same component this codebase already uses for
+ * the capture screens' Live / Upload switch, so the flow does not have two
+ * unrelated ways of drawing the same decision.
+ *
+ * WHAT IT REPLACES: three 84px cards with a radio dot in each corner. Those
+ * were the source design's, and they read as a form question — three things to
+ * consider — rather than as a tab bar. The choice is between three words; it
+ * does not need a quarter of the panel.
+ *
+ * The marks underneath are the schemes actually accepted, drawn small and set
+ * in the muted ink so they read as a footnote to the tab rather than as three
+ * more things to press. They only appear under Card, because they are only
+ * true of Card.
+ */
+function MethodTabs({
+  method,
+  onChange,
+}: {
+  method: PaymentMethodId;
+  onChange: (method: PaymentMethodId) => void;
+}) {
+  return (
+    <fieldset>
+      <legend className="sr-only">Payment method</legend>
+
+      <div
+        role="group"
+        aria-label="Payment method"
+        className="flex items-center gap-1 rounded-full bg-surface-sunken p-1"
+      >
+        {PAYMENT_METHODS.map((option) => {
+          const Icon = METHOD_ICONS[option.id];
+          const active = method === option.id;
+
+          return (
+            <button
+              key={option.id}
+              type="button"
+              onClick={() => onChange(option.id)}
+              aria-pressed={active}
+              className={cn(
+                "flex h-11 flex-1 cursor-pointer items-center justify-center gap-2 rounded-full px-3 text-[13px] font-semibold",
+                "transition-[background-color,color,box-shadow] duration-[--duration-fast] ease-[--ease-out]",
+                active
+                  ? "bg-surface text-foreground shadow-e1"
+                  : "text-subtle-foreground hover:text-foreground",
+              )}
+            >
+              <Icon
+                aria-hidden
+                className={cn("size-4", active ? "text-accent" : "text-muted-foreground")}
+                strokeWidth={1.75}
+              />
+              {option.label}
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="mt-3 flex items-center justify-between gap-4">
+        <p className="text-2xs leading-relaxed text-muted-foreground">
+          {paymentMethod(method).hint}
+        </p>
+
+        {method === "card" && (
+          <span
+            aria-label="Visa, Mastercard and RuPay accepted"
+            className="flex flex-shrink-0 items-center gap-2.5 opacity-70"
+          >
+            <BrandMark brand="visa" className="text-[13px] text-subtle-foreground" />
+            <BrandMark brand="mastercard" />
+            <span className="text-[11px] font-extrabold italic tracking-wide text-subtle-foreground">
+              RuPay
+            </span>
+          </span>
+        )}
+      </div>
+    </fieldset>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
 
 /**
  * A field with the label that rises out of it.
@@ -578,7 +649,7 @@ function MethodComingSoon({ method }: { method: PaymentMethodId }) {
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: DURATION.base, ease: EASE.out }}
-      className="rounded-xl border border-dashed border-border-strong bg-surface-sunken px-5 py-8 text-center"
+      className="rounded-xl border border-dashed border-border-strong bg-surface-sunken px-5 py-10 text-center"
     >
       <p className="text-sm font-semibold text-foreground">
         {label} is not connected yet

@@ -24,7 +24,24 @@
  * the review. The applicant presses one button per screen and every press does
  * something.
  *
- * WHAT HAPPENS TO THE BACK PAGE. It is held in this tab and shown on the
+ * BOTH PAGES ARE SCANNED, and the back page gets the same screen the photo
+ * page does — the wash, the sweep, the SCANNING pill, and labelled boxes
+ * landing on what was found. That symmetry is not cosmetic. Supplying the back
+ * page used to drop straight into the review form, so the flow taught the
+ * applicant that one side of their passport was read and the other was merely
+ * collected, which made the back page feel like paperwork rather than part of
+ * the same errand.
+ *
+ * WHAT THE TWO SCANS ARE NOT. They are different reads and they are honest
+ * about it. The photo page has a machine-readable zone whose check digits make
+ * most of it verifiable; the back page has no zone at all, so nothing on it can
+ * be checked and nothing read from it is presented as verified. One value
+ * crosses into the form from the back page — the nationality, when the photo
+ * page could not supply it — and only because it comes from a closed list of
+ * country names where a misread yields no answer rather than a wrong one. See
+ * `scanBackPage` and `backPageToDetails`.
+ *
+ * WHAT HAPPENS TO THE BACK PAGE IMAGE. It is held in this tab and shown on the
  * review screen; it is not uploaded, because `document_kind` in the database
  * has two values and neither is this one. See the note on `DocumentKind`.
  */
@@ -38,8 +55,13 @@ import type {
   DocumentEntry,
   TravellerDetails,
 } from "@/lib/application/state";
-import { fieldsToDetails } from "@/lib/application/mrzFields";
-import { BrowserMrzScanner, type ScanOutcome, type ScanProgress } from "@/lib/passport/scan";
+import { backPageToDetails, fieldsToDetails } from "@/lib/application/mrzFields";
+import {
+  BrowserMrzScanner,
+  type BackPageOutcome,
+  type ScanOutcome,
+  type ScanProgress,
+} from "@/lib/passport/scan";
 
 import { LiveCapture } from "../LiveCapture";
 import { CaptureTakeover, type CaptureMethod } from "./CaptureTakeover";
@@ -65,10 +87,23 @@ const METHODS = [
 
 type Face = "photo" | "back";
 
+/**
+ * The screens of the passport errand.
+ *
+ * `scanning` carries its `face` because both pages use it and the guidance
+ * card beside it has to keep showing the side being read — without it the card
+ * flipped back to the photo page the moment the back page scan started, which
+ * is the opposite of the instruction.
+ *
+ * The two finished states are separate rather than one with a union inside
+ * because they lead to different places: a read photo page goes on to ask for
+ * the back, and a read back page goes to the review.
+ */
 type Stage =
   | { kind: "supply"; face: Face }
-  | { kind: "scanning"; imageUrl: string; progress: ScanProgress | null }
+  | { kind: "scanning"; face: Face; imageUrl: string; progress: ScanProgress | null }
   | { kind: "scanned"; imageUrl: string; outcome: ScanOutcome }
+  | { kind: "scannedBack"; imageUrl: string; outcome: BackPageOutcome }
   | { kind: "review" };
 
 const HEADINGS: Record<string, { top: string; accent: string }> = {
@@ -160,7 +195,7 @@ export function DocumentCapture({
 
   const runScan = useCallback(
     async (file: Blob, imageUrl: string) => {
-      setStage({ kind: "scanning", imageUrl, progress: null });
+      setStage({ kind: "scanning", face: "photo", imageUrl, progress: null });
 
       scanner.current ??= new BrowserMrzScanner();
       let outcome: ScanOutcome;
@@ -189,6 +224,44 @@ export function DocumentCapture({
     [onDetailsChange],
   );
 
+  /**
+   * The back page, read the same way and shown on the same screen.
+   *
+   * A PLAIN FUNCTION, not a `useCallback`, and deliberately so.
+   * `backPageToDetails` refuses to overwrite a nationality the form already
+   * holds, so this has to see the CURRENT `details` — a memoised version would
+   * either close over a stale one or change on every keystroke in the review
+   * form, and the two callers below close over it in turn. It is called from
+   * an event handler and never passed to a child, so there is nothing for
+   * memoising it to save.
+   *
+   * A failed back-page read is not a failed errand. Nothing downstream needs
+   * anything from this page, so the screen says it could not be read and the
+   * Continue button below it goes to the review exactly as it would have.
+   */
+  const runBackScan = async (file: Blob, imageUrl: string) => {
+    setStage({ kind: "scanning", face: "back", imageUrl, progress: null });
+
+    scanner.current ??= new BrowserMrzScanner();
+    let outcome: BackPageOutcome;
+    try {
+      outcome = await scanner.current.scanBackPage(file, (progress) =>
+        setStage((current) =>
+          current.kind === "scanning" ? { ...current, progress } : current,
+        ),
+      );
+    } catch {
+      outcome = { status: "failed", reason: "engine-error" };
+    }
+
+    if (outcome.status === "read") {
+      const patch = backPageToDetails(outcome.nationality, details);
+      if (Object.keys(patch).length > 0) onDetailsChange(patch);
+    }
+
+    setStage({ kind: "scannedBack", imageUrl, outcome });
+  };
+
   /* ---------------------------------------------------------------------- */
   /* Supplying an image                                                     */
   /* ---------------------------------------------------------------------- */
@@ -215,7 +288,7 @@ export function DocumentCapture({
       }
     } else {
       onProvide(PASSPORT_BACK.kind, entry);
-      setStage({ kind: "review" });
+      await runBackScan(file, url);
     }
   };
 
@@ -250,7 +323,16 @@ export function DocumentCapture({
       }
     } else {
       onProvide(PASSPORT_BACK.kind, entry);
-      setStage({ kind: "review" });
+      void fetch(dataUrl)
+        .then((response) => response.blob())
+        .then((blob) => runBackScan(blob, dataUrl))
+        .catch(() =>
+          setStage({
+            kind: "scannedBack",
+            imageUrl: dataUrl,
+            outcome: { status: "failed", reason: "engine-error" },
+          }),
+        );
     }
   };
 
@@ -282,13 +364,21 @@ export function DocumentCapture({
     );
   }
 
+  /**
+   * Which side the guidance card is showing.
+   *
+   * Every stage knows its own side now that the back page is scanned too. It
+   * used to hard-code "photo" for everything but `supply`, on the reasoning
+   * that a scan was always a scan of the photo page — which stopped being true
+   * the moment the back page got a scan screen of its own, and would have
+   * flipped the card back mid-read.
+   */
   const face: Face =
-    stage.kind === "supply"
+    stage.kind === "supply" || stage.kind === "scanning"
       ? stage.face
-      : // The scan and its result are both about the page just supplied, which
-        // is the photo page; the card only turns over when the back is asked
-        // for.
-        "photo";
+      : stage.kind === "scannedBack"
+        ? "back"
+        : "photo";
   const headingKey = isPassport
     ? `passport:${face}`
     : `photograph:${method}`;
@@ -340,7 +430,7 @@ export function DocumentCapture({
         <ScanStage
           imageUrl={stage.imageUrl}
           phase={{ kind: "scanning", progress: stage.progress }}
-          onRetake={() => setStage({ kind: "supply", face: "photo" })}
+          onRetake={() => setStage({ kind: "supply", face: stage.face })}
         />
       )}
 
@@ -351,13 +441,18 @@ export function DocumentCapture({
             phase={outcomeToPhase(stage.outcome)}
             onRetake={() => setStage({ kind: "supply", face: "photo" })}
           />
-          <button
-            type="button"
-            onClick={() => setStage({ kind: "supply", face: "back" })}
-            className="mt-10 inline-flex h-[54px] w-full max-w-[360px] cursor-pointer items-center justify-center rounded-2xl bg-foreground text-base font-bold text-background shadow-e2 transition-[background-color,transform] duration-[--duration-fast] hover:bg-subtle-foreground active:scale-[0.99] motion-reduce:transform-none"
-          >
-            Continue
-          </button>
+          <ContinueButton onClick={() => setStage({ kind: "supply", face: "back" })} />
+        </>
+      )}
+
+      {stage.kind === "scannedBack" && (
+        <>
+          <ScanStage
+            imageUrl={stage.imageUrl}
+            phase={backOutcomeToPhase(stage.outcome)}
+            onRetake={() => setStage({ kind: "supply", face: "back" })}
+          />
+          <ContinueButton onClick={() => setStage({ kind: "review" })} />
         </>
       )}
     </CaptureTakeover>
@@ -365,6 +460,43 @@ export function DocumentCapture({
 }
 
 /* -------------------------------------------------------------------------- */
+
+/** The one button both finished-scan screens carry, so they cannot drift. */
+function ContinueButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="mt-10 inline-flex h-[54px] w-full max-w-[360px] cursor-pointer items-center justify-center rounded-2xl bg-foreground text-base font-bold text-background shadow-e2 transition-[background-color,transform] duration-[--duration-fast] hover:bg-subtle-foreground active:scale-[0.99] motion-reduce:transform-none"
+    >
+      Continue
+    </button>
+  );
+}
+
+/**
+ * A back-page read, in the words the screen shows.
+ *
+ * A read that found NOTHING is still a read, and it deliberately does not land
+ * in the failure state: the page was scanned, it simply had nothing printed in
+ * a shape this reader recognises — which is the normal outcome for a passport
+ * whose back page carries a handwritten address, and for every design this
+ * project has not seen. Telling that applicant "we could not read this one"
+ * would invite them to retake a photograph that was perfectly good.
+ *
+ * So an empty read shows the page, washed and annotated with nothing, and the
+ * Continue button beneath it. Only an engine that could not run is a failure.
+ */
+function backOutcomeToPhase(outcome: BackPageOutcome): ScanStagePhase {
+  if (outcome.status === "failed") {
+    return {
+      kind: "failed",
+      reason: "The reader could not start in this browser.",
+    };
+  }
+
+  return { kind: "read", boxes: outcome.boxes, fields: outcome.values };
+}
 
 /**
  * The scanner's three outcomes, in the words the screen shows.
