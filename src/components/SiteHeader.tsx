@@ -28,7 +28,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
-import { Compass, Search, Ticket, User, X } from "lucide-react";
+import { Search, User, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 import { Wordmark } from "@/components/Wordmark";
@@ -52,13 +52,32 @@ type SiteHeaderProps = {
   forceHide?: boolean;
 };
 
+/**
+ * THE TABS, AND WHY THEY ARE EMOJI RATHER THAN LINE ICONS.
+ *
+ * The reference the product owner supplied draws these two as small colour
+ * illustrations — a passport for Explore, a fan of tickets for Events — not as
+ * the 1.5px stroked glyphs Lucide draws. `Compass` and `Ticket` were the
+ * closest line icons in the set, and the compass in particular was the wrong
+ * noun: this is a visa product, and the thing under "Explore" is a passport.
+ *
+ * They are Unicode characters, not images, and that is the point. A cropped
+ * asset from the reference screenshot is 61px square — visibly soft at the
+ * 32px this renders at on a 2x display, and a second file to ship and cache.
+ * A character is drawn by the platform's own colour emoji font at whatever
+ * size it is set in, needs no `img-src` grant, and cannot fail to load.
+ *
+ * `aria-hidden` sits on the wrapper: the label beside it already says
+ * "Explore", and a screen reader announcing "passport control Explore" reads
+ * the same tab twice under two different names.
+ */
 const TABS: ReadonlyArray<{
   id: HeaderTab;
   label: string;
-  Icon: typeof Compass;
+  glyph: string;
 }> = [
-  { id: "explore", label: "Explore", Icon: Compass },
-  { id: "events", label: "Events", Icon: Ticket },
+  { id: "explore", label: "Explore", glyph: "\u{1F6C2}" },
+  { id: "events", label: "Events", glyph: "\u{1F39F}\u{FE0F}" },
 ];
 
 /** Placeholder rotation for the search field — carried over from the old
@@ -295,11 +314,11 @@ export function SiteHeader({
             aria-label="Primary"
             className="hidden flex-shrink-0 items-end gap-8 md:flex lg:gap-10"
           >
-            {TABS.map(({ id, label, Icon }) => (
+            {TABS.map(({ id, label, glyph }) => (
               <TabButton
                 key={id}
                 label={label}
-                Icon={Icon}
+                glyph={glyph}
                 active={activeTab === id}
                 condensed={condensed || !isFull}
                 onClick={() => handleTabClick(id)}
@@ -405,11 +424,11 @@ export function SiteHeader({
             aria-label="Primary"
             className="flex items-end justify-center gap-10 border-t border-border/60 px-4 pb-1 md:hidden"
           >
-            {TABS.map(({ id, label, Icon }) => (
+            {TABS.map(({ id, label, glyph }) => (
               <TabButton
                 key={id}
                 label={label}
-                Icon={Icon}
+                glyph={glyph}
                 active={activeTab === id}
                 condensed
                 layoutGroup="mobile"
@@ -503,14 +522,14 @@ export function SiteHeader({
 
 function TabButton({
   label,
-  Icon,
+  glyph,
   active,
   condensed,
   layoutGroup = "desktop",
   onClick,
 }: {
   label: string;
-  Icon: typeof Compass;
+  glyph: string;
   active: boolean;
   condensed: boolean;
   layoutGroup?: string;
@@ -539,7 +558,22 @@ function TabButton({
           condensed ? "h-0 opacity-0" : "h-9 opacity-100",
         ].join(" ")}
       >
-        <Icon className="h-8 w-8" strokeWidth={1.5} aria-hidden="true" />
+        {/* `leading-none` on a matched line box, or the emoji's own ascender
+            padding pushes the label down and the two tabs stop sharing a
+            baseline with the wordmark beside them. Grayscale until active, so
+            an unselected tab does not shout in full colour — the same emphasis
+            the stroked icons carried, by another means. */}
+        <span
+          className={[
+            "block text-[30px] leading-none",
+            "transition-[filter,opacity] duration-[var(--duration-fast)] ease-[var(--ease-out)]",
+            active
+              ? "opacity-100"
+              : "opacity-70 grayscale group-hover:opacity-100 group-hover:grayscale-0",
+          ].join(" ")}
+        >
+          {glyph}
+        </span>
       </span>
 
       <span className="type-ui">{label}</span>

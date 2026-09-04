@@ -161,6 +161,24 @@ export function DocumentsStep() {
 
     return (
       <DocumentCapture
+        /**
+         * KEYED ON THE ERRAND, and this is load-bearing rather than a lint fix.
+         *
+         * `onDone` chains one requirement straight into the next without
+         * returning to the list — passport, then photograph. Unkeyed, that is
+         * the same element in the same position, so React reuses the instance
+         * and every `useState` initialiser inside it is skipped: the capture
+         * opened on the photograph while still holding the passport's `stage`
+         * of `{ kind: "review" }` and its `method` of "upload". The passport
+         * review screen is rendered before the method is even consulted, so
+         * finishing the passport re-rendered the review instead of opening the
+         * live face capture, and Live Capture was unreachable in the shipped
+         * flow.
+         *
+         * The traveller is in the key as well as the requirement: two people
+         * both needing a photograph are two errands, not one continued.
+         */
+        key={`${target.travellerId}:${target.requirement.kind}`}
         requirement={target.requirement}
         photoEntry={state.documents[documentKey(traveller.id, target.requirement.kind)]}
         backEntry={state.documents[documentKey(traveller.id, PASSPORT_BACK.kind)]}

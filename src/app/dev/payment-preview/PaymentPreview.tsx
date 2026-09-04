@@ -48,8 +48,16 @@ export function PaymentPreview() {
     return { ok: true };
   };
 
+  /*
+   * 34rem was the panel's own width when it was a single column. It is two
+   * now — the card and the total on the left, the form on the right — and at
+   * 34rem the right column came out ~150px wide, which stacked the floating
+   * labels on top of each other and made this harness useless for reviewing
+   * the thing it exists to review. Matched to the width the application flow
+   * gives the step (`max-w-[1000px]`) plus this page's own chrome.
+   */
   return (
-    <main className="mx-auto min-h-screen w-full max-w-[34rem] px-5 py-10">
+    <main className="mx-auto min-h-screen w-full max-w-[68rem] px-5 py-10">
       <header className="mb-7 rounded-xl border border-warning-subtle-foreground/30 bg-warning-subtle px-4 py-3.5">
         <p className="text-sm font-bold text-warning-subtle-foreground">
           Preview — this is a simulation
@@ -99,10 +107,25 @@ export function PaymentPreview() {
         <div className="mt-8">
           <PaymentPanel
             // A plausible total: two travellers, standard processing. Formatted
-            // the way `PaymentStep` formats `summary.fees.total`.
-            amount="₹12,340"
+            // the way `PaymentStep` formats `summary.fees.total`, and — unlike
+            // the flat figure this replaces — arithmetically consistent with
+            // the rows beneath it, so the receipt printer can be reviewed here
+            // without the totals on the paper contradicting each other.
+            //
+            //   government   ₹3,500 x 2 = ₹7,000
+            //   service      ₹1,500 x 2 = ₹3,000
+            //   subtotal                 ₹10,000
+            //   GST 18% of the service fee only    ₹540
+            //   total                    ₹10,540
+            amount="₹10,540"
             amountUnavailableLabel="Fee not published"
             destination="United Arab Emirates e-Visa"
+            receiptLines={[
+              { label: "2 × United Arab Emirates government fee", amount: "₹7,000" },
+              { label: "2 × Abizon service fee", amount: "₹3,000" },
+            ]}
+            receiptSubtotal="₹10,000"
+            receiptTax={{ label: "GST (18%)", amount: "₹540" }}
             fallbackName="Cardholder"
             onPay={onPay}
             preview

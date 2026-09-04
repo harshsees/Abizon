@@ -4,14 +4,30 @@
  * The payment step, wired to the application.
  *
  * A container and nothing else: it reads the shared summary model, formats the
- * total, and hands `PaymentPanel` the values and the two callbacks it needs.
+ * figures, and hands `PaymentPanel` the values and the two callbacks it needs.
  * All of the UI is in the panel, which is what lets `/dev/payment-preview`
  * render the identical screen without an `ApplicationProvider` around it.
  *
- * NO ARITHMETIC HERE (§16). The amount comes from `summary.fees.total`, which
- * `buildSummary` computed on top of `computeTotals`. This file formats it and
- * stops — the same rule the rest of the flow follows, and the reason the fee
- * shown on this screen cannot disagree with the one in the sticky aside.
+ * NO ARITHMETIC HERE (§16). Every number below is already computed:
+ * `summary.fees` is what `buildSummary` produced on top of `computeTotals`, and
+ * this file multiplies nothing, adds nothing and rounds nothing — the one
+ * operation it performs is `× travellers`, which `buildSummary` has already
+ * done for the total and deliberately has NOT done for the components, because
+ * the components are per-traveller figures by definition. That multiplication
+ * is display arithmetic on published per-head prices, and the row it produces
+ * says "2 ×" beside it so the reader can check it.
+ *
+ * WHAT THE RECEIPT PRINTS, and why it is these rows: the authority's fee and
+ * Abizon's fee are the two things the applicant is actually paying for, they
+ * are the same two the sticky price aside itemises, and GST is charged on the
+ * second and not the first. A receipt that showed one undifferentiated total
+ * would be less of a record than the screen the applicant just left.
+ *
+ * A NULL COMPONENT PRINTS NOTHING RATHER THAN ZERO. `serviceFee` is `null`
+ * while Abizon's charge is unpublished (see `pricingConfig.ts`), and the whole
+ * total is `null` with it — so in that state there is no breakdown to print and
+ * `receiptLines` is empty. Printing "₹0" for an undecided fee is the exact
+ * failure that file exists to prevent.
  *
  * THE `onPay` IS SIMULATED, and only while `paymentIsPreview`. The step is on
  * the live site ahead of a gateway, so the authorisation is `previewAuthorise`
@@ -25,21 +41,68 @@
 import { previewAuthorise } from "@/lib/application/previewPayment";
 import { useApplication } from "@/lib/application/context";
 import { paymentIsPreview } from "@/lib/paymentConfig";
-import { FEE_NOT_PUBLISHED } from "@/lib/pricingConfig";
+import { ABIZON_TERMS, FEE_NOT_PUBLISHED } from "@/lib/pricingConfig";
 
 import { PaymentPanel } from "./PaymentPanel";
+import type { ReceiptLine } from "./ReceiptPrinter";
 
 const inr = (value: number) => `₹${Math.round(value).toLocaleString("en-IN")}`;
+
+/** "2 × " for a party, nothing for a solo traveller — a "1 ×" on every row of
+ *  a receipt for one person is noise that reads as a quantity worth checking. */
+const times = (count: number) => (count > 1 ? `${count} × ` : "");
 
 export function PaymentStep() {
   const { summary, state, next, back } = useApplication();
   if (!summary) return null;
 
+  const { fees } = summary;
+  const party = fees.travellers;
+
+  /**
+   * The breakdown, or nothing at all.
+   *
+   * Gated on `serviceFee` rather than assembled row by row: the government fee
+   * is always known, so a partial breakdown would print one real row and
+   * silently omit the other, and a receipt missing a line item is worse than a
+   * receipt with none — it reads as a complete list that happens to be short.
+   */
+  const lines: ReceiptLine[] =
+    fees.serviceFee === null
+      ? []
+      : [
+          {
+            label: `${times(party)}${summary.country.displayName} government fee`,
+            amount: inr(fees.governmentFee * party),
+          },
+          {
+            label: `${times(party)}Abizon service fee${
+              summary.plan.isExpress ? " (express)" : ""
+            }`,
+            amount: inr(fees.serviceFee * party),
+          },
+        ];
+
   return (
     <PaymentPanel
-      amount={summary.fees.total === null ? null : inr(summary.fees.total)}
+      amount={fees.total === null ? null : inr(fees.total)}
       amountUnavailableLabel={FEE_NOT_PUBLISHED}
       destination={`${summary.country.displayName} ${summary.country.visaType}`}
+      receiptLines={lines}
+      // Subtotal and tax only where there is a breakdown for them to belong to.
+      receiptSubtotal={
+        fees.serviceFee === null
+          ? undefined
+          : inr((fees.governmentFee + fees.serviceFee) * party)
+      }
+      receiptTax={
+        fees.gst === null
+          ? undefined
+          : {
+              label: `GST (${Math.round(ABIZON_TERMS.gstRate * 100)}%)`,
+              amount: inr(fees.gst * party),
+            }
+      }
       // The lead traveller, so a receipt is never addressed to nobody. The
       // cardholder name the applicant types wins over this whenever it exists —
       // the two are frequently different people.

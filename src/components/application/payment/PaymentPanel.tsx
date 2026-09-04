@@ -95,6 +95,7 @@ import { cn } from "@/lib/utils";
 
 import { BrandMark, PaymentCard } from "./PaymentCard";
 import { PaymentOverlay } from "./PaymentOverlay";
+import type { ReceiptLine } from "./ReceiptPrinter";
 
 /** What a gateway says back. A failure must carry a reason a person can read. */
 export type PaymentOutcome = { ok: true } | { ok: false; message: string };
@@ -110,6 +111,21 @@ export type PaymentPanelProps = {
   amountUnavailableLabel: string;
   /** What the payment is for. Appears on the receipt and in the left column. */
   destination: string;
+  /**
+   * THE RECEIPT'S PRICED ROWS, already formatted and already multiplied by
+   * party size — the caller reads them off `summary.fees`, which is the same
+   * model the sticky price aside reads. Passed in rather than derived here for
+   * the reason §16 gives: a component that showed a price it had computed
+   * itself would be a second answer to what this application costs.
+   *
+   * Empty is a legitimate answer. A destination whose Abizon fee is unpublished
+   * has no breakdown to print, and the paper prints the total alone.
+   */
+  receiptLines?: ReceiptLine[];
+  /** Everything before tax, formatted. Omit where there is no tax row. */
+  receiptSubtotal?: string;
+  /** The tax row. Its label carries the rate, so it travels as a pair. */
+  receiptTax?: ReceiptLine;
   /** Used on the receipt when the cardholder field is somehow empty. */
   fallbackName?: string;
   /**
@@ -138,6 +154,9 @@ export function PaymentPanel({
   amount,
   amountUnavailableLabel,
   destination,
+  receiptLines,
+  receiptSubtotal,
+  receiptTax,
   fallbackName,
   onPay,
   preview = false,
@@ -270,10 +289,24 @@ export function PaymentPanel({
             </div>
           </dl>
 
-          <p className="mx-auto mt-5 flex w-full max-w-[400px] items-center gap-2 text-2xs text-muted-foreground">
-            <ShieldCheck aria-hidden className="size-3.5 flex-shrink-0" />
-            Card details are sent straight to the payment provider.
-          </p>
+          {/* The two marks the reference recording sets under its card. They
+              are claims about how the details travel, so each is worded to be
+              true of what this app actually does: the page is served over TLS
+              (see the HSTS header in `next.config.ts`), and the card fields
+              are handed to the provider rather than stored here — which is
+              what makes the scope question moot rather than what makes it
+              certified. Neither says "certified", because nothing here has
+              been. */}
+          <ul className="mx-auto mt-5 flex w-full max-w-[400px] flex-wrap items-center gap-x-5 gap-y-2 text-2xs text-muted-foreground">
+            <li className="flex items-center gap-1.5">
+              <Lock aria-hidden className="size-3.5 flex-shrink-0" />
+              Sent over an encrypted connection
+            </li>
+            <li className="flex items-center gap-1.5">
+              <ShieldCheck aria-hidden className="size-3.5 flex-shrink-0" />
+              Card details never stored by Abizon
+            </li>
+          </ul>
         </aside>
 
         {/* ================================================================ */}
@@ -429,6 +462,9 @@ export function PaymentPanel({
               destination,
               lastFour: cardLastFour(fields.number),
               at: settledAt ?? new Date(),
+              lines: receiptLines ?? [],
+              subtotal: receiptSubtotal,
+              tax: receiptTax,
             }}
           />
         )}

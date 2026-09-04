@@ -14,6 +14,7 @@
  */
 
 import { useState, useMemo, useEffect } from "react";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { List, Map, Search, Ticket } from "lucide-react";
@@ -26,8 +27,35 @@ import {
   type FilterValues,
 } from "@/components/CountryFilters";
 import { CountryGrid } from "@/components/CountryGrid";
-import { CountryMapView } from "@/components/CountryMapView";
 import { SiteHeader } from "@/components/SiteHeader";
+
+/**
+ * THE MAP IS LOADED WHEN IT IS ASKED FOR, and this is the one import on the
+ * page that has to be.
+ *
+ * `CountryMapView` pulls in `data/worldMap.ts`, which is ~125KB of Natural
+ * Earth coastline. The list is the default view and most visitors never press
+ * Map, so putting that in the page's first payload would make everybody pay
+ * for a view most of them will not open. Split out, it is fetched on the press
+ * that reveals it.
+ *
+ * `ssr: false` because the component measures its own box with a
+ * `ResizeObserver` before it can place a single marker: a server render would
+ * emit a stage of width 0 with no pins in it, and the client would replace it
+ * wholesale on hydration. There is nothing to pre-render here that is worth
+ * pre-rendering.
+ */
+const CountryMapView = dynamic(
+  () => import("@/components/CountryMapView").then((m) => m.CountryMapView),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex min-h-[500px] w-full flex-1 items-center justify-center rounded-[40px] border border-slate-800/80 bg-slate-900 text-xs font-semibold text-slate-400">
+        Loading the map…
+      </div>
+    ),
+  },
+);
 
 /**
  * The discovery container. Deliberately wider than the app's `max-w-7xl`
@@ -197,7 +225,7 @@ export default function Home() {
                 </motion.div>
               ) : (
                 <CountryMapView
-                  pinCount={filteredCountries.length}
+                  countries={filteredCountries}
                   onSelectCountry={handleCountryClick}
                 />
               )}

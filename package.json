@@ -14,6 +14,7 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
+    "gen:worldmap": "node scripts/generate-world-map.mjs",
     "ops:user": "tsx --conditions=react-server scripts/ops-user.ts",
     "predev": "node scripts/setup-tesseract.mjs",
     "prebuild": "node scripts/setup-tesseract.mjs"
@@ -64,8 +65,11 @@
     "eslint": "^9",
     "eslint-config-next": "^16.3.1",
     "tailwindcss": "^4",
+    "topojson-client": "^3.1.0",
     "tsx": "^4.23.12",
     "typescript": "^5",
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.10",
+    "world-atlas": "^2.0.2",
+    "world-countries": "^5.1.0"
   }
 }

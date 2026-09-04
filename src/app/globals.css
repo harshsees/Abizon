@@ -1067,14 +1067,24 @@ button {
    ------------------------------------------------------------------------ */
 
 .pay-scene {
-  perspective: 1200px;
+  perspective: 1400px;
 }
 
 .pay-card {
-  /* The card's own material. Nothing outside this component reads these. */
-  --pay-card-from: #5b8dfa;
-  --pay-card-to: #3864f1;
-  --pay-card-radius: 14px;
+  /* ── THE MATERIAL ──────────────────────────────────────────────────────
+     Sampled off the reference recording rather than chosen: the card there
+     runs from a near-black navy at the top-left corner to a saturated indigo
+     at the bottom-right, and the three stops below are the pixels at those
+     corners. The old card was a flat mid-blue (#5b8dfa → #3864f1), which read
+     as a UI panel that happened to be card-shaped. This one reads as plastic
+     because the dark end is genuinely dark: there is somewhere for the gloss
+     to be brighter than.
+
+     Nothing outside this component reads these. */
+  --pay-card-from: #131d33;
+  --pay-card-mid: #1e2c57;
+  --pay-card-to: #2f3e94;
+  --pay-card-radius: 18px;
 
   position: relative;
   width: 100%;
@@ -1097,18 +1107,28 @@ button {
   border-radius: var(--pay-card-radius);
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-  border: 1px solid rgb(255 255 255 / 0.2);
+  /* A hairline of light along the top edge and shadow along the bottom: an
+     edge lit from above, which is what stops the card reading as a sticker
+     lying flat on the page. */
+  border: 1px solid rgb(255 255 255 / 0.12);
   color: #fff;
   background:
     /* The gloss sweep sits above the base so the card catches a light. */
     linear-gradient(
-      110deg,
-      rgb(255 255 255 / 0) 20%,
-      rgb(255 255 255 / 0.15) 35%,
-      rgb(255 255 255 / 0) 50%
+      112deg,
+      rgb(255 255 255 / 0) 22%,
+      rgb(255 255 255 / 0.09) 38%,
+      rgb(255 255 255 / 0) 54%
     ),
-    linear-gradient(135deg, var(--pay-card-from), var(--pay-card-to));
-  box-shadow: inset 0 0 10px rgb(255 255 255 / 0.1);
+    linear-gradient(
+      135deg,
+      var(--pay-card-from) 0%,
+      var(--pay-card-mid) 46%,
+      var(--pay-card-to) 100%
+    );
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.16),
+    inset 0 -1px 0 rgb(0 0 0 / 0.3);
 }
 
 /* Two soft pools of light, top-right and bottom-left. Without them the
@@ -1122,37 +1142,42 @@ button {
 }
 
 .pay-face::before {
-  top: -40px;
-  right: -50px;
-  width: 220px;
-  height: 220px;
-  background: radial-gradient(circle, rgb(255 255 255 / 0.12) 0%, rgb(255 255 255 / 0) 70%);
-}
-
-.pay-face::after {
-  bottom: -60px;
-  left: -40px;
+  top: -45px;
+  right: -55px;
   width: 240px;
   height: 240px;
   background: radial-gradient(circle, rgb(255 255 255 / 0.1) 0%, rgb(255 255 255 / 0) 70%);
 }
 
+.pay-face::after {
+  bottom: -70px;
+  left: -50px;
+  width: 260px;
+  height: 260px;
+  background: radial-gradient(circle, rgb(120 160 255 / 0.16) 0%, rgb(120 160 255 / 0) 70%);
+}
+
 .pay-face--back {
   transform: rotateY(180deg);
+  /* The back of a card is the unlit side. The same three stops, dimmed, so
+     the two faces are recognisably one object rather than two. */
+  background: linear-gradient(135deg, var(--pay-card-from) 0%, #18234a 55%, #232f6d 100%);
 }
 
 /* The chip. A gold gradient with the contact pattern drawn over it — one
    horizontal split and two verticals, which is what an EMV chip actually
-   looks like and is legible at 44px in a way a photograph would not be. */
+   looks like and is legible at 42px in a way a photograph would not be.
+   Warmer than before: #cea621 is the pixel under the chip in the recording,
+   and the old #b78e2a read as brass. */
 .pay-chip {
   position: relative;
-  width: 44px;
-  height: 32px;
+  width: 42px;
+  height: 31px;
   overflow: hidden;
-  border: 1px solid rgb(0 0 0 / 0.4);
-  border-radius: 5px;
-  background: linear-gradient(135deg, #e4c466 0%, #b78e2a 100%);
-  box-shadow: 0 1px 2px rgb(0 0 0 / 0.2), inset 0 1px 1px rgb(255 255 255 / 0.5);
+  border: 1px solid rgb(0 0 0 / 0.35);
+  border-radius: 6px;
+  background: linear-gradient(135deg, #f5d982 0%, #e0b336 42%, #b8871d 100%);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.35), inset 0 1px 1px rgb(255 255 255 / 0.55);
 }
 
 .pay-chip::before {
@@ -1162,7 +1187,7 @@ button {
   left: 0;
   right: 0;
   height: 1px;
-  background: rgb(0 0 0 / 0.3);
+  background: rgb(0 0 0 / 0.28);
   transform: translateY(-50%);
 }
 
@@ -1173,9 +1198,40 @@ button {
   bottom: 0;
   left: 28%;
   right: 28%;
-  border-left: 1px solid rgb(0 0 0 / 0.3);
-  border-right: 1px solid rgb(0 0 0 / 0.3);
+  border-left: 1px solid rgb(0 0 0 / 0.28);
+  border-right: 1px solid rgb(0 0 0 / 0.28);
   border-radius: 2px;
+}
+
+/* The magnetic stripe, full bleed across the back. Not a flat black bar: a
+   real stripe is matte oxide tape with a faint sheen down its middle, and the
+   three stops are what keep it from reading as a hole cut in the card. */
+.pay-stripe {
+  width: 100%;
+  height: 46px;
+  background: linear-gradient(180deg, #05070d 0%, #14181f 45%, #05070d 100%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06);
+}
+
+/* The signature panel. White paper stock with the diagonal security tint real
+   panels are printed with, and the security code set to its right — which is
+   where it is printed, and the whole reason the card turns over at all. */
+.pay-signature {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  height: 34px;
+  padding: 0 12px;
+  border-radius: 3px;
+  background:
+    repeating-linear-gradient(
+      -45deg,
+      rgb(148 163 184 / 0.16) 0 6px,
+      rgb(255 255 255 / 0) 6px 12px
+    ),
+    #f7f7f4;
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.06);
 }
 
 /* The contactless mark. Static by default; the waves ripple outward only
@@ -1183,7 +1239,7 @@ button {
    rather than decorating the card permanently. */
 .pay-wifi {
   transform: rotate(90deg);
-  opacity: 0.8;
+  opacity: 0.75;
   filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.4));
 }
 
@@ -1197,38 +1253,64 @@ button {
 .pay-wifi[data-live="true"] [data-wave="2"] { animation: pay-wifi-blink 1.2s infinite 0.4s; }
 .pay-wifi[data-live="true"] [data-wave="3"] { animation: pay-wifi-blink 1.2s infinite 0.6s; }
 
-/* Authorising: a slow ring pushed out from the card edge. Deliberately a
-   shadow rather than a spinner — the card is the subject, and a spinner beside
-   it would put the waiting somewhere other than on the thing being waited on. */
-@keyframes pay-radar {
-  0% { box-shadow: 0 0 0 0 rgb(59 130 246 / 0.4); }
-  70% { box-shadow: 0 0 0 40px rgb(59 130 246 / 0); }
-  100% { box-shadow: 0 0 0 0 rgb(59 130 246 / 0); }
-}
+/* ── THE GLOW ───────────────────────────────────────────────────────────────
+   What the recording does while a payment is in flight, and it is a better
+   idea than the ring it replaces. The old `.pay-radar` pushed a blue shadow
+   outward on a loop — a spinner drawn as a shadow, and blue, which is the
+   colour of every resting surface in the app. The recording instead holds a
+   warm halo tight against the card edge while it waits and turns it green the
+   instant it settles, so the colour IS the answer: the outcome is readable
+   from across a room without reading a word of it.
 
-.pay-radar {
+   It is a sibling element behind the card rather than a `box-shadow` on the
+   card itself, because the card sits on a 3D transform and a shadow on a
+   rotating element rotates with it — the halo would swing edge-on and vanish.
+   ------------------------------------------------------------------------ */
+.pay-glow {
   position: absolute;
   inset: 0;
   z-index: -1;
-  border-radius: var(--pay-card-radius, 14px);
+  border-radius: var(--pay-card-radius, 18px);
   pointer-events: none;
-  animation: pay-radar 1.5s infinite;
 }
 
-/* Settled: one green ring, once. Tighter spread than the radar so it reads as
-   a confirmation rather than another cycle of the same waiting. */
-@keyframes pay-settled {
-  0% { box-shadow: 0 0 0 0 rgb(34 197 94 / 0.8); }
-  100% { box-shadow: 0 0 0 15px rgb(34 197 94 / 0); }
+@keyframes pay-glow-breathe {
+  0%, 100% {
+    box-shadow:
+      0 0 0 2px rgb(244 63 94 / 0.5),
+      0 0 32px 6px rgb(244 63 94 / 0.4),
+      0 0 70px 18px rgb(219 39 119 / 0.22);
+  }
+  50% {
+    box-shadow:
+      0 0 0 3px rgb(244 63 94 / 0.75),
+      0 0 46px 12px rgb(244 63 94 / 0.55),
+      0 0 96px 26px rgb(219 39 119 / 0.3);
+  }
 }
 
-.pay-settled {
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  border-radius: var(--pay-card-radius, 14px);
-  pointer-events: none;
-  animation: pay-settled 1s ease-out forwards;
+.pay-glow[data-state="authorising"] {
+  animation: pay-glow-breathe 1.6s ease-in-out infinite;
+}
+
+/* Settled. Bright on arrival and eased back to a steady rim rather than a
+   pulse that keeps cycling: the waiting is over, and a halo still breathing
+   would say that it was not. */
+@keyframes pay-glow-settle {
+  0% {
+    box-shadow:
+      0 0 0 3px rgb(34 197 94 / 0.9),
+      0 0 60px 20px rgb(34 197 94 / 0.6);
+  }
+  100% {
+    box-shadow:
+      0 0 0 2px rgb(34 197 94 / 0.55),
+      0 0 34px 8px rgb(34 197 94 / 0.35);
+  }
+}
+
+.pay-glow[data-state="settled"] {
+  animation: pay-glow-settle 900ms var(--ease-out, ease-out) forwards;
 }
 
 /* A field that was rejected. Short, small travel, and it runs once — a field
@@ -1244,26 +1326,6 @@ button {
   animation: pay-shake 0.4s ease-in-out;
 }
 
-/* The receipt's torn top edge — a repeating radial that punches half-circles
-   out of the paper. Drawn rather than an image so it inherits the paper colour
-   and cannot come out a slightly different white. */
-.pay-receipt::before {
-  content: "";
-  position: absolute;
-  top: -6px;
-  left: 0;
-  width: 100%;
-  height: 6px;
-  background: radial-gradient(
-      circle,
-      transparent,
-      transparent 50%,
-      var(--pay-receipt-paper, #fdfdfd) 50%,
-      var(--pay-receipt-paper, #fdfdfd) 100%
-    )
-    0 0 / 12px 6px repeat-x;
-}
-
 @media (prefers-reduced-motion: reduce) {
   /* The flip still has to happen — it is how the CVV side is reached — but it
      happens instantly rather than as a turn. */
@@ -1273,16 +1335,27 @@ button {
 
   /* Same reason as the caret and the arrival sweep above: these keyframes end
      on an invisible frame, so letting them run their one permitted iteration
-     would leave the contactless mark dimmed and the rings absent rather than
-     simply still. */
+     would leave the contactless mark dimmed and the halo absent rather than
+     simply still. The glow's two states are not decoration — the colour is how
+     the outcome is read — so they are held on their FINAL frame instead of
+     being switched off. */
   .pay-wifi[data-live="true"] [data-wave] {
     animation: none !important;
     opacity: 1 !important;
   }
 
-  .pay-radar,
-  .pay-settled {
+  .pay-glow[data-state="authorising"] {
     animation: none !important;
+    box-shadow:
+      0 0 0 2px rgb(244 63 94 / 0.6),
+      0 0 40px 10px rgb(244 63 94 / 0.45) !important;
+  }
+
+  .pay-glow[data-state="settled"] {
+    animation: none !important;
+    box-shadow:
+      0 0 0 2px rgb(34 197 94 / 0.55),
+      0 0 34px 8px rgb(34 197 94 / 0.35) !important;
   }
 
   .animate-pay-shake {
@@ -1291,23 +1364,416 @@ button {
 }
 
 /* ---------------------------------------------------------------------------
-   8. THE SETTLED PAYMENT STAGE
+   8. THE RECEIPT PRINTER
 
-   Receipt, card and message together stand about 900px tall — the source
-   design's own proportions, drawn for a desktop window and taller than the
-   viewport of an ordinary laptop. Measured: at 900px the receipt was clipped by
-   225px at the top, which takes the masthead and, in preview mode, the
-   "not a real payment" stamp off the screen.
+   Ported from the reference the product owner supplied (`reciept-ui/`), whose
+   HTML and CSS arrived without its `script.js`. The markup is React now and the
+   behaviour is written from scratch in `ReceiptPrinter.tsx`; everything below —
+   the metallic hood, the slit, the serrated cutter teeth, the paper grain, the
+   three keyframe sets — is the reference's own CSS, kept in the reference's own
+   values and rewritten only where this app's conventions differ.
 
-   That is not a cosmetic loss. The stamp is one of two disclosures the app
-   makes while it has no gateway (see `paymentConfig.ts`), and a disclosure that
-   only appears on tall monitors is not a disclosure. So the composition scales
-   as a whole rather than being cropped: the design keeps its proportions and
-   everything on it stays legible, which is the trade a receipt this tall was
-   always going to force.
+   WHAT CHANGED FROM THE REFERENCE, and why in each case:
+
+     · SCOPED. Everything is prefixed `rcpt-` and nothing styles a bare element.
+       The reference set `html, body { background: #fff !important }` and styled
+       `h1`, which would have repainted the whole application.
+
+     · THEME-AWARE HOUSING. The reference is drawn on a hard white page. This
+       one sits on `--canvas`, so the machine's shadows are stated in rgb with
+       alpha rather than in the near-whites they were mixed against.
+
+     · NO FIXED 31rem DROP. The reference pushes its caption down by a hard
+       `margin-top: 31rem` once printing starts, which assumes a receipt of one
+       known length. Ours prints real line items and its height depends on the
+       fee breakdown, so the paper is in normal flow inside a mask and the
+       caption is simply below it — the same reason the previous receipt was in
+       flow, and the same failure avoided (see the note in `PaymentOverlay`).
+
+   WHY A PRINTER AT ALL. The thing being represented is a payment terminal
+   producing a record of a transaction, and that is an object people have
+   watched happen a thousand times. The animation is not decoration: it is the
+   reason the receipt is believed. A card of text that fades in says a page
+   changed; paper feeding out of a slot says a transaction completed.
+   ------------------------------------------------------------------------ */
+
+.rcpt-machine {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 400px;
+}
+
+/* The top hood: a brushed metallic bar, lit from above. Five stops rather than
+   two because a two-stop gradient reads as a coloured rectangle — metal is the
+   one material where the highlight has to be a narrow band with dark on both
+   sides of it. */
+.rcpt-hood-top {
+  position: relative;
+  z-index: 25;
+  width: 100%;
+  height: 46px;
+  overflow: hidden;
+  border-radius: 16px 16px 4px 4px;
+  background: linear-gradient(
+    180deg,
+    #ffffff 0%,
+    #fbf4e8 15%,
+    #e9cf9f 45%,
+    #d19e54 75%,
+    #b37f35 100%
+  );
+  box-shadow:
+    0 -2px 6px rgb(255 255 255 / 0.9),
+    0 10px 20px rgb(179 127 53 / 0.28),
+    inset 0 2px 2px rgb(255 255 255 / 0.9),
+    inset 0 -2px 4px rgb(105 68 16 / 0.45);
+}
+
+.rcpt-hood-highlight {
+  position: absolute;
+  top: 3px;
+  left: 5%;
+  width: 90%;
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    rgb(255 255 255 / 0) 0%,
+    rgb(255 255 255 / 0.95) 50%,
+    rgb(255 255 255 / 0) 100%
+  );
+  filter: blur(1px);
+}
+
+/* The mouth. Deliberately almost black with a hard inner shadow: the paper has
+   to look like it is coming from somewhere, and the only way to draw "inside
+   the machine" is to make the slit darker than anything else on screen. */
+.rcpt-slit {
+  position: relative;
+  z-index: 5;
+  width: 87.5%;
+  height: 12px;
+  margin-top: -6px;
+  border-radius: 2px;
+  background: #0f0a03;
+  box-shadow:
+    inset 0 6px 12px rgb(25 12 2 / 0.95),
+    inset 0 -1px 2px rgb(255 255 255 / 0.2);
+}
+
+.rcpt-hood-bottom {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  height: 14px;
+  margin-top: -4px;
+  border-radius: 0 0 14px 14px;
+  background: linear-gradient(180deg, #9e6d2b 0%, #d8b478 40%, #fff7ea 100%);
+  box-shadow: 0 8px 18px rgb(0 0 0 / 0.12);
+}
+
+.rcpt-hood-bottom::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(180deg, rgb(0 0 0 / 0.15) 0%, rgb(0 0 0 / 0) 100%);
+}
+
+/* The blade. One white line swept across the slit, once, at the moment the
+   paper is torn — the flash a cutter makes catching the light. */
+.rcpt-blade {
+  position: absolute;
+  top: 42px;
+  left: 50%;
+  z-index: 35;
+  width: 87.5%;
+  height: 3px;
+  transform: translateX(-50%);
+  background: linear-gradient(
+    90deg,
+    rgb(255 255 255 / 0) 0%,
+    #ffffff 50%,
+    rgb(255 255 255 / 0) 100%
+  );
+  box-shadow: 0 0 10px #ffffff;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.rcpt-blade[data-cutting="true"] {
+  animation: rcpt-blade-flash 0.35s ease-out forwards;
+}
+
+@keyframes rcpt-blade-flash {
+  0% { opacity: 0; transform: translateX(-50%) scaleX(0.1); }
+  50% { opacity: 1; transform: translateX(-50%) scaleX(1); }
+  100% { opacity: 0; transform: translateX(-50%) scaleX(1); }
+}
+
+/* THE VIEWPORT is what makes the paper look like it comes out of the machine
+   rather than appearing in front of it. `clip-path` cuts it dead flat at the
+   slit line and leaves 60px of slack on the sides and 1200px below, so the
+   paper's own drop shadow is free to fall outside the clip. The shadow is a
+   `filter` on this element rather than a `box-shadow` on the paper, because
+   the paper is cut into serrated teeth and only `drop-shadow` follows a
+   clipped shape. */
+.rcpt-viewport {
+  position: relative;
+  width: 95%;
+  margin-top: -1px;
+  padding-bottom: 20px;
+  /* A COLLAPSING ROW, so tearing the paper off gives its space back.
+     The paper is in normal flow — that is what stops it being pushed off the
+     top of a short viewport — which also means the ~380px it occupies stays
+     reserved after it has been torn away, leaving the caption stranded at the
+     bottom of an empty column. `1fr` to `0fr` is the one way to transition a
+     row of unknown height, and the height IS unknown here: the paper prints a
+     fee breakdown whose length depends on the destination. */
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows 480ms var(--ease-out, ease-out);
+  clip-path: inset(0 -60px -1200px -60px);
+  pointer-events: none;
+  perspective: 1200px;
+  perspective-origin: 50% 0%;
+  filter:
+    drop-shadow(0 18px 36px rgb(20 15 5 / 0.16))
+    drop-shadow(0 4px 12px rgb(20 15 5 / 0.08));
+}
+
+/* The paper. Warm off-white, not the page white — thermal stock is never quite
+   the colour of a screen's background, and the difference is what stops the
+   receipt reading as a hole in the page. The clip-path is the cutter's teeth:
+   30 v-notches along the bottom edge, which is what a POS cutter leaves. */
+/* Grid children refuse to shrink below their content without this, which
+   would make the 0fr row above collapse to the paper's full height. */
+.rcpt-viewport > * {
+  min-height: 0;
+}
+
+.rcpt-viewport[data-collapsed="true"] {
+  grid-template-rows: 0fr;
+}
+
+.rcpt-paper {
+  position: relative;
+  width: 100%;
+  background-color: #fafaf8;
+  transform-origin: top center;
+  transform-style: preserve-3d;
+  user-select: none;
+  will-change: transform, opacity;
+  clip-path: polygon(
+    0% 0%, 100% 0%,
+    100% calc(100% - 10px),
+    98.33% 100%, 96.67% calc(100% - 10px),
+    95.00% 100%, 93.33% calc(100% - 10px),
+    91.67% 100%, 90.00% calc(100% - 10px),
+    88.33% 100%, 86.67% calc(100% - 10px),
+    85.00% 100%, 83.33% calc(100% - 10px),
+    81.67% 100%, 80.00% calc(100% - 10px),
+    78.33% 100%, 76.67% calc(100% - 10px),
+    75.00% 100%, 73.33% calc(100% - 10px),
+    71.67% 100%, 70.00% calc(100% - 10px),
+    68.33% 100%, 66.67% calc(100% - 10px),
+    65.00% 100%, 63.33% calc(100% - 10px),
+    61.67% 100%, 60.00% calc(100% - 10px),
+    58.33% 100%, 56.67% calc(100% - 10px),
+    55.00% 100%, 53.33% calc(100% - 10px),
+    51.67% 100%, 50.00% calc(100% - 10px),
+    48.33% 100%, 46.67% calc(100% - 10px),
+    45.00% 100%, 43.33% calc(100% - 10px),
+    41.67% 100%, 40.00% calc(100% - 10px),
+    38.33% 100%, 36.67% calc(100% - 10px),
+    35.00% 100%, 33.33% calc(100% - 10px),
+    31.67% 100%, 30.00% calc(100% - 10px),
+    28.33% 100%, 26.67% calc(100% - 10px),
+    25.00% 100%, 23.33% calc(100% - 10px),
+    21.67% 100%, 20.00% calc(100% - 10px),
+    18.33% 100%, 16.67% calc(100% - 10px),
+    15.00% 100%, 13.33% calc(100% - 10px),
+    11.67% 100%, 10.00% calc(100% - 10px),
+    8.33% 100%, 6.67% calc(100% - 10px),
+    5.00% 100%, 3.33% calc(100% - 10px),
+    1.67% 100%, 0% calc(100% - 10px)
+  );
+}
+
+/* Paper grain. A fractal-noise SVG at 2.5% opacity — invisible as texture,
+   decisive as the difference between "paper" and "white rectangle". */
+.rcpt-paper::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  opacity: 0.025;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* The sheen. Light at the top where the paper is still curved out of the
+   machine, shadow at the foot where it hangs away from the surface. */
+.rcpt-paper::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgb(255 255 255 / 0.45) 0%,
+    rgb(255 255 255 / 0.15) 35%,
+    rgb(0 0 0 / 0.02) 75%,
+    rgb(0 0 0 / 0.05) 100%
+  );
+}
+
+/* ── THE FOUR STATES OF THE PAPER ──────────────────────────────────────────
+   Retracted, feeding, printed, torn. Written as data-attributes rather than
+   classes so the state machine in the component has exactly one place to put
+   its answer and cannot leave two of them set at once. */
+
+/* Loaded, waiting. Pulled up behind the slit with only its serrated lip
+   showing, and tipped away from the reader so the visible sliver reads as the
+   edge of something rolled inside the machine. */
+.rcpt-paper[data-state="retracted"] {
+  transform: translateY(-93%) rotateX(-16deg) translateZ(-25px);
+}
+
+.rcpt-paper[data-state="feeding"] {
+  animation: rcpt-feed 2.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Fed. The resting position, and the state the paper is left in.
+   NOT a transition from `retracted`: the feed is a keyframed unroll with an
+   arch in the middle of it, and a transition between two transforms would
+   interpolate straight through that arch as a slide. */
+@keyframes rcpt-feed {
+  0% {
+    transform: translateY(-93%) rotateX(-18deg) translateZ(-30px) scale(0.97);
+    opacity: 0.4;
+  }
+  20% {
+    /* Emerging, flexed forward towards the reader. */
+    transform: translateY(-70%) rotateX(-12deg) translateZ(20px) scale(0.985);
+    opacity: 0.85;
+  }
+  45% {
+    /* The arch. A ribbon of paper leaving a slot is never flat. */
+    transform: translateY(-40%) rotateX(-6deg) translateZ(26px) scale(0.995);
+    opacity: 1;
+  }
+  75% {
+    transform: translateY(-12%) rotateX(-2deg) translateZ(10px) scale(1);
+  }
+  90% {
+    /* Settling under its own weight, slightly past the resting line. */
+    transform: translateY(1%) rotateX(0.8deg) translateZ(2px) scale(1);
+  }
+  100% {
+    transform: translateY(0%) rotateX(0deg) translateZ(0px) scale(1);
+    opacity: 1;
+  }
+}
+
+.rcpt-paper[data-state="printed"] {
+  transform: translateY(0) rotateX(0deg) translateZ(0);
+}
+
+/* Torn off. A hand tugs it sideways, it rips at the cutter line and leaves,
+   fading where it is rather than sliding down the page — the reference's own
+   note, and it is right: paper torn off a terminal goes into a pocket, it does
+   not fall to the floor. */
+.rcpt-paper[data-state="torn"] {
+  transform-origin: top right;
+  animation: rcpt-tear 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+@keyframes rcpt-tear {
+  0% { transform: translateY(0) translateX(0) rotate(0deg); opacity: 1; }
+  20% { transform: translateY(6px) translateX(18px) rotate(-3deg); opacity: 1; }
+  50% { transform: translateY(14px) translateX(55px) rotate(-8deg) scale(0.98); opacity: 0.8; }
+  100% { transform: translateY(22px) translateX(110px) rotate(-14deg) scale(0.94); opacity: 0; }
+}
+
+/* The ink. Monospaced, because a receipt is set in whatever the terminal's
+   ROM had and every one of them is a fixed-pitch face — and because columns of
+   figures only line up in one. */
+.rcpt-ink {
+  position: relative;
+  z-index: 2;
+  padding: 1.5rem 1.3rem 2rem;
+  font-family: var(--font-mono, ui-monospace, "JetBrains Mono", "Courier New", monospace);
+  color: #222222;
+  letter-spacing: 0;
+}
+
+.rcpt-rule {
+  height: 0;
+  margin: 0.9rem 0;
+  border-bottom: 1px dashed #cccccc;
+}
+
+/* The barcode. A repeating linear-gradient at four bar widths, which is enough
+   irregularity to read as a printed code at a glance. It encodes nothing and
+   is `aria-hidden`: drawing a scannable barcode would be worse than drawing
+   none, because it would claim to carry data it does not carry. */
+.rcpt-barcode {
+  width: 75%;
+  height: 28px;
+  background: repeating-linear-gradient(
+    90deg,
+    #222 0px, #222 1.5px,
+    transparent 1.5px, transparent 3px,
+    #222 3px, #222 4px,
+    transparent 4px, transparent 5.5px,
+    #222 5.5px, #222 8px,
+    transparent 8px, transparent 9.5px
+  );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* The paper still has to arrive — it is the record of the payment — so the
+     feed is removed and the printed position is what remains. The tear is a
+     dismissal, so it lands on its end frame: gone. */
+  .rcpt-paper[data-state="feeding"] {
+    animation: none !important;
+    transform: translateY(0) !important;
+    opacity: 1 !important;
+  }
+
+  .rcpt-paper[data-state="torn"] {
+    animation: none !important;
+    opacity: 0 !important;
+  }
+
+  .rcpt-blade[data-cutting="true"] {
+    animation: none !important;
+  }
+
+  .rcpt-viewport {
+    transition: none !important;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   9. THE SETTLED PAYMENT STAGE
+
+   Printer, paper, card and message together stand well over 900px — the
+   reference's own proportions, drawn for a desktop window and taller than the
+   viewport of an ordinary laptop. Measured on the previous receipt: at 900px
+   the paper was clipped by 225px at the top, which took the masthead with it.
+
+   So the composition scales as a whole rather than being cropped: the design
+   keeps its proportions and everything on it stays legible, which is the trade
+   a receipt this tall was always going to force.
 
    Stepped rather than continuous, because `scale` on a transformed ancestor
-   affects the shared-element animation the card runs on arrival, and three
+   affects the shared-element animation the card runs on arrival, and four
    fixed values are easy to check by eye at each breakpoint.
    ------------------------------------------------------------------------ */
 .pay-stage {

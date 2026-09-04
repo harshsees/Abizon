@@ -60,3 +60,6 @@ next-env.d.ts
 # build. Reproducible from the lockfile and a pinned URL, so they are fetched
 # rather than committed — 8MB of binaries is paid for on every clone forever.
 public/tesseract/
+
+# Reference material dropped in the repo root by the product owner.
+/payment v2.zip

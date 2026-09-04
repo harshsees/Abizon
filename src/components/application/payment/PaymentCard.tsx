@@ -10,13 +10,42 @@
  * and expiry appear here in the positions they occupy on a real card, and
  * focusing the CVV field turns the card over to where the CVV is printed.
  *
+ * ── REDRAWN TO THE REFERENCE RECORDING ──
+ *
+ * `payment-ui/screen-20260829-140424.mp4`. The card there is a dark navy
+ * "platinum" card and it is laid out the way real cards are, which the version
+ * this replaces was not:
+ *
+ *   WAS                                   NOW
+ *   a "Card number" label above the       no label. Nothing on a real card
+ *   digits                                names its own number, and the field
+ *                                         six inches to the right already does
+ *   name / valid / brand on one           name and expiry on the left under
+ *   crowded row, the brand mark           their printed captions, the scheme
+ *   fighting the expiry for space         mark alone on the right
+ *   `text-lg` digits at 0.18em            `text-xl` at 0.14em, which is the
+ *                                         ratio the recording sets and is what
+ *                                         makes the number the object on the
+ *                                         card rather than one of five things
+ *   a flat mid-blue                       the recording's navy-to-indigo
+ *   a bare black bar for the mag stripe   an oxide stripe and a printed
+ *   and a white box for the CVV           signature panel with the security
+ *                                         tint, which is what the applicant is
+ *                                         being asked to look at
+ *
+ * TIER AND PRODUCT LINE ("PLATINUM", "INFINITE") are set from props with no
+ * default that asserts anything false. They are the card's own printing, not a
+ * claim this app makes: `tier` defaults to the neutral "PLATINUM" the reference
+ * shows, and the product line under the scheme mark only renders when a brand
+ * has actually been recognised.
+ *
  * PURELY PRESENTATIONAL. It holds no state, validates nothing, and knows
  * nothing about payment — `flipped` and `authorising` are told to it. That is
  * what lets the same component render inside the step, inside the success
  * overlay, and inside the dev preview without three variants of it.
  *
  * THE MATERIAL IS IN CSS, not here. See section 7 of `globals.css` for why the
- * gradients, the chip and the 3D transforms are written there.
+ * gradients, the chip, the stripe and the 3D transforms are written there.
  *
  * ACCESSIBILITY. The card is `aria-hidden`. Every value on it is a duplicate of
  * a form field that already has a label, and a screen reader reading a
@@ -25,6 +54,23 @@
  */
 
 import { CARD_BRAND_LABEL, type CardBrand } from "@/lib/application/payment";
+
+/**
+ * The product line printed under each scheme mark.
+ *
+ * Real, and specific to the scheme: Visa Infinite, World Mastercard and Amex
+ * Platinum are the actual premium tiers those three sell. RuPay's is "Select".
+ * They are texture on a mock card and nothing reads them, but a card printed
+ * with a tier its own scheme does not offer is the kind of detail that makes
+ * an otherwise convincing object look wrong without the viewer knowing why.
+ */
+const BRAND_LINE: Record<CardBrand, string> = {
+  visa: "INFINITE",
+  mastercard: "WORLD",
+  amex: "PLATINUM",
+  rupay: "SELECT",
+  discover: "SIGNATURE",
+};
 
 export type PaymentCardProps = {
   /** Already grouped for display. This component does no formatting. */
@@ -38,6 +84,8 @@ export type PaymentCardProps = {
   flipped?: boolean;
   /** A payment is in flight: the contactless mark ripples. */
   authorising?: boolean;
+  /** The tier printed top-right. The reference's card says PLATINUM. */
+  tier?: string;
 };
 
 export function PaymentCard({
@@ -48,6 +96,7 @@ export function PaymentCard({
   brand,
   flipped = false,
   authorising = false,
+  tier = "PLATINUM",
 }: PaymentCardProps) {
   return (
     <div
@@ -58,47 +107,65 @@ export function PaymentCard({
       {/* ------------------------------------------------------------------ */}
       {/* Front                                                              */}
       {/* ------------------------------------------------------------------ */}
-      <div className="pay-face flex flex-col justify-between p-6">
+      <div className="pay-face flex flex-col justify-between p-6 sm:p-7">
+        {/* Row one: the physical furniture on the left, the tier on the
+            right. Both are printed at the top of a real card and neither is
+            data, which is why they share a row nothing else is in. */}
         <div className="flex items-start justify-between">
-          <div className="pay-chip" />
-          <ContactlessMark live={authorising} />
+          <div className="flex items-center gap-3.5">
+            <div className="pay-chip" />
+            <ContactlessMark live={authorising} />
+          </div>
+          <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/70">
+            {tier}
+          </span>
         </div>
 
-        {/* Four rows spread by `justify-between`, as on the source design and
-            on a real card: the chip sits high, the number occupies the middle
-            band, and the name and expiry run along the bottom. Grouping the
-            last three into one block instead left the number hard against the
-            details and a dead gap under the chip. */}
-        <CardLabel>Card number</CardLabel>
-
-        {/* Monospaced and tracked out, so a digit checked against the card in
+        {/* THE NUMBER, on its own, in the middle band — where it is embossed.
+            Monospaced and tracked out, so a digit checked against the card in
             the applicant's hand lands under the same digit every time.
             Placeholder dots rather than an empty line: the card should look
             like a card before anything is typed. */}
         <p
           data-numeric
-          className="font-mono text-lg font-medium tracking-[0.18em] [text-shadow:1px_1px_2px_rgb(0_0_0/0.4)]"
+          className="font-mono text-[19px] font-medium tracking-[0.14em] [text-shadow:0_1px_3px_rgb(0_0_0/0.45)] sm:text-xl"
         >
           {number || "•••• •••• •••• ••••"}
         </p>
 
-        <div className="flex items-center gap-5">
-          <div className="min-w-0 flex-1">
-            <CardLabel>Name</CardLabel>
-            <p className="truncate text-[13px] font-medium uppercase">
-              {name || "Your name"}
-            </p>
+        {/* Row three: the two printed values on the left under their captions,
+            the scheme mark alone on the right. The previous build put all
+            three on one flex row with the brand between the expiry and the
+            edge, which on a phone truncated the cardholder name to make room
+            for a wordmark. */}
+        <div className="flex items-end justify-between gap-5">
+          <div className="flex min-w-0 items-end gap-7">
+            <div className="min-w-0">
+              <CardLabel>Cardholder name</CardLabel>
+              <p className="mt-1 truncate text-[13px] font-semibold uppercase tracking-wide">
+                {name || "Your name"}
+              </p>
+            </div>
+            <div className="flex-shrink-0">
+              <CardLabel>Expires</CardLabel>
+              <p
+                data-numeric
+                className="mt-1 text-[13px] font-semibold uppercase tracking-wide"
+              >
+                {expiry || "MM / YY"}
+              </p>
+            </div>
           </div>
-          <div className="flex-shrink-0 text-center">
-            <CardLabel>Valid</CardLabel>
-            <p data-numeric className="text-[13px] font-medium uppercase">
-              {expiry || "MM / YY"}
-            </p>
-          </div>
+
           {/* The slot is always there so the row does not reflow when a brand
               is recognised mid-typing; only the mark arrives. */}
-          <div className="flex min-w-[52px] flex-shrink-0 justify-end">
-            <BrandMark brand={brand} />
+          <div className="flex min-w-[52px] flex-shrink-0 flex-col items-end">
+            <BrandMark brand={brand} className="text-[19px]" />
+            {brand && (
+              <span className="mt-0.5 text-[7px] font-semibold uppercase tracking-[0.3em] text-white/55">
+                {BRAND_LINE[brand]}
+              </span>
+            )}
           </div>
         </div>
       </div>
@@ -106,22 +173,32 @@ export function PaymentCard({
       {/* ------------------------------------------------------------------ */}
       {/* Back                                                               */}
       {/* ------------------------------------------------------------------ */}
-      <div className="pay-face pay-face--back">
-        <div className="mt-6 h-10 w-full bg-[#111]" />
+      <div className="pay-face pay-face--back flex flex-col">
+        {/* The stripe runs edge to edge, high on the card, exactly as it does
+            on the plastic. It is the landmark that tells the applicant they
+            are looking at the back without anything having to say so. */}
+        <div className="pay-stripe mt-5" />
 
-        <div className="px-6 py-4">
-          <CardLabel>Security code</CardLabel>
-          <div
-            data-numeric
-            className="mt-1.5 flex h-9 w-full items-center justify-end rounded bg-white px-4 font-mono text-base tracking-[0.25em] text-slate-900"
-          >
-            {"•".repeat(cvv.length)}
+        <div className="px-6 pt-4 sm:px-7">
+          <CardLabel className="block text-right">Security code (CVV)</CardLabel>
+
+          {/* The panel, and the code set to its right — which is where it is
+              printed. Dots rather than digits: the applicant already sees what
+              they typed in the field, and the card is showing them WHERE it
+              lives, not repeating it to the room. */}
+          <div className="pay-signature mt-1.5">
+            <span
+              data-numeric
+              className="font-mono text-[15px] tracking-[0.35em] text-slate-900"
+            >
+              {cvv ? "•".repeat(cvv.length) : ""}
+            </span>
           </div>
 
           {/* Verbatim from a card back. It is set unreadably small on purpose —
               it is texture that makes the object convincing, not copy, which is
               also why nothing here needs to be translated or maintained. */}
-          <p className="mt-3 text-justify text-[7.5px] leading-relaxed opacity-60">
+          <p className="mt-3.5 text-justify text-[7.5px] leading-relaxed text-white/55">
             This card is issued by the bank named on the reverse and remains its
             property. Use of this card is governed by the cardholder agreement.
             It is not transferable. If found, please return it to any branch of
@@ -195,7 +272,7 @@ function CardLabel({
 }) {
   return (
     <p
-      className={`text-[9px] uppercase tracking-[0.1em] opacity-50 ${className}`.trim()}
+      className={`text-[8px] uppercase tracking-[0.16em] text-white/50 ${className}`.trim()}
     >
       {children}
     </p>
@@ -213,7 +290,7 @@ function CardLabel({
 function ContactlessMark({ live }: { live: boolean }) {
   return (
     <svg
-      className="pay-wifi size-6"
+      className="pay-wifi size-[22px]"
       data-live={live ? "true" : "false"}
       viewBox="0 0 24 24"
       fill="none"
