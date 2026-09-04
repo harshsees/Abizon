@@ -1366,44 +1366,86 @@ button {
 /* ---------------------------------------------------------------------------
    8. THE RECEIPT PRINTER
 
-   Ported from the reference the product owner supplied (`reciept-ui/`), whose
-   HTML and CSS arrived without its `script.js`. The markup is React now and the
-   behaviour is written from scratch in `ReceiptPrinter.tsx`; everything below —
-   the metallic hood, the slit, the serrated cutter teeth, the paper grain, the
-   three keyframe sets — is the reference's own CSS, kept in the reference's own
-   values and rewritten only where this app's conventions differ.
+   The thermal dispenser from the reference the product owner supplied
+   (`image_video/reciept-ui/`). All three of its files are now accounted for:
+   `index.html` and `style.css` arrived as themselves, and `script.js` turned
+   out to be inside the PDF in the same folder — which is where the exact
+   durations, the state machine and the Web Audio synthesiser below come from.
 
-   WHAT CHANGED FROM THE REFERENCE, and why in each case:
+   ── ONE KNOB SIZES THE WHOLE MACHINE ──
 
-     · SCOPED. Everything is prefixed `rcpt-` and nothing styles a bare element.
-       The reference set `html, body { background: #fff !important }` and styled
-       `h1`, which would have repainted the whole application.
+   `--rcpt-w`. Every width is a percentage of it and every type size is an `em`
+   of a font-size derived from it, so the printer scales as one object and its
+   proportions are the reference's at any size. The reference is drawn at 400px
+   with a 16px root; `--rcpt-w / 25` reproduces that exactly, and raising the
+   variable enlarges the machine, the paper and the print together.
 
-     · THEME-AWARE HOUSING. The reference is drawn on a hard white page. This
-       one sits on `--canvas`, so the machine's shadows are stated in rgb with
-       alpha rather than in the near-whites they were mixed against.
+   It is set larger than the reference's own 400px because at reference size,
+   inside a stage that was also being scaled down, the receipt was too small to
+   read — which was the note that prompted this rewrite.
+
+   ── WHAT CHANGED FROM THE REFERENCE, AND WHY IN EACH CASE ──
+
+     · SCOPED. Everything is prefixed `rcpt-` and nothing styles a bare
+       element. The reference sets `html, body { background: #fff !important }`
+       and styles `h1`, which would have repainted the application.
+
+     · CLASSIC MODE ACTUALLY STEPS. In the reference, `triggerPrint` adds
+       `printing-classic` AND `vibrating` to the same element, and both rules
+       set `animation` on `.receipt-paper-wrapper` — so the later one wins the
+       cascade and Classic mode vibrates in place without ever feeding. Here
+       the feed is on the paper and the vibration is on the ink inside it, so
+       the two compose instead of fighting: the sheet steps out of the slot
+       while the print judders, which is what the mode is describing.
 
      · NO FIXED 31rem DROP. The reference pushes its caption down by a hard
        `margin-top: 31rem` once printing starts, which assumes a receipt of one
-       known length. Ours prints real line items and its height depends on the
-       fee breakdown, so the paper is in normal flow inside a mask and the
-       caption is simply below it — the same reason the previous receipt was in
-       flow, and the same failure avoided (see the note in `PaymentOverlay`).
+       known length. Ours prints a real fee breakdown whose height depends on
+       the destination, so the paper is a collapsing grid row in normal flow
+       and the caption simply follows it.
 
-   WHY A PRINTER AT ALL. The thing being represented is a payment terminal
-   producing a record of a transaction, and that is an object people have
-   watched happen a thousand times. The animation is not decoration: it is the
-   reason the receipt is believed. A card of text that fades in says a page
-   changed; paper feeding out of a slot says a transaction completed.
+     · THEME-AWARE HOUSING. The reference is drawn on a hard white page. This
+       sits on `--canvas`, so the machine's shadows are stated as rgb with
+       alpha rather than in the near-whites they were mixed against.
+
+   WHY A PRINTER AT ALL. The thing being represented is a terminal producing a
+   record of a transaction, and that is an object people have watched a
+   thousand times. The animation is not decoration: it is the reason the
+   receipt is believed. A card of text that fades in says a page changed; paper
+   feeding out of a slot says a transaction completed.
    ------------------------------------------------------------------------ */
 
 .rcpt-machine {
+  /* The reference is 400px. See the header on why the desktop size is larger.
+     `min()` against the viewport rather than `max-width: 100%`, because the
+     type sizes below are `em` of a font-size derived from this variable: a
+     `max-width` narrows the box and leaves the print at its full size, which
+     on a 390px phone printed 18px monospace onto a 280px sheet and wrapped
+     every line item across three. Clamping the VARIABLE narrows the machine,
+     the paper and the print together, which is the whole point of there being
+     one knob. */
+  --rcpt-w: min(460px, calc(100vw - 3rem));
+
   position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 100%;
-  max-width: 400px;
+  width: var(--rcpt-w);
+}
+
+/* SHORT VIEWPORTS SHRINK THE MACHINE, NOT THE STAGE.
+   The receipt is what makes this composition tall, so it is what gives ground
+   on a laptop — and because it is sized from one variable, shrinking it
+   shrinks the sheet and the print with it and nothing goes out of proportion.
+   The overlay scrolls for whatever is still over the fold, which is reachable
+   in both directions since the stage centres with `margin: auto` rather than
+   `justify-content`. */
+@media (max-height: 900px) {
+  .rcpt-machine { --rcpt-w: min(400px, calc(100vw - 3rem)); }
+}
+
+@media (max-height: 780px) {
+  .rcpt-machine { --rcpt-w: min(350px, calc(100vw - 3rem)); }
 }
 
 /* The top hood: a brushed metallic bar, lit from above. Five stops rather than
@@ -1414,7 +1456,7 @@ button {
   position: relative;
   z-index: 25;
   width: 100%;
-  height: 46px;
+  height: calc(var(--rcpt-w) * 0.115);
   overflow: hidden;
   border-radius: 16px 16px 4px 4px;
   background: linear-gradient(
@@ -1449,14 +1491,14 @@ button {
 }
 
 /* The mouth. Deliberately almost black with a hard inner shadow: the paper has
-   to look like it is coming from somewhere, and the only way to draw "inside
-   the machine" is to make the slit darker than anything else on screen. */
+   to look like it comes from somewhere, and the only way to draw "inside the
+   machine" is to make the slit darker than anything else on screen. */
 .rcpt-slit {
   position: relative;
   z-index: 5;
   width: 87.5%;
-  height: 12px;
-  margin-top: -6px;
+  height: calc(var(--rcpt-w) * 0.03);
+  margin-top: calc(var(--rcpt-w) * -0.015);
   border-radius: 2px;
   background: #0f0a03;
   box-shadow:
@@ -1468,8 +1510,8 @@ button {
   position: relative;
   z-index: 10;
   width: 100%;
-  height: 14px;
-  margin-top: -4px;
+  height: calc(var(--rcpt-w) * 0.035);
+  margin-top: calc(var(--rcpt-w) * -0.01);
   border-radius: 0 0 14px 14px;
   background: linear-gradient(180deg, #9e6d2b 0%, #d8b478 40%, #fff7ea 100%);
   box-shadow: 0 8px 18px rgb(0 0 0 / 0.12);
@@ -1484,10 +1526,10 @@ button {
 }
 
 /* The blade. One white line swept across the slit, once, at the moment the
-   paper is torn — the flash a cutter makes catching the light. */
+   paper is cut — the flash a cutter makes catching the light. */
 .rcpt-blade {
   position: absolute;
-  top: 42px;
+  top: calc(var(--rcpt-w) * 0.105);
   left: 50%;
   z-index: 35;
   width: 87.5%;
@@ -1516,41 +1558,38 @@ button {
 
 /* THE VIEWPORT is what makes the paper look like it comes out of the machine
    rather than appearing in front of it. `clip-path` cuts it dead flat at the
-   slit line and leaves 60px of slack on the sides and 1200px below, so the
+   slit line and leaves 60px of slack at the sides and 1200px below, so the
    paper's own drop shadow is free to fall outside the clip. The shadow is a
    `filter` on this element rather than a `box-shadow` on the paper, because
    the paper is cut into serrated teeth and only `drop-shadow` follows a
-   clipped shape. */
+   clipped shape.
+
+   IT IS ALSO A COLLAPSING ROW. The paper is in normal flow — that is what
+   stops it being pushed off the top of a short viewport — which also means the
+   400-odd px it occupies stays reserved after it has been torn away, leaving
+   the caption stranded at the bottom of an empty column. `1fr` to `0fr` is the
+   one way to transition a row of unknown height, and the height IS unknown
+   here: the paper prints a fee breakdown whose length depends on the
+   destination. */
 .rcpt-viewport {
   position: relative;
+  display: grid;
+  grid-template-rows: 1fr;
   width: 95%;
   margin-top: -1px;
   padding-bottom: 20px;
-  /* A COLLAPSING ROW, so tearing the paper off gives its space back.
-     The paper is in normal flow — that is what stops it being pushed off the
-     top of a short viewport — which also means the ~380px it occupies stays
-     reserved after it has been torn away, leaving the caption stranded at the
-     bottom of an empty column. `1fr` to `0fr` is the one way to transition a
-     row of unknown height, and the height IS unknown here: the paper prints a
-     fee breakdown whose length depends on the destination. */
-  display: grid;
-  grid-template-rows: 1fr;
-  transition: grid-template-rows 480ms var(--ease-out, ease-out);
   clip-path: inset(0 -60px -1200px -60px);
   pointer-events: none;
   perspective: 1200px;
   perspective-origin: 50% 0%;
+  transition: grid-template-rows 480ms var(--ease-out, ease-out);
   filter:
     drop-shadow(0 18px 36px rgb(20 15 5 / 0.16))
     drop-shadow(0 4px 12px rgb(20 15 5 / 0.08));
 }
 
-/* The paper. Warm off-white, not the page white — thermal stock is never quite
-   the colour of a screen's background, and the difference is what stops the
-   receipt reading as a hole in the page. The clip-path is the cutter's teeth:
-   30 v-notches along the bottom edge, which is what a POS cutter leaves. */
-/* Grid children refuse to shrink below their content without this, which
-   would make the 0fr row above collapse to the paper's full height. */
+/* Grid children refuse to shrink below their content without this, which would
+   make the 0fr row below collapse to the paper's full height anyway. */
 .rcpt-viewport > * {
   min-height: 0;
 }
@@ -1559,9 +1598,14 @@ button {
   grid-template-rows: 0fr;
 }
 
+/* The paper. Warm off-white, not the page white — thermal stock is never quite
+   the colour of a screen's background, and the difference is what stops the
+   receipt reading as a hole in the page. The clip-path is the cutter's teeth:
+   30 v-notches along the bottom edge, which is what a POS cutter leaves. */
 .rcpt-paper {
   position: relative;
-  width: 100%;
+  width: 86.85%;
+  margin: 0 auto;
   background-color: #fafaf8;
   transform-origin: top center;
   transform-style: preserve-3d;
@@ -1633,9 +1677,10 @@ button {
 }
 
 /* ── THE FOUR STATES OF THE PAPER ──────────────────────────────────────────
-   Retracted, feeding, printed, torn. Written as data-attributes rather than
-   classes so the state machine in the component has exactly one place to put
-   its answer and cannot leave two of them set at once. */
+   Retracted, printing, printed, tearing. Data attributes rather than classes
+   so the state machine in the component has one place to put its answer and
+   cannot leave two of them set at once — which is the cascade collision that
+   breaks Classic mode in the reference. */
 
 /* Loaded, waiting. Pulled up behind the slit with only its serrated lip
    showing, and tipped away from the reader so the visible sliver reads as the
@@ -1644,15 +1689,32 @@ button {
   transform: translateY(-93%) rotateX(-16deg) translateZ(-25px);
 }
 
-.rcpt-paper[data-state="feeding"] {
-  animation: rcpt-feed 2.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+.rcpt-paper[data-state="printed"] {
+  transform: translateY(0) rotateX(0deg) translateZ(0);
 }
 
-/* Fed. The resting position, and the state the paper is left in.
-   NOT a transition from `retracted`: the feed is a keyframed unroll with an
-   arch in the middle of it, and a transition between two transforms would
-   interpolate straight through that arch as a slide. */
-@keyframes rcpt-feed {
+/* Classic: a stepper motor. The reference's `printMechanical3D`, unchanged —
+   five uneven stages, because a stepper does not accelerate smoothly. */
+.rcpt-paper[data-state="printing"][data-mode="classic"] {
+  animation: rcpt-feed-classic 2.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes rcpt-feed-classic {
+  0% { transform: translateY(-93%) rotateX(-16deg) translateZ(-25px); opacity: 0.6; }
+  15% { transform: translateY(-78%) rotateX(-12deg) translateZ(14px); opacity: 0.85; }
+  35% { transform: translateY(-56%) rotateX(-8deg) translateZ(22px); opacity: 0.95; }
+  60% { transform: translateY(-30%) rotateX(-5deg) translateZ(18px); opacity: 1; }
+  82% { transform: translateY(-8%) rotateX(-2deg) translateZ(8px); }
+  100% { transform: translateY(0%) rotateX(0deg) translateZ(0px); opacity: 1; }
+}
+
+/* Smooth: one continuous unroll with an arch in the middle of it. The
+   reference's `printSmooth3D`, unchanged. */
+.rcpt-paper[data-state="printing"][data-mode="smooth"] {
+  animation: rcpt-feed-smooth 2.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes rcpt-feed-smooth {
   0% {
     transform: translateY(-93%) rotateX(-18deg) translateZ(-30px) scale(0.97);
     opacity: 0.4;
@@ -1680,15 +1742,24 @@ button {
   }
 }
 
-.rcpt-paper[data-state="printed"] {
-  transform: translateY(0) rotateX(0deg) translateZ(0);
+/* The judder, on the INK rather than on the paper. See the header: the
+   reference puts it on the same element as the feed, where it silently
+   replaces it. Half a pixel, 20 times a second, and only while a stepper is
+   actually pulling the sheet through. */
+.rcpt-ink[data-vibrating="true"] {
+  animation: rcpt-vibrate 0.05s infinite alternate ease-in-out;
+}
+
+@keyframes rcpt-vibrate {
+  0% { transform: translateX(-0.4px); }
+  100% { transform: translateX(0.4px); }
 }
 
 /* Torn off. A hand tugs it sideways, it rips at the cutter line and leaves,
    fading where it is rather than sliding down the page — the reference's own
    note, and it is right: paper torn off a terminal goes into a pocket, it does
    not fall to the floor. */
-.rcpt-paper[data-state="torn"] {
+.rcpt-paper[data-state="tearing"] {
   transform-origin: top right;
   animation: rcpt-tear 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 }
@@ -1700,31 +1771,181 @@ button {
   100% { transform: translateY(22px) translateX(110px) rotate(-14deg) scale(0.94); opacity: 0; }
 }
 
-/* The ink. Monospaced, because a receipt is set in whatever the terminal's
-   ROM had and every one of them is a fixed-pitch face — and because columns of
-   figures only line up in one. */
+/* ── THE PRINT ─────────────────────────────────────────────────────────────
+   The reference's own type, in `em` off a font-size derived from `--rcpt-w`,
+   so the sheet's proportions hold at any size. Monospaced, because a receipt
+   is set in whatever the terminal's ROM had and every one of them is a
+   fixed-pitch face — and because columns of figures only line up in one.
+   ------------------------------------------------------------------------ */
 .rcpt-ink {
   position: relative;
   z-index: 2;
-  padding: 1.5rem 1.3rem 2rem;
+  padding: 1.5em 1.3em 2em;
   font-family: var(--font-mono, ui-monospace, "JetBrains Mono", "Courier New", monospace);
+  font-size: calc(var(--rcpt-w) / 25);
   color: #222222;
   letter-spacing: 0;
 }
 
+.rcpt-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.6em;
+  margin-bottom: 1.15em;
+}
+
+.rcpt-brand-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2em;
+  min-width: 0;
+  width: 72%;
+}
+
+.rcpt-brand {
+  font-size: 0.85em;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: #0b4f8a;
+}
+
+.rcpt-brand-sub {
+  font-size: 0.68em;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: 0.05em;
+  color: #555555;
+}
+
+/* The reference loads a logo image here. Ours is the wordmark's own initial in
+   the brand blue — a real mark this app owns, rather than a file the paper
+   would have to fetch and could fail to. */
+.rcpt-badge {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 3em;
+  height: 3em;
+  border-radius: 0.5em;
+  background: #0b4f8a;
+  color: #ffffff;
+  font-size: 1em;
+  font-weight: 800;
+  box-shadow: 0 2px 6px rgb(0 0 0 / 0.12);
+}
+
+.rcpt-amount-block {
+  margin-bottom: 1.15em;
+}
+
+.rcpt-amount {
+  font-size: 1.7em;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: #111111;
+}
+
+.rcpt-meta {
+  margin-top: 0.3em;
+  font-size: 0.62em;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #888888;
+}
+
 .rcpt-rule {
   height: 0;
-  margin: 0.9rem 0;
+  margin: 0.9em 0;
   border-bottom: 1px dashed #cccccc;
+}
+
+.rcpt-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65em;
+}
+
+.rcpt-item {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.8em;
+  font-size: 0.78em;
+  font-weight: 500;
+}
+
+.rcpt-item-name {
+  min-width: 0;
+  color: #333333;
+}
+
+.rcpt-item-price {
+  flex-shrink: 0;
+  font-weight: 600;
+  color: #222222;
+}
+
+.rcpt-totals {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4em;
+  font-size: 0.78em;
+}
+
+.rcpt-total-row {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 500;
+  color: #777777;
+}
+
+/* Grand total — a plain top rule like a real receipt, no coloured band. */
+.rcpt-grand {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 0.6em;
+  padding-top: 0.55em;
+  border-top: 1px solid #cccccc;
+  font-size: 0.82em;
+  font-weight: 700;
+  color: #111111;
+}
+
+.rcpt-footer {
+  margin-top: 0.85em;
+  padding-top: 0.5em;
+  text-align: center;
+}
+
+.rcpt-footer-msg {
+  margin-bottom: 0.7em;
+  font-size: 0.68em;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: #555555;
 }
 
 /* The barcode. A repeating linear-gradient at four bar widths, which is enough
    irregularity to read as a printed code at a glance. It encodes nothing and
-   is `aria-hidden`: drawing a scannable barcode would be worse than drawing
-   none, because it would claim to carry data it does not carry. */
+   is `aria-hidden`; the reference prints a transaction number beneath it and
+   this does not, because there is no such number at this point in the flow and
+   a plausible one would be an invented record. */
+.rcpt-barcode-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15em;
+  opacity: 0.75;
+}
+
 .rcpt-barcode {
   width: 75%;
-  height: 28px;
+  height: 1.75em;
   background: repeating-linear-gradient(
     90deg,
     #222 0px, #222 1.5px,
@@ -1739,18 +1960,20 @@ button {
 @media (prefers-reduced-motion: reduce) {
   /* The paper still has to arrive — it is the record of the payment — so the
      feed is removed and the printed position is what remains. The tear is a
-     dismissal, so it lands on its end frame: gone. */
-  .rcpt-paper[data-state="feeding"] {
+     dismissal, so it lands on its end frame: gone. The judder is pure texture
+     and simply stops. */
+  .rcpt-paper[data-state="printing"] {
     animation: none !important;
     transform: translateY(0) !important;
     opacity: 1 !important;
   }
 
-  .rcpt-paper[data-state="torn"] {
+  .rcpt-paper[data-state="tearing"] {
     animation: none !important;
     opacity: 0 !important;
   }
 
+  .rcpt-ink[data-vibrating="true"],
   .rcpt-blade[data-cutting="true"] {
     animation: none !important;
   }
@@ -1763,31 +1986,24 @@ button {
 /* ---------------------------------------------------------------------------
    9. THE SETTLED PAYMENT STAGE
 
-   Printer, paper, card and message together stand well over 900px — the
-   reference's own proportions, drawn for a desktop window and taller than the
-   viewport of an ordinary laptop. Measured on the previous receipt: at 900px
-   the paper was clipped by 225px at the top, which took the masthead with it.
+   THIS USED TO SCALE, AND SCALING IS WHY IT WAS BROKEN.
 
-   So the composition scales as a whole rather than being cropped: the design
-   keeps its proportions and everything on it stays legible, which is the trade
-   a receipt this tall was always going to force.
+   `transform: scale()` on the stage shrank the pixels and left the layout box
+   at full size, so on a 1366x768 laptop the composition was drawn at 74% and
+   still reserved 880px of column: the top of the receipt sat above the scroll
+   origin where no browser will scroll to it, and 300px of dead space hung
+   underneath. It also had to be stepped rather than continuous, because a
+   scaled ancestor distorts the shared-element animation the card arrives on.
 
-   Stepped rather than continuous, because `scale` on a transformed ancestor
-   affects the shared-element animation the card runs on arrival, and four
-   fixed values are easy to check by eye at each breakpoint.
+   Nothing is scaled now. The machine sizes itself from `--rcpt-w` in section 8
+   — including its type, which is `em` off that same variable — and two
+   height queries there narrow it on a short screen. That shrinks the layout as
+   well as the picture, which is the difference that matters, and the overlay
+   simply scrolls for whatever is left over.
+
+   The class stays because `PaymentOverlay` names it and because this is where
+   the argument lives; it carries the transform origin and nothing else.
    ------------------------------------------------------------------------ */
 .pay-stage {
   transform-origin: center center;
-}
-
-@media (max-height: 1040px) {
-  .pay-stage { transform: scale(0.84); }
-}
-
-@media (max-height: 880px) {
-  .pay-stage { transform: scale(0.72); }
-}
-
-@media (max-height: 760px) {
-  .pay-stage { transform: scale(0.62); }
 }

@@ -67,8 +67,9 @@
  * contributes no height, so the flex centring had no idea the paper was there
  * and happily pushed 200-400px of it off the top of the screen. In flow, the
  * printer reserves its own height and the column centres around the whole
- * composition. Section 9 of `globals.css` scales the stage down on a short
- * viewport rather than cropping it, and the overlay scrolls beneath that.
+ * composition. On a short viewport the machine narrows itself rather than the
+ * stage being scaled — see section 9 of `globals.css` for why scaling was the
+ * wrong lever — and the overlay scrolls for whatever is left over.
  */
 
 import { motion } from "framer-motion";
@@ -117,14 +118,24 @@ export function PaymentOverlay({
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: DURATION.base, ease: EASE.out }}
-      className="fixed inset-0 z-modal flex flex-col items-center justify-center overflow-y-auto bg-background/95 px-5 py-10 backdrop-blur-md"
+      /* `items-center` but NOT `justify-center`, and the centring done with
+         `m-auto` on the child instead. A flex container that centres its
+         content and then overflows puts the overflow above `scrollTop: 0`,
+         where no browser will scroll to it — on a phone that took the top of
+         the receipt off the screen permanently. `margin: auto` centres the
+         same way while overflow stays reachable in both directions. */
+      className="fixed inset-0 z-modal flex flex-col items-center overflow-y-auto bg-background/95 px-5 py-10 backdrop-blur-md"
     >
-      <div className="pay-stage flex w-full flex-col items-center">
+      <div className="pay-stage m-auto flex w-full flex-col items-center">
         {/* THE CARD, first in both phases. See the header. */}
         <motion.div
           layoutId="payment-card"
           transition={SPRING.gentle}
-          animate={{ scale: settled ? 0.88 : 1 }}
+          /* Smaller once settled, and deliberately so: the card is the thing
+             that was operated and the receipt is the thing that resulted, so
+             the receipt has to be the larger object on the screen. At parity
+             the two competed and the paper read as an accessory to the card. */
+          animate={{ scale: settled ? 0.7 : 1 }}
           style={{ zIndex: 10 }}
           className="pay-scene relative h-[240px] w-full max-w-[420px]"
         >
@@ -138,7 +149,10 @@ export function PaymentOverlay({
             initial={{ opacity: 0, y: -14 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.25, duration: DURATION.slow, ease: EASE.out }}
-            className="mt-10 w-[340px]"
+            /* Wide enough for the 460px machine plus the drop shadow its
+               viewport casts outside its own box. The printer sizes itself
+               from `--rcpt-w`; this only has to not squeeze it. */
+            className="mt-6 w-full max-w-[560px]"
           >
             <ReceiptPrinter
               document={receipt}
