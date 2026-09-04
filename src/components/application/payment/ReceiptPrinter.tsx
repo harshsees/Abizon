@@ -26,7 +26,9 @@
  *   SMOOTH       not a label change. Classic is a stepper: an uneven five-stage
  *                feed, a judder on the print, and fourteen audible pulses.
  *                Smooth is one continuous unroll with an arch in it.
- *   SOUND        Off by default. See the note on `DEFAULT_SOUND`.
+ *   SOUND        On, as the reference has it, with a mute beside the mode
+ *                switch. See the note on `DEFAULT_SOUND` for why it is
+ *                audible at all when nothing was pressed to start the print.
  *
  * ── THE FIRST COPY PRINTS ITSELF ──
  *
@@ -34,8 +36,7 @@
  * not, and the difference is the difference between a demo and a checkout: a
  * terminal that has just taken a payment prints the receipt, it does not offer
  * to. So the first feed runs on arrival and every button operates the machine
- * from there — which is also why the sound ships off, since nothing can have
- * been consented to before the screen has even been seen.
+ * from there.
  *
  * ── EVERY FIGURE ON THE PAPER IS SOURCED ──
  *
@@ -108,16 +109,24 @@ const TEAR_MS = 550;
 const RESET_MS = 300;
 
 /**
- * SOUND SHIPS OFF, and this is the one place this build departs from the
- * reference on purpose.
+ * SOUND SHIPS ON, as the reference does, at the product owner's request.
  *
- * The reference defaults it on, which is right for a page whose entire subject
- * is a printer. This is a checkout, the first feed runs without anybody asking
- * for it, and a payment confirmation that makes machine noises at somebody who
- * did not ask is a bug however well it is synthesised. The toggle is on screen
- * and the synthesiser is complete; flip this to `true` to ship it on.
+ * IT IS ONLY AUDIBLE BECAUSE A PRESS ALREADY HAPPENED. The first feed runs on
+ * arrival rather than on a button, so nothing here can rely on a click of its
+ * own — but this screen is only ever reached by pressing Pay, and that press
+ * gives the document sticky user activation for the rest of its life. The
+ * `AudioContext` is constructed inside that activation's shadow, which is why
+ * it starts rather than being created suspended and staying that way.
+ *
+ * If a browser refuses anyway, `PrinterAudio` catches it and the animation
+ * plays in silence — the sound is never load-bearing.
+ *
+ * The mute toggle sits under the machine, and the preference is per-visit
+ * rather than remembered: nothing about this screen is worth writing to a
+ * device, and a receipt printer somebody muted six weeks ago on another
+ * application is not a setting they were trying to make.
  */
-const DEFAULT_SOUND = false;
+const DEFAULT_SOUND = true;
 
 /** Which motion the machine uses. Classic is the stepper — see the header. */
 const DEFAULT_MODE: PrinterMode = "classic";

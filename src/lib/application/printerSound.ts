@@ -20,9 +20,11 @@
  *   4. It fails silently and completely. Every call is wrapped, and a browser
  *      that blocks the `AudioContext` loses the sound and nothing else.
  *
- * NOTHING HERE PLAYS UNINVITED. `PrinterAudio` is constructed lazily on the
- * first sound actually requested, which can only follow a press, and the caller
- * gates every call on a preference that ships off. See `ReceiptPrinter`.
+ * NOTHING HERE OPENS A CONTEXT SPECULATIVELY. `PrinterAudio` is constructed
+ * lazily on the first sound actually requested, and the caller gates every call
+ * on a preference with a mute on screen beside it. The first sound follows the
+ * applicant pressing Pay, whose user activation is what lets the context start
+ * rather than being created suspended. See `ReceiptPrinter`.
  */
 
 /** The reference's two voices: a heavier stepper and a quieter continuous feed. */
