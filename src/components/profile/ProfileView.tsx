@@ -14,7 +14,10 @@ import {
 } from "lucide-react";
 
 import { BrandLogo } from "@/components/BrandLogo";
+import { DocumentTracker } from "@/components/profile/DocumentTracker";
 import { signOut } from "@/app/actions/auth";
+import type { DocumentProgressInput } from "@/lib/application/documentProgress";
+import { summariseDocuments } from "@/lib/application/documentProgress";
 import { formatE164 } from "@/lib/auth/phone";
 
 /**
@@ -54,6 +57,8 @@ export type ProfileApplication = {
   travelDate: string | null;
   updatedAt: number;
   submittedAt: number | null;
+  /** Kind and review state only — see the note in the route. */
+  documents: DocumentProgressInput[];
 };
 
 const STATUS_LABEL: Record<string, string> = {
@@ -248,46 +253,7 @@ export function ProfileView({
             ) : (
               <ul className="mt-6 space-y-3">
                 {shown.map((application) => (
-                  <li key={application.id}>
-                    <Link
-                      href={
-                        // In progress goes back into the flow; submitted goes
-                        // to tracking. Two different intentions, and sending
-                        // both to the same place would mean one of them
-                        // arriving somewhere that cannot help.
-                        application.status === "draft"
-                          ? `/apply?country=${application.countrySlug}`
-                          : `/track/${application.reference}`
-                      }
-                      className="flex flex-wrap items-center gap-x-5 gap-y-2 rounded-2xl border border-slate-200/70 bg-white p-4 shadow-sm transition hover:border-slate-300"
-                    >
-                      <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-slate-100 text-muted-foreground">
-                        <FileText className="h-4.5 w-4.5" />
-                      </span>
-
-                      <span className="min-w-0 flex-1">
-                        <span className="block text-sm font-extrabold text-slate-900">
-                          {application.countryName}
-                        </span>
-                        <span
-                          data-numeric
-                          className="mt-0.5 block font-mono text-[11px] font-bold text-muted-foreground"
-                        >
-                          {application.reference} ·{" "}
-                          {application.travellerCount === 1
-                            ? "1 traveller"
-                            : `${application.travellerCount} travellers`}
-                          {application.travelDate ? ` · ${application.travelDate}` : ""}
-                        </span>
-                      </span>
-
-                      <span className="rounded-full bg-slate-100 px-3 py-1 text-[10px] font-extrabold uppercase tracking-wider text-slate-600">
-                        {STATUS_LABEL[application.status] ?? application.status}
-                      </span>
-
-                      <ChevronRight className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
-                    </Link>
-                  </li>
+                  <ApplicationRow key={application.id} application={application} />
                 ))}
               </ul>
             )}
@@ -298,6 +264,127 @@ export function ProfileView({
       </main>
 
     </div>
+  );
+}
+
+/**
+ * ONE APPLICATION, AND ITS DOCUMENTS UNDERNEATH IT.
+ *
+ * ── Why the tracker is behind a disclosure rather than always open ──
+ *
+ * An applicant with four applications would otherwise be handed four progress
+ * rails, four document lists and up to twenty rows, and the thing they came for
+ * — which application is which — would be somewhere in the middle of it. Closed,
+ * the row is the summary it always was; open, it is the tracking record.
+ *
+ * The summary line carries the one fact worth surfacing without a click: how
+ * many documents are through. Somebody scanning the list for a problem should
+ * not have to open four panels to find it, so a rejection is stated on the
+ * closed row too.
+ *
+ * ── Why the row is no longer a link ──
+ *
+ * It was one, and a link containing a disclosure button is a control the
+ * keyboard cannot use sensibly — Enter on the row would navigate, Enter on the
+ * button inside it would not, and which one a screen reader announces depends
+ * on where the focus landed. So the row opens, and the destination it used to
+ * lead to is a named link inside it, which also let it stop being ambiguous
+ * about what it does: "Continue application" and "Track" are two different
+ * actions and were one chevron.
+ */
+function ApplicationRow({ application }: { application: ProfileApplication }) {
+  const [open, setOpen] = useState(false);
+  const summary = summariseDocuments(application.documents);
+
+  return (
+    <li className="overflow-hidden rounded-2xl border border-slate-200/70 bg-white shadow-sm transition hover:border-slate-300">
+      <button
+        type="button"
+        onClick={() => setOpen((value) => !value)}
+        aria-expanded={open}
+        className="flex w-full cursor-pointer flex-wrap items-center gap-x-5 gap-y-2 p-4 text-left"
+      >
+        <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-slate-100 text-muted-foreground">
+          <FileText className="h-4.5 w-4.5" />
+        </span>
+
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm font-extrabold text-slate-900">
+            {application.countryName}
+          </span>
+          <span
+            data-numeric
+            className="mt-0.5 block font-mono text-[11px] font-bold text-muted-foreground"
+          >
+            {application.reference} ·{" "}
+            {application.travellerCount === 1
+              ? "1 traveller"
+              : `${application.travellerCount} travellers`}
+            {application.travelDate ? ` · ${application.travelDate}` : ""}
+          </span>
+        </span>
+
+        {/* The document state, on the closed row. A rejection is the only thing
+            here that needs acting on, so it is the only thing allowed to be
+            loud. */}
+        {summary.total > 0 && (
+          <span
+            className={`rounded-full px-3 py-1 text-[10px] font-extrabold uppercase tracking-wider ${
+              summary.rejected > 0
+                ? "bg-destructive-subtle text-destructive"
+                : summary.verified === summary.total
+                  ? "bg-success-subtle text-success-subtle-foreground"
+                  : "bg-slate-100 text-slate-600"
+            }`}
+          >
+            {summary.rejected > 0
+              ? `${summary.rejected} to replace`
+              : `${summary.verified}/${summary.total} verified`}
+          </span>
+        )}
+
+        <span className="rounded-full bg-slate-100 px-3 py-1 text-[10px] font-extrabold uppercase tracking-wider text-slate-600">
+          {STATUS_LABEL[application.status] ?? application.status}
+        </span>
+
+        <ChevronRight
+          className={`h-4 w-4 flex-shrink-0 text-muted-foreground transition-transform duration-[--duration-fast] ${
+            open ? "rotate-90" : ""
+          }`}
+          aria-hidden
+        />
+      </button>
+
+      {open && (
+        <div className="border-t border-slate-200/70 bg-slate-50/50 p-4">
+          <DocumentTracker documents={application.documents} />
+
+          <div className="mt-5 flex flex-wrap gap-2">
+            {/* In progress goes back into the flow; submitted goes to
+                tracking. Two different intentions, and one chevron used to
+                serve both — so one of them always arrived somewhere that could
+                not help. */}
+            {application.status === "draft" ? (
+              <Link
+                href={`/apply?country=${application.countrySlug}`}
+                className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-on-primary transition hover:bg-primary-hover"
+              >
+                Continue application
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            ) : (
+              <Link
+                href={`/track/${application.reference}`}
+                className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-on-primary transition hover:bg-primary-hover"
+              >
+                Track this application
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            )}
+          </div>
+        </div>
+      )}
+    </li>
   );
 }
 

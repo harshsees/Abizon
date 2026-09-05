@@ -182,6 +182,73 @@ export type DocumentRecord = {
   uploadedAt: number;
 };
 
+/**
+ * EVERY DOCUMENT ON EVERY APPLICATION THIS USER OWNS, IN ONE QUERY.
+ *
+ * The profile lists applications and, under each of them, how far its documents
+ * have got. The obvious way to build that is `listApplications` and then
+ * `getApplication` per row — which is one query plus three per application, and
+ * for the applicant with six applications is nineteen round trips to render one
+ * page.
+ *
+ * This is one join instead. Scoped by `userId` on the APPLICATIONS side, so the
+ * `where` clause is what enforces ownership rather than a filter afterwards —
+ * the same rule as everywhere else in this file: a comparison after the fact is
+ * one somebody can refactor away.
+ *
+ * ── What is deliberately not selected ──
+ *
+ * `storage_path`, `checksum`, `content_type`, `byte_size`. None of them is
+ * needed to draw a progress bar, all of them cross into a client component if
+ * they are fetched here, and `storage_path` is the one value that, combined
+ * with a service key, addresses somebody's passport scan. The column list is
+ * the disclosure boundary.
+ */
+export type DocumentProgressRow = {
+  applicationId: string;
+  travellerPosition: number;
+  kind: string;
+  status: string;
+  rejectionReason: string | null;
+  uploadedAt: number;
+};
+
+export async function listDocumentProgress(
+  userId: string,
+): Promise<DocumentProgressRow[]> {
+  const db = requireDb();
+
+  const rows = await db
+    .select({
+      applicationId: documents.applicationId,
+      position: travellers.position,
+      kind: documents.kind,
+      status: documents.status,
+      rejectionReason: documents.rejectionReason,
+      uploadedAt: documents.uploadedAt,
+    })
+    .from(documents)
+    .innerJoin(applications, eq(documents.applicationId, applications.id))
+    .innerJoin(travellers, eq(documents.travellerId, travellers.id))
+    .where(
+      and(
+        eq(applications.userId, userId),
+        isNull(applications.deletedAt),
+        isNull(documents.deletedAt),
+      ),
+    )
+    .orderBy(travellers.position, documents.uploadedAt);
+
+  return rows.map((row) => ({
+    applicationId: row.applicationId,
+    travellerPosition: row.position,
+    kind: row.kind,
+    status: row.status,
+    rejectionReason: row.rejectionReason,
+    uploadedAt: row.uploadedAt.getTime(),
+  }));
+}
+
 export async function getApplication(
   userId: string,
   applicationId: string,

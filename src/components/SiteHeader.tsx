@@ -28,7 +28,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
-import { Search, User, X } from "lucide-react";
+import { FileSearch, Search, User, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 import { BrandLogo } from "@/components/BrandLogo";
@@ -388,6 +388,29 @@ export function SiteHeader({
             >
               <Search className="h-4.5 w-4.5" aria-hidden="true" />
             </button>
+
+            {/* THE TRACKING CONTROL.
+
+                Beside the account button rather than in the footer or on the
+                homepage's own canvas, because the question it answers — "where
+                has my application got to" — is asked from whatever page the
+                applicant happens to be on, usually days after they left the
+                flow. A control that only exists on the homepage is one they
+                have to navigate to before they can use it.
+
+                It is an icon and not a labelled link for the same reason the
+                account button is: this row already carries a wordmark, a
+                claim, a nav tab and a search field, and a fifth piece of text
+                would make the search field the only thing in it that is not
+                shouting. The accessible name does the naming. */}
+            <Link
+              href="/track"
+              aria-label="Track an application"
+              title="Track an application"
+              className="flex h-11 w-11 items-center justify-center rounded-full border border-border bg-surface-sunken text-subtle-foreground transition-colors hover:border-border-strong hover:bg-surface"
+            >
+              <FileSearch className="h-5 w-5" aria-hidden="true" />
+            </Link>
 
             <Link
               href="/profile"
