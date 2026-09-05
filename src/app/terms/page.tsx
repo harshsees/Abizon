@@ -203,7 +203,7 @@ export default function TermsPage() {
             Arbitration and Conciliation Act 1996, seated in New Delhi, conducted in English.
           </p>
 
-          <h2>11. Events outside anyone's control</h2>
+          <h2>11. Events outside anyone&rsquo;s control</h2>
           <p>
             Where a consulate closes, a government suspends issuance, a portal is unavailable
             for a sustained period, or travel to a destination is restricted, our delivery
