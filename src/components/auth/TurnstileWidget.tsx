@@ -90,9 +90,37 @@ export type TurnstileWidgetProps = {
    * replaying the spent one.
    */
   resetKey?: string;
+  /**
+   * Whether the form may be submitted yet.
+   *
+   * ── The bug this exists to close ──
+   *
+   * The token does not arrive when the page does. Cloudflare's script loads,
+   * renders an iframe, runs its checks and calls back — measured at roughly
+   * 1.5 to 2 seconds on a fast connection, and longer on a phone. Until that
+   * callback fires the hidden input is EMPTY, and the submit button was live
+   * the whole time.
+   *
+   * So somebody who typed their number and pressed Send — which is everybody
+   * who knows their own phone number — posted an empty token and was told "We
+   * could not confirm you are not a robot. Reload and try again." Reloading
+   * does not help, because the race is the same on the next page load and the
+   * fast typist loses it again. That is the whole of "I am not able to sign
+   * in": a login that works only if you hesitate.
+   *
+   * Reported upward rather than fixed inside this component because the button
+   * that has to be disabled is in `LoginCard`, and a widget that silently
+   * blocked its parent's submit would be worse than one that says so.
+   *
+   * `true` in the two cases where waiting is pointless: no site key (the
+   * server skips the check under exactly the same condition), and a widget
+   * that failed to load (no token is ever coming, and blocking the button
+   * would strand the applicant behind a check that is not running).
+   */
+  onReadyChange?: (ready: boolean) => void;
 };
 
-export function TurnstileWidget({ resetKey }: TurnstileWidgetProps) {
+export function TurnstileWidget({ resetKey, onReadyChange }: TurnstileWidgetProps) {
   const siteKey = publicEnv.turnstileSiteKey;
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetIdRef = useRef<string | null>(null);
@@ -143,6 +171,19 @@ export function TurnstileWidget({ resetKey }: TurnstileWidgetProps) {
     window.turnstile.reset(widgetIdRef.current);
     setToken("");
   }, [resetKey]);
+
+  /**
+   * Tell the form whether it may be submitted.
+   *
+   * An effect rather than a call inside the Turnstile callbacks, because there
+   * are four places readiness changes — the token arriving, it expiring, the
+   * widget erroring, and a reset clearing it — and routing them all through
+   * one derived value is what stops the fifth one being forgotten.
+   */
+  const ready = !siteKey || failed || token !== "";
+  useEffect(() => {
+    onReadyChange?.(ready);
+  }, [ready, onReadyChange]);
 
   if (!siteKey) return null;
 

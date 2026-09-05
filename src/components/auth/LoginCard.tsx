@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useActionState, useCallback, useEffect, useRef, useState } from "react";
 import { AlertCircle, ArrowRight, MessageSquare, Pencil, ShieldCheck } from "lucide-react";
 
 import { loginAction } from "@/app/actions/auth";
@@ -96,6 +96,20 @@ function PhoneStep({
   const [iso, setIso] = useState(state.iso ?? DEFAULT_ISO);
   const country = CALLING_CODES.find((entry) => entry.iso === iso) ?? CALLING_CODES[0];
 
+  /**
+   * Whether the bot check has produced a token yet.
+   *
+   * Starts `false` and is raised by the widget — including immediately, and
+   * synchronously enough, in the two cases where there is nothing to wait for
+   * (no site key, or a widget that failed to load). See `onReadyChange`.
+   *
+   * `useCallback` because it is passed to a child that lists it as an effect
+   * dependency; a fresh function each render would re-run that effect on every
+   * keystroke in the number field.
+   */
+  const [botCheckReady, setBotCheckReady] = useState(false);
+  const handleReadyChange = useCallback((value: boolean) => setBotCheckReady(value), []);
+
   return (
     <>
       <header className="mb-6">
@@ -165,10 +179,23 @@ function PhoneStep({
             key is the current error: a rejected submit spends its token, and
             resubmitting the spent one fails with a message about robots that
             has nothing to do with what went wrong. */}
-        <TurnstileWidget resetKey={state.error} />
+        <TurnstileWidget resetKey={state.error} onReadyChange={handleReadyChange} />
 
-        <Button type="submit" size="lg" block loading={pending}>
-          Send code
+        {/* Disabled until there is a token to send, and SAYING SO on its
+            face rather than sitting there greyed out.
+
+            Not `loading`: that prop hides the children behind a spinner, so
+            the label explaining the wait would be invisible — which is the
+            failure mode this whole fix is about. The wait is a second or two
+            and the applicant is usually still typing through it. */}
+        <Button
+          type="submit"
+          size="lg"
+          block
+          loading={pending}
+          disabled={!botCheckReady}
+        >
+          {botCheckReady ? "Send code" : "Security check…"}
           <ArrowRight data-arrow className="size-4" />
         </Button>
       </form>

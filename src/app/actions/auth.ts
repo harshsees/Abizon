@@ -47,6 +47,75 @@ function safeDestination(raw: string | undefined | null): string {
 
 /* -------------------------------------------------------------------------- */
 
+/**
+ * RUN AN AUTH STEP, AND TURN A THROWN ERROR INTO A SENTENCE.
+ *
+ * ── What happened without this ──
+ *
+ * `requestCode` reaches the database on its first line, to count how many codes
+ * that number has been sent in the last hour. When the database is unreachable
+ * — a paused Supabase project, a rotated password, a pooler outage, a network
+ * blip — the driver throws, the throw escapes the Server Action, and Next.js
+ * renders the error boundary. The observed result is `POST /login 500` and a
+ * blank page: no message, no field, no way back except the browser's Back
+ * button, and nothing on screen that suggests the problem is ours rather than
+ * the applicant's number.
+ *
+ * This is the second half of "I am not able to sign in", and it is the half
+ * that turns a temporary outage into a login that appears to be broken.
+ *
+ * ── Why the message says so little ──
+ *
+ * `Failed query: select count(*) from "auth_sends" where …` names a table, a
+ * shape and a connection, and an applicant can do nothing with any of it. What
+ * they need is whether to try again, and the answer for every error that
+ * reaches here is yes. The detail goes to the server log, where somebody can
+ * act on it — and it goes there in full, because unlike an OCR stack an auth
+ * error carries no image and no code, only a phone number that this process
+ * already has.
+ *
+ * ── Why this does not swallow the domain failures ──
+ *
+ * `requestCode` and `verifyCode` return `{ ok: false, error }` for everything
+ * they EXPECT: a number over its hourly limit, a wrong code, a dead challenge.
+ * Those are returned values and pass through untouched. What is caught here is
+ * only what was thrown, which by construction is the unexpected.
+ */
+type AuthFailure = {
+  ok: false;
+  error: string;
+  /**
+   * Declared, and always `undefined`.
+   *
+   * The callers read these off the union of "what the step returned" and "what
+   * this threw". Omitting them here would make the union a type on which
+   * neither member's optional fields are readable, and the fix for that is
+   * either an `in` check at every use or this — one line saying that a
+   * transport failure has no attempt count and is not fatal to the challenge,
+   * which is exactly what it means.
+   */
+  attemptsRemaining?: undefined;
+  fatal?: undefined;
+  retryAfterMs?: undefined;
+};
+
+async function guard<T extends { ok: boolean }>(
+  run: () => Promise<T>,
+  label: string,
+): Promise<T | AuthFailure> {
+  try {
+    return await run();
+  } catch (error) {
+    console.error(`[auth] ${label} failed`, error);
+    return {
+      ok: false,
+      error:
+        "Sign-in is temporarily unavailable — we could not reach our records. " +
+        "Please try again in a moment.",
+    };
+  }
+}
+
 async function start(formData: FormData): Promise<LoginState> {
   const iso = String(formData.get("iso") ?? "IN");
   const national = String(formData.get("national") ?? "");
@@ -85,7 +154,10 @@ async function start(formData: FormData): Promise<LoginState> {
     return { step: "phone", error: bot.error, iso, national };
   }
 
-  const outcome = await requestCode(parsed.e164);
+  const outcome = await guard(
+    () => requestCode(parsed.e164),
+    "requestCode",
+  );
   if (!outcome.ok) {
     return { step: "phone", error: outcome.error, iso, national };
   }
@@ -117,7 +189,10 @@ async function verify(previous: LoginState, formData: FormData): Promise<LoginSt
     };
   }
 
-  const outcome = await verifyCode(previous.challengeId, String(formData.get("code") ?? ""));
+  const outcome = await guard(
+    () => verifyCode(previous.challengeId, String(formData.get("code") ?? "")),
+    "verifyCode",
+  );
 
   if (!outcome.ok) {
     return {
