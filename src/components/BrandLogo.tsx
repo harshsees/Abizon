@@ -106,23 +106,31 @@ export function BrandMark({
 /**
  * Mark plus word, as one link-able unit.
  *
- * ── Why the word is smaller than the mark ──
+ * ── The word is back at the size it always was ──
  *
- * It used to be the other way round: a 32px hairline triangle beside a 22px
- * bold word, so the word was the logo and the triangle was punctuation. A mark
- * that is never the loudest element never becomes recognisable on its own, and
- * a mark you do not recognise is one you have to read the word next to — which
- * is the whole cost of not having a logo.
+ * A first pass set it one step DOWN from the mark, on the argument that a mark
+ * which is never the loudest element never becomes recognisable alone. The
+ * product owner asked for the original size back, and they are right on the
+ * facts: the wordmark had been 20px since the site was built, the reference
+ * sets its own at the same weight, and shrinking it was solving a problem
+ * nobody had reported.
  *
- * So the mark leads at every size and the word is set one step down from it,
- * as the thing that names the mark rather than the thing being named. The
- * ratios below are fixed per size rather than left to callers, because "small"
- * is the only instruction a call site should have to give.
+ * What the mark gained instead is being a solid shape rather than a hairline
+ * outline, which is what actually made it legible at 32px — that change did the
+ * work, and the size change was riding along with it.
+ *
+ * The numbers below are the ones each call site carried before `BrandLogo`
+ * existed: a 32px mark beside a 20px word, stepping to 22px on desktop, and a
+ * 20px mark beside a 12px word for the footer's legal-bar credit. They are
+ * fixed per size rather than left to callers, because "small" is the only
+ * instruction a call site should have to give.
  */
 const SIZES = {
-  sm: { mark: "size-6", word: "text-sm", gap: "gap-1.5" },
-  md: { mark: "size-8", word: "text-base", gap: "gap-2" },
-  lg: { mark: "size-10", word: "text-lg", gap: "gap-2.5" },
+  /** The footer's legal-bar credit, and nothing else. */
+  sm: { mark: "size-5", word: "text-xs", gap: "gap-1.5" },
+  /** Site header, footer brand, profile header, login header. */
+  md: { mark: "size-7 md:size-8", word: "text-xl md:text-[1.375rem]", gap: "gap-2" },
+  lg: { mark: "size-10", word: "text-3xl", gap: "gap-2.5" },
 } as const;
 
 export function BrandLogo({

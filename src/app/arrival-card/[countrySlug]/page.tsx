@@ -61,14 +61,14 @@ export async function generateMetadata({
 }: PageProps<"/arrival-card/[countrySlug]">): Promise<Metadata> {
   const { countrySlug } = await params;
   const country = resolveCountry(countrySlug);
-  if (!country) return { title: "Arrival card not found | Abizon" };
+  if (!country) return { title: "Arrival card not found | abizon" };
 
   const config = resolveCountryVisaConfig(country);
   const card = config.arrivalCard;
-  if (!card) return { title: "Arrival card not found | Abizon" };
+  if (!card) return { title: "Arrival card not found | abizon" };
 
   return {
-    title: `${card.scheme} | Abizon`,
+    title: `${card.scheme} | abizon`,
     description:
       `Fill in the ${card.scheme} for ${config.displayName}. ` +
       `It is free, issued by the ${config.displayName} government, and takes a few minutes.`,

@@ -255,7 +255,7 @@ export function CountryApplicationPanel({
           <div className="p-4 md:p-5">
             {/* 1 — the choices, as the reference's stacked rows.
                 The reference's first row is a "Visa Type" dropdown of travel
-                purposes. Abizon records one visa type per destination and no
+                purposes. abizon records one visa type per destination and no
                 purpose at all, so the row that IS a real choice takes its
                 place: how fast it is processed. */}
             <div className="divide-y divide-border">
@@ -436,8 +436,8 @@ export function CountryApplicationPanel({
                     label="Pay on approval"
                     sub={
                       totals.provisional
-                        ? "Abizon fee · provisional"
-                        : "Abizon fee"
+                        ? "abizon fee · provisional"
+                        : "abizon fee"
                     }
                     value={inrOrUnset(payOnApproval)}
                   />
@@ -485,7 +485,7 @@ export function CountryApplicationPanel({
 
       <p className="mt-3 px-1 text-2xs leading-relaxed text-muted-foreground">
         Nothing is charged until you reach checkout. Your {config.displayName}{" "}
-        visa is guaranteed by {formatShortDate(deliveryDays)} or the Abizon fee
+        visa is guaranteed by {formatShortDate(deliveryDays)} or the abizon fee
         is waived.
       </p>
     </aside>

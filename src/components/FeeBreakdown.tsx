@@ -58,7 +58,7 @@ export function GovFeeBreakdown({
     },
     {
       icon: ShieldCheck,
-      label: "Abizon service fee",
+      label: "abizon service fee",
       // The hint carries the status. A traveller reading a fee table is
       // entitled to know which of these numbers is settled and which is not,
       // and the distinction disappears from here on its own the moment
@@ -190,7 +190,7 @@ export function GovFeeBreakdown({
                 <span>
                   Government fees are set by the {countryName} authorities and
                   can change without notice. If the fee drops between payment
-                  and filing, Abizon refunds the difference automatically.
+                  and filing, abizon refunds the difference automatically.
                 </span>
               </p>
             </div>

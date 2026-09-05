@@ -12,7 +12,7 @@ import {
 } from "@/components/PageKit";
 
 export const metadata: Metadata = {
-  title: "Schengen Visa Guide for Indians | Abizon",
+  title: "Schengen Visa Guide for Indians | abizon",
   description:
     "How to apply for a Schengen visa from India — which country to apply to, documents, appointment strategy, fees and the 90/180 rule explained.",
 };

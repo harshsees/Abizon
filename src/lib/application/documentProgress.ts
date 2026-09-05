@@ -84,7 +84,7 @@ export const DOCUMENT_PROGRESS_STAGES: readonly DocumentProgressStage[] = [
   {
     id: "checking",
     label: "In review",
-    description: "Passed to a reviewer at Abizon.",
+    description: "Passed to a reviewer at abizon.",
   },
   {
     id: "verified",

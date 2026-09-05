@@ -30,9 +30,9 @@ import { resolveCountry } from "@/lib/countryCatalogue";
  * change is that the `available: true` branch starts being taken.
  */
 export const metadata: Metadata = {
-  title: "Track Application | Abizon",
+  title: "Track Application | abizon",
   description:
-    "The stages a Abizon visa application passes through, and what Abizon can currently report.",
+    "The stages a abizon visa application passes through, and what abizon can currently report.",
 };
 
 type Props = {
@@ -127,12 +127,12 @@ export default async function TrackingPage({ params }: Props) {
 
         <section className="mt-8">
           <h2 className="text-sm font-semibold text-foreground">
-            How a Abizon application progresses
+            How a abizon application progresses
           </h2>
           <p className="mt-1 text-2xs leading-relaxed text-muted-foreground">
             The route every application takes. Everything from{" "}
             <span className="font-semibold text-foreground">Submitted</span>{" "}
-            onward is recorded by the person at Abizon handling it — there is no
+            onward is recorded by the person at abizon handling it — there is no
             consulate that publishes a status feed, so each stage means somebody
             here observed it.
           </p>

@@ -149,15 +149,15 @@ export function UaeStatusForm() {
           <ArrowRight className="h-4 w-4 transition-transform duration-[var(--duration-base)] ease-out group-hover:translate-x-0.5" />
         </button>
 
-        {/* PHASE 6B corrected this. It read "Applications filed through Abizon
+        {/* PHASE 6B corrected this. It read "Applications filed through abizon
             open directly in your tracking timeline", which promises live
             tracking — there is no status service, so nothing opens and nothing
             is looked up. It now says what the button actually does. */}
         <p className="mt-3 flex items-start gap-2 text-xs text-muted-foreground">
           <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
           <span>
-            Abizon does not have an online status service yet, so we cannot
-            report where an application has reached. A Abizon reference opens
+            abizon does not have an online status service yet, so we cannot
+            report where an application has reached. A abizon reference opens
             the stages an application passes through; for anything filed
             elsewhere, we&apos;ll point you at the official channel.
           </span>
@@ -174,7 +174,7 @@ export function UaeStatusForm() {
             className="mt-4 rounded-2xl border border-accent-subtle bg-accent-subtle p-5"
           >
             <h3 className="text-sm font-bold text-accent-subtle-foreground">
-              That reference isn&apos;t a Abizon application
+              That reference isn&apos;t a abizon application
             </h3>
             <p className="mt-2 text-sm leading-relaxed text-accent-subtle-foreground">
               For a UAE visa filed through another agent, an airline or directly, the

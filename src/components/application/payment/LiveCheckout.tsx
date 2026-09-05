@@ -148,7 +148,7 @@ export function LiveCheckout({
           <p className="mt-3.5 flex items-start gap-2 text-[12px] leading-relaxed text-muted-foreground">
             <ShieldCheck aria-hidden className="mt-px size-3.5 flex-shrink-0" />
             Card details are entered in Razorpay&rsquo;s own secure window and
-            never reach Abizon.
+            never reach abizon.
           </p>
 
           {phase.kind === "failed" && (

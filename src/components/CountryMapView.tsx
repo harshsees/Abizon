@@ -363,7 +363,7 @@ export function CountryMapView({ countries, onSelectCountry }: CountryMapViewPro
             destination map
           </span>
           <h2 className="text-xl font-bold leading-tight text-white md:text-2xl">
-            Everywhere Abizon can take you
+            Everywhere abizon can take you
           </h2>
           <p className="mt-1 max-w-md text-xs text-slate-400">
             Drag to move, scroll or pinch to zoom. Every {PIN} is a destination

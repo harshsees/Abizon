@@ -299,7 +299,7 @@ export function ArrivalCardFlow({
 
         <Link
           href="/"
-          aria-label="Abizon home"
+          aria-label="abizon home"
           className="pointer-events-auto grid size-9 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-surface/85 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground"
         >
           <House aria-hidden className="size-[18px]" strokeWidth={1.75} />
@@ -552,7 +552,7 @@ export function ArrivalCardFlow({
                   >
                     {/* §74. The truthful final state. Not "submitted" — the
                         form is ready and the government's page is one tap
-                        away. Abizon has not filed anything and does not say
+                        away. abizon has not filed anything and does not say
                         it has. */}
                     <a
                       href={card.officialUrl}

@@ -11,9 +11,9 @@ import {
 } from "@/components/PageKit";
 
 export const metadata: Metadata = {
-  title: "Refunds Policy | Abizon",
+  title: "Refunds Policy | abizon",
   description:
-    "When Abizon refunds you, how much, and how fast — including the automatic refund that fires whenever a visa misses its committed delivery date.",
+    "When abizon refunds you, how much, and how fast — including the automatic refund that fires whenever a visa misses its committed delivery date.",
 };
 
 const scenarios = [

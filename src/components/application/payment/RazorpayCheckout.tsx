@@ -192,7 +192,7 @@ export function useRazorpayCheckout(input: {
         key: order.keyId,
         amount: order.amountPaise,
         currency: order.currency,
-        name: "Abizon",
+        name: "abizon",
         description: destination,
         order_id: order.orderId,
         prefill,

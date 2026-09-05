@@ -239,11 +239,11 @@ function standardFaqs(card: Omit<ArrivalCard, "faqs" | "status">): ArrivalCardFa
         card.free
           ? `No. The ${card.noun} is free on the government's own site at ${host}. ` +
             `Anyone charging you for it is charging for the typing, and that includes us — ` +
-            `Abizon does not take a fee for this form.`
+            `abizon does not take a fee for this form.`
           : `The destination charges for this one. The fee is payable on ${host}.`,
     },
     {
-      question: "Does Abizon submit it for me?",
+      question: "Does abizon submit it for me?",
       answer:
         `No, and no one can — the immigration service has no way for a third party to file it. ` +
         `This page gets your details together and checks the passport reads correctly, then hands you ` +

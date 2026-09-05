@@ -192,7 +192,7 @@ export function paymentMethod(id: PaymentMethodId): PaymentMethod {
  * Used where the button is disabled outright — no gateway and no preview.
  */
 export const PAYMENT_UNAVAILABLE_NOTICE =
-  "Abizon cannot take a card payment online yet. Fees are settled with you directly before anything is filed.";
+  "abizon cannot take a card payment online yet. Fees are settled with you directly before anything is filed.";
 
 /**
  * THE PREVIEW NOTICE. Shown above the form whenever `paymentIsPreview`.

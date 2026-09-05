@@ -11,7 +11,7 @@ import {
 } from "@/components/PageKit";
 
 export const metadata: Metadata = {
-  title: "Careers | Abizon",
+  title: "Careers | abizon",
   description:
     "Build the infrastructure that lets anyone travel anywhere. Open engineering, operations and design roles across New Delhi, Dubai and New York.",
 };
@@ -89,7 +89,7 @@ const roles = [
   {
     title: "Partnerships Manager, Travel",
     description:
-      "Bring Abizon to OTAs, airlines and corporate travel desks as an embedded visa layer.",
+      "Bring abizon to OTAs, airlines and corporate travel desks as an embedded visa layer.",
     meta: "New York",
   },
 ];
@@ -134,7 +134,7 @@ export default function CareersPage() {
       <Section
         eyebrow="By the numbers"
         title="What you would be joining"
-        description="Abizon processes visa applications for travellers across India, the GCC and the United States."
+        description="abizon processes visa applications for travellers across India, the GCC and the United States."
       >
         <StatGrid
           stats={[

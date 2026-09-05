@@ -36,7 +36,7 @@ export default async function OpsLoginPage() {
         </div>
 
         <h1 className="font-serif text-2xl font-bold tracking-tight text-foreground">
-          Abizon ops
+          abizon ops
         </h1>
         <p className="mb-6 mt-2 text-sm leading-relaxed text-muted-foreground">
           Staff access. Every application you open and every document you view is

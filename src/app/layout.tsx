@@ -81,13 +81,13 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Abizon | Dubai / UAE Visa for Indians",
+  title: "abizon | Dubai / UAE Visa for Indians",
   // "real-time status tracking" was in this description until Phase 6C.
   // Phase 6B established there is no status service — `lookupApplicationStatus`
   // returns `available: false` for every reference — so the claim was false in
   // the one place search engines and link previews quote verbatim.
   description:
-    "Apply online for a Dubai / UAE visa from India. Document checks against the destination's requirements, transparent government and service fees, and on-time delivery or the Abizon fee is waived.",
+    "Apply online for a Dubai / UAE visa from India. Document checks against the destination's requirements, transparent government and service fees, and on-time delivery or the abizon fee is waived.",
 };
 
 /**

@@ -100,7 +100,7 @@ export function PaymentPreview() {
           Pay for your application
         </h1>
         <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-          The government fee for United Arab Emirates and Abizon&rsquo;s charge,
+          The government fee for United Arab Emirates and abizon&rsquo;s charge,
           in one payment.
         </p>
 
@@ -122,7 +122,7 @@ export function PaymentPreview() {
             destination="United Arab Emirates e-Visa"
             receiptLines={[
               { label: "2 × United Arab Emirates government fee", amount: "₹7,000" },
-              { label: "2 × Abizon service fee", amount: "₹3,000" },
+              { label: "2 × abizon service fee", amount: "₹3,000" },
             ]}
             receiptSubtotal="₹10,000"
             receiptTax={{ label: "GST (18%)", amount: "₹540" }}

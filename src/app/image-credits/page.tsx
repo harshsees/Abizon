@@ -34,9 +34,9 @@ import { COUNTRY_PHOTOS } from "@/lib/countryImagery";
 import { displayCountryName } from "@/lib/countryVisa";
 
 export const metadata: Metadata = {
-  title: "Image credits | Abizon",
+  title: "Image credits | abizon",
   description:
-    "Every destination photograph on Abizon, with its photographer, licence and source.",
+    "Every destination photograph on abizon, with its photographer, licence and source.",
 };
 
 type CreditRow = {
@@ -176,8 +176,8 @@ export default function ImageCreditsPage() {
         </div>
 
         <p className="mt-6 max-w-3xl text-2xs leading-relaxed text-muted-foreground">
-          Abizon is not affiliated with the Wikimedia Foundation, and no
-          photographer listed here has endorsed Abizon. If you are the author of
+          abizon is not affiliated with the Wikimedia Foundation, and no
+          photographer listed here has endorsed abizon. If you are the author of
           one of these photographs and want the credit corrected or the image
           removed, write to us and we will act on it.
         </p>

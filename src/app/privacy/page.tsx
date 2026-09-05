@@ -8,9 +8,9 @@ import {
 } from "@/lib/legal";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy | Abizon",
+  title: "Privacy Policy | abizon",
   description:
-    "What personal data Abizon collects, why, who it is shared with, how long it is kept, and the rights you have over it.",
+    "What personal data abizon collects, why, who it is shared with, how long it is kept, and the rights you have over it.",
 };
 
 export default function PrivacyPage() {
@@ -40,8 +40,8 @@ export default function PrivacyPage() {
         <Prose>
           <h2>1. Who we are</h2>
           <p>
-            Abizon operates this website and the visa filing service described on it. For the
-            purposes of Indian data protection law and the GDPR, Abizon is the data
+            abizon operates this website and the visa filing service described on it. For the
+            purposes of Indian data protection law and the GDPR, abizon is the data
             controller for the personal data described below. Questions go to{" "}
             <a href="mailto:privacy@abizon.com">privacy@abizon.com</a>.
           </p>
@@ -136,7 +136,7 @@ export default function PrivacyPage() {
             advertising. Our document intelligence models are trained on licensed and synthetic
             datasets. Our published research uses application metadata only, subject to a
             minimum aggregation threshold of 1,000 records — see{" "}
-            <a href="/atlas">Abizon Atlas</a>.
+            <a href="/atlas">abizon Atlas</a>.
           </p>
 
           <h2>7. Your rights under the DPDP Act</h2>

@@ -12,7 +12,7 @@ import {
 } from "@/components/PageKit";
 
 export const metadata: Metadata = {
-  title: "Student Visa | Abizon",
+  title: "Student Visa | abizon",
   description:
     "Student visa filing for the US, UK, Canada, Australia and Schengen — financial documentation, interview preparation and deadline management.",
 };

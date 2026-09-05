@@ -12,9 +12,9 @@ import {
 } from "@/components/PageKit";
 
 export const metadata: Metadata = {
-  title: "Abizon Atlas | Travel & Mobility Research",
+  title: "abizon Atlas | Travel & Mobility Research",
   description:
-    "Abizon Atlas publishes original research on visa policy, mobility trends and outbound travel, built on anonymised filing data.",
+    "abizon Atlas publishes original research on visa policy, mobility trends and outbound travel, built on anonymised filing data.",
 };
 
 const reports = [
@@ -67,7 +67,7 @@ export default function AtlasPage() {
     <PageShell>
       <PageHero
         tone="dark"
-        eyebrow="Abizon Atlas"
+        eyebrow="abizon Atlas"
         title="Research on how the world actually moves"
         description="We see several hundred thousand visa applications a quarter. Aggregated and stripped of anything identifying, that is a uniquely direct measure of where people are going and what stops them. Atlas is where we publish it."
       />

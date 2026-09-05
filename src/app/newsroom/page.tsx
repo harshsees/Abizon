@@ -10,14 +10,14 @@ import {
 } from "@/components/PageKit";
 
 export const metadata: Metadata = {
-  title: "Newsroom | Abizon",
+  title: "Newsroom | abizon",
   description:
-    "Company announcements, product launches, policy analysis and press resources from Abizon.",
+    "Company announcements, product launches, policy analysis and press resources from abizon.",
 };
 
 const releases = [
   {
-    title: "Abizon adds 22 African destinations to instant e-Visa coverage",
+    title: "abizon adds 22 African destinations to instant e-Visa coverage",
     description:
       "Tanzania, Rwanda, Zambia and 19 others move to same-week delivery, bringing total coverage to 155 destinations.",
     meta: "12 Jul 2026",
@@ -35,7 +35,7 @@ const releases = [
     meta: "03 Jun 2026",
   },
   {
-    title: "Abizon publishes its first Fee Change Audit",
+    title: "abizon publishes its first Fee Change Audit",
     description:
       "A public, permanent log of every government fee movement we observe, with the date we detected it and the date we passed it on.",
     meta: "19 May 2026",

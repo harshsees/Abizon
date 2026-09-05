@@ -154,7 +154,7 @@ describe("the questions behind the FAQ control", () => {
     }
   });
 
-  it("never says Abizon submits the form", () => {
+  it("never says abizon submits the form", () => {
     // The one claim this flow must never make. Abizon cannot file any of
     // these, and a FAQ answer is exactly where a reassuring sentence would
     // get written by somebody who did not know that.

@@ -79,14 +79,14 @@ export const APPLICATION_STATUSES: readonly ApplicationStatusMeta[] = [
   {
     id: "submitted",
     label: "Submitted",
-    description: "Sent to Abizon for filing.",
+    description: "Sent to abizon for filing.",
     supported: true,
     inSequence: true,
   },
   {
     id: "received",
     label: "Received",
-    description: "Abizon has checked the documents and accepted them.",
+    description: "abizon has checked the documents and accepted them.",
     supported: true,
     inSequence: true,
   },

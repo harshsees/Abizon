@@ -4,7 +4,7 @@ import { CTABand, Callout, PageHero, PageShell, Section, StepList } from "@/comp
 import { PhotoSpecTool } from "@/components/tools/PhotoSpecTool";
 
 export const metadata: Metadata = {
-  title: "Visa Photo Creator — Size & Specification Checker | Abizon",
+  title: "Visa Photo Creator — Size & Specification Checker | abizon",
   description:
     "Exact visa photo dimensions, head height and background rules for Schengen, US, UK, Japan, India and UAE applications.",
 };
@@ -61,7 +61,7 @@ export default function VisaPhotoCreatorPage() {
 
       <CTABand
         title="Apply with the photo already checked"
-        description="Every application through Abizon runs the photo against the destination's specification before it's submitted."
+        description="Every application through abizon runs the photo against the destination's specification before it's submitted."
         href="/"
         label="Start an application"
       />

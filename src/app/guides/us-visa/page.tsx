@@ -12,7 +12,7 @@ import {
 } from "@/components/PageKit";
 
 export const metadata: Metadata = {
-  title: "US Visa Guide for Indians (B1/B2) | Abizon",
+  title: "US Visa Guide for Indians (B1/B2) | abizon",
   description:
     "How to apply for a US B1/B2 visitor visa from India — DS-160, MRV fee, interview slots, what officers assess, and how to prepare.",
 };

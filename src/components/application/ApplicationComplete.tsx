@@ -59,7 +59,7 @@ export function ApplicationComplete() {
           className="rounded-xl border border-border bg-surface-sunken p-5 sm:p-6"
         >
           <p className="text-sm font-semibold text-foreground">
-            Your {summary.country.displayName} application is with Abizon.
+            Your {summary.country.displayName} application is with abizon.
           </p>
           <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
             We have everything for{" "}
@@ -89,7 +89,7 @@ export function ApplicationComplete() {
               Nothing has been charged.
             </p>
             <p>
-              Abizon cannot take a payment online yet. Fees are settled with you
+              abizon cannot take a payment online yet. Fees are settled with you
               directly before anything is filed with{" "}
               {summary.country.displayName}.
             </p>
@@ -157,7 +157,7 @@ export function ApplicationComplete() {
           Your {summary.country.displayName} application is complete.
         </p>
         <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-          Everything Abizon needs for{" "}
+          Everything abizon needs for{" "}
           {summary.travellers.count === 1
             ? "one traveller"
             : `${summary.travellers.count} travellers`}{" "}
@@ -184,12 +184,12 @@ export function ApplicationComplete() {
           {sync.mode === "synced" ? (
             <p>
               Your application is saved to your account and your documents are
-              stored securely. It has not been sent to Abizon for filing until
+              stored securely. It has not been sent to abizon for filing until
               you submit it below.
             </p>
           ) : (
             <p>
-              Abizon cannot yet accept a submission or a payment online. Your
+              abizon cannot yet accept a submission or a payment online. Your
               answers are held in this browser tab and the documents you attached
               have not left this device — closing the tab discards the files, and
               the rest of your progress stays on this device only.
@@ -204,11 +204,11 @@ export function ApplicationComplete() {
               // The government fee is real and stays. The Abizon side is not,
               // so the sentence stops rather than completing itself with a
               // number nobody has agreed.
-              <>. The Abizon fee is not yet published.</>
+              <>. The abizon fee is not yet published.</>
             ) : (
               <>
                 {" "}
-                and {inr(summary.fees.payOnApproval * per)} to Abizon once the
+                and {inr(summary.fees.payOnApproval * per)} to abizon once the
                 visa is granted — {inr(summary.fees.total)} in total.
               </>
             )}
@@ -310,7 +310,7 @@ function SubmitPanel() {
 
   return (
     <div className="rounded-xl border border-border bg-surface-sunken p-5 sm:p-6">
-      <p className="text-sm font-semibold text-foreground">Send this to Abizon</p>
+      <p className="text-sm font-semibold text-foreground">Send this to abizon</p>
       <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
         You will get a reference, and we will email you when the status changes.
         You can still be contacted about anything that needs correcting.

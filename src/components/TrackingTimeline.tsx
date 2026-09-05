@@ -84,7 +84,7 @@ export function TrackingTimeline({
       aria-label={
         status
           ? `Application status: ${status}. Stage ${activeIndex + 1} of ${SEQUENCE_STATUSES.length}.`
-          : `The ${SEQUENCE_STATUSES.length} stages of a Abizon application. Current stage unknown.`
+          : `The ${SEQUENCE_STATUSES.length} stages of a abizon application. Current stage unknown.`
       }
     >
       {SEQUENCE_STATUSES.map((stage, index) => {

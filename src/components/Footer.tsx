@@ -21,7 +21,7 @@ export function Footer() {
     { name: "Fee Change Audit", href: "/fee-change-audit" },
     { name: "Status", href: "/status" },
     { name: "Speed", href: "/speed" },
-    { name: "Abizon Atlas", href: "/atlas" },
+    { name: "abizon Atlas", href: "/atlas" },
   ];
 
   const productLinks = [
@@ -29,7 +29,7 @@ export function Footer() {
     { name: "Visa Requirements", href: "/tools/visa-requirements" },
     { name: "Schengen Appointment Checker", href: "/tools/schengen-appointment-checker" },
     { name: "Visa Photo Creator", href: "/tools/visa-photo-creator" },
-    { name: "Abizon Emergency Helpline", href: "/emergency-helpline" },
+    { name: "abizon Emergency Helpline", href: "/emergency-helpline" },
     { name: "Rejection Recovery", href: "/rejection-recovery" },
     { name: "Student Visa", href: "/student-visa" },
     { name: "Bible", href: "/bible" },
@@ -42,7 +42,7 @@ export function Footer() {
     { name: "US Visa", href: "/guides/us-visa" },
     { name: "UK Visa", href: "/guides/uk-visa" },
     { name: "Japan Visa", href: "/guides/japan-visa" },
-    { name: "Abizon Passport Index", href: "/passport-index" },
+    { name: "abizon Passport Index", href: "/passport-index" },
   ];
 
   const officeLocations = [
@@ -78,7 +78,7 @@ export function Footer() {
 
             {/* Description */}
             <p className="text-[13px] font-medium text-muted-foreground leading-relaxed max-w-xs">
-              Abizon helps you plan, apply, and track visas seamlessly across the world.
+              abizon helps you plan, apply, and track visas seamlessly across the world.
             </p>
 
             <AskAiLinks />
@@ -176,7 +176,7 @@ export function Footer() {
           
           {/* Copyright details */}
           <div className="flex flex-wrap items-center gap-2 text-xs font-medium">
-            <span>&copy; {new Date().getFullYear()} Abizon. All rights reserved.</span>
+            <span>&copy; {new Date().getFullYear()} abizon. All rights reserved.</span>
             <span>&bull;</span>
             <Link href="/privacy" className="inline-block py-1.5 hover:text-slate-800 transition">Privacy</Link>
             <span>&bull;</span>

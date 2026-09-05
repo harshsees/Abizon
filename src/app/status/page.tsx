@@ -4,9 +4,9 @@ import { CheckCircle2, CircleAlert, CircleDashed, CircleSlash } from "lucide-rea
 import { CTABand, PageHero, PageShell, Section } from "@/components/PageKit";
 
 export const metadata: Metadata = {
-  title: "System Status | Abizon",
+  title: "System Status | abizon",
   description:
-    "Live operational status for Abizon filing lanes, document processing, payments and government portal connectivity.",
+    "Live operational status for abizon filing lanes, document processing, payments and government portal connectivity.",
 };
 
 /**
@@ -153,7 +153,7 @@ export default function StatusPage() {
         }
         description={
           allPlanned
-            ? "This page will report the live state of every service a traveller depends on, including the government portals Abizon does not run — if one is down, your visa is affected and you should be able to see that. None of these services is in operation yet, so there is nothing to report."
+            ? "This page will report the live state of every service a traveller depends on, including the government portals abizon does not run — if one is down, your visa is affected and you should be able to see that. None of these services is in operation yet, so there is nothing to report."
             : "Live operational status for every service a traveller depends on. Government portals are included even though we don't run them — if they're down, your visa is affected, and you should be able to see that."
         }
         badge={

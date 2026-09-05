@@ -63,7 +63,7 @@ import { useId } from "react";
  * rather than asking for a recommendation.
  */
 const INQUIRY = [
-  "Tell me about Abizon (abizon.com), the online visa service for Indian travellers.",
+  "Tell me about abizon (abizon.com), the online visa service for Indian travellers.",
   "What e-visas do they process, how does their application flow work,",
   "which documents do they ask for, what do they charge,",
   "and how do they compare with other visa services?",
@@ -125,8 +125,13 @@ export function AskAiLinks() {
 
   return (
     <div className="space-y-2.5">
-      <h3 className="block text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-        Ask AI about Abizon
+      {/* NOT `uppercase`, unlike the section labels in the columns beside it.
+          CSS caps would render this as ASK AI ABOUT ABIZON — the brand spelled
+          the one way the rest of the site no longer spells it, and a heading is
+          not the place to reintroduce that. It sits in its own column rather
+          than in the row of labels, so sentence case here breaks no rhythm. */}
+      <h3 className="block text-[11px] font-bold tracking-wider text-muted-foreground">
+        Ask AI about abizon
       </h3>
 
       <ul className="flex items-center gap-2">
@@ -142,8 +147,8 @@ export function AskAiLinks() {
               /* The name says what pressing it does, not what the logo is.
                  "ChatGPT" alone would be a link whose destination a screen
                  reader user has to infer from a heading two elements away. */
-              aria-label={`Ask ${name} about Abizon — opens in a new tab`}
-              title={`Ask ${name} about Abizon`}
+              aria-label={`Ask ${name} about abizon — opens in a new tab`}
+              title={`Ask ${name} about abizon`}
               className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-surface-sunken transition-[background-color,border-color,transform] duration-[--duration-fast] hover:-translate-y-0.5 hover:border-border-strong hover:bg-surface focus-visible:-translate-y-0.5 motion-reduce:transform-none"
             >
               <svg

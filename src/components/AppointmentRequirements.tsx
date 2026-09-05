@@ -70,7 +70,7 @@ export function AppointmentRequirements({ config }: { config: CountryVisaConfig 
       Icon: Landmark,
       label: "Government fee paid at the mission",
       detail:
-        "The embassy collects its own fee directly. Abizon does not take it on their behalf.",
+        "The embassy collects its own fee directly. abizon does not take it on their behalf.",
     });
   }
 

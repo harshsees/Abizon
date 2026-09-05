@@ -77,7 +77,7 @@ export const CONFIG_FIELD_STATUS: Record<
   processingTime: {
     classification: "derived",
     presentFor: "all",
-    note: "`deliveryDays` is Abizon's committed delivery, which is what the guarantee and the plan selector show. Government processing time is a different, unheld fact — and §12 forbids inventing it.",
+    note: "`deliveryDays` is abizon's committed delivery, which is what the guarantee and the plan selector show. Government processing time is a different, unheld fact — and §12 forbids inventing it.",
   },
   entryType: {
     classification: "optional",
@@ -107,7 +107,7 @@ export const CONFIG_FIELD_STATUS: Record<
   applicationSteps: {
     classification: "not-applicable",
     presentFor: "none",
-    note: "§17: the shared Abizon journey is the product UX and is already shown. Country-specific government steps would have to be sourced per destination.",
+    note: "§17: the shared abizon journey is the product UX and is already shown. Country-specific government steps would have to be sourced per destination.",
   },
   faqs: {
     classification: "optional",
@@ -250,7 +250,7 @@ export function validateCountryConfig(country: Country): CountryConfigReport {
     push(
       "warning",
       "pricing.serviceFee",
-      `Abizon service fee (₹${ABIZON_TERMS.serviceFee}) and express surcharge (₹${ABIZON_TERMS.expressSurcharge}) are provisional and require business confirmation. See lib/pricingConfig.ts.`,
+      `abizon service fee (₹${ABIZON_TERMS.serviceFee}) and express surcharge (₹${ABIZON_TERMS.expressSurcharge}) are provisional and require business confirmation. See lib/pricingConfig.ts.`,
     );
   }
 

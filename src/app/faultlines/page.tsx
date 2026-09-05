@@ -10,9 +10,9 @@ import {
 } from "@/components/PageKit";
 
 export const metadata: Metadata = {
-  title: "Faultlines — Incident Post-mortems | Abizon",
+  title: "Faultlines — Incident Post-mortems | abizon",
   description:
-    "Every Abizon incident that affected a traveller, written up in full: what broke, who it hit, what it cost, and what changed.",
+    "Every abizon incident that affected a traveller, written up in full: what broke, who it hit, what it cost, and what changed.",
 };
 
 type Incident = {
@@ -83,7 +83,7 @@ export default function FaultlinesPage() {
               No incidents published
             </h3>
             <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-              Abizon has not filed applications at volume yet, so there is no
+              abizon has not filed applications at volume yet, so there is no
               operational history to write up. When there is, every incident that
               affected a traveller appears here with its cause and what changed —
               including the ones that are embarrassing to publish.

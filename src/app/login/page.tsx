@@ -8,9 +8,9 @@ import { LoginCard } from "@/components/auth/LoginCard";
 import { getCurrentUser } from "@/lib/auth/dal";
 
 export const metadata: Metadata = {
-  title: "Sign in | Abizon",
+  title: "Sign in | abizon",
   description:
-    "Sign in to Abizon with your mobile number to start, resume or track a visa application.",
+    "Sign in to abizon with your mobile number to start, resume or track a visa application.",
   // A login screen has nothing to index and appearing in search results for it
   // only ever helps a phishing lookalike rank alongside the real one.
   robots: { index: false, follow: false },
@@ -44,7 +44,7 @@ export default async function LoginPage({
         <Link
           href="/"
           className="inline-flex items-center"
-          aria-label="Abizon home"
+          aria-label="abizon home"
         >
           {/* This was the last hand-written wordmark in the codebase — a
               `font-black tracking-tighter` span reading `abizon`, lower case,

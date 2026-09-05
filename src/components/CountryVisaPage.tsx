@@ -292,12 +292,12 @@ export function CountryVisaPage({ country }: { country: Country }) {
             The only two-column region on the page, and the left column now
             ends where its facts do.
 
-            It used to carry the fee breakdown, "Why Abizon" and the emirates
+            It used to carry the fee breakdown, "Why abizon" and the emirates
             block underneath the three fact cards, which made it roughly twice
             the card's height — so the card was `md:sticky` and tracked the
             reader down a column of prose it had nothing to do with. The fee
             breakdown moved INTO the card as a drawer (it was restating the
-            card's own figures), "Why Abizon" is gone, and the emirates block
+            card's own figures), "Why abizon" is gone, and the emirates block
             is a full-width section below.
 
             What is left is three cards beside one card. `items-start` leaves
@@ -473,7 +473,7 @@ function VisaFreeNotice({ config }: { config: CountryVisaConfig }) {
         Indian passport holders can enter {config.displayName} without a visa
       </h2>
       <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-        There is nothing to apply for and nothing to pay Abizon. Check the
+        There is nothing to apply for and nothing to pay abizon. Check the
         entry conditions below before you travel — a visa-free entry still has
         rules about passport validity and onward travel.
       </p>

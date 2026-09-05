@@ -12,9 +12,9 @@ import {
 } from "@/components/PageKit";
 
 export const metadata: Metadata = {
-  title: "Security | Abizon",
+  title: "Security | abizon",
   description:
-    "How Abizon protects passport scans and personal data — encryption, retention limits, access control, and our vulnerability disclosure policy.",
+    "How abizon protects passport scans and personal data — encryption, retention limits, access control, and our vulnerability disclosure policy.",
 };
 
 const controls = [

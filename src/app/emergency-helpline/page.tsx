@@ -12,9 +12,9 @@ import {
 } from "@/components/PageKit";
 
 export const metadata: Metadata = {
-  title: "Emergency Visa Helpline | Abizon",
+  title: "Emergency Visa Helpline | abizon",
   description:
-    "Flying in under 72 hours with a visa problem? The Abizon emergency desk is staffed 24/7 and escalates straight to a filing specialist.",
+    "Flying in under 72 hours with a visa problem? The abizon emergency desk is staffed 24/7 and escalates straight to a filing specialist.",
 };
 
 const situations = [

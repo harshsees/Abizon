@@ -36,7 +36,7 @@ import { decryptField, encryptField, FIELD_CONTEXT } from "@/lib/crypto/fields";
  *  drifted without meaningfully widening the window a stolen code is valid in. */
 const TOLERANCE_SECONDS = 30;
 
-const ISSUER = "Abizon Ops";
+const ISSUER = "abizon Ops";
 
 export type Enrolment = {
   /** Base32, to be encrypted before it goes anywhere near the database. */

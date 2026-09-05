@@ -13,7 +13,7 @@ import {
 } from "@/components/PageKit";
 
 export const metadata: Metadata = {
-  title: "Defense Personnel Programme | Abizon",
+  title: "Defense Personnel Programme | abizon",
   description:
     "Zero service fees on every visa for serving and retired Indian armed forces personnel and their immediate families, plus dedicated NOC handling.",
 };

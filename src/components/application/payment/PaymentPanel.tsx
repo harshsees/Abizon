@@ -304,7 +304,7 @@ export function PaymentPanel({
             </li>
             <li className="flex items-center gap-1.5">
               <ShieldCheck aria-hidden className="size-3.5 flex-shrink-0" />
-              Card details never stored by Abizon
+              Card details never stored by abizon
             </li>
           </ul>
         </aside>

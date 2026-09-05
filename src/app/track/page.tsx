@@ -45,9 +45,9 @@ import { getCurrentUser } from "@/lib/auth/dal";
  */
 
 export const metadata: Metadata = {
-  title: "Track an application | Abizon",
+  title: "Track an application | abizon",
   description:
-    "Follow a Abizon visa application by its reference, or open your own applications.",
+    "Follow a abizon visa application by its reference, or open your own applications.",
 };
 
 export default async function TrackIndexPage({

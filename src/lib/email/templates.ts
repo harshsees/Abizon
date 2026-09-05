@@ -76,7 +76,12 @@ function layout(input: {
     <tr><td align="center">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#ffffff;border:1px solid ${BORDER};border-radius:10px;">
         <tr><td style="padding:28px 28px 0;">
-          <p style="margin:0 0 24px;font-size:15px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:${BRAND};">Abizon</p>
+          <!-- The wordmark. text-transform:uppercase was on this and rendered
+               ABIZON whatever the string said, which is how an email can go on
+               spelling the brand a third way after the site has settled on one.
+               The wide letter-spacing went with it: 0.08em was drawn for caps
+               and makes lower case look like it is falling apart. -->
+          <p style="margin:0 0 24px;font-size:17px;font-weight:800;letter-spacing:-0.02em;color:${BRAND};">abizon</p>
           <h1 style="margin:0 0 16px;font-size:22px;line-height:1.3;font-weight:700;color:${BRAND};">${input.heading}</h1>
         </td></tr>
         <tr><td style="padding:0 28px 28px;">
@@ -91,7 +96,7 @@ function layout(input: {
       </table>
 
       <p style="margin:20px 0 0;font-size:11px;line-height:1.6;color:${MUTED};max-width:520px;">
-        This message was sent by Abizon about a visa application you started.
+        This message was sent by abizon about a visa application you started.
         We will never ask for a one-time code, a password or a payment by email.
       </p>
     </td></tr>

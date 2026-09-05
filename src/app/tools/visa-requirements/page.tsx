@@ -4,7 +4,7 @@ import { CTABand, Callout, PageHero, PageShell, Prose, Section } from "@/compone
 import { VisaRequirementsTool } from "@/components/tools/VisaRequirementsTool";
 
 export const metadata: Metadata = {
-  title: "Visa Requirements Checker — 155 Destinations | Abizon",
+  title: "Visa Requirements Checker — 155 Destinations | abizon",
   description:
     "Check visa requirements, fees, validity and processing time for any of 155 destinations on an Indian passport.",
 };

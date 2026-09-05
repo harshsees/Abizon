@@ -268,7 +268,7 @@ export function SiteHeader({
             <Link
               href="/"
               className="flex flex-shrink-0 items-center"
-              aria-label="Abizon home"
+              aria-label="abizon home"
             >
               <BrandLogo size="md" />
             </Link>

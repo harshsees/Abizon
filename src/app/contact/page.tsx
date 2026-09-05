@@ -10,9 +10,9 @@ import {
 } from "@/components/PageKit";
 
 export const metadata: Metadata = {
-  title: "Contact Abizon | Support, Press, Partnerships",
+  title: "Contact abizon | Support, Press, Partnerships",
   description:
-    "Reach the right team at Abizon — 24/7 application support, emergency travel escalation, press, partnerships and security disclosure.",
+    "Reach the right team at abizon — 24/7 application support, emergency travel escalation, press, partnerships and security disclosure.",
 };
 
 const channels = [
@@ -40,7 +40,7 @@ const channels = [
     icon: <Briefcase className="h-5 w-5" />,
     title: "Partnerships",
     description:
-      "OTAs, airlines, corporate travel desks and universities embedding Abizon. partners@abizon.com",
+      "OTAs, airlines, corporate travel desks and universities embedding abizon. partners@abizon.com",
     href: "/partners",
   },
   {

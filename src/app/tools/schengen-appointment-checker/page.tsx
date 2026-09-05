@@ -4,7 +4,7 @@ import { CTABand, Callout, PageHero, PageShell, Prose, Section } from "@/compone
 import { SchengenAppointmentBoard } from "@/components/tools/SchengenAppointmentBoard";
 
 export const metadata: Metadata = {
-  title: "Schengen Appointment Checker | Abizon",
+  title: "Schengen Appointment Checker | abizon",
   description:
     "Current Schengen visa appointment availability across 15 missions in India, with automated slot monitoring and booking.",
 };
@@ -74,7 +74,7 @@ export default function SchengenAppointmentCheckerPage() {
 
       <CTABand
         title="Let us handle the appointment"
-        description="Schengen applications through Abizon include appointment capture. Median wait drops from 47 days to 9."
+        description="Schengen applications through abizon include appointment capture. Median wait drops from 47 days to 9."
         href="/guides/schengen-visa"
         label="Schengen visa guide"
       />

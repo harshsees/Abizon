@@ -75,7 +75,7 @@ const STEPS: Step[] = [
   },
   {
     num: 2,
-    title: "Abizon reviews everything thoroughly",
+    title: "abizon reviews everything thoroughly",
     body: "No scope for error.",
     art: <MagnifierArt />,
   },
@@ -313,7 +313,7 @@ export function VisaProcess({ countryName }: { countryName?: string }) {
               expression and the text that follows it across a line break,
               which rendered this as "a Dubaivisa is made by". */}
           The decision on a {countryName}{" "}
-          visa is made by the destination&rsquo;s immigration authority. Abizon
+          visa is made by the destination&rsquo;s immigration authority. abizon
           guarantees the timing of the filing, not the outcome.
         </p>
       )}

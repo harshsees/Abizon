@@ -355,7 +355,7 @@ function CodeStep({
       <p className="mt-6 flex items-start gap-2 border-t border-border pt-5 text-2xs leading-relaxed text-muted-foreground">
         <ShieldCheck className="mt-px size-3.5 shrink-0" aria-hidden="true" />
         <span>
-          Abizon will never ask for this code by phone, email or WhatsApp. If someone
+          abizon will never ask for this code by phone, email or WhatsApp. If someone
           asks you for it, they are not us.
         </span>
       </p>

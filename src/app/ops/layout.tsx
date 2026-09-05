@@ -26,7 +26,7 @@ import type { Metadata } from "next";
  */
 
 export const metadata: Metadata = {
-  title: "Ops | Abizon",
+  title: "Ops | abizon",
   // Nothing here is for the public and nothing here should ever be findable.
   // The header is belt and braces alongside `robots.txt` and the auth gate.
   robots: { index: false, follow: false, nocache: true },

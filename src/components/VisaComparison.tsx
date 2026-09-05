@@ -68,7 +68,7 @@ export function VisaComparison() {
 
         {/* A real table: five claims across two conditions is tabular data, and
             a screen reader should be able to say "A delivery date you see
-            before you apply — Abizon: Yes, Doing it yourself: No" rather than
+            before you apply — abizon: Yes, Doing it yourself: No" rather than
             reading two disconnected columns of icons. */}
         <div className="mx-auto mt-9 max-w-3xl overflow-x-auto">
           <table className="w-full min-w-[420px] border-separate border-spacing-0">
@@ -79,7 +79,7 @@ export function VisaComparison() {
                   scope="col"
                   className="rounded-t-2xl bg-surface px-4 py-4 text-center text-sm font-bold text-foreground"
                 >
-                  Abizon
+                  abizon
                 </th>
                 <th
                   scope="col"

@@ -13,7 +13,7 @@ import {
 import { CTABand, FeatureGrid, PageHero, PageShell, Section } from "@/components/PageKit";
 
 export const metadata: Metadata = {
-  title: "Visa Tools | Abizon",
+  title: "Visa Tools | abizon",
   description:
     "Free tools for visa applicants — requirements checker, photo creator, appointment monitoring, status checkers and the passport mobility index.",
 };

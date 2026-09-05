@@ -102,7 +102,7 @@ export function ProfileView({
           
           {/* Left section: Logo & Slogan */}
           <div className="flex items-center gap-3">
-            <Link href="/" className="flex items-center" aria-label="Abizon home">
+            <Link href="/" className="flex items-center" aria-label="abizon home">
               <BrandLogo size="md" />
             </Link>
             
@@ -164,7 +164,7 @@ export function ProfileView({
                   {submitted.length}
                 </span>
                 <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mt-1.5 leading-none">
-                  With<br/>Abizon
+                  With<br/>abizon
                 </span>
               </div>
             </div>
@@ -217,7 +217,7 @@ export function ProfileView({
                 count={submitted.length}
                 onClick={() => setActiveSubTab("submitted")}
               >
-                With Abizon
+                With abizon
               </TabButton>
             </div>
 
@@ -231,7 +231,7 @@ export function ProfileView({
                 title={
                   activeSubTab === "open"
                     ? "Nothing in progress"
-                    : "Nothing with Abizon yet"
+                    : "Nothing with abizon yet"
                 }
                 body={
                   activeSubTab === "open"

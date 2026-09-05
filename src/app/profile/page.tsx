@@ -7,8 +7,8 @@ import { resolveCountry } from "@/lib/countryCatalogue";
 import { capabilities } from "@/lib/env";
 
 export const metadata: Metadata = {
-  title: "Your profile | Abizon",
-  description: "Your Abizon account, applications and travel documents.",
+  title: "Your profile | abizon",
+  description: "Your abizon account, applications and travel documents.",
   robots: { index: false, follow: false },
 };
 

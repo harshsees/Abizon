@@ -13,8 +13,16 @@
  *   face      Poppins, the geometric grotesque loaded in the root layout for
  *             this string and nothing else. Inter's neo-grotesque letterforms
  *             read as UI at any weight; the circular bowls are the point.
- *   casing    `Abizon`. Title case, written into the component so no caller
- *             can pass `abizon` or bolt `uppercase` onto it again.
+ *   casing    `abizon`. Lower case, written into the component so no caller can
+ *             pass `Abizon` or bolt `uppercase` onto it again — which is what
+ *             the five hand-written copies did, in two different casings.
+ *
+ *             It is lower case because the product owner asked for it twice:
+ *             once as "keep the Letter in a small", which was read as a size
+ *             instruction and acted on wrongly, and once unambiguously. The
+ *             whole product surface follows — page copy, metadata, email
+ *             templates and the legal pages — so the mark and the running text
+ *             agree rather than the site spelling its own name two ways.
  *   colour    the brand yellow, as a token. See `--color-wordmark`.
  *
  * `tone` exists for the one place the mark is deliberately quiet — the footer's
@@ -44,7 +52,7 @@ export function Wordmark({ tone = "brand", className }: WordmarkProps) {
         className,
       )}
     >
-      Abizon
+      abizon
     </span>
   );
 }

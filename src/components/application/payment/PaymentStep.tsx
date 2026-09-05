@@ -89,7 +89,7 @@ export function PaymentStep() {
             amount: inr(fees.governmentFee * party),
           },
           {
-            label: `${times(party)}Abizon service fee${
+            label: `${times(party)}abizon service fee${
               summary.plan.isExpress ? " (express)" : ""
             }`,
             amount: inr(fees.serviceFee * party),
