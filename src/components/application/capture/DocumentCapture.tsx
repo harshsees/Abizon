@@ -56,9 +56,11 @@ import type {
   TravellerDetails,
 } from "@/lib/application/state";
 import { backPageToDetails, fieldsToDetails } from "@/lib/application/mrzFields";
+import { surnameAgrees } from "@/lib/passport/pan";
 import {
   BrowserMrzScanner,
   type BackPageOutcome,
+  type PanOutcome,
   type ScanOutcome,
   type ScanProgress,
 } from "@/lib/passport/scan";
@@ -104,6 +106,7 @@ type Stage =
   | { kind: "scanning"; face: Face; imageUrl: string; progress: ScanProgress | null }
   | { kind: "scanned"; imageUrl: string; outcome: ScanOutcome }
   | { kind: "scannedBack"; imageUrl: string; outcome: BackPageOutcome }
+  | { kind: "scannedPan"; imageUrl: string; outcome: PanOutcome }
   | { kind: "review" };
 
 /**
@@ -279,6 +282,36 @@ export function DocumentCapture({
     setStage({ kind: "scannedBack", imageUrl, outcome });
   };
 
+  /**
+   * The PAN card, read and shape-checked.
+   *
+   * A plain function for the same reason `runBackScan` is one: it closes over
+   * `details` — the surname the passport scan produced — in order to say
+   * whether the card's fifth character agrees with it, and a memoised version
+   * would either hold a stale surname or change on every keystroke in the
+   * review form.
+   *
+   * A card that cannot be read is NOT an error and does not block anything.
+   * See `scanPanCard`: the commonest cause is a hologram across the number.
+   */
+  const runPanScan = async (file: Blob, imageUrl: string) => {
+    setStage({ kind: "scanning", face: "photo", imageUrl, progress: null });
+
+    scanner.current ??= new BrowserMrzScanner();
+    let outcome: PanOutcome;
+    try {
+      outcome = await scanner.current.scanPanCard(file, (progress) =>
+        setStage((current) =>
+          current.kind === "scanning" ? { ...current, progress } : current,
+        ),
+      );
+    } catch {
+      outcome = { status: "failed", reason: "engine-error" };
+    }
+
+    setStage({ kind: "scannedPan", imageUrl, outcome });
+  };
+
   /* ---------------------------------------------------------------------- */
   /* Supplying an image                                                     */
   /* ---------------------------------------------------------------------- */
@@ -300,6 +333,8 @@ export function DocumentCapture({
       onProvide(requirement.kind, entry);
       if (isPassport) {
         await runScan(file, url);
+      } else if (requirement.kind === "panCard") {
+        await runPanScan(file, url);
       } else {
         onDone();
       }
@@ -324,7 +359,18 @@ export function DocumentCapture({
 
     if (face === "photo") {
       onProvide(requirement.kind, entry);
-      if (isPassport) {
+      if (requirement.kind === "panCard") {
+        void fetch(dataUrl)
+          .then((response) => response.blob())
+          .then((blob) => runPanScan(blob, dataUrl))
+          .catch(() =>
+            setStage({
+              kind: "scannedPan",
+              imageUrl: dataUrl,
+              outcome: { status: "failed", reason: "engine-error" },
+            }),
+          );
+      } else if (isPassport) {
         void fetch(dataUrl)
           .then((response) => response.blob())
           .then((blob) => runScan(blob, dataUrl))
@@ -489,6 +535,20 @@ export function DocumentCapture({
           <ContinueButton onClick={() => setStage({ kind: "review" })} />
         </>
       )}
+
+      {stage.kind === "scannedPan" && (
+        <>
+          <ScanStage
+            imageUrl={stage.imageUrl}
+            phase={panOutcomeToPhase(stage.outcome, details.fullName)}
+            onRetake={() => setStage({ kind: "supply", face: "photo" })}
+          />
+          {/* Continue either way. An unread PAN is attached and an ops
+              reviewer will look at it; see `scanPanCard` for why refusing it
+              here would block an application over a reflection. */}
+          <ContinueButton onClick={onDone} />
+        </>
+      )}
     </CaptureTakeover>
   );
 }
@@ -506,6 +566,59 @@ function ContinueButton({ onClick }: { onClick: () => void }) {
       Continue
     </button>
   );
+}
+
+/**
+ * A PAN read, in the words the screen shows.
+ *
+ * ── The surname line is information, not a verdict ──
+ *
+ * The fifth character of a PAN is the initial of the holder's surname, so it
+ * can be compared against the passport — but the requirement is the PAN of
+ * WHOEVER IS PAYING, which is routinely a parent, a spouse or an employer. A
+ * mismatch is therefore expected often enough that treating it as a failure
+ * would train people to ignore the screen.
+ *
+ * So a mismatch is stated and nothing is blocked: somebody who reached for the
+ * wrong card sees it now, and somebody who reached for their father's card
+ * reads a sentence confirming the system understood which card it was given.
+ */
+function panOutcomeToPhase(outcome: PanOutcome, fullName: string): ScanStagePhase {
+  if (outcome.status === "failed") {
+    return {
+      kind: "failed",
+      reason: "The reader could not start in this browser.",
+    };
+  }
+
+  if (outcome.status === "unreadable") {
+    return {
+      kind: "failed",
+      reason:
+        "No PAN number was found on that image. The card is attached — retake it if the number is hidden by a reflection.",
+    };
+  }
+
+  const { reading } = outcome;
+  // The passport's surname is the LAST word of the full name the review form
+  // holds; the scan writes it as "GIVEN NAMES SURNAME".
+  const surname = fullName.trim().split(/\s+/).at(-1);
+
+  const agreement = surnameAgrees(reading, surname);
+
+  return {
+    kind: "read",
+    boxes: outcome.boxes,
+    fields: [
+      { label: "PAN", value: reading.number },
+      { label: "Held by", value: reading.holderTypeLabel },
+      ...(agreement === "match"
+        ? [{ label: "Surname", value: `Matches ${surname}` }]
+        : agreement === "mismatch"
+          ? [{ label: "Surname", value: `Not ${surname} — a family member's card` }]
+          : []),
+    ],
+  };
 }
 
 /**

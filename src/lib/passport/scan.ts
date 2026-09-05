@@ -54,9 +54,17 @@
  * decision before it is a technical one.
  */
 
-import { refineName } from "./names";
+import { resolveName } from "./names";
 import { nationalityFromPageText } from "./nationality";
-import { decodeOnce, prepare } from "./preprocess";
+import { findPan, type PanReading } from "./pan";
+import {
+  QUADRANTS,
+  decodeUpright,
+  orientDocument,
+  rotateQuadrant,
+} from "./orient";
+import { prepare } from "./preprocess";
+import { readPrintedNames, withoutMrz } from "./printedName";
 import { recoverMrz, score, trustedFields, type TrustedField } from "./recover";
 import type { MrzChecks, MrzFailure, MrzFields } from "./mrz";
 
@@ -80,6 +88,7 @@ export type ScanProgress =
  * reaches the form.
  */
 export type FieldBoxKey =
+  | "panNumber"
   | "surname"
   | "givenNames"
   | "passportNumber"
@@ -160,6 +169,28 @@ export type BackPageOutcome =
     }
   | { status: "failed"; reason: "engine-error" };
 
+/**
+ * WHAT A PAN CARD READ COMES BACK AS.
+ *
+ * Between `ScanOutcome`'s three answers and `BackPageOutcome`'s two, because a
+ * PAN card sits between the two documents in how far it can be checked. There
+ * is no check digit — the tenth character is one, but its algorithm is
+ * unpublished (see `pan.ts`) — and there IS a shape the number must have, so a
+ * read can be wrong in a way that is detectable, which a back page cannot.
+ *
+ *   verified    a well-formed PAN was found. `reading` carries the number and
+ *               what its fourth character says the holder is.
+ *   unreadable  the page was read and no PAN-shaped string was on it. This is
+ *               the answer for a blurred photograph, for the back of the card,
+ *               and for a driving licence uploaded by mistake — three different
+ *               problems with the same remedy, which is to take it again.
+ *   failed      the engine could not run at all.
+ */
+export type PanOutcome =
+  | { status: "verified"; reading: PanReading; boxes: FieldBox[] }
+  | { status: "unreadable"; boxes: FieldBox[] }
+  | { status: "failed"; reason: "engine-error" };
+
 export interface PassportScanner {
   scan(image: Blob, onProgress?: (progress: ScanProgress) => void): Promise<ScanOutcome>;
   /**
@@ -174,6 +205,18 @@ export interface PassportScanner {
     image: Blob,
     onProgress?: (progress: ScanProgress) => void,
   ): Promise<BackPageOutcome>;
+  /**
+   * Read a PAN card and check the number is shaped like one.
+   *
+   * On the same object and therefore the same worker, for the reason
+   * `scanBackPage` is: the PAN follows the passport in the same errand, and a
+   * second scanner would start a second several-megabyte engine to read one
+   * ten-character string.
+   */
+  scanPanCard(
+    image: Blob,
+    onProgress?: (progress: ScanProgress) => void,
+  ): Promise<PanOutcome>;
   /** Release the worker. Cheap to call when it was never started. */
   dispose(): Promise<void>;
 }
@@ -291,43 +334,126 @@ export class BrowserMrzScanner implements PassportScanner {
     onProgress?: (progress: ScanProgress) => void,
   ): Promise<ScanOutcome> {
     let worker: TesseractWorker;
-    let bitmap: ImageBitmap;
+    let decoded: ImageBitmap;
 
     try {
       worker = await this.#ensureWorker(onProgress);
-      bitmap = await decodeOnce(image);
+      decoded = await decodeUpright(image);
     } catch {
       // Deliberately not logged with the error attached: the stack from an OCR
       // failure can carry image data, and this runs on a passport.
       return { status: "failed", reason: "engine-error" };
     }
 
+    /**
+     * Crop the page out of the photograph and square it up before anything
+     * reads it. See `orient.ts` — every step in there can decline, and a
+     * photograph it declines to touch is scanned exactly as it was before.
+     *
+     * This has to happen HERE and not inside `prepare`, because the whole
+     * point is that it changes what "the bottom third" means: the windows
+     * below are fractions of the image, and they only contain the zone once
+     * the image is the page.
+     */
+    const oriented = await orientDocument(decoded);
+    let bitmap = oriented.bitmap;
+    /** Closed at the end alongside `decoded`, when they are not the same. */
+    const derived: ImageBitmap[] = [];
+    if (bitmap !== decoded) derived.push(bitmap);
+
+    const release = () => {
+      decoded.close();
+      for (const extra of derived) extra.close();
+    };
+
     try {
       await this.#configureForMrz(worker);
 
-      let recovered: ReturnType<typeof recoverMrz> = null;
+      type Recovered = NonNullable<ReturnType<typeof recoverMrz>>;
+
+      let recovered: Recovered | null = null;
+      /**
+       * The best score seen ACROSS every window and every orientation, which
+       * is why it lives out here. Each attempt only reports a candidate that
+       * beat everything before it, so "did this orientation improve matters"
+       * is answered by whether anything came back at all.
+       */
       let bestScore = -1;
 
-      for (const window of MRZ_WINDOWS) {
-        const prepared = await prepare(bitmap, window);
-        const result = await worker.recognize(prepared.blob);
-        const candidate = recoverMrz(result.data.text);
-        if (!candidate) continue;
+      /**
+       * Every window on one bitmap.
+       *
+       * Returns rather than mutates, because `recovered` is captured by this
+       * closure and TypeScript does not track assignments made inside one — it
+       * narrowed the variable to `null` at the declaration and then to `never`
+       * at every later use, which is a compile error standing in for a real
+       * readability problem: nothing at the call site said this could change
+       * the variable.
+       */
+      const readAt = async (
+        candidateBitmap: ImageBitmap,
+      ): Promise<{ found: Recovered | null; perfect: boolean }> => {
+        let found: Recovered | null = null;
 
-        // Keep the BETTER read, not merely the first or the perfect one. The
-        // crop usually wins, but on an image that was already sharp the whole
-        // page can beat it, and a version that only replaced on a perfect
-        // score would throw the better of two imperfect reads away.
-        const value = score(candidate.result.checks);
-        if (value > bestScore) {
-          bestScore = value;
-          recovered = candidate;
+        for (const window of MRZ_WINDOWS) {
+          const prepared = await prepare(candidateBitmap, window);
+          const result = await worker.recognize(prepared.blob);
+          const candidate = recoverMrz(result.data.text);
+          if (!candidate) continue;
+
+          // Keep the BETTER read, not merely the first or the perfect one. The
+          // crop usually wins, but on an image that was already sharp the whole
+          // page can beat it, and a version that only replaced on a perfect
+          // score would throw the better of two imperfect reads away.
+          const value = score(candidate.result.checks);
+          if (value > bestScore) {
+            bestScore = value;
+            found = candidate;
+          }
+          if (candidate.result.allChecksPassed) return { found, perfect: true };
         }
-        if (candidate.result.allChecksPassed) break;
+
+        return { found, perfect: false };
+      };
+
+      recovered = (await readAt(bitmap)).found;
+
+      /**
+       * THE QUADRANT RETRY, and why it is behind a failure rather than in the
+       * loop above.
+       *
+       * A passport photographed sideways cannot be distinguished from one
+       * photographed the right way up by looking at its shape — both are
+       * rectangles — so the only way to settle it is to read it and see. That
+       * costs a full OCR pass per quadrant, which on a phone is seconds, and
+       * three of them on every upload would make every good scan three times
+       * slower to serve the minority that are turned.
+       *
+       * So it runs only when a straight read has found NOTHING. A read that
+       * found a zone with a failing check digit is not a rotation problem —
+       * it is a legibility problem, and turning the image will not fix it.
+       *
+       * The rotated bitmap becomes the one everything downstream uses, because
+       * the printed-page pass has to read the same page the zone came off.
+       */
+      if (!recovered) {
+        for (const quadrant of QUADRANTS) {
+          const turned = await rotateQuadrant(bitmap, quadrant);
+          derived.push(turned);
+
+          const attempt = await readAt(turned);
+          if (!attempt.found) continue;
+
+          recovered = attempt.found;
+          // Everything downstream — the printed-page pass, the field boxes —
+          // must read the same orientation the zone came off.
+          bitmap = turned;
+          if (attempt.perfect) break;
+        }
       }
 
       if (!recovered) {
-        bitmap.close();
+        release();
         return { status: "failed", reason: "no-mrz-found" };
       }
 
@@ -359,7 +485,7 @@ export class BrowserMrzScanner implements PassportScanner {
         boxes = [];
       }
 
-      bitmap.close();
+      release();
 
       const trusted = trustedFields(checks);
 
@@ -376,7 +502,7 @@ export class BrowserMrzScanner implements PassportScanner {
 
       return { status: "partial", fields: refined, checks, trusted, failed, boxes };
     } catch {
-      bitmap.close();
+      release();
       return { status: "failed", reason: "engine-error" };
     }
   }
@@ -405,15 +531,45 @@ export class BrowserMrzScanner implements PassportScanner {
     const words = collectWords(result.data.blocks);
     if (words.length === 0) return { boxes: [], fields };
 
-    // The names, corrected against the printed page before anything else uses
-    // them — so the boxes below are matched on the CORRECTED spelling, which
-    // is the spelling actually on the page and therefore the one that will
-    // match a word box exactly.
-    const vocabulary = words.map((word) => word.text);
+    /**
+     * THE NAME COMES OFF THE TOP OF THE PAGE, NOT THE BOTTOM.
+     *
+     * This pass reads the WHOLE image, and the bottom of that image is the
+     * machine-readable zone — the source the name is supposed to be being
+     * checked against. Leaving the zone's own words in the vocabulary made the
+     * check partly circular: the thing the correction was measured against
+     * included a second reading of the thing being corrected.
+     *
+     * `withoutMrz` drops them by content rather than by position, because
+     * position is decided by how the applicant framed the photograph.
+     *
+     * Then two sources, in order of how much they can fix:
+     *
+     *   the printed field   `Surname` and `Given Name(s)`, read by their
+     *                       labels. This is the name the consulate compares
+     *                       against, in full, and it is the only source that
+     *                       can recover a name TD3's 39-character limit
+     *                       truncated or dropped outright.
+     *   word-by-word        the previous behaviour, kept as the fallback: the
+     *                       zone's words with their spelling corrected against
+     *                       the page. Used when the labels were not found, or
+     *                       when what was found under them does not corroborate
+     *                       the zone.
+     *
+     * `resolveName` owns which one wins and refuses a printed value that
+     * agrees with nothing the zone read — see the note on `preferPrinted`.
+     */
+    const printable = withoutMrz(words);
+    const vocabulary = printable.map((word) => word.text);
+    const printed = readPrintedNames(groupIntoLines(printable));
+
+    // The boxes below are matched on the RESOLVED spelling, which is the
+    // spelling actually on the page and therefore the one that will match a
+    // word box exactly.
     const refined: MrzFields = {
       ...fields,
-      surname: refineName(fields.surname, vocabulary),
-      givenNames: refineName(fields.givenNames, vocabulary),
+      surname: resolveName(fields.surname, printed.surname?.text, vocabulary),
+      givenNames: resolveName(fields.givenNames, printed.givenNames?.text, vocabulary),
     };
 
     const wanted: Array<{ key: FieldBox["key"]; label: string; value: string }> = [
@@ -502,7 +658,13 @@ export class BrowserMrzScanner implements PassportScanner {
 
     try {
       worker = await this.#ensureWorker(onProgress);
-      bitmap = await decodeOnce(image);
+      // Cropped and squared up like the photo page. The back page has no zone
+      // to fall back on, so a photograph that is half tablecloth is a read
+      // that finds no labels at all.
+      const decoded = await decodeUpright(image);
+      const oriented = await orientDocument(decoded);
+      bitmap = oriented.bitmap;
+      if (bitmap !== decoded) decoded.close();
     } catch {
       // As in `scan`: never logged with the error attached, because an OCR
       // stack can carry image data and this runs on a passport.
@@ -550,6 +712,99 @@ export class BrowserMrzScanner implements PassportScanner {
         boxes: found,
         nationality: nationalityFromPageText(words.map((word) => word.text)),
       };
+    } catch {
+      bitmap.close();
+      return { status: "failed", reason: "engine-error" };
+    }
+  }
+
+  /**
+   * READ A PAN CARD.
+   *
+   * The same page pass the back page uses — no whitelist, normal layout
+   * analysis, word boxes on — and then one question asked of the words that
+   * come back: is any run of them shaped like a PAN.
+   *
+   * ── Why there is no whitelist even though the target is A-Z0-9 ──
+   *
+   * Because the whitelist is what makes the MRZ pass work and would make this
+   * one worse. Constraining the alphabet helps when the ENGINE knows it is
+   * looking at one uniform block of a monospaced face; a PAN card is a name, a
+   * father's name, a date, a signature and a hologram in four different sizes,
+   * and mode 6 over that returns a page of nonsense. The shape test is the
+   * constraint here, and it is a stronger one: ten characters in a fixed
+   * pattern with a closed set in position four rejects far more than an
+   * alphabet does.
+   *
+   * ── Why a failed read is not a failed upload ──
+   *
+   * `unreadable` is reported, the card is still attached, and the applicant
+   * may carry on. A PAN that OCR could not find is very often a perfectly good
+   * photograph of a laminated card with a hologram across the number, and
+   * refusing it would block an application over a reflection. What the answer
+   * buys is the chance to say so while the card is still in their hand.
+   */
+  async scanPanCard(
+    image: Blob,
+    onProgress?: (progress: ScanProgress) => void,
+  ): Promise<PanOutcome> {
+    let worker: TesseractWorker;
+    let bitmap: ImageBitmap;
+
+    try {
+      worker = await this.#ensureWorker(onProgress);
+      // Cropped and squared like every other document: a PAN card is small and
+      // is photographed with a lot of desk around it.
+      const decoded = await decodeUpright(image);
+      const oriented = await orientDocument(decoded);
+      bitmap = oriented.bitmap;
+      if (bitmap !== decoded) decoded.close();
+    } catch {
+      return { status: "failed", reason: "engine-error" };
+    }
+
+    try {
+      onProgress?.({ phase: "locating" });
+
+      await this.#configureForPage(worker);
+      const prepared = await prepare(bitmap, undefined, { contrast: false });
+      const result = await worker.recognize(prepared.blob, undefined, { blocks: true });
+      await this.#configureForMrz(worker);
+
+      bitmap.close();
+
+      const words = collectWords(result.data.blocks);
+      const reading = findPan(words.map((word) => word.text));
+
+      if (!reading) return { status: "unreadable", boxes: [] };
+
+      /**
+       * Where the number is printed, for the annotation.
+       *
+       * Matched by CONTAINMENT rather than equality, because the number that
+       * was found may have been assembled from two or three neighbouring word
+       * boxes and no single box holds all of it. The box drawn is the first
+       * one that is part of it, which is where the eye needs to go.
+       */
+      const boxes: FieldBox[] = [];
+      const hit = words.find((word) => {
+        const value = word.text.toUpperCase().replace(/[^A-Z0-9]/g, "");
+        return value.length >= 4 && reading.number.includes(value);
+      });
+
+      if (hit) {
+        boxes.push({
+          key: "panNumber",
+          label: "PAN",
+          value: reading.number,
+          x: hit.bbox.x0 / prepared.width,
+          y: hit.bbox.y0 / prepared.height,
+          width: (hit.bbox.x1 - hit.bbox.x0) / prepared.width,
+          height: (hit.bbox.y1 - hit.bbox.y0) / prepared.height,
+        });
+      }
+
+      return { status: "verified", reading, boxes };
     } catch {
       bitmap.close();
       return { status: "failed", reason: "engine-error" };

@@ -299,3 +299,106 @@ export function refineName(fromMrz: string, pageWords: readonly string[]): strin
   if (parts.length === 0) return fromMrz;
   return parts.map((part) => refineWord(part, pageWords)).join(" ");
 }
+
+/* -------------------------------------------------------------------------- */
+/* Preferring what is printed at the top of the page                          */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * THE SAFETY RAIL ON READING THE PRINTED NAME.
+ *
+ * `printedName.ts` finds the value under the `Surname` and `Given Name(s)`
+ * labels. This decides whether to believe it, and everything above depends on
+ * this being conservative, because the two sources fail in opposite ways:
+ *
+ *   the zone   is read through a 37-character whitelist with an alphabet that
+ *              cannot contain a `Q` where a `0` belongs. It is nearly always
+ *              RIGHT about the letters and sometimes wrong about the WHOLE
+ *              name — truncated at 39 characters, or missing a given name the
+ *              truncation ate.
+ *   the page   is the actual name, in full, in a clean face. But it is found
+ *              by position, and position on a photograph of a document held at
+ *              an angle is a guess. A bad grab yields a plausible-looking word
+ *              from somewhere else on the page.
+ *
+ * So neither is trusted alone. The printed value is adopted only where it
+ * CORROBORATES the zone, in one of three ways:
+ *
+ *   it agrees        transliterated, the two are identical. Adopt the page's,
+ *                    which carries the accents and the hyphens the zone cannot.
+ *   it extends       the zone's reading is a prefix of the page's. This is
+ *                    exactly what truncation looks like from the outside, and
+ *                    it is the case the whole exercise is for: `RAJENDRAKUM`
+ *                    against a page reading `RAJENDRAKUMAR`, or `ASHA` against
+ *                    `ASHA DEVI`.
+ *   it corrects      the two are within the same edit budget `refineWord`
+ *                    uses. A misread letter in the zone's name, which has no
+ *                    check digit to catch it.
+ *
+ * Anything else — a page value that shares nothing with the zone's — is a bad
+ * grab, and the zone's reading stands. That is the failure mode to prefer: the
+ * zone's name is the name that was there before this file existed.
+ *
+ * ── Why the prefix test is one-directional ──
+ *
+ * The zone's value being a prefix of the page's means the zone lost the end of
+ * a name, which is what a 39-character field does. The reverse — the page
+ * being a prefix of the zone — means OCR stopped early on the printed line,
+ * and adopting that would SHORTEN somebody's name to fit a misread. So it is
+ * refused, and the zone's fuller reading stands.
+ */
+export function preferPrinted(
+  fromMrz: string,
+  printed: string | undefined,
+): string | null {
+  if (!printed) return null;
+
+  const zone = transliterate(fromMrz.replace(/\s+/g, ""));
+  const page = transliterate(printed.replace(/\s+/g, ""));
+
+  if (zone.length < 2 || page.length < 2) return null;
+
+  const display = printed.toUpperCase().replace(/\s+/g, " ").trim();
+
+  if (zone === page) return display;
+  if (page.startsWith(zone)) return display;
+
+  /**
+   * The reverse prefix, refused before the distance test can wave it through.
+   *
+   * `RAJENDRAKUM` under a zone reading `RAJENDRAKUMAR` is two edits apart,
+   * which is inside the budget below — so without this guard the distance
+   * branch adopts it and shortens the name, which is the exact damage this
+   * whole file was written to undo. A page value that is a strict prefix of the
+   * zone's means OCR stopped early on the printed line, and the zone's fuller
+   * reading is the better of the two.
+   */
+  if (zone.startsWith(page)) return null;
+
+  // The same budget `refineWord` allows, measured on the longer of the two so
+  // a truncated zone value does not get a shorter word's tighter budget.
+  const budget = Math.min(3, Math.floor(Math.max(zone.length, page.length) / 4));
+  if (budget > 0 && editDistance(zone, page) <= budget) return display;
+
+  return null;
+}
+
+/**
+ * The name, from the best source available.
+ *
+ * The order is the point: what is PRINTED wins where it can be corroborated,
+ * and the zone's spelling, corrected word by word against the page, is the
+ * fallback. Before this, the fallback was the only path — which is why a
+ * truncated name reached the form truncated.
+ *
+ * @param fromMrz   the name as the machine-readable zone read it
+ * @param printed   the value under the printed label, if one was found
+ * @param pageWords every non-zone word OCR found, for the word-level fallback
+ */
+export function resolveName(
+  fromMrz: string,
+  printed: string | undefined,
+  pageWords: readonly string[],
+): string {
+  return preferPrinted(fromMrz, printed) ?? refineName(fromMrz, pageWords);
+}

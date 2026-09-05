@@ -244,7 +244,10 @@ export async function prepare(
   return { blob: await toBlob(canvas), region, width, height };
 }
 
-/** Decoded once and shared by both attempts, so a 4MB JPEG is parsed once. */
-export async function decodeOnce(blob: Blob): Promise<ImageBitmap> {
-  return decode(blob);
-}
+/*
+ * `decodeOnce` lived here — a one-line `createImageBitmap` shared by both MRZ
+ * attempts so a 4MB JPEG was parsed once. `orient.ts` owns decoding now,
+ * because decoding is where the EXIF orientation has to be honoured and doing
+ * it in two places is how one of them ends up not honouring it. The sharing
+ * property is unchanged: `scan` decodes once and passes the bitmap down.
+ */
