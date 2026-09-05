@@ -1,6 +1,11 @@
 import type { Metadata } from "next";
 
 import { Callout, PageHero, PageShell, Prose, Section } from "@/components/PageKit";
+import { StatutoryDisclosures } from "@/components/legal/StatutoryDisclosures";
+import {
+  GRIEVANCE_ACKNOWLEDGEMENT_HOURS,
+  GRIEVANCE_RESOLUTION_DAYS,
+} from "@/lib/legal";
 
 export const metadata: Metadata = {
   title: "Privacy Policy | Abizon",
@@ -134,28 +139,82 @@ export default function PrivacyPage() {
             <a href="/atlas">Abizon Atlas</a>.
           </p>
 
-          <h2>7. Your rights</h2>
+          <h2>7. Your rights under the DPDP Act</h2>
+          <p>
+            This section used to be written in the vocabulary of the GDPR — legitimate
+            interests, the right to object, data portability. Those are European concepts and
+            two of the three have no counterpart in Indian law, so the list described rights we
+            could not actually offer and omitted two that we owe you. What follows is the
+            Digital Personal Data Protection Act 2023, which is the law that governs your data
+            here.
+          </p>
           <ul>
-            <li>Access a copy of the personal data we hold about you</li>
-            <li>Correct anything inaccurate</li>
-            <li>Request deletion, subject to legal retention requirements</li>
-            <li>Object to processing based on legitimate interests</li>
-            <li>Receive your data in a portable format</li>
-            <li>Withdraw consent where processing relies on it</li>
+            <li>
+              <strong>Access</strong> (s.11) — a summary of the personal data we process about
+              you, what we do with it, and who else we have shared it with.
+            </li>
+            <li>
+              <strong>Correction, completion and erasure</strong> (s.12) — we correct
+              inaccurate data, complete incomplete data, and erase what we no longer need for
+              the purpose you gave it for or to meet a legal obligation.
+            </li>
+            <li>
+              <strong>Grievance redressal</strong> (s.13) — a route to complain to us that does
+              not depend on our goodwill, with published periods. See below.
+            </li>
+            <li>
+              <strong>Nomination</strong> (s.14) — you may nominate someone to exercise these
+              rights on your behalf if you die or become incapacitated. Ask and we will record
+              it.
+            </li>
+            <li>
+              <strong>Withdrawal of consent</strong> (s.6(4)) — as easily as you gave it. An
+              application already filed with a consulate cannot be unfiled, so withdrawal stops
+              future processing rather than reversing what a government already holds.
+            </li>
           </ul>
           <p>
-            Write to <a href="mailto:privacy@abizon.com">privacy@abizon.com</a>. We respond
-            within 30 days and do not charge for the first request in any 12-month period.
+            Write to <a href="mailto:privacy@abizon.com">privacy@abizon.com</a>. We do not
+            charge for exercising any of these.
           </p>
 
-          <h2>8. Where your data is held</h2>
+          <h2>8. Children</h2>
+          <p>
+            Section 9 of the DPDP Act treats anyone under 18 as a child, and children travel.
+            Where an applicant is a minor we process their data only on the verifiable consent
+            of a parent or lawful guardian, obtained through the adult who is making the
+            application. We do not track a child, profile them, or serve them advertising —
+            none of which we do to adults either.
+          </p>
+
+          <h2>9. If something goes wrong</h2>
+          <p>
+            A personal data breach is reported to the Data Protection Board of India and to
+            every affected person, without a threshold and without waiting to establish harm —
+            the Act does not provide for one and we do not apply one of our own.
+          </p>
+
+          <h2>10. Complaining, and escalating</h2>
+          <p>
+            Raise it with our Grievance Officer, named below. Every complaint is acknowledged
+            within {GRIEVANCE_ACKNOWLEDGEMENT_HOURS} hours with a ticket number and resolved
+            within {GRIEVANCE_RESOLUTION_DAYS} days.
+          </p>
+          <p>
+            If you are not satisfied, you may complain to the{" "}
+            <strong>Data Protection Board of India</strong>. Section 13(3) requires you to
+            exhaust our process first, which is the reason the periods above are published:
+            they are what tells you when you are entitled to escalate.
+          </p>
+
+          <h2>11. Where your data is held</h2>
           <p>
             Data for Indian applicants is stored in India. Data for GCC applicants is stored in
             the UAE. Neither is replicated outside its region. Where a document must reach a
             government outside that region, it is transmitted for that purpose only.
           </p>
 
-          <h2>9. Cookies</h2>
+          <h2>12. Cookies</h2>
           <p>
             We use cookies necessary for the site to function — session management and security
             — and, with your consent, analytics cookies that help us understand where the
@@ -163,12 +222,18 @@ export default function PrivacyPage() {
             functionality.
           </p>
 
-          <h2>10. Changes</h2>
+          <h2>13. Changes</h2>
           <p>
             Material changes are notified by email at least 30 days in advance. The revision
             date at the top of this page always reflects the current version.
           </p>
+
+          <h2>14. Who to contact</h2>
         </Prose>
+
+        <div className="mt-6">
+          <StatutoryDisclosures />
+        </div>
       </Section>
     </PageShell>
   );
