@@ -6,7 +6,7 @@ import { and, eq, isNull } from "drizzle-orm";
 
 import { audit } from "@/lib/audit";
 import { requireDb } from "@/lib/db/client";
-import { applications, documents, travellers } from "@/lib/db/schema";
+import { applications, documentKind, documents, travellers } from "@/lib/db/schema";
 import { checkLimit } from "@/lib/rateLimit";
 import {
   ACCEPTED_UPLOAD_TYPES,
@@ -49,7 +49,16 @@ import { normaliseDocumentImage } from "./normalise";
  * orphan row would be a broken document forever.
  */
 
-export type DocumentKind = "passport" | "photograph";
+/**
+ * Read off the Postgres enum rather than written out again.
+ *
+ * This was a hand-maintained `"passport" | "photograph"`, and it was the type
+ * that made adding the PAN card a compile error in four files instead of a
+ * silent runtime rejection in one — which is the good outcome, but only
+ * because somebody had to come here and edit it. Derived, the enum in
+ * `schema.ts` is the single place a new kind is declared, and this follows.
+ */
+export type DocumentKind = (typeof documentKind.enumValues)[number];
 
 export type UploadTicket = {
   /** Where the browser PUTs. Expires in minutes, not hours. */

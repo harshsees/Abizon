@@ -7,6 +7,7 @@ import {
   createTraveller,
   documentKey,
   initialState,
+  travellerDocumentState,
   type ApplicationState,
   type DocumentEntry,
   type RestorePayload,
@@ -41,6 +42,26 @@ function withTravellers(names: string[]): ApplicationState {
  * rather than after it. A test about uploads should not have to know that, so
  * it says it here once.
  */
+/**
+ * The party documents, attached to whoever leads the party.
+ *
+ * PAN card, return ticket and hotel booking are asked once per application
+ * rather than once per traveller, and they are asked of the FIRST traveller —
+ * see `travellerDocumentState`. Every test below is about the passport and the
+ * photograph, so it says this here once rather than listing five documents six
+ * times and burying the thing each test is actually asserting.
+ *
+ * They are attached `stored`, i.e. the boring case, so a test asserting on an
+ * `uploading` or `failed` passport is asserting on the passport.
+ */
+function withPartyDocuments(state: ApplicationState): ApplicationState {
+  const [lead] = state.travellers;
+  state.documents[documentKey(lead.id, "panCard")] = stored();
+  state.documents[documentKey(lead.id, "returnTicket")] = stored();
+  state.documents[documentKey(lead.id, "hotelStay")] = stored();
+  return state;
+}
+
 function withConfirmedDetails(state: ApplicationState): ApplicationState {
   for (const traveller of state.travellers) {
     state.details[traveller.id] = {
@@ -58,9 +79,43 @@ function withConfirmedDetails(state: ApplicationState): ApplicationState {
 
 /* -------------------------------------------------------------------------- */
 
+describe("party documents are asked once, of the lead traveller", () => {
+  it("puts the PAN card, ticket and hotel booking on the first card only", () => {
+    const state = withTravellers(["ASHA", "RAVI"]);
+    const [lead, second] = state.travellers;
+
+    const kindsFor = (traveller: typeof lead) =>
+      travellerDocumentState(state, country, traveller).required.map((r) => r.kind);
+
+    expect(kindsFor(lead)).toEqual([
+      "passport",
+      "photograph",
+      "panCard",
+      "returnTicket",
+      "hotelStay",
+    ]);
+
+    // The second traveller is asked for their own passport and face, and for
+    // nothing that describes the trip. A family does not hold two hotel
+    // bookings, and asking would be asking Ravi to upload Asha's.
+    expect(kindsFor(second)).toEqual(["passport", "photograph"]);
+  });
+
+  it("moves them to whoever leads the party after the lead is removed", () => {
+    let state = withTravellers(["ASHA", "RAVI"]);
+    const [lead, second] = state.travellers;
+
+    state = applicationReducer(state, { type: "removeTraveller", id: lead.id });
+
+    expect(
+      travellerDocumentState(state, country, second).required.map((r) => r.kind),
+    ).toContain("panCard");
+  });
+});
+
 describe("blockingReason — documents", () => {
   it("passes when every required document is attached and confirmed", () => {
-    const state = withConfirmedDetails(withTravellers(["ASHA"]));
+    const state = withPartyDocuments(withConfirmedDetails(withTravellers(["ASHA"])));
     const [traveller] = state.travellers;
 
     state.documents[documentKey(traveller.id, "passport")] = stored();
@@ -73,7 +128,7 @@ describe("blockingReason — documents", () => {
     // Both files attached, nothing confirmed. The review screen lives inside
     // this step, so this is the state somebody is in the moment a scan
     // finishes and before they have looked at what it read.
-    const state = withTravellers(["ASHA"]);
+    const state = withPartyDocuments(withTravellers(["ASHA"]));
     const [traveller] = state.travellers;
 
     state.documents[documentKey(traveller.id, "passport")] = stored();
@@ -85,7 +140,7 @@ describe("blockingReason — documents", () => {
   });
 
   it("blocks without an email and phone number, and asks for both", () => {
-    const state = withConfirmedDetails(withTravellers(["ASHA"]));
+    const state = withPartyDocuments(withConfirmedDetails(withTravellers(["ASHA"])));
     const [traveller] = state.travellers;
 
     state.documents[documentKey(traveller.id, "passport")] = stored();
@@ -96,7 +151,7 @@ describe("blockingReason — documents", () => {
   });
 
   it("blocks on a failed upload, and says why", () => {
-    const state = withTravellers(["ASHA"]);
+    const state = withPartyDocuments(withTravellers(["ASHA"]));
     const [traveller] = state.travellers;
 
     state.documents[documentKey(traveller.id, "passport")] = {
@@ -115,7 +170,7 @@ describe("blockingReason — documents", () => {
   });
 
   it("blocks while an upload is still in flight", () => {
-    const state = withTravellers(["ASHA"]);
+    const state = withPartyDocuments(withTravellers(["ASHA"]));
     const [traveller] = state.travellers;
 
     state.documents[documentKey(traveller.id, "passport")] = {
@@ -129,7 +184,7 @@ describe("blockingReason — documents", () => {
   });
 
   it("still allows a purely local flow, where nothing has been uploaded", () => {
-    const state = withConfirmedDetails(withTravellers(["ASHA"]));
+    const state = withPartyDocuments(withConfirmedDetails(withTravellers(["ASHA"])));
     const [traveller] = state.travellers;
 
     // Signed out, or no database. `local` is not a failure and must not block —
@@ -153,7 +208,7 @@ describe("blockingReason — documents", () => {
 
 describe("setDocumentUpload", () => {
   it("releases the bytes once the upload has succeeded", () => {
-    const state = withTravellers(["ASHA"]);
+    const state = withPartyDocuments(withTravellers(["ASHA"]));
     const [traveller] = state.travellers;
 
     state.documents[documentKey(traveller.id, "passport")] = {
@@ -180,7 +235,7 @@ describe("setDocumentUpload", () => {
   });
 
   it("keeps the bytes when the upload failed, so a retry has something to send", () => {
-    const state = withTravellers(["ASHA"]);
+    const state = withPartyDocuments(withTravellers(["ASHA"]));
     const [traveller] = state.travellers;
 
     state.documents[documentKey(traveller.id, "passport")] = {
@@ -203,7 +258,7 @@ describe("setDocumentUpload", () => {
   });
 
   it("is inert against a document that was cleared while in flight", () => {
-    const state = withTravellers(["ASHA"]);
+    const state = withPartyDocuments(withTravellers(["ASHA"]));
     const [traveller] = state.travellers;
 
     // Writing the result back would resurrect a row the applicant just removed.

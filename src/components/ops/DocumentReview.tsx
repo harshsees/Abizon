@@ -40,9 +40,25 @@ export type DocumentReviewProps = {
   canReview: boolean;
 };
 
+/**
+ * The applicant's word for the document, for the person reviewing it.
+ *
+ * Deliberately a `Record<string, string>` with a fallback at the call site
+ * rather than a `Record<DocumentKind, string>`: an ops console that throws
+ * because the database grew a kind it has not been taught to name is an ops
+ * console down at exactly the moment somebody needs it. An unknown kind shows
+ * its raw enum value, which is ugly and legible and reviewable.
+ *
+ * The last three are trip documents, filed once for the whole party against
+ * the lead traveller — so the same PAN card appears under one name however
+ * many people are on the application. `documents.ts` explains why.
+ */
 const KIND_LABEL: Record<string, string> = {
   passport: "Passport data page",
   photograph: "Photograph",
+  panCard: "PAN card",
+  returnTicket: "Return ticket",
+  hotelStay: "Hotel booking",
 };
 
 export function DocumentReview({
@@ -188,7 +204,7 @@ export function DocumentReview({
               precisely what the short signature exists to prevent. */}
           <img
             src={url}
-            alt={`${KIND_LABEL[document.kind]} for ${travellerName}`}
+            alt={`${KIND_LABEL[document.kind] ?? document.kind} for ${travellerName}`}
             className="mx-auto max-h-[70vh] w-auto"
           />
           <p className="border-t border-border px-3 py-2 text-2xs text-muted-foreground">

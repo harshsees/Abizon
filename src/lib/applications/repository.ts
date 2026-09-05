@@ -13,7 +13,13 @@ import {
   FIELD_CONTEXT,
 } from "@/lib/crypto/fields";
 import { requireDb } from "@/lib/db/client";
-import { applicationEvents, applications, documents, travellers } from "@/lib/db/schema";
+import {
+  applicationEvents,
+  applications,
+  documentKind,
+  documents,
+  travellers,
+} from "@/lib/db/schema";
 import { capabilities } from "@/lib/env";
 
 /**
@@ -169,7 +175,8 @@ export type DocumentRecord = {
   id: string;
   travellerId: string;
   travellerPosition: number;
-  kind: "passport" | "photograph";
+  /** Off the Postgres enum — see `storage/documents.ts` for why. */
+  kind: (typeof documentKind.enumValues)[number];
   status: string;
   rejectionReason: string | null;
   uploadedAt: number;

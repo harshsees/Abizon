@@ -11,6 +11,10 @@ import {
   updateApplication,
   type TravellerInput,
 } from "@/lib/applications/repository";
+import {
+  STORED_DOCUMENT_KINDS,
+  type StoredDocumentKind,
+} from "@/lib/application/documents";
 import { getCurrentUser } from "@/lib/auth/dal";
 import { capabilities } from "@/lib/env";
 import { checkLimit } from "@/lib/rateLimit";
@@ -248,6 +252,21 @@ export const saveTravellersAction = authedAction
 /* -------------------------------------------------------------------------- */
 
 /**
+ * The kinds an upload may name, derived rather than written.
+ *
+ * This was `z.enum(["passport", "photograph"])`, twice — a fourth copy of a
+ * list that also lives in `documents.ts`, in the `document_kind` Postgres enum,
+ * and in the sync loop. Adding the PAN card, return ticket and hotel booking
+ * meant the client offered five kinds and the server refused three of them,
+ * with a validation error the applicant would have read as "your upload
+ * failed". Reading the constant means the next kind added is accepted here
+ * without anybody having to remember this file exists.
+ */
+const storedDocumentKind = z.enum(
+  STORED_DOCUMENT_KINDS as unknown as [StoredDocumentKind, ...StoredDocumentKind[]],
+);
+
+/**
  * Hands back a URL the browser PUTs to directly. See the header of
  * `lib/storage/documents.ts` for why the file does not come through here — the
  * short version is a 4.5MB platform limit and a bill for moving bytes twice.
@@ -257,7 +276,7 @@ export const uploadTicketAction = authedAction
   .inputSchema(
     z.object({
       travellerId: z.uuid(),
-      kind: z.enum(["passport", "photograph"]),
+      kind: storedDocumentKind,
       contentType: z.string().max(80),
       byteSize: z.number().int().positive(),
     }),
@@ -284,7 +303,7 @@ export const finaliseUploadAction = authedAction
   .inputSchema(
     z.object({
       travellerId: z.uuid(),
-      kind: z.enum(["passport", "photograph"]),
+      kind: storedDocumentKind,
       path: z.string().max(200),
     }),
   )

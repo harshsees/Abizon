@@ -7,7 +7,13 @@
  * block), the grid, the map and a slide-over drawer inline, at ~810 lines. The
  * pieces are components now — `CountryFilters`, `CountryGrid`, `CountryMapView`
  * — and what is left here is what actually belongs to the page: the filter
- * state, the query that applies it, and the view/tab switches.
+ * state, the query that applies it, and the list/map switch.
+ *
+ * The Explore/Events tab pair went with the header rebuild. Events was a panel
+ * that said events were coming and offered a button back to this grid, and the
+ * `activeTab` state existed only to choose between the two. There is one tab
+ * now — Evisa — and being on this page is what makes it active, so the page
+ * holds no tab state at all.
  *
  * The drawer is gone. `selectedCountry` was only ever set back to `null`, so
  * nothing could open it: ~150 lines of markup no user could reach.
@@ -17,7 +23,7 @@ import { useState, useMemo, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
-import { List, Map, Search, Ticket } from "lucide-react";
+import { List, Map, Search } from "lucide-react";
 
 import { countriesData, Country, getCountrySlug } from "@/data/countries";
 import {
@@ -72,7 +78,6 @@ export default function Home() {
   const router = useRouter();
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeTab, setActiveTab] = useState<"explore" | "events">("explore");
   const [viewMode, setViewMode] = useState<"list" | "map">("list");
   const [filters, setFilters] = useState<FilterValues>(DEFAULT_FILTERS);
 
@@ -108,12 +113,9 @@ export default function Home() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const searchVal = params.get("search");
-    const tabVal = params.get("tab");
 
     // eslint-disable-next-line react-hooks/set-state-in-effect
     if (searchVal) setSearchQuery(searchVal);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (tabVal === "explore" || tabVal === "events") setActiveTab(tabVal);
   }, []);
 
   const handleFilterChange = (key: FilterKey, value: string) =>
@@ -167,8 +169,6 @@ export default function Home() {
         variant="full"
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
       />
 
       <main
@@ -193,116 +193,72 @@ export default function Home() {
           />
         </div>
 
-        {/* Search → filters → count → grid, in that order and with room to
-            breathe between them, so the whole thing reads as one system. */}
-        {activeTab === "explore" && (
-          <div className="mb-8 flex w-full justify-center md:mb-10">
-            <div className="w-full max-w-6xl">
-              <CountryFilters values={filters} onChange={handleFilterChange} />
-            </div>
+        {/* Search → filters → grid, in that order and with room to breathe
+            between them, so the whole thing reads as one system. */}
+        <div className="mb-8 flex w-full justify-center md:mb-10">
+          <div className="w-full max-w-6xl">
+            <CountryFilters values={filters} onChange={handleFilterChange} />
           </div>
-        )}
+        </div>
 
         <div className="flex flex-1 flex-col justify-start">
-          {activeTab === "events" ? (
-            <EventsPanel onBrowseDestinations={() => setActiveTab("explore")} />
-          ) : (
-            <AnimatePresence mode="wait">
-              {viewMode === "list" ? (
-                <motion.div
-                  key="list-view"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.3 }}
-                  className="flex flex-col"
-                >
-                  <CountryGrid
-                    countries={filteredCountries}
-                    hasActiveFilters={hasActiveFilters}
-                    onResetFilters={resetFilters}
-                  />
-                </motion.div>
-              ) : (
-                <CountryMapView
+          <AnimatePresence mode="wait">
+            {viewMode === "list" ? (
+              <motion.div
+                key="list-view"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.3 }}
+                className="flex flex-col"
+              >
+                <CountryGrid
                   countries={filteredCountries}
-                  onSelectCountry={handleCountryClick}
+                  hasActiveFilters={hasActiveFilters}
+                  onResetFilters={resetFilters}
                 />
-              )}
-            </AnimatePresence>
-          )}
+              </motion.div>
+            ) : (
+              <CountryMapView
+                countries={filteredCountries}
+                onSelectCountry={handleCountryClick}
+              />
+            )}
+          </AnimatePresence>
         </div>
       </main>
 
       {/* View switch. Kept, but pulled back to a quiet surface control — it was
           a heavy dark capsule competing with the grid it sits over. */}
-      {activeTab === "explore" && (
-        <div className="fixed bottom-6 left-1/2 z-sticky -translate-x-1/2">
-          <div
-            role="group"
-            aria-label="Result view"
-            className="flex items-center gap-1 rounded-full border border-border bg-surface/90 p-1 shadow-e3 backdrop-blur-md"
-          >
-            {([
-              { mode: "list", label: "List", Icon: List },
-              { mode: "map", label: "Map", Icon: Map },
-            ] as const).map(({ mode, label, Icon }) => (
-              <button
-                key={mode}
-                type="button"
-                onClick={() => setViewMode(mode)}
-                aria-pressed={viewMode === mode}
-                className={[
-                  "flex cursor-pointer items-center gap-1.5 rounded-full px-3.5 py-2 text-2xs font-semibold",
-                  "transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)]",
-                  viewMode === mode
-                    ? "bg-foreground text-surface"
-                    : "text-muted-foreground hover:text-foreground",
-                ].join(" ")}
-              >
-                <Icon aria-hidden className="h-3.5 w-3.5" />
-                <span>{label}</span>
-              </button>
-            ))}
-          </div>
+      <div className="fixed bottom-6 left-1/2 z-sticky -translate-x-1/2">
+        <div
+          role="group"
+          aria-label="Result view"
+          className="flex items-center gap-1 rounded-full border border-border bg-surface/90 p-1 shadow-e3 backdrop-blur-md"
+        >
+          {([
+            { mode: "list", label: "List", Icon: List },
+            { mode: "map", label: "Map", Icon: Map },
+          ] as const).map(({ mode, label, Icon }) => (
+            <button
+              key={mode}
+              type="button"
+              onClick={() => setViewMode(mode)}
+              aria-pressed={viewMode === mode}
+              className={[
+                "flex cursor-pointer items-center gap-1.5 rounded-full px-3.5 py-2 text-2xs font-semibold",
+                "transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)]",
+                viewMode === mode
+                  ? "bg-foreground text-surface"
+                  : "text-muted-foreground hover:text-foreground",
+              ].join(" ")}
+            >
+              <Icon aria-hidden className="h-3.5 w-3.5" />
+              <span>{label}</span>
+            </button>
+          ))}
         </div>
-      )}
-    </div>
-  );
-}
-
-/**
- * The Events tab.
- *
- * `activeTab` was state that nothing read: clicking Events moved the underline
- * and left the destination grid on screen, so the control claimed to switch
- * views and then didn't. The tab now branches, and this is what it branches to.
- *
- * Deliberately minimal — fixing the state architecture, not designing an
- * Events product. When there is something real to show, this is where it goes.
- */
-function EventsPanel({
-  onBrowseDestinations,
-}: {
-  onBrowseDestinations: () => void;
-}) {
-  return (
-    <div className="flex flex-col items-center justify-center rounded-2xl border border-border bg-surface px-6 py-20 text-center shadow-e1">
-      <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-surface-sunken text-muted-foreground">
-        <Ticket className="h-6 w-6" aria-hidden="true" />
       </div>
-      <h2 className="type-h2 text-foreground">Events are on the way</h2>
-      <p className="type-small mt-3 max-w-md text-muted-foreground">
-        We&rsquo;re putting together visa-ready trips built around concerts,
-        matches and festivals abroad. Nothing is bookable here yet.
-      </p>
-      <button
-        type="button"
-        onClick={onBrowseDestinations}
-        className="mt-7 cursor-pointer rounded-xl bg-foreground px-6 py-3 text-xs font-bold text-surface transition-colors hover:bg-subtle-foreground"
-      >
-        Browse destinations instead
-      </button>
     </div>
   );
 }

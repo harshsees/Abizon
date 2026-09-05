@@ -13,7 +13,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 
-import { Wordmark } from "@/components/Wordmark";
+import { BrandLogo } from "@/components/BrandLogo";
 import { signOut } from "@/app/actions/auth";
 import { formatE164 } from "@/lib/auth/phone";
 
@@ -97,13 +97,8 @@ export function ProfileView({
           
           {/* Left section: Logo & Slogan */}
           <div className="flex items-center gap-3">
-            <Link href="/" className="flex items-center gap-2">
-              <svg className="w-8 h-8 text-black" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M15 80 L50 20 L85 80 Z" stroke="currentColor" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" />
-                <path d="M40 55 L60 55" stroke="currentColor" strokeWidth="8" strokeLinecap="round" />
-                <path d="M50 20 L55 35" stroke="currentColor" strokeWidth="8" strokeLinecap="round" />
-              </svg>
-              <Wordmark className="text-xl" />
+            <Link href="/" className="flex items-center" aria-label="Abizon home">
+              <BrandLogo size="md" />
             </Link>
             
             {/* Slogan */}

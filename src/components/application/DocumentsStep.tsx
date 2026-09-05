@@ -678,12 +678,30 @@ function RequirementRow({
           <span className="block truncate text-[15px] font-medium leading-none text-foreground">
             {requirement.shortLabel}
           </span>
-          {(uploading || failed) && (
+          {/* The status line, or — when there is no status to report — what
+              this row means for the rest of the party.
+
+              A trip document (PAN, ticket, hotel) appears on the lead
+              traveller's card and nowhere else, so a family looking at four
+              cards sees three extra rows on the first one and nothing to
+              explain why. Without the note, the obvious reading is that the
+              first traveller has been singled out for extra paperwork.
+
+              The status wins when there is one: "Uploading…" is about this
+              second and the note is about the whole application, and stacking
+              both puts two lines under a 15px label in a 46px row. */}
+          {uploading || failed ? (
             <span
               className={`block truncate text-[11px] ${failed ? "text-destructive" : "text-muted-foreground"}`}
             >
               {failed ? (entry?.error ?? "Did not upload") : "Uploading…"}
             </span>
+          ) : (
+            requirement.sharedNote && (
+              <span className="block truncate text-[11px] text-muted-foreground">
+                {requirement.sharedNote}
+              </span>
+            )
           )}
         </span>
       </button>

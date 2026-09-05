@@ -63,7 +63,30 @@ export const applicationStatus = pgEnum("application_status", [
   "withdrawn",
 ]);
 
-export const documentKind = pgEnum("document_kind", ["passport", "photograph"]);
+/**
+ * WHAT KIND OF DOCUMENT A ROW HOLDS.
+ *
+ * The first three describe a PERSON — one per traveller, and one traveller's
+ * passport is no use for another. The last three describe the TRIP: a PAN card
+ * for whoever is paying, the return booking, the hotel reservation. A family of
+ * four files four passports and one hotel booking, so the trip documents are
+ * written against the lead traveller's row rather than repeated four times.
+ * `lib/application/documents.ts` is where that split is defined and explained;
+ * this enum only has to be able to name the result.
+ *
+ * ── Adding a value here is a migration, and it is not reversible ──
+ *
+ * Postgres has `ALTER TYPE … ADD VALUE` and no `DROP VALUE`. Whatever goes in
+ * this list is in the database for good, so a kind that turns out to be wrong
+ * is retired by ceasing to write it, not by removing it. See migration 0002.
+ */
+export const documentKind = pgEnum("document_kind", [
+  "passport",
+  "photograph",
+  "panCard",
+  "returnTicket",
+  "hotelStay",
+]);
 
 /**
  * A document's review state. `pending` is not "not uploaded" — it is "uploaded

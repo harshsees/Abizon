@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { smsDeliveryNotice } from "@/app/actions/auth";
+import { BrandLogo } from "@/components/BrandLogo";
 import { LoginCard } from "@/components/auth/LoginCard";
 import { getCurrentUser } from "@/lib/auth/dal";
 
@@ -42,26 +43,14 @@ export default async function LoginPage({
       <header className="px-4 py-5 sm:px-6">
         <Link
           href="/"
-          className="inline-flex items-center gap-2"
+          className="inline-flex items-center"
           aria-label="Abizon home"
         >
-          <svg
-            className="size-7 text-foreground"
-            viewBox="0 0 100 100"
-            fill="none"
-            aria-hidden="true"
-          >
-            <path
-              d="M15 80 L50 20 L85 80 Z"
-              stroke="currentColor"
-              strokeWidth="8"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <path d="M40 55 L60 55" stroke="currentColor" strokeWidth="8" strokeLinecap="round" />
-            <path d="M50 20 L55 35" stroke="currentColor" strokeWidth="8" strokeLinecap="round" />
-          </svg>
-          <span className="text-xl font-black tracking-tighter text-foreground">abizon</span>
+          {/* This was the last hand-written wordmark in the codebase — a
+              `font-black tracking-tighter` span reading `abizon`, lower case,
+              in the foreground colour. Three drifts from the mark in one
+              element. */}
+          <BrandLogo size="md" />
         </Link>
       </header>
 

@@ -106,11 +106,28 @@ type Stage =
   | { kind: "scannedBack"; imageUrl: string; outcome: BackPageOutcome }
   | { kind: "review" };
 
+/**
+ * The two-tone heading each screen carries, keyed by what is being supplied.
+ *
+ * The photograph is keyed by METHOD as well as kind, because "look ahead,
+ * straight at the camera" is an instruction to somebody about to be
+ * photographed and nonsense to somebody choosing a file. Nothing else has two
+ * ways in, so nothing else needs the second key.
+ *
+ * The three trip documents are one screen each and land here for their copy
+ * rather than falling through to the generic "ready when you are" — which is a
+ * fallback that says nothing about the specific mistake each of these invites:
+ * a PAN photographed at an angle, a ticket screenshot cropped above the name,
+ * a hotel booking that covers three of the five nights.
+ */
 const HEADINGS: Record<string, { top: string; accent: string }> = {
   "photograph:camera": { top: "Look ahead,", accent: "straight at the camera" },
   "photograph:upload": { top: "Your photograph,", accent: "plain background" },
   "passport:photo": { top: "Passport,", accent: "photo page up" },
   "passport:back": { top: "Now flip to the", accent: "back page" },
+  panCard: { top: "Your PAN card,", accent: "flat and square on" },
+  returnTicket: { top: "The flight home,", accent: "with every name showing" },
+  hotelStay: { top: "Where you are staying,", accent: "for the whole trip" },
 };
 
 export function DocumentCapture({
@@ -381,7 +398,9 @@ export function DocumentCapture({
         : "photo";
   const headingKey = isPassport
     ? `passport:${face}`
-    : `photograph:${method}`;
+    : requirement.kind === "photograph"
+      ? `photograph:${method}`
+      : requirement.kind;
   const heading = HEADINGS[headingKey] ?? {
     top: requirement.label,
     accent: "ready when you are",
@@ -391,7 +410,22 @@ export function DocumentCapture({
     <CaptureTakeover
       titleTop={heading.top}
       titleAccent={heading.accent}
-      methods={stage.kind === "supply" ? METHODS : undefined}
+      /**
+       * The method switch appears only where there is a real choice.
+       *
+       * `requirement.capture` has always said which documents a camera makes
+       * sense for, and until the trip documents arrived every requirement said
+       * "either", so nothing read it. A PAN card, a boarding pass and a hotel
+       * voucher are all `upload`: the camera behind "Live Capture" is the FACE
+       * capture — a countdown, an oval frame guide, a nose-position heuristic —
+       * and offering it for a boarding pass would open a screen asking somebody
+       * to centre their face in order to photograph a piece of paper.
+       */
+      methods={
+        stage.kind === "supply" && requirement.capture !== "upload"
+          ? METHODS
+          : undefined
+      }
       method={method}
       onMethodChange={setMethod}
       onBack={() => {

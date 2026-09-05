@@ -31,21 +31,15 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Search, User, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
-import { Wordmark } from "@/components/Wordmark";
+import { BrandLogo } from "@/components/BrandLogo";
 import { countriesData, getCountrySlug } from "@/data/countries";
 
-export type HeaderTab = "explore" | "events";
+export type HeaderTab = "evisa";
 
 type SiteHeaderProps = {
   /** Layout. `full` is the homepage composition; everything else is compact. */
   variant?: "full" | "compact";
-  /**
-   * Only the homepage passes these. Elsewhere the tabs are pure navigation:
-   * neither is active, and clicking one routes home with the tab selected.
-   */
-  activeTab?: HeaderTab;
-  onTabChange?: (tab: HeaderTab) => void;
-  /** Live-filter wiring, again homepage-only. */
+  /** Live-filter wiring, homepage-only. */
   searchQuery?: string;
   onSearchChange?: (value: string) => void;
   /** Country pages pin their sub-nav to the top and hide this. */
@@ -53,32 +47,42 @@ type SiteHeaderProps = {
 };
 
 /**
- * THE TABS, AND WHY THEY ARE EMOJI RATHER THAN LINE ICONS.
+ * THE TAB. Singular, now.
  *
- * The reference the product owner supplied draws these two as small colour
- * illustrations — a passport for Explore, a fan of tickets for Events — not as
- * the 1.5px stroked glyphs Lucide draws. `Compass` and `Ticket` were the
- * closest line icons in the set, and the compass in particular was the wrong
- * noun: this is a visa product, and the thing under "Explore" is a passport.
+ * There were two — Explore and Events — and Events was a promise the product
+ * could not keep: the tab switched to a panel that said events were "on the
+ * way" and offered a button back to the grid it had just replaced. A primary
+ * navigation slot spent on a coming-soon notice is a slot that teaches people
+ * one of the two things up there is not worth pressing.
  *
- * They are Unicode characters, not images, and that is the point. A cropped
- * asset from the reference screenshot is 61px square — visibly soft at the
- * 32px this renders at on a 2x display, and a second file to ship and cache.
- * A character is drawn by the platform's own colour emoji font at whatever
- * size it is set in, needs no `img-src` grant, and cannot fail to load.
+ * What remains is the thing the company actually sells, named as such: Evisa,
+ * not "Explore". "Explore" describes what the page does; "Evisa" names what
+ * you get, and it is the word a visitor arrived searching for.
  *
- * `aria-hidden` sits on the wrapper: the label beside it already says
- * "Explore", and a screen reader announcing "passport control Explore" reads
- * the same tab twice under two different names.
+ * ── Why the icon is an emoji rather than a line icon ──
+ *
+ * The reference draws it as a small colour illustration of a passport, not as
+ * a 1.5px stroked glyph. `Compass` was the closest thing in Lucide and it was
+ * the wrong noun anyway: this is a visa product, and the object under this tab
+ * is a passport.
+ *
+ * It is a Unicode character rather than the cropped screenshot in
+ * `image_video/explore-emoji.png`, and that is the point. The crop is 61px
+ * square — visibly soft at the 30px this renders at on a 2x display, and a
+ * second file to ship and cache. A character is drawn by the platform's own
+ * colour emoji font at whatever size it is set in, needs no `img-src` grant,
+ * and cannot fail to load. U+1F6C2 PASSPORT CONTROL is the same navy booklet
+ * the crop shows, because the crop is that glyph.
+ *
+ * `aria-hidden` sits on the wrapper: the label beside it already says "Evisa",
+ * and a screen reader announcing "passport control Evisa" reads the same tab
+ * twice under two different names.
  */
 const TABS: ReadonlyArray<{
   id: HeaderTab;
   label: string;
   glyph: string;
-}> = [
-  { id: "explore", label: "Explore", glyph: "\u{1F6C2}" },
-  { id: "events", label: "Events", glyph: "\u{1F39F}\u{FE0F}" },
-];
+}> = [{ id: "evisa", label: "Evisa", glyph: "\u{1F6C2}" }];
 
 /** Placeholder rotation for the search field — carried over from the old
  *  country-page header, which was the one nice touch it had. */
@@ -86,8 +90,6 @@ const PLACEHOLDER_WORDS = ["countries", "cities"];
 
 export function SiteHeader({
   variant = "compact",
-  activeTab,
-  onTabChange,
   searchQuery,
   onSearchChange,
   forceHide = false,
@@ -189,9 +191,18 @@ export function SiteHeader({
     if (q) router.push(`/?search=${encodeURIComponent(q)}`);
   };
 
-  const handleTabClick = (tab: HeaderTab) => {
-    if (isHome && onTabChange) onTabChange(tab);
-    else router.push(`/?tab=${tab}`);
+  /**
+   * With one tab, "which tab is selected" is no longer state anybody has to
+   * hold — it is just whether you are on the destination page. The homepage
+   * used to own an `activeTab` and hand it down; that existed only so Explore
+   * and Events could disagree, and Events is gone.
+   *
+   * So the tab is lit when this is the homepage, pressing it there does
+   * nothing (you are already looking at it), and pressing it anywhere else is
+   * a link home.
+   */
+  const handleTabClick = () => {
+    if (!isHome) router.push("/");
   };
 
   // The mobile sheet searches the real dataset and its results are links, so
@@ -250,36 +261,10 @@ export function SiteHeader({
           <div className="flex min-w-0 items-center gap-3 md:gap-4">
             <Link
               href="/"
-              className="flex flex-shrink-0 items-center gap-2"
+              className="flex flex-shrink-0 items-center"
               aria-label="Abizon home"
             >
-              <svg
-                className="h-7 w-7 text-foreground md:h-8 md:w-8"
-                viewBox="0 0 100 100"
-                fill="none"
-                aria-hidden="true"
-              >
-                <path
-                  d="M15 80 L50 20 L85 80 Z"
-                  stroke="currentColor"
-                  strokeWidth="8"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M40 55 L60 55"
-                  stroke="currentColor"
-                  strokeWidth="8"
-                  strokeLinecap="round"
-                />
-                <path
-                  d="M50 20 L55 35"
-                  stroke="currentColor"
-                  strokeWidth="8"
-                  strokeLinecap="round"
-                />
-              </svg>
-              <Wordmark className="text-xl md:text-[1.375rem]" />
+              <BrandLogo size="md" />
             </Link>
 
             <span
@@ -319,9 +304,9 @@ export function SiteHeader({
                 key={id}
                 label={label}
                 glyph={glyph}
-                active={activeTab === id}
+                active={isHome}
                 condensed={condensed || !isFull}
-                onClick={() => handleTabClick(id)}
+                onClick={handleTabClick}
               />
             ))}
           </nav>
@@ -429,10 +414,10 @@ export function SiteHeader({
                 key={id}
                 label={label}
                 glyph={glyph}
-                active={activeTab === id}
+                active={isHome}
                 condensed
                 layoutGroup="mobile"
-                onClick={() => handleTabClick(id)}
+                onClick={handleTabClick}
               />
             ))}
           </nav>

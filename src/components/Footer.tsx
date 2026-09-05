@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { MapPin, ArrowUpRight, MessageSquare, Bot, Sparkles, Brain } from "lucide-react";
+import { MapPin, ArrowUpRight } from "lucide-react";
 
-import { Wordmark } from "@/components/Wordmark";
+import { AskAiLinks } from "@/components/AskAiLinks";
+import { BrandLogo } from "@/components/BrandLogo";
 
 export function Footer() {
   const companyLinks = [
@@ -57,7 +58,13 @@ export function Footer() {
   ];
 
   return (
-    <footer className="w-full bg-white border-t border-slate-200 mt-16 pt-16 pb-8 font-sans select-none">
+    /* `select-none` was on this element. Every address, every office, every
+       link label in the footer — the parts of the page most likely to be
+       copied — could not be selected, and nothing here needed protecting from
+       a text cursor. It was almost certainly reached for to stop the blue
+       flash when a link is double-clicked, which is a rendering annoyance, not
+       a reason to disable copy on a third of the page. */
+    <footer className="w-full bg-white border-t border-slate-200 mt-16 pt-16 pb-8 font-sans">
       <div className="mx-auto max-w-7xl px-4 md:px-6">
         
         {/* Main 5-Column Grid */}
@@ -67,40 +74,14 @@ export function Footer() {
           <div className="lg:col-span-4 space-y-6 flex flex-col items-start text-left">
             
             {/* Logo */}
-            <div className="flex items-center gap-2">
-              <svg className="w-8 h-8 text-black" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M15 80 L50 20 L85 80 Z" stroke="currentColor" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" />
-                <path d="M40 55 L60 55" stroke="currentColor" strokeWidth="8" strokeLinecap="round" />
-                <path d="M50 20 L55 35" stroke="currentColor" strokeWidth="8" strokeLinecap="round" />
-              </svg>
-              <Wordmark className="text-xl" />
-            </div>
+            <BrandLogo size="md" />
 
             {/* Description */}
             <p className="text-[13px] font-medium text-muted-foreground leading-relaxed max-w-xs">
               Abizon helps you plan, apply, and track visas seamlessly across the world.
             </p>
 
-            {/* Ask AI Section */}
-            <div className="space-y-2.5">
-              <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">
-                Ask AI about Abizon
-              </span>
-              <div className="flex items-center gap-2">
-                <button type="button" aria-label="Chat with Abizon AI" className="h-9 w-9 flex items-center justify-center rounded-full bg-slate-50 border border-slate-200 text-muted-foreground hover:text-slate-800 transition cursor-pointer">
-                  <MessageSquare className="w-4 h-4 fill-slate-400/10" />
-                </button>
-                <button type="button" aria-label="Abizon AI suggestions" className="h-9 w-9 flex items-center justify-center rounded-full bg-slate-50 border border-slate-200 text-muted-foreground hover:text-slate-800 transition cursor-pointer">
-                  <Sparkles className="w-4 h-4 text-amber-500 fill-amber-500/10" />
-                </button>
-                <button type="button" aria-label="Abizon AI knowledge base" className="h-9 w-9 flex items-center justify-center rounded-full bg-slate-50 border border-slate-200 text-muted-foreground hover:text-slate-800 transition cursor-pointer">
-                  <Brain className="w-4 h-4 text-violet-500" />
-                </button>
-                <button type="button" aria-label="Abizon AI assistant" className="h-9 w-9 flex items-center justify-center rounded-full bg-slate-50 border border-slate-200 text-muted-foreground hover:text-slate-800 transition cursor-pointer">
-                  <Bot className="w-4 h-4 text-emerald-500" />
-                </button>
-              </div>
-            </div>
+            <AskAiLinks />
 
             {/* Wall Of Love */}
             <div className="space-y-2">
@@ -214,13 +195,7 @@ export function Footer() {
               2.88:1. Opacity is invisible to a token system — the colour looks
               compliant in the class list while rendering as something else —
               so the de-emphasis comes from the muted token instead. */}
-          <div className="flex items-center gap-1.5">
-            <svg className="w-5 h-5 text-muted-foreground" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-              <path d="M15 80 L50 20 L85 80 Z" stroke="currentColor" strokeWidth="10" strokeLinecap="round" strokeLinejoin="round" />
-              <path d="M40 55 L60 55" stroke="currentColor" strokeWidth="10" strokeLinecap="round" />
-            </svg>
-            <Wordmark tone="muted" className="text-xs" />
-          </div>
+          <BrandLogo size="sm" wordTone="muted" />
 
         </div>
 

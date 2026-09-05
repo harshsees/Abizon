@@ -625,12 +625,42 @@ export type TravellerDocumentState = {
   complete: boolean;
 };
 
+/**
+ * WHAT THIS ONE PERSON STILL OWES, and why the answer depends on where they
+ * are in the party.
+ *
+ * Requirements come in two scopes (see `DocumentScope` in `documents.ts`).
+ * Traveller-scoped ones — passport, photograph — are asked of everybody.
+ * Party-scoped ones — PAN card, return ticket, hotel booking — describe the
+ * trip and are asked ONCE, of the lead traveller.
+ *
+ * "Lead" is simply first in the party, which is the person who started the
+ * application. That is deliberately positional rather than a flag somebody has
+ * to set: there is no screen on which to nominate a document-holder, and
+ * inventing one would be a question asked of every applicant to serve the
+ * minority who are travelling as a group.
+ *
+ * The filter below is the whole mechanism. Party documents are keyed under the
+ * lead's id like any other document, so nothing downstream — the upload loop,
+ * the server action, the ops queue — needs to know this distinction exists;
+ * they attach to a real traveller row belonging to a real person, which is
+ * also what makes "the PAN card of one of the main family members" true rather
+ * than a figure of speech.
+ *
+ * The consequence, and it is correct: removing the lead traveller removes the
+ * party documents with them, and the next person in the party is asked for
+ * theirs. If the PAN holder has left the application, their PAN is not the one
+ * to file.
+ */
 export function travellerDocumentState(
   state: ApplicationState,
   country: Country,
   traveller: Traveller,
 ): TravellerDocumentState {
-  const required = requiredDocuments(country.documents);
+  const isLead = state.travellers[0]?.id === traveller.id;
+  const required = requiredDocuments(country.documents).filter(
+    (requirement) => requirement.scope === "traveller" || isLead,
+  );
   const provided = required
     .filter((requirement) => state.documents[documentKey(traveller.id, requirement.kind)])
     .map((requirement) => requirement.kind);
