@@ -66,13 +66,19 @@ type SiteHeaderProps = {
  * the wrong noun anyway: this is a visa product, and the object under this tab
  * is a passport.
  *
- * It is a Unicode character rather than the cropped screenshot in
- * `image_video/explore-emoji.png`, and that is the point. The crop is 61px
- * square — visibly soft at the 30px this renders at on a 2x display, and a
- * second file to ship and cache. A character is drawn by the platform's own
- * colour emoji font at whatever size it is set in, needs no `img-src` grant,
- * and cannot fail to load. U+1F6C2 PASSPORT CONTROL is the same navy booklet
- * the crop shows, because the crop is that glyph.
+ * It is U+1F6C2 PASSPORT CONTROL, carried over unchanged from the Explore tab
+ * this replaces — which is what was asked for, and is why it is not the navy
+ * booklet in `image_video/explore-emoji.png`. That crop is from the REFERENCE
+ * SITE, which ships its own illustration; U+1F6C2 renders as a blue sign with
+ * a figure on Windows and as a booklet on some other platforms, and neither is
+ * within our gift to change.
+ *
+ * Shipping the crop instead was considered and rejected: it is 61px square,
+ * visibly soft at the 30px this renders at on a 2x display, and a second file
+ * to ship and cache. A character is drawn by the platform's own colour emoji
+ * font at whatever size it is set in, needs no `img-src` grant, and cannot
+ * fail to load. If the exact booklet matters more than those three things, the
+ * fix is a commissioned SVG rather than a screenshot.
  *
  * `aria-hidden` sits on the wrapper: the label beside it already says "Evisa",
  * and a screen reader announcing "passport control Evisa" reads the same tab
