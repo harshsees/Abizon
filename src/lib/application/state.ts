@@ -52,7 +52,30 @@ import { requiredDocuments, type DocumentKind, type DocumentRequirement } from "
  * "No Documents Required" — around a dozen destinations in the dataset. The
  * previous flow had no way to express that and asked everyone for two files.
  *
- * THREE STEPS, DOWN FROM FIVE.
+ * FIVE STEPS, AND WHY TWO CAME BACK.
+ *
+ * `dates` and `sponsor` are new, and they are the two questions the reference
+ * asks that this flow was answering by assumption:
+ *
+ *   dates    was seeded from the country page through the URL and never shown
+ *            again. That works for somebody who came through the panel and
+ *            answered it there; it silently assumes a date for everybody who
+ *            arrived at /apply any other way, and it gives nobody a way to
+ *            change their mind. It is the FIRST step because every figure
+ *            downstream — which processing plan is even offered, what the
+ *            delivery promise means — is measured from it.
+ *   sponsor  was not asked at all. Who is funding the trip is on the form
+ *            every consulate in this catalogue publishes, and their financials
+ *            are what an officer actually weighs; an application filed without
+ *            it is one filed incomplete.
+ *
+ * It sits AFTER `travellers` rather than second, which is a deliberate
+ * departure from the order the screenshots are numbered in. The sponsor screen
+ * offers the people on the application by name — "HARSH", or somebody else —
+ * and there is nobody to offer until the party exists. Asking it before
+ * `travellers` would mean a screen whose main choice is always empty.
+ *
+ * THE THREE THAT ARE STILL GONE, DOWN FROM FIVE.
  *
  * `setup`, `details` and `review` are gone, and none of what they asked for
  * went with them:
@@ -72,7 +95,9 @@ import { requiredDocuments, type DocumentKind, type DocumentRequirement } from "
  * distinct pieces of work: who is going, what they need to supply, and paying.
  */
 export type ApplicationStepId =
+  | "dates"
   | "travellers"
+  | "sponsor"
   | "documents"
   | "payment"
   | "ready";
@@ -96,6 +121,12 @@ export type ApplicationStepMeta = {
 };
 
 const STEP_META: Record<ApplicationStepId, Omit<ApplicationStepMeta, "id">> = {
+  dates: {
+    label: "Dates",
+    eyebrow: "Travel dates",
+    title: "What are your estimated travel dates?",
+    cta: "Continue",
+  },
   travellers: {
     label: "Travelers",
     eyebrow: "Travellers",
@@ -104,6 +135,12 @@ const STEP_META: Record<ApplicationStepId, Omit<ApplicationStepMeta, "id">> = {
     // destination".
     title: "Who's going on this trip?",
     cta: "Continue",
+  },
+  sponsor: {
+    label: "Sponsor",
+    eyebrow: "Sponsor",
+    title: "Let\u2019s know who\u2019s sponsoring this trip",
+    cta: "Continue with selected sponsor",
   },
   documents: {
     label: "Documents",
@@ -127,7 +164,14 @@ const STEP_META: Record<ApplicationStepId, Omit<ApplicationStepMeta, "id">> = {
 
 /** The ordered steps for a destination. */
 export function stepSequence(country?: Country): ApplicationStepMeta[] {
-  const ids: ApplicationStepId[] = ["travellers", "documents", "payment", "ready"];
+  const ids: ApplicationStepId[] = [
+    "dates",
+    "travellers",
+    "sponsor",
+    "documents",
+    "payment",
+    "ready",
+  ];
 
   const needsDocuments = country
     ? requiredDocuments(country.documents).length > 0
@@ -291,6 +335,21 @@ export type ApplicationState = {
   travelDate?: string;
   /** The non-exact answers. See `resolveTravelWindow`. */
   travelWindow?: "soon" | "later";
+  /**
+   * Who is funding the trip.
+   *
+   * A traveller's id when the sponsor is on the application, `"other"` when
+   * they are not, and `undefined` until the question has been answered.
+   *
+   * ── Why `other` carries a name and the rest does not ──
+   *
+   * A sponsor who is travelling is already a row in `travellers` with a name,
+   * a passport and a set of details; storing a second copy of their name here
+   * would create two places it can be edited and one place it can be wrong.
+   * A sponsor who is NOT travelling exists nowhere else, so their name has to
+   * live somewhere, and this is the only place it belongs.
+   */
+  sponsor?: { kind: "traveller"; travellerId: string } | { kind: "other"; name: string };
   step: ApplicationStepId;
   /** 1 forward, -1 backward. Consumed by the transition wrapper only. */
   direction: 1 | -1;
@@ -310,6 +369,7 @@ export type ApplicationAction =
   | { type: "setPlan"; plan: number }
   | { type: "setTravelDate"; travelDate?: string }
   | { type: "setTravelWindow"; travelWindow: "soon" | "later" }
+  | { type: "setSponsor"; sponsor: ApplicationState["sponsor"] }
   | { type: "setDocument"; travellerId: string; kind: DocumentKind; entry: DocumentEntry }
   | { type: "clearDocument"; travellerId: string; kind: DocumentKind }
   /** Progress reported by the sync layer. Patches rather than replaces, so an
@@ -382,7 +442,7 @@ export function initialState(seed: Partial<ApplicationState> = {}): ApplicationS
   return {
     travellers: [],
     plan: 0,
-    step: "travellers",
+    step: "dates",
     direction: 1,
     documents: {},
     details: {},
@@ -422,11 +482,26 @@ export function applicationReducer(
       }
       delete details[action.id];
 
+      /**
+       * The sponsor goes too, if it was them.
+       *
+       * A sponsor stored as a traveller id becomes a dangling pointer the
+       * moment that traveller is removed — and a dangling one that still reads
+       * as "answered", so the step stays green and the application is filed
+       * naming nobody. Clearing it sends the applicant back to a question they
+       * now genuinely have to answer again.
+       */
+      const sponsor =
+        state.sponsor?.kind === "traveller" && state.sponsor.travellerId === action.id
+          ? undefined
+          : state.sponsor;
+
       return {
         ...state,
         travellers: state.travellers.filter((t) => t.id !== action.id),
         documents,
         details,
+        sponsor,
       };
     }
 
@@ -449,6 +524,9 @@ export function applicationReducer(
         travelWindow: action.travelWindow,
         travelDate: undefined,
       };
+
+    case "setSponsor":
+      return { ...state, sponsor: action.sponsor };
 
     case "setDocument":
       return {
@@ -703,11 +781,52 @@ export function blockingReason(
   if (!country) return "Choose a destination before continuing.";
 
   switch (step) {
+    /**
+     * A date, or an explicit "I do not have one yet".
+     *
+     * `resolveTravelWindow` treats a picked date as the `exact` answer, so
+     * either branch of the screen satisfies this — what is refused is arriving
+     * at the documents step having answered neither, which is the state
+     * everybody was in before this step existed.
+     */
+    case "dates": {
+      if (!resolveTravelWindow(state)) {
+        return "Choose your travel dates, or tell us they are not fixed yet.";
+      }
+      return undefined;
+    }
+
     case "travellers": {
       if (state.travellers.length === 0) return "Add at least one traveller.";
       if (state.travellers.some((t) => t.firstName.trim().length === 0)) {
         return "Every traveller needs a first name.";
       }
+      return undefined;
+    }
+
+    case "sponsor": {
+      const { sponsor } = state;
+      if (!sponsor) return "Tell us who is funding this trip.";
+
+      if (sponsor.kind === "other" && sponsor.name.trim().length < 2) {
+        return "Add the name of whoever is sponsoring the trip.";
+      }
+
+      /**
+       * A sponsor naming a traveller who is no longer on the application.
+       *
+       * `removeTraveller` clears it, so this is unreachable through the UI —
+       * and it is checked anyway, because the other way into this state is a
+       * draft restored from the server against a party that has since changed,
+       * and that path does not go through the reducer.
+       */
+      if (
+        sponsor.kind === "traveller" &&
+        !state.travellers.some((traveller) => traveller.id === sponsor.travellerId)
+      ) {
+        return "The sponsor you chose is no longer on this application.";
+      }
+
       return undefined;
     }
 

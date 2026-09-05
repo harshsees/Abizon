@@ -68,9 +68,11 @@ import { ApplicationBoot } from "./ApplicationBoot";
 import { ApplicationComplete } from "./ApplicationComplete";
 import { ApplicationStepTransition } from "./ApplicationStepTransition";
 import { ApplyBack, ApplyProgress, ApplyRail, ApplyRailMobile, type RailStep } from "./ApplyChrome";
+import { DatesStep } from "./DatesStep";
 import { DocumentsStep } from "./DocumentsStep";
 import { PaymentStep } from "./payment/PaymentStep";
 import { ProcessingScreen } from "./ProcessingScreen";
+import { SponsorStep } from "./SponsorStep";
 import { TravellersStep } from "./TravellersStep";
 
 function Notice({
@@ -236,7 +238,9 @@ export function ApplicationShell() {
             <ProcessingScreen onDone={() => setHandedOff(true)} />
           ) : (
             <>
+              {currentStep.id === "dates" && <DatesStep />}
               {currentStep.id === "travellers" && <TravellersStep />}
+              {currentStep.id === "sponsor" && <SponsorStep />}
               {currentStep.id === "documents" && <DocumentsStep />}
               {/* The widest step in the flow. `PaymentPanel` is two columns
                   now — the card and the total on the left, everything that is

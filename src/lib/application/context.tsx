@@ -106,7 +106,9 @@ function readDateParam(value: string | null): string | undefined {
 }
 
 const STEP_IDS: readonly ApplicationStepId[] = [
+  "dates",
   "travellers",
+  "sponsor",
   "documents",
   "payment",
   "ready",
@@ -121,6 +123,9 @@ const DOCUMENT_KINDS: readonly DocumentKind[] = [
   "passport",
   "passportBack",
   "photograph",
+  "panCard",
+  "returnTicket",
+  "hotelStay",
 ];
 
 function readHandoffParams(
@@ -368,7 +373,17 @@ export function ApplicationProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!state.countrySlug) return;
 
-    const worthResuming = state.travellers.length > 0 || state.step !== "travellers";
+    /**
+     * Has the applicant actually begun?
+     *
+     * The test used to be `step !== "travellers"`, i.e. "not on the first
+     * screen". `dates` is the first screen now, and leaving this alone would
+     * have written a draft — and offered "Resume application" on the country
+     * page — to anybody who opened /apply and looked at a calendar. The
+     * condition is the same one it always was; the name of the first step is
+     * not.
+     */
+    const worthResuming = state.travellers.length > 0 || state.step !== "dates";
     if (!worthResuming) return;
 
     saveDraft(state.countrySlug, {

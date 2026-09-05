@@ -26,7 +26,7 @@
  * is the whole design: one question per screen, nothing else competing with it.
  */
 
-import { FileText, ShoppingCart, Users } from "lucide-react";
+import { CalendarDays, FileText, ShoppingCart, Star, Users } from "lucide-react";
 import { ChevronLeft } from "lucide-react";
 
 import type { ApplicationStepId } from "@/lib/application/state";
@@ -110,8 +110,20 @@ export function ApplyProgress({ percent }: { percent: number }) {
 /* Rail                                                                       */
 /* -------------------------------------------------------------------------- */
 
+/**
+ * One glyph per step.
+ *
+ * `Star` for the sponsor is the reference's own choice and is not an obvious
+ * one — a star usually means "favourite". It earns its place because the
+ * alternatives are worse: a wallet or a rupee reads as the payment step two
+ * icons below it, and a person reads as the travellers step two icons above.
+ * What is left has to be abstract, and the rail carries a text label under
+ * every glyph anyway.
+ */
 const RAIL_ICONS: Record<string, typeof Users> = {
+  dates: CalendarDays,
   travellers: Users,
+  sponsor: Star,
   documents: FileText,
   payment: ShoppingCart,
 };
