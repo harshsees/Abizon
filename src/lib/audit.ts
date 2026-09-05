@@ -50,6 +50,17 @@ export type AuditAction =
   | "application.withdrawn"
   | "document.uploaded"
   | "document.deleted"
+  /* Payments.
+     Four actions and not one, because "a payment happened" is not a single
+     event: an order is created far more often than it is paid, a capture is
+     the only one that means money moved, and a failure is the one somebody
+     will come asking about. Collapsing them into `payment.updated` with the
+     detail in `metadata` would make the audit log unqueryable for the only
+     question anybody asks it — "when were we paid". */
+  | "payment.order_created"
+  | "payment.authorized"
+  | "payment.captured"
+  | "payment.failed"
   /* Staff */
   | "staff.signed_in"
   | "staff.sign_in_failed"

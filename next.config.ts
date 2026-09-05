@@ -119,7 +119,13 @@ const csp = [
    * The engine itself is served from this origin (see
    * `scripts/setup-tesseract.mjs`), so no CDN is added alongside it.
    */
-  `script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://challenges.cloudflare.com${
+  /*
+   * `checkout.razorpay.com` serves the Checkout modal's loader. It is in
+   * `script-src` and not in `frame-src` because the script is what this origin
+   * loads; the iframes it then creates are Razorpay's own and are listed
+   * separately below.
+   */
+  `script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://challenges.cloudflare.com https://checkout.razorpay.com${
     isDev ? " 'unsafe-eval'" : ""
   }`,
 
@@ -153,11 +159,22 @@ const csp = [
   // Turnstile's verification calls; Sentry's ingest; PostHog's capture endpoint.
   // Each is only reached if the corresponding key is configured.
   // Supabase is appended for the direct browser-to-Storage upload.
-  `connect-src 'self' https://challenges.cloudflare.com https://*.ingest.sentry.io https://*.ingest.de.sentry.io https://*.posthog.com${supabaseSource}`,
+  //
+  // Razorpay: `api.razorpay.com` is what Checkout calls to create and poll a
+  // payment; `lumberjack.razorpay.com` is their telemetry, and omitting it does
+  // not break payment but does fill the console with violations on every
+  // checkout — which is how a real violation gets missed.
+  `connect-src 'self' https://challenges.cloudflare.com https://*.ingest.sentry.io https://*.ingest.de.sentry.io https://*.posthog.com https://api.razorpay.com https://lumberjack.razorpay.com${supabaseSource}`,
 
   // The Turnstile challenge renders in an iframe. Without this the widget shows
   // an empty box and every login fails.
-  "frame-src https://challenges.cloudflare.com",
+  //
+  // Razorpay Checkout is also an iframe, and it in turn frames the ISSUING
+  // BANK for 3-D Secure — which is a hostname nobody can enumerate, because it
+  // is a different bank for every card. `api.razorpay.com` covers the modal
+  // itself and Razorpay proxies the bank page through their own origin, which
+  // is the only reason a finite list is possible here at all.
+  "frame-src https://challenges.cloudflare.com https://checkout.razorpay.com https://api.razorpay.com",
 
   "object-src 'none'",
   "base-uri 'self'",

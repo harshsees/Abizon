@@ -29,13 +29,25 @@
  * `receiptLines` is empty. Printing "₹0" for an undecided fee is the exact
  * failure that file exists to prevent.
  *
- * THE `onPay` IS SIMULATED, and only while `paymentIsPreview`. The step is on
- * the live site ahead of a gateway, so the authorisation is `previewAuthorise`
- * — which has its own file, and a header explaining what it is allowed to be.
- * The two disclosures that make that honest travel with it through `preview`:
- * the notice above the form and the stamp across the receipt. When a gateway is
- * named, `paymentIsPreview` goes false, both disappear, and the import below is
- * the one line that changes.
+ * ── TWO SCREENS, AND WHY THEY ARE NOT THE SAME SCREEN ──
+ *
+ * With Razorpay keys configured this renders `LiveCheckout`: the amount, the
+ * breakdown, and one button that opens Razorpay's own modal. Without them it
+ * renders `PaymentPanel` with its hand-built card form and a simulated
+ * authorisation.
+ *
+ * That is not a stylistic split. Razorpay Checkout collects the card in an
+ * iframe on Razorpay's origin, and never seeing a card number is what keeps
+ * this codebase out of PCI-DSS scope — a property of not having the data rather
+ * than of being careful with it. There is no way to keep the pretty form and
+ * hand what it collects to Razorpay: no standard account exposes an API that
+ * would accept it, and building one would move the compliance burden here.
+ *
+ * So the form survives as the PREVIEW screen and as `/dev/payment-preview`, and
+ * the two disclosures that make preview honest — the notice above the form and
+ * the stamp across the receipt — travel with it. When keys are configured,
+ * `paymentIsPreview()` goes false and this component renders the other branch
+ * entirely.
  */
 
 import { previewAuthorise } from "@/lib/application/previewPayment";
@@ -43,6 +55,7 @@ import { useApplication } from "@/lib/application/context";
 import { paymentIsPreview } from "@/lib/paymentConfig";
 import { ABIZON_TERMS, FEE_NOT_PUBLISHED } from "@/lib/pricingConfig";
 
+import { LiveCheckout } from "./LiveCheckout";
 import { PaymentPanel } from "./PaymentPanel";
 import type { ReceiptLine } from "./ReceiptPrinter";
 
@@ -53,7 +66,7 @@ const inr = (value: number) => `₹${Math.round(value).toLocaleString("en-IN")}`
 const times = (count: number) => (count > 1 ? `${count} × ` : "");
 
 export function PaymentStep() {
-  const { summary, state, next, back } = useApplication();
+  const { summary, state, next, back, sync } = useApplication();
   if (!summary) return null;
 
   const { fees } = summary;
@@ -83,6 +96,49 @@ export function PaymentStep() {
           },
         ];
 
+  /**
+   * THE LIVE BRANCH, and the one condition that gates it besides the keys.
+   *
+   * `sync.applicationId` is the server's row, and there is no row while the
+   * applicant is signed out or the deployment has no database. Razorpay prices
+   * an order FROM that row — see `createPaymentOrderAction`, which recomputes
+   * the amount rather than trusting the screen — so with no row there is
+   * nothing to charge for.
+   *
+   * That case falls through to the preview panel, which is the right screen for
+   * it: an applicant who never signed in cannot be charged, and the notice above
+   * the form says so. It is not a silent downgrade — it is the same disclosure
+   * every preview render carries.
+   */
+  if (!paymentIsPreview() && sync.applicationId) {
+    return (
+      <LiveCheckout
+        applicationId={sync.applicationId}
+        amount={fees.total === null ? null : inr(fees.total)}
+        amountUnavailableLabel={FEE_NOT_PUBLISHED}
+        destination={`${summary.country.displayName} ${summary.country.visaType}`}
+        receiptLines={lines}
+        receiptTax={
+          fees.gst === null
+            ? undefined
+            : {
+                label: `GST (${Math.round(ABIZON_TERMS.gstRate * 100)}%)`,
+                amount: inr(fees.gst * party),
+              }
+        }
+        prefill={{
+          name:
+            state.details[state.travellers[0]?.id]?.fullName ||
+            summary.travellers.names[0],
+          email: state.contact.email,
+          contact: state.contact.phone,
+        }}
+        onPaid={next}
+        onBack={back}
+      />
+    );
+  }
+
   return (
     <PaymentPanel
       amount={fees.total === null ? null : inr(fees.total)}
@@ -110,7 +166,7 @@ export function PaymentStep() {
         state.details[state.travellers[0]?.id]?.fullName ||
         summary.travellers.names[0]
       }
-      preview={paymentIsPreview}
+      preview
       onPay={previewAuthorise}
       onComplete={next}
       onBack={back}

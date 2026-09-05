@@ -115,6 +115,38 @@ const schema = z.object({
    *  who would be handling the incident. */
   OPS_SESSION_SECRET: z.string().min(32).optional(),
 
+  /* --- Payments ----------------------------------------------------------- */
+  /**
+   * Razorpay. Three values, and the third is not optional in the way the
+   * schema's `.optional()` makes it look.
+   *
+   * `NEXT_PUBLIC_RAZORPAY_KEY_ID` carries the `NEXT_PUBLIC_` prefix because it
+   * is public by design — it identifies the merchant, authenticates nothing,
+   * and Checkout puts it in the page regardless. The prefix is doing real work:
+   * the apply flow is a client component all the way up to the route, so the
+   * browser has to be able to answer "is a gateway configured" on its own in
+   * order to decide between the live screen and the preview one, and a
+   * server-only variable cannot tell it.
+   *
+   * ONE VARIABLE, read from both sides, rather than a private one plus a public
+   * twin. Two names holding the same value is two names that drift, and the
+   * failure would be a deployment whose browser thinks payments are live and
+   * whose server disagrees.
+   *
+   * `RAZORPAY_KEY_SECRET` signs order creation and verifies the handshake
+   * Checkout returns. It never leaves the server.
+   *
+   * `RAZORPAY_WEBHOOK_SECRET` is a DIFFERENT secret, set in the Razorpay
+   * dashboard when the webhook is registered, and it is the one people skip.
+   * Without it the webhook cannot be authenticated, and an unauthenticated
+   * webhook that marks payments captured is an endpoint anybody can POST to in
+   * order to mark their own application paid. `CONDITIONAL` below makes it
+   * mandatory the moment the other two are set.
+   */
+  NEXT_PUBLIC_RAZORPAY_KEY_ID: z.string().optional(),
+  RAZORPAY_KEY_SECRET: z.string().optional(),
+  RAZORPAY_WEBHOOK_SECRET: z.string().optional(),
+
   /* --- Site -------------------------------------------------------------- */
   /** Absolute origin, used in emails and signed links where a relative URL is
    *  meaningless. Vercel sets `VERCEL_PROJECT_PRODUCTION_URL`; this overrides. */
@@ -171,6 +203,16 @@ const CONDITIONAL: Array<{ when: (env: Env) => boolean; require: Array<keyof Env
       label: "UPSTASH_REDIS_REST_URL is set",
       when: (env) => Boolean(env.UPSTASH_REDIS_REST_URL),
       require: ["UPSTASH_REDIS_REST_TOKEN"],
+    },
+    {
+      /**
+       * Half a key pair is not a configuration, it is a deploy that will fail
+       * at the first checkout — and the applicant, not the operator, is the one
+       * who discovers it.
+       */
+      label: "NEXT_PUBLIC_RAZORPAY_KEY_ID is set",
+      when: (env) => Boolean(env.NEXT_PUBLIC_RAZORPAY_KEY_ID),
+      require: ["RAZORPAY_KEY_SECRET", "RAZORPAY_WEBHOOK_SECRET"],
     },
     {
       label: "RESEND_API_KEY is set",
@@ -289,6 +331,19 @@ export const capabilities = {
     Boolean(env().UPSTASH_REDIS_REST_URL && env().UPSTASH_REDIS_REST_TOKEN),
   errorReporting: () => Boolean(env().SENTRY_DSN),
   opsConsole: () => Boolean(env().OPS_SESSION_SECRET),
+  /**
+   * Can this deployment take money?
+   *
+   * Both halves of the key pair, and nothing else. Deliberately NOT including
+   * the webhook secret: a deployment can charge a card without one, it just
+   * cannot be told about it asynchronously, and gating checkout on a missing
+   * webhook secret would take the whole payment path down over a reconciliation
+   * feature. `CONDITIONAL` refuses the production deploy instead, which is the
+   * right place to catch it — before anybody's card is charged rather than
+   * after.
+   */
+  payments: () =>
+    Boolean(env().NEXT_PUBLIC_RAZORPAY_KEY_ID && env().RAZORPAY_KEY_SECRET),
 } as const;
 
 /**

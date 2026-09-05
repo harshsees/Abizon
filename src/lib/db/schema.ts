@@ -99,6 +99,34 @@ export const documentStatus = pgEnum("document_status", [
   "rejected",
 ]);
 
+/**
+ * WHERE A PAYMENT HAS GOT TO.
+ *
+ * Razorpay's own vocabulary, narrowed to the states that matter here.
+ *
+ *   created    an order exists at Razorpay and nobody has paid it. Most orders
+ *              die here — a checkout opened and abandoned is the commonest
+ *              outcome of any payment screen, and it is not a failure.
+ *   authorized the bank approved it and the money is on hold. Razorpay
+ *              auto-captures by default, so this is usually momentary; it is
+ *              named because an account with auto-capture off will sit here.
+ *   captured   the money is ours. THIS IS THE ONLY STATE THAT MEANS PAID.
+ *   failed     the bank refused, or the applicant abandoned an attempt that had
+ *              already started.
+ *   refunded   captured and given back.
+ *
+ * There is deliberately no `pending`: every one of these is a definite thing
+ * that happened, and a status meaning "we are not sure" would be used for all
+ * five within a month.
+ */
+export const paymentStatus = pgEnum("payment_status", [
+  "created",
+  "authorized",
+  "captured",
+  "failed",
+  "refunded",
+]);
+
 export const staffRole = pgEnum("staff_role", ["viewer", "processor", "admin"]);
 
 /** Who did a thing. `system` covers cron jobs and webhooks, which have no human
@@ -360,6 +388,91 @@ export const documents = pgTable(
 );
 
 /**
+ * PAYMENTS.
+ *
+ * ── The amount is in PAISE, and it is an integer ──
+ *
+ * Razorpay's API is denominated in the smallest currency unit and so is this
+ * column, for a better reason than matching them: money in a floating-point
+ * column is money that will one day be out by a hundredth of a rupee, and the
+ * hundredth will be discovered during a reconciliation rather than in a test.
+ * `bigint` with `mode: "number"` because ₹92,233,720,368 is a long way past any
+ * visa fee and JavaScript's safe integer range is not the constraint here.
+ *
+ * ── The amount is written by the SERVER, from the application ──
+ *
+ * Never from the client. The action recomputes the total from the destination,
+ * the plan and the party size before it creates an order — see
+ * `createPaymentOrderAction`. A client-supplied amount is the oldest hole in
+ * every checkout ever built, and the reason it keeps being built is that
+ * passing the number the UI is already displaying is one line shorter.
+ *
+ * ── Why the order id is unique and the payment id is not ──
+ *
+ * One order per attempt at paying an application, and Razorpay guarantees the
+ * order id. The payment id arrives later — from the browser handshake, or from
+ * the webhook, whichever lands first — so it is nullable, and the unique index
+ * is on the order. That is also what makes the webhook idempotent: it looks the
+ * row up by order id and writes a status, and a webhook delivered three times
+ * writes the same status three times.
+ *
+ * ── What is NOT stored ──
+ *
+ * No card number, no last four, no cardholder name, no token. Razorpay Checkout
+ * collects card details in its own iframe on its own origin, and none of it
+ * reaches this application — which is the property that keeps this codebase out
+ * of PCI-DSS scope, and it is a property of not having the data rather than of
+ * being careful with it. `signature` is the HMAC we verified, kept so that a
+ * disputed payment can be re-verified against the same bytes months later.
+ */
+export const payments = pgTable(
+  "payments",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    applicationId: uuid("application_id")
+      .notNull()
+      .references(() => applications.id, { onDelete: "cascade" }),
+    /** Denormalised from the application so a payment can be found by owner
+     *  without a join, and so a deleted application still has an auditable
+     *  payer. */
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+
+    /** `order_...`, from Razorpay. One per attempt. */
+    razorpayOrderId: text("razorpay_order_id").notNull(),
+    /** `pay_...`. Absent until somebody actually pays. */
+    razorpayPaymentId: text("razorpay_payment_id"),
+    /** The HMAC Checkout returned, once verified. Kept for re-verification. */
+    signature: text("signature"),
+
+    /** Smallest currency unit. See the header. */
+    amountPaise: bigint("amount_paise", { mode: "number" }).notNull(),
+    currency: text("currency").notNull().default("INR"),
+
+    status: paymentStatus("status").notNull().default("created"),
+    /** Razorpay's reason, verbatim, when it refuses. Not shown to the
+     *  applicant — their message is written for them — but it is the first
+     *  thing anybody looks for when a payment did not work. */
+    failureReason: text("failure_reason"),
+
+    /** How they paid: `card`, `upi`, `netbanking`, `wallet`. Reported by
+     *  Razorpay, useful for reconciliation, and not personal data. */
+    method: text("method"),
+
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    /** When the money actually became ours. Null until `captured`. */
+    capturedAt: timestamp("captured_at", { withTimezone: true }),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("payments_order_idx").on(table.razorpayOrderId),
+    index("payments_application_idx").on(table.applicationId),
+    index("payments_user_idx").on(table.userId),
+  ],
+);
+
+/**
  * Every status change, with who made it. This is what turns
  * `lib/application/status.ts`'s unsupported statuses into supported ones: the
  * system cannot observe a consulate, but it can observe a member of staff
@@ -601,3 +714,4 @@ export type TravellerRow = typeof travellers.$inferSelect;
 export type DocumentRow = typeof documents.$inferSelect;
 export type StaffUserRow = typeof staffUsers.$inferSelect;
 export type ApplicationEventRow = typeof applicationEvents.$inferSelect;
+export type PaymentRow = typeof payments.$inferSelect;

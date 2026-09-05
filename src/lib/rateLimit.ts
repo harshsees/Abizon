@@ -64,6 +64,17 @@ export const LIMITS = {
 
   /** Writes to an application draft. Generous — the apply flow autosaves. */
   applicationWritePerUser: { limit: 300, windowSeconds: 3600 },
+
+  /**
+   * Razorpay orders opened by one applicant.
+   *
+   * Low, because opening an order is a write to somebody else's system that we
+   * are judged on. A person paying for one application legitimately opens two
+   * or three — a card declined, a method changed, a tab reloaded — and twenty
+   * an hour is a dashboard full of abandoned orders, which is exactly the
+   * pattern a payment provider's fraud review looks for.
+   */
+  paymentOrderPerUser: { limit: 20, windowSeconds: 3600 },
 } as const satisfies Record<string, Window>;
 
 export type LimitName = keyof typeof LIMITS;

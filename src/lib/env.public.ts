@@ -30,10 +30,41 @@ export const publicEnv = {
 
   /** Sentry's browser DSN. A DSN is not a secret — it is a write-only endpoint. */
   sentryDsn: process.env.NEXT_PUBLIC_SENTRY_DSN ?? "",
+
+  /**
+   * Razorpay's merchant key id.
+   *
+   * Public in the strongest sense — Checkout puts it in the page itself, and it
+   * authenticates nothing; the secret that does is in `env.ts` and stays there.
+   *
+   * It is read HERE so the browser can answer "is a gateway configured" without
+   * a round trip. The apply flow is a client component from the route down, so
+   * `paymentIsPreview()` — which decides between the live checkout and the
+   * preview card form — has no server to ask.
+   *
+   * The value used for the actual Checkout call comes back from
+   * `createPaymentOrderAction` rather than from here. Same variable, but the
+   * order and the key it was created under should travel together: a key read
+   * from the bundle and an order created on the server are two facts that can
+   * be from different deployments, and Razorpay rejects that pairing in a way
+   * nobody would enjoy debugging.
+   */
+  razorpayKeyId: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID ?? "",
 } as const;
 
 export const publicCapabilities = {
   turnstile: publicEnv.turnstileSiteKey.length > 0,
   analytics: publicEnv.posthogKey.length > 0,
   errorReporting: publicEnv.sentryDsn.length > 0,
+
+  /**
+   * Can this deployment take money?
+   *
+   * The browser's half of `capabilities.payments()` in `env.ts`, and it
+   * deliberately checks only the key id — the secret is not here and must never
+   * be. The two can therefore disagree in exactly one way: a deployment with a
+   * key id and no secret. `env.ts` refuses that deploy in production, which is
+   * the right place to catch it.
+   */
+  payments: publicEnv.razorpayKeyId.length > 0,
 } as const;

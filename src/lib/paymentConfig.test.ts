@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  PAYMENT_GATEWAY,
   PAYMENT_METHODS,
   PAYMENT_PREVIEW_NOTICE,
   PAYMENT_PREVIEW_RECEIPT_STAMP,
   paymentEnabled,
+  paymentGateway,
   paymentIsPreview,
   paymentMethod,
 } from "./paymentConfig";
@@ -27,10 +27,16 @@ import {
 describe("payment mode", () => {
   it("is internally consistent", () => {
     // preview is derived from the gateway, so the two cannot disagree.
-    expect(paymentIsPreview).toBe(PAYMENT_GATEWAY === "none");
+    expect(paymentIsPreview()).toBe(paymentGateway() === "none");
+  });
 
-    // A named gateway is always enabled; "none" is enabled only in preview.
-    if (PAYMENT_GATEWAY !== "none") expect(paymentEnabled).toBe(true);
+  it("is in preview under this suite, because the runner has no keys", () => {
+    // Vitest runs without NEXT_PUBLIC_RAZORPAY_KEY_ID, so the disclosure
+    // assertions below are reached rather than skipped. If this ever fails,
+    // the test environment has acquired real payment keys and every
+    // `if (!paymentIsPreview()) return;` below has silently stopped testing
+    // anything — which is the failure mode those early returns invite.
+    expect(paymentIsPreview()).toBe(true);
   });
 
   it("shows the step, in one mode or the other", () => {
@@ -42,14 +48,14 @@ describe("payment mode", () => {
 
 describe("preview disclosures", () => {
   it("keeps both disclosures while no gateway answers", () => {
-    if (!paymentIsPreview) return;
+    if (!paymentIsPreview()) return;
 
     expect(PAYMENT_PREVIEW_NOTICE.trim().length).toBeGreaterThan(0);
     expect(PAYMENT_PREVIEW_RECEIPT_STAMP.trim().length).toBeGreaterThan(0);
   });
 
   it("says plainly that no card is charged, rather than hinting at it", () => {
-    if (!paymentIsPreview) return;
+    if (!paymentIsPreview()) return;
 
     // The applicant has their wallet out. "Coming soon" is not the same
     // sentence as "your card will not be charged", and only one of them
@@ -62,7 +68,7 @@ describe("preview disclosures", () => {
   });
 
   it("stamps the receipt so it cannot be read as a record on its own", () => {
-    if (!paymentIsPreview) return;
+    if (!paymentIsPreview()) return;
 
     // The receipt outlives the screen — screenshotted, or forwarded to somebody
     // who never saw the notice on the form. It has to carry the disclaimer
