@@ -112,16 +112,20 @@
   --color-primary-subtle-foreground: var(--amber-800);
   --color-primary-border: var(--amber-200);
 
-  /* The wordmark, and only the wordmark.
-     It is a role of its own rather than `--color-primary` because the two want
-     opposite things. `primary` is amber-700 so that body text and filled CTAs
-     clear 4.5:1, and at that step the amber has gone brown — correct for a
-     button, wrong for a logo that is supposed to read yellow. amber-600 is the
-     lightest step that still clears the 3:1 bar large text is held to, which is
-     the bar that applies: the mark is set at 20px/700, and the link around it
-     carries its own accessible name, so nothing is lost if the colour is not
-     read at all. */
-  --color-wordmark: var(--amber-600);
+  /* The logo — the peak, the horizon and the word — and nothing else.
+
+     BLACK, NOT AMBER, at the product owner's instruction. It was amber-600,
+     and the long argument that used to sit here was about which step of the
+     amber ramp cleared 3:1 while still reading yellow rather than brown. That
+     question is moot: the mark is set in the same ink as the headings, which
+     is 16.9:1 on the canvas and needs no defending.
+
+     It stays a role of its own rather than becoming `--color-foreground` at
+     every call site, for the reason it was always separate: the logo's colour
+     is a brand decision and the body text's is a legibility one, and they
+     happen to agree today. When they stop agreeing, this is the one line that
+     moves. `--color-primary` remains amber and still paints every button. */
+  --color-wordmark: var(--color-foreground);
 
   /* Informational accent */
   --color-accent: var(--blue-600);

@@ -23,18 +23,19 @@
  *             whole product surface follows — page copy, metadata, email
  *             templates and the legal pages — so the mark and the running text
  *             agree rather than the site spelling its own name two ways.
- *   colour    the brand yellow, as a token. See `--color-wordmark`.
+ *   colour    black, as a token. See `--color-wordmark`, which resolved to
+ *             amber-600 until the mark was redrawn and is the foreground now.
  *
  * `tone` exists for the one place the mark is deliberately quiet — the footer's
- * legal bar, where it is a 12px credit next to a copyright line and painting it
- * brand yellow would make the smallest instance the loudest. It changes the
- * colour and nothing else, so the face and the casing stay put.
+ * legal bar, where it is a 12px credit beside a copyright line and full-strength
+ * ink would make the smallest instance the loudest thing in the row. It changes
+ * the colour and nothing else, so the face and the casing stay put.
  */
 
 import { cn } from "@/lib/utils";
 
 type WordmarkProps = {
-  /** `brand` is the yellow mark. `muted` is the footer credit. */
+  /** `brand` is the mark at full strength. `muted` is the footer credit. */
   tone?: "brand" | "muted";
   /** Size and any weight override. Everything else is fixed. */
   className?: string;
