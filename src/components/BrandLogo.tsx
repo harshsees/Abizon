@@ -40,8 +40,11 @@
  *
  * The consequence to remember when tuning it: the numbers in `d` are the
  * SKELETON, not the silhouette. The drawn triangle runs from y≈10 to y≈89.5,
- * not the 23→83 the path says, and the counter is ~20 units tall, not the 40
- * its own subpath describes. Change `strokeWidth` and both move.
+ * not the 23→83 the path says, and the counter comes out ~26 units tall
+ * against the 46 its own subpath describes, because the stroke eats 6.5 off
+ * every edge of it. Change `strokeWidth` and both move — in opposite
+ * directions, which is why the first draft's counter shrank to a slot and the
+ * whole mark read as a warning sign rather than a letter.
  *
  * ── Colour ──
  *
@@ -66,7 +69,7 @@ import { Wordmark } from "@/components/Wordmark";
  * inner one a hole rather than an overpaint, so the winding does not matter and
  * the path stays readable.
  */
-const MARK_PATH = "M50 23 L86 83 L14 83 Z M50 40 L72 80 L28 80 Z";
+const MARK_PATH = "M50 23 L86 83 L14 83 Z M50 36 L76 82 L24 82 Z";
 
 type MarkTone = "brand" | "current";
 
