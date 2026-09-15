@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "permissions": {
+    "storage.incoming.write": "Mint an upload URL for raw camera output",
+    "storage.incoming.read": "Read raw camera output back for normalisation",
+    "storage.incoming.delete": "Delete raw camera output once normalised",
+    "storage.documents.write": "Store a normalised document",
+    "storage.documents.read": "Mint a short-lived URL to view a stored document",
+    "storage.documents.delete": "Delete a stored document",
+    "jobs.create": "Queue a background job",
+    "jobs.read": "Read the status and result of a job",
+    "ai.invoke": "Queue a Claude (Bedrock) completion"
+  },
+  "roles": {
+    "applicant": {
+      "description": "A signed-in applicant, acting through the web app. Storage keys are further restricted to the prefix carried in their token.",
+      "inherits": [],
+      "permissions": [
+        "storage.incoming.write",
+        "storage.incoming.read",
+        "storage.incoming.delete",
+        "storage.documents.write",
+        "storage.documents.delete",
+        "jobs.read"
+      ]
+    },
+    "viewer": {
+      "description": "Staff: read the queue and view documents; change nothing.",
+      "inherits": [],
+      "permissions": ["storage.documents.read", "jobs.read"]
+    },
+    "processor": {
+      "description": "Staff: everything a viewer can, plus queue jobs and use the AI assistant.",
+      "inherits": ["viewer"],
+      "permissions": ["jobs.create", "ai.invoke"]
+    },
+    "admin": {
+      "description": "Staff: everything a processor can, plus delete documents.",
+      "inherits": ["processor"],
+      "permissions": ["storage.documents.delete"]
+    },
+    "system": {
+      "description": "The web app's own scheduled jobs (retention, purge). Never a person.",
+      "inherits": [],
+      "permissions": ["*"]
+    }
+  }
+}

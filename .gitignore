@@ -63,3 +63,13 @@ public/tesseract/
 
 # Reference material dropped in the repo root by the product owner.
 /payment v2.zip
+
+# Python backend
+backend/.venv/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Production environment files, written on the server from SSM Parameter Store.
+/deploy/env/
