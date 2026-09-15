@@ -265,7 +265,7 @@ export const documentUrlAction = staffAction
   .action(async ({ parsedInput }) => {
     const staff = await requireRole("viewer");
 
-    const url = await documentViewUrl(parsedInput.storagePath);
+    const url = await documentViewUrl(parsedInput.storagePath, staff);
     if (!url) userError("That document could not be opened.");
 
     await audit({

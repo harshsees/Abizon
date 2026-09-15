@@ -74,11 +74,19 @@ const schema = z.object({
    *  rows while new writes use the current key. */
   DATA_ENCRYPTION_KEY_PREVIOUS: z.string().optional(),
 
-  /* --- Documents --------------------------------------------------------- */
-  SUPABASE_URL: z.string().url().optional(),
-  /** Server only. Bypasses row-level security, so it never reaches a client
-   *  component and never appears in a NEXT_PUBLIC_ variable. */
-  SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
+  /* --- Backend service: documents on S3, background jobs ----------------- */
+  /** Internal URL of the Python service, e.g. `http://api:8000` on the Docker
+   *  network. Never a public hostname — the service is not exposed. */
+  BACKEND_URL: z.string().url().optional(),
+  /** Signs the 60-second token on every call to the backend. The same value as
+   *  `SERVICE_JWT_SECRET` in the backend's environment, and separate from
+   *  `AUTH_SECRET` and `OPS_SESSION_SECRET`, so no cookie secret can mint one. */
+  SERVICE_JWT_SECRET: z.string().min(32).optional(),
+  /** `https://<bucket>.s3.<region>.amazonaws.com`. Read at *build* time by
+   *  `next.config.ts` for the Content-Security-Policy; validated here so a
+   *  production deploy without it fails loudly instead of silently blocking
+   *  every upload in the browser. */
+  STORAGE_ORIGIN: z.string().url().optional(),
 
   /* --- SMS --------------------------------------------------------------- */
   SMS_PROVIDER: z.enum(["console", "memory", "msg91"]).default("console"),
@@ -173,8 +181,12 @@ const PRODUCTION_REQUIRED: Array<{ key: keyof Env; because: string }> = [
   { key: "AUTH_SECRET", because: "sessions cannot be signed and codes cannot be hashed" },
   { key: "DATABASE_URL", because: "the in-memory auth store is silently wrong on serverless" },
   { key: "DATA_ENCRYPTION_KEY", because: "passport numbers would be written in plaintext" },
-  { key: "SUPABASE_URL", because: "documents cannot be stored" },
-  { key: "SUPABASE_SERVICE_ROLE_KEY", because: "documents cannot be stored" },
+  { key: "BACKEND_URL", because: "documents cannot be stored" },
+  { key: "SERVICE_JWT_SECRET", because: "the backend service cannot be called" },
+  {
+    key: "STORAGE_ORIGIN",
+    because: "the browser's upload to S3 is blocked by the Content-Security-Policy",
+  },
   { key: "CRON_SECRET", because: "the retention and purge endpoints would be public" },
   {
     key: "TURNSTILE_SECRET_KEY",
@@ -198,6 +210,11 @@ const CONDITIONAL: Array<{ when: (env: Env) => boolean; require: Array<keyof Env
       label: 'SMS_PROVIDER="msg91"',
       when: (env) => env.SMS_PROVIDER === "msg91",
       require: ["MSG91_AUTH_KEY", "MSG91_SENDER_ID", "MSG91_DLT_TEMPLATE_ID"],
+    },
+    {
+      label: "BACKEND_URL is set",
+      when: (env) => Boolean(env.BACKEND_URL),
+      require: ["SERVICE_JWT_SECRET"],
     },
     {
       label: "UPSTASH_REDIS_REST_URL is set",
@@ -324,7 +341,7 @@ export function env(): Env {
 export const capabilities = {
   database: () => Boolean(env().DATABASE_URL),
   encryption: () => Boolean(env().DATA_ENCRYPTION_KEY),
-  storage: () => Boolean(env().SUPABASE_URL && env().SUPABASE_SERVICE_ROLE_KEY),
+  storage: () => Boolean(env().BACKEND_URL && env().SERVICE_JWT_SECRET),
   email: () => Boolean(env().RESEND_API_KEY && env().EMAIL_FROM),
   turnstile: () => Boolean(env().TURNSTILE_SECRET_KEY),
   distributedRateLimit: () =>

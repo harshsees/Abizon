@@ -1,5 +1,14 @@
 -- Storage buckets and row-level security.
 --
+-- ── A NO-OP OFF SUPABASE, since September 2026 ──
+--
+-- Documents moved to S3 (see `backend/app/services/storage.py`), and the
+-- database to RDS, which has no `storage` schema. Both statements below are
+-- therefore guarded on `storage.buckets` existing: on RDS this migration
+-- records itself as applied and does nothing, rather than failing on a table
+-- that is not there and blocking 0002 and 0003 behind it. It is kept, not
+-- deleted, because Drizzle applies migrations by position in the journal.
+--
 -- HAND-WRITTEN, not generated. `drizzle-kit` manages the tables declared in
 -- `schema.ts`; Supabase Storage lives in the `storage` schema, which Drizzle
 -- does not and should not know about. Putting it here anyway means the whole
@@ -25,26 +34,35 @@
 -- `public = false` on both. There is no such thing as a passport scan that is
 -- fine to leave publicly addressable, and a bucket flipped to public by
 -- accident is not recoverable — the URLs are already out.
-insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-values
-  (
-    'incoming',
-    'incoming',
-    false,
-    15728640, -- 15MB. Also checked when the upload ticket is issued, so a large
-              -- file fails with a readable message before the upload rather
-              -- than after it. This is the limit that actually binds.
-    array['image/jpeg', 'image/png', 'image/webp']
-  ),
-  (
-    'documents',
-    'documents',
-    false,
-    15728640,
-    -- Only ever written by the normaliser, which always emits JPEG.
-    array['image/jpeg']
-  )
-on conflict (id) do nothing;
+do $$
+begin
+  -- Not Supabase: there are no buckets to create. See the header.
+  if to_regclass('storage.buckets') is null then
+    return;
+  end if;
+
+  insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+  values
+    (
+      'incoming',
+      'incoming',
+      false,
+      15728640, -- 15MB. Also checked when the upload ticket is issued, so a large
+                -- file fails with a readable message before the upload rather
+                -- than after it. This is the limit that actually binds.
+      array['image/jpeg', 'image/png', 'image/webp']
+    ),
+    (
+      'documents',
+      'documents',
+      false,
+      15728640,
+      -- Only ever written by the normaliser, which always emits JPEG.
+      array['image/jpeg']
+    )
+  on conflict (id) do nothing;
+end
+$$;
 --> statement-breakpoint
 
 -- --------------------------------------------------------------------------
@@ -90,6 +108,11 @@ declare
   rls_on boolean;
   offenders text;
 begin
+  -- Not Supabase: nothing to assert. See the header.
+  if to_regclass('storage.objects') is null then
+    return;
+  end if;
+
   select relrowsecurity into rls_on from pg_class where oid = 'storage.objects'::regclass;
 
   if not rls_on then

@@ -474,10 +474,11 @@ export function useApplicationSync(input: SyncInput): ApplicationSync {
         }
 
         /**
-         * Straight to Supabase. The bytes never touch a function of ours — see
-         * the header of `lib/storage/documents.ts` for the two reasons, of
-         * which the binding one is that Vercel caps a function's request body
-         * at about 4.5MB and a phone camera passport scan is routinely larger.
+         * Straight to S3. The bytes never touch a server of ours — see the
+         * header of `lib/storage/documents.ts` for the two reasons, of which
+         * the binding one is that request bodies are capped well below the
+         * size of a phone camera passport scan. The URL was signed with this
+         * exact content type, so the header below is not optional.
          */
         const put = await fetch(ticket.data.uploadUrl, {
           method: "PUT",

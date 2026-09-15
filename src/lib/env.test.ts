@@ -42,7 +42,8 @@ describe("a blank variable is an absent one", () => {
     // on the first of them.
     process.env.DATABASE_URL = "";
     process.env.DIRECT_URL = "";
-    process.env.SUPABASE_URL = "";
+    process.env.BACKEND_URL = "";
+    process.env.STORAGE_ORIGIN = "";
     process.env.UPSTASH_REDIS_REST_URL = "";
     process.env.SITE_URL = "";
 
@@ -50,17 +51,17 @@ describe("a blank variable is an absent one", () => {
 
     expect(() => env()).not.toThrow();
     expect(env().DATABASE_URL).toBeUndefined();
-    expect(env().SUPABASE_URL).toBeUndefined();
+    expect(env().BACKEND_URL).toBeUndefined();
   });
 
   it("treats whitespace as blank, because a trailing space is invisible", async () => {
     // This one is worse than an empty value: `"  "` would satisfy a bare string
     // check and then fail at connection time, a long way from the cause.
-    process.env.SUPABASE_SERVICE_ROLE_KEY = "   ";
+    process.env.SERVICE_JWT_SECRET = "   ";
 
     const { env } = await loadEnvModule();
 
-    expect(env().SUPABASE_SERVICE_ROLE_KEY).toBeUndefined();
+    expect(env().SERVICE_JWT_SECRET).toBeUndefined();
   });
 
   it("reports the capability as off rather than misconfigured", async () => {
@@ -88,10 +89,10 @@ describe("a blank variable is an absent one", () => {
 });
 
 describe("a value that is present is still validated", () => {
-  it("rejects a Supabase dashboard URL pasted in as a connection string", async () => {
+  it("rejects a console URL pasted in as a connection string", async () => {
     // The mistake this check exists for. Blank must not be an excuse to stop
     // catching a wrong value that is genuinely there.
-    process.env.DATABASE_URL = "https://supabase.com/dashboard/project/abcd";
+    process.env.DATABASE_URL = "https://ap-south-1.console.aws.amazon.com/rds/home#database:id=abizon";
 
     const { env } = await loadEnvModule();
 
@@ -100,12 +101,12 @@ describe("a value that is present is still validated", () => {
 
   it("names every invalid variable at once, not just the first", async () => {
     process.env.DATABASE_URL = "not-a-connection-string";
-    process.env.SUPABASE_URL = "not-a-url";
+    process.env.BACKEND_URL = "not-a-url";
 
     const { env } = await loadEnvModule();
 
     // An operator fixing one variable per deploy is the reason this collects.
-    expect(() => env()).toThrow(/DATABASE_URL[\s\S]*SUPABASE_URL/);
+    expect(() => env()).toThrow(/DATABASE_URL[\s\S]*BACKEND_URL/);
   });
 });
 

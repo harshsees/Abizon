@@ -5,15 +5,11 @@ import { randomUUID } from "node:crypto";
 import { and, eq, isNull } from "drizzle-orm";
 
 import { audit } from "@/lib/audit";
+import { BackendError, type BackendPrincipal, type StaffRole } from "@/lib/backend/client";
 import { requireDb } from "@/lib/db/client";
 import { applications, documentKind, documents, travellers } from "@/lib/db/schema";
 import { checkLimit } from "@/lib/rateLimit";
-import {
-  ACCEPTED_UPLOAD_TYPES,
-  BUCKETS,
-  MAX_UPLOAD_BYTES,
-  requireStorage,
-} from "./client";
+import { ACCEPTED_UPLOAD_TYPES, MAX_UPLOAD_BYTES, objectStore, type Area } from "./client";
 import { normaliseDocumentImage } from "./normalise";
 
 /**
@@ -25,28 +21,34 @@ import { normaliseDocumentImage } from "./normalise";
  * stores it. It does not work and it is worth knowing why before someone
  * simplifies it back:
  *
- *   1. Server Actions cap request bodies at 1MB by default and Vercel caps
- *      function request bodies at about 4.5MB regardless. A phone camera
- *      passport scan is routinely larger than both.
- *   2. Every byte would travel through a billed function twice — in, then out
- *      to storage — for no benefit, since the bytes are not inspected on the
- *      way past.
+ *   1. Server Actions cap request bodies at 1MB by default, and the reverse
+ *      proxy in front of the app caps them again. A phone camera passport scan
+ *      is routinely larger than both.
+ *   2. Every byte would travel through this server twice — in, then out to
+ *      storage — for no benefit, since the bytes are not inspected on the way
+ *      past.
  *
- * So: the server issues a **signed upload URL** scoped to one path, the browser
- * PUTs to Supabase directly, and then tells us it is done. The server never
- * sees the upload; it sees a path it minted, in a bucket only it can read.
+ * So: the backend issues a **presigned S3 upload URL** scoped to one key, the
+ * browser PUTs to S3 directly, and then tells us it is done. This server never
+ * sees the upload; it sees a key it composed, in a bucket only the backend can
+ * read.
  *
  * ── The three-step shape, and the failure it is built around ──
  *
- *   ticket   → authorise, decide the path, mint a short-lived upload URL
- *   upload   → browser to Supabase, no function involved
- *   finalise → download, normalise, store, record
+ *   ticket   → authorise, decide the key, get a short-lived upload URL
+ *   upload   → browser to S3, no server of ours involved
+ *   finalise → read back, normalise, store, record
  *
  * The interesting case is an applicant who uploads and then closes the tab.
- * There is now an object in `incoming` with no database row. That is fine and
- * by design: `incoming` is emptied daily by the retention job, and a document
- * only exists once `finalise` has written the row. An orphan file expires; an
- * orphan row would be a broken document forever.
+ * There is now an object in `incoming/` with no database row. That is fine and
+ * by design: the backend purges `incoming/` hourly, and a document only exists
+ * once `finalise` has written the row. An orphan file expires; an orphan row
+ * would be a broken document forever.
+ *
+ * ── Who the backend is told is asking ──
+ *
+ * The applicant, with the key prefix of the one traveller this server has just
+ * verified they own. See `lib/backend/client.ts`.
  */
 
 /**
@@ -61,10 +63,9 @@ import { normaliseDocumentImage } from "./normalise";
 export type DocumentKind = (typeof documentKind.enumValues)[number];
 
 export type UploadTicket = {
-  /** Where the browser PUTs. Expires in minutes, not hours. */
+  /** Where the browser PUTs, with `Content-Type` set to what was declared.
+   *  Expires in minutes, not hours. */
   uploadUrl: string;
-  /** Supabase's one-time token for that URL. */
-  token: string;
   /** Passed back to `finaliseUpload` — the server re-derives everything else
    *  from it rather than trusting a second set of claims from the client. */
   path: string;
@@ -115,6 +116,25 @@ async function assertOwnedTraveller(
   return row;
 }
 
+/** The only principal an applicant's storage call is ever made as. The prefix
+ *  comes from ids `assertOwnedTraveller` has just verified, never from input. */
+function applicantPrincipal(userId: string, applicationId: string, travellerId: string): BackendPrincipal {
+  return { type: "applicant", id: userId, keyPrefix: `${applicationId}/${travellerId}/` };
+}
+
+/**
+ * Cleanup that must not fail the applicant's upload. A raw file left behind is
+ * collected by the hourly purge; a replaced document left behind is logged,
+ * because nothing else will find it.
+ */
+async function removeQuietly(principal: BackendPrincipal, area: Area, keys: string[]): Promise<void> {
+  try {
+    await objectStore.remove(principal, area, keys);
+  } catch (error) {
+    console.error(`[documents] could not remove ${keys.length} ${area} object(s)`, error instanceof Error ? error.message : error);
+  }
+}
+
 /* -------------------------------------------------------------------------- */
 /* 1 — the ticket                                                              */
 /* -------------------------------------------------------------------------- */
@@ -136,7 +156,7 @@ export async function issueUploadTicket(input: {
   // Both checks are advisory — the client controls what it actually PUTs — and
   // both are worth making, because catching the wrong file here produces a
   // useful message before a 12MB upload rather than after it. The binding
-  // versions are the bucket's own limits and `normaliseDocumentImage`.
+  // versions are the backend's size check on read-back and `normaliseDocumentImage`.
   if (!ACCEPTED_UPLOAD_TYPES.includes(input.contentType as (typeof ACCEPTED_UPLOAD_TYPES)[number])) {
     throw new Error("Upload a JPEG, PNG or WebP image.");
   }
@@ -149,20 +169,23 @@ export async function issueUploadTicket(input: {
     );
   }
 
-  // The path is composed by the server from ids it has just verified. Nothing
+  // The key is composed by the server from ids it has just verified. Nothing
   // from the client reaches it — a client-supplied filename is how a `../`
   // ends up in an object key.
   const path = `${applicationId}/${input.travellerId}/${input.kind}-${randomUUID()}`;
 
-  const { data, error } = await requireStorage()
-    .storage.from(BUCKETS.incoming)
-    .createSignedUploadUrl(path);
-
-  if (error || !data) {
-    throw new Error(`Could not prepare the upload: ${error?.message ?? "unknown error"}`);
+  try {
+    const presigned = await objectStore.uploadUrl(
+      applicantPrincipal(input.userId, applicationId, input.travellerId),
+      "incoming",
+      path,
+      input.contentType,
+    );
+    return { uploadUrl: presigned.url, path };
+  } catch (error) {
+    console.error("[documents] could not issue upload url", error instanceof Error ? error.message : error);
+    throw new Error("Could not prepare the upload. Try again.");
   }
-
-  return { uploadUrl: data.signedUrl, token: data.token, path: data.path };
 }
 
 /* -------------------------------------------------------------------------- */
@@ -181,7 +204,7 @@ export async function finaliseUpload(input: {
 }): Promise<FinaliseResult> {
   const { applicationId } = await assertOwnedTraveller(input.userId, input.travellerId);
   const db = requireDb();
-  const client = requireStorage();
+  const principal = applicantPrincipal(input.userId, applicationId, input.travellerId);
 
   // The path was minted by `issueUploadTicket` from verified ids, so re-deriving
   // its expected prefix and comparing is a complete check: a client that hands
@@ -191,21 +214,26 @@ export async function finaliseUpload(input: {
     return { ok: false, error: "That upload does not belong to this application." };
   }
 
-  const download = await client.storage.from(BUCKETS.incoming).download(input.path);
-
-  if (download.error || !download.data) {
+  let original: Buffer;
+  try {
+    original = await objectStore.read(principal, "incoming", input.path);
+  } catch (error) {
+    // 413: the backend measured the object, found it over the limit, and has
+    // already deleted it. Its message says how large it was.
+    if (error instanceof BackendError && error.status === 413) {
+      return { ok: false, error: error.message };
+    }
     return {
       ok: false,
       error: "We could not find that upload. It may have expired — try again.",
     };
   }
 
-  const original = Buffer.from(await download.data.arrayBuffer());
   const normalised = await normaliseDocumentImage(original);
 
   // Whatever happens next, the raw file goes. It has served its only purpose
   // and it is the copy that still carries the applicant's GPS coordinates.
-  await client.storage.from(BUCKETS.incoming).remove([input.path]);
+  await removeQuietly(principal, "incoming", [input.path]);
 
   if (!normalised.ok) {
     return { ok: false, error: normalised.error };
@@ -213,17 +241,10 @@ export async function finaliseUpload(input: {
 
   const storedPath = `${applicationId}/${input.travellerId}/${input.kind}-${randomUUID()}.jpg`;
 
-  const upload = await client.storage
-    .from(BUCKETS.documents)
-    .upload(storedPath, normalised.bytes, {
-      contentType: normalised.contentType,
-      // Never overwrite. A path collision would mean a random UUID repeated,
-      // which does not happen — and if it somehow did, failing is better than
-      // one applicant's passport quietly replacing another's.
-      upsert: false,
-    });
-
-  if (upload.error) {
+  try {
+    await objectStore.write(principal, "documents", storedPath, normalised.bytes, normalised.contentType);
+  } catch (error) {
+    console.error("[documents] could not store document", error instanceof Error ? error.message : error);
     return { ok: false, error: "We could not store that document. Try again." };
   }
 
@@ -258,7 +279,7 @@ export async function finaliseUpload(input: {
     .returning({ id: documents.id });
 
   if (previous) {
-    await client.storage.from(BUCKETS.documents).remove([previous.storagePath]);
+    await removeQuietly(principal, "documents", [previous.storagePath]);
     await db
       .update(documents)
       .set({ deletedAt: new Date() })
@@ -291,28 +312,26 @@ export async function finaliseUpload(input: {
 /* 3 — viewing                                                                 */
 /* -------------------------------------------------------------------------- */
 
-/** Sixty seconds. Long enough to render an image, short enough that a URL
- *  pasted into a support ticket is dead before anyone clicks it. */
-const VIEW_URL_TTL_SECONDS = 60;
-
 /**
  * A URL is minted per view and never stored. A stored URL outlives the
  * signature inside it and becomes either a broken link or — if the expiry was
  * generous — a passport scan reachable by anyone who has ever seen the address.
  * The `documents` table holds the *path*, and this turns a path into sixty
- * seconds of access.
+ * seconds of access (the backend's `VIEW_URL_TTL_SECONDS`).
+ *
+ * The staff member's role is passed through so the backend's RBAC makes its own
+ * decision; `requireRole` has already made this app's.
  */
-export async function documentViewUrl(storagePath: string): Promise<string | null> {
-  const { data, error } = await requireStorage()
-    .storage.from(BUCKETS.documents)
-    .createSignedUrl(storagePath, VIEW_URL_TTL_SECONDS);
-
-  if (error || !data) {
-    console.error("[documents] could not sign view url", error);
+export async function documentViewUrl(
+  storagePath: string,
+  staff: { id: string; role: StaffRole },
+): Promise<string | null> {
+  try {
+    return await objectStore.viewUrl({ type: "staff", id: staff.id, role: staff.role }, storagePath);
+  } catch (error) {
+    console.error("[documents] could not sign view url", error instanceof Error ? error.message : error);
     return null;
   }
-
-  return data.signedUrl;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -323,6 +342,10 @@ export async function documentViewUrl(storagePath: string): Promise<string | nul
  * Removes the object and marks the row. The row survives on purpose: "we held a
  * passport scan for this application and deleted it on this date" is a claim the
  * client may have to make to a regulator, and a deleted row cannot make it.
+ *
+ * The backend is asked as `system`: by the time this runs the caller — an
+ * erasure, a retention run, an admin action — has already decided the deletion
+ * is allowed, and `actor` is what the audit log records.
  */
 export async function deleteDocument(documentId: string, actor: {
   type: "applicant" | "staff" | "system";
@@ -338,7 +361,7 @@ export async function deleteDocument(documentId: string, actor: {
 
   if (!row) return;
 
-  await requireStorage().storage.from(BUCKETS.documents).remove([row.storagePath]);
+  await objectStore.remove({ type: "system" }, "documents", [row.storagePath]);
   await db.update(documents).set({ deletedAt: new Date() }).where(eq(documents.id, row.id));
 
   await audit({

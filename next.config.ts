@@ -30,11 +30,11 @@ const countryRedirects = [
 const isDev = process.env.NODE_ENV === "development";
 
 /**
- * THE SUPABASE ORIGIN, and why the CSP has to know about it.
+ * THE DOCUMENTS BUCKET ORIGIN, and why the CSP has to know about it.
  *
- * Documents never pass through a function: the browser `PUT`s straight to a
- * signed Storage URL, and the ops console renders each document from a
- * sixty-second signed `GET`. Both are cross-origin requests to the project's
+ * Documents never pass through a server of ours: the browser `PUT`s straight to
+ * a presigned S3 URL, and the ops console renders each document from a
+ * sixty-second presigned `GET`. Both are cross-origin requests to the bucket's
  * own hostname, so without it here the upload is blocked by `connect-src` and
  * the viewer by `img-src`.
  *
@@ -44,16 +44,21 @@ const isDev = process.env.NODE_ENV === "development";
  * "the upload did not complete — check your connection", which is a lie about
  * their network. Nothing appears in any server log.
  *
- * Derived from `SUPABASE_URL` rather than wildcarded to `*.supabase.co`,
- * because `https://*.supabase.co` would authorise every Supabase project on
- * the internet as a destination for an injected upload — and the point of
- * enumerating hosts is that the list is exhaustive. Read from `process.env`
- * directly for the same reason `siteUrl()` does: this file is evaluated during
- * `next build`, and going through `env()` would run the production requirement
- * check on a CI runner that has no secrets.
+ * `STORAGE_ORIGIN` is exactly `https://<bucket>.s3.<region>.amazonaws.com` —
+ * the regional, virtual-hosted form the backend signs (`backend/app/services/aws.py`
+ * pins its endpoint for this reason). Not `https://*.amazonaws.com`, which would
+ * authorise every bucket on AWS as a destination for an injected upload — and
+ * the point of enumerating hosts is that the list is exhaustive.
+ *
+ * Read from `process.env` directly for the same reason `siteUrl()` does: this
+ * file is evaluated during `next build`, and going through `env()` would run
+ * the production requirement check on a CI runner that has no secrets. And
+ * *because* it is evaluated at build time, the value is baked into the image —
+ * the `Dockerfile` takes it as a build argument, and changing the bucket means
+ * rebuilding.
  */
-const supabaseOrigin = (() => {
-  const raw = process.env.SUPABASE_URL;
+const storageOrigin = (() => {
+  const raw = process.env.STORAGE_ORIGIN;
   if (!raw) return null;
 
   try {
@@ -65,7 +70,7 @@ const supabaseOrigin = (() => {
   }
 })();
 
-const supabaseSource = supabaseOrigin ? ` ${supabaseOrigin}` : "";
+const storageSource = storageOrigin ? ` ${storageOrigin}` : "";
 
 /**
  * CONTENT SECURITY POLICY — and the trade-off that decided its shape.
@@ -149,22 +154,22 @@ const csp = [
   // end-to-end run reporting a CSP violation on `flagcdn.com/w80/th.png`, which
   // is the sort of breakage that shows up as "the flags stopped loading" three
   // days after a deploy and nowhere in any log.
-  // Supabase is appended for the document viewer in the ops console, which
-  // renders passport scans from signed Storage URLs.
-  `img-src 'self' data: blob: https://images.unsplash.com https://upload.wikimedia.org https://flagcdn.com${supabaseSource}`,
+  // The documents bucket is appended for the viewer in the ops console, which
+  // renders passport scans from presigned S3 URLs.
+  `img-src 'self' data: blob: https://images.unsplash.com https://upload.wikimedia.org https://flagcdn.com${storageSource}`,
 
   "font-src 'self' data:",
   "media-src 'self' blob:",
 
   // Turnstile's verification calls; Sentry's ingest; PostHog's capture endpoint.
   // Each is only reached if the corresponding key is configured.
-  // Supabase is appended for the direct browser-to-Storage upload.
+  // The documents bucket is appended for the direct browser-to-S3 upload.
   //
   // Razorpay: `api.razorpay.com` is what Checkout calls to create and poll a
   // payment; `lumberjack.razorpay.com` is their telemetry, and omitting it does
   // not break payment but does fill the console with violations on every
   // checkout — which is how a real violation gets missed.
-  `connect-src 'self' https://challenges.cloudflare.com https://*.ingest.sentry.io https://*.ingest.de.sentry.io https://*.posthog.com https://api.razorpay.com https://lumberjack.razorpay.com${supabaseSource}`,
+  `connect-src 'self' https://challenges.cloudflare.com https://*.ingest.sentry.io https://*.ingest.de.sentry.io https://*.posthog.com https://api.razorpay.com https://lumberjack.razorpay.com${storageSource}`,
 
   // The Turnstile challenge renders in an iframe. Without this the widget shows
   // an empty box and every login fails.
@@ -202,8 +207,8 @@ const securityHeaders = [
   },
 
   // Stops a browser from deciding an uploaded file is HTML because it looks
-  // like HTML. Relevant here: documents are served through signed URLs from
-  // Supabase, but this closes the same door on anything served from our origin.
+  // like HTML. Relevant here: documents are served through presigned URLs from
+  // S3, but this closes the same door on anything served from our origin.
   { key: "X-Content-Type-Options", value: "nosniff" },
 
   // `frame-ancestors` above is the real defence; this is the same rule for
@@ -242,6 +247,11 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: __dirname,
   },
+
+  // A self-contained server in `.next/standalone` with only the traced
+  // node_modules it needs — what the Docker image runs on EC2. Without it the
+  // image would carry the whole dependency tree, dev tooling included.
+  output: "standalone",
 
   // The framework version is not a secret worth keeping, but it is free to stop
   // advertising which release to check advisories against.

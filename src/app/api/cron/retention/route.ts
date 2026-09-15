@@ -4,7 +4,8 @@ import { audit } from "@/lib/audit";
 import { cronAuthorised, cronDenied, cronResponse } from "@/lib/cron";
 import { db } from "@/lib/db/client";
 import { applications, documents, erasureRequests, travellers, users } from "@/lib/db/schema";
-import { BUCKETS, storage } from "@/lib/storage/client";
+import { capabilities } from "@/lib/env";
+import { objectStore } from "@/lib/storage/client";
 
 /**
  * RETENTION AND ERASURE — the DPDP job.
@@ -55,7 +56,7 @@ export async function GET(request: Request) {
   const database = db();
   if (!database) return cronResponse("retention", { skipped: "no database" });
 
-  const client = storage();
+  const storageOn = capabilities.storage();
   const now = new Date();
   const cutoff = new Date(now.getTime() - DOCUMENT_RETENTION_DAYS * 24 * 60 * 60 * 1000);
 
@@ -76,13 +77,15 @@ export async function GET(request: Request) {
   let documentsDeleted = 0;
 
   if (expired.length > 0) {
-    if (client) {
+    if (storageOn) {
       // Storage first, then the row. The other order leaves an object with no
       // row pointing at it, which nothing will ever find or delete — whereas a
       // row whose object is already gone is simply deleted again next run.
-      await client.storage
-        .from(BUCKETS.documents)
-        .remove(expired.map((document) => document.storagePath));
+      await objectStore.remove(
+        { type: "system" },
+        "documents",
+        expired.map((document) => document.storagePath),
+      );
     }
 
     for (const document of expired) {
@@ -128,10 +131,12 @@ export async function GET(request: Request) {
       .innerJoin(applications, eq(applications.id, documents.applicationId))
       .where(and(eq(applications.userId, requestRow.userId), isNull(documents.deletedAt)));
 
-    if (owned.length > 0 && client) {
-      await client.storage
-        .from(BUCKETS.documents)
-        .remove(owned.map((document) => document.storagePath));
+    if (owned.length > 0 && storageOn) {
+      await objectStore.remove(
+        { type: "system" },
+        "documents",
+        owned.map((document) => document.storagePath),
+      );
     }
 
     await database.transaction(async (tx) => {

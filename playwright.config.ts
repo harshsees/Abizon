@@ -139,8 +139,8 @@ export default defineConfig({
        */
       DATABASE_URL: "",
       DIRECT_URL: "",
-      SUPABASE_URL: "",
-      SUPABASE_SERVICE_ROLE_KEY: "",
+      BACKEND_URL: "",
+      SERVICE_JWT_SECRET: "",
 
       // Same reasoning: the suite asserts the shape of the login flow, not
       // Cloudflare's availability, and the test keys in `.env.local` would make

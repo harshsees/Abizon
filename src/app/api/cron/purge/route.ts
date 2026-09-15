@@ -4,32 +4,28 @@ import { audit } from "@/lib/audit";
 import { cronAuthorised, cronDenied, cronResponse } from "@/lib/cron";
 import { db } from "@/lib/db/client";
 import { authChallenges, authSends } from "@/lib/db/schema";
-import { BUCKETS, storage } from "@/lib/storage/client";
 
 /**
- * DAILY HOUSEKEEPING.
+ * HOURLY HOUSEKEEPING.
  * ---------------------------------------------------------------------------
- * Three tables and one bucket grow without limit unless something empties them.
- * None of this is urgent in any single hour, and all of it is expensive after a
- * year of nobody noticing.
+ * Two tables grow without limit unless something empties them. None of this is
+ * urgent in any single hour, and all of it is expensive after a year of nobody
+ * noticing.
  *
- * ── Why daily and not hourly, which is what this wants ──
+ * ── Who calls this ──
  *
- * It was `17 * * * *`. Vercel's Hobby plan permits a cron to run at most once a
- * day and rejects the *whole deployment* when one asks for more — so from the
- * moment this file arrived, every deploy failed with "Hobby accounts are
- * limited to daily cron jobs" and the site froze on its last good build. Days
- * of unrelated work sat on `main` looking pushed and were never live. The
- * schedule is the thing that has to give until the account is on Pro.
+ * Celery beat, in the backend service, at 17 minutes past every hour
+ * (`web-purge` in `backend/app/worker/celery_app.py`), with the same bearer
+ * secret Vercel Cron used to send. On Vercel's Hobby plan this was held to once
+ * a day; that constraint left with Vercel.
  *
- * WHAT THAT COSTS, precisely: raw camera output sits in `incoming` for up to
- * 24 hours instead of up to one. Those are unprocessed passport photographs
- * with EXIF intact, in a private bucket, readable only by the service role.
- * The exposure is the retention window, not access — but it is a real change
- * to a number the DPDP retention story quotes, so it belongs in that
- * conversation rather than in a config file nobody rereads.
+ * ── What moved out ──
  *
- * On Pro, put `17 * * * *` back and delete this note.
+ * Orphaned raw uploads in `incoming/` used to be collected here. The backend
+ * owns the bucket now and purges them itself every hour
+ * (`maintenance.purge_incoming`), with an S3 lifecycle rule as the backstop —
+ * so unprocessed passport photographs with EXIF intact sit for at most an hour,
+ * not a day.
  *
  * ── Why expired challenges are not deleted at expiry ──
  *
@@ -66,40 +62,14 @@ export async function GET(request: Request) {
     .where(lt(authSends.sentAt, new Date(now - 24 * 60 * 60 * 1000)))
     .returning({ id: authSends.id });
 
-  /**
-   * Orphaned uploads. An applicant who uploads and then closes the tab leaves an
-   * object in `incoming` with no database row — see the header of
-   * `lib/storage/documents.ts`, where that is described as fine and by design
-   * precisely because this job exists to collect them.
-   *
-   * A day is generous. Nothing legitimately sits in `incoming` for more than the
-   * few seconds between the browser's PUT and the finalise call.
-   */
-  let orphans = 0;
-  const client = storage();
-
-  if (client) {
-    const { data } = await client.storage.from(BUCKETS.incoming).list("", { limit: 1000 });
-    const stale = (data ?? []).filter((object) => {
-      const created = object.created_at ? Date.parse(object.created_at) : now;
-      return now - created > 24 * 60 * 60 * 1000;
-    });
-
-    if (stale.length > 0) {
-      await client.storage.from(BUCKETS.incoming).remove(stale.map((object) => object.name));
-      orphans = stale.length;
-    }
-  }
-
   await audit({
     action: "retention.challenges_purged",
     actorType: "system",
-    metadata: { challenges: challenges.length, sends: sends.length, orphanUploads: orphans },
+    metadata: { challenges: challenges.length, sends: sends.length },
   });
 
   return cronResponse("purge", {
     challenges: challenges.length,
     sends: sends.length,
-    orphanUploads: orphans,
   });
 }

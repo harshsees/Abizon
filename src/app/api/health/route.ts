@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 
+import { pingBackend } from "@/lib/backend/client";
 import { db } from "@/lib/db/client";
 import { announceDegradedModes, capabilities } from "@/lib/env";
 
@@ -47,13 +48,17 @@ export async function GET() {
     }
   }
 
+  // The backend service answers for documents and background jobs. Liveness
+  // only — it reports its own dependencies on its own /health/ready.
+  const backendReachable = checks.storage ? await pingBackend() : false;
+
   // The database is the only hard dependency; everything else degrades in a
   // documented way. A 503 here should mean "stop sending traffic", not "one
   // optional integration is unconfigured".
   const healthy = !checks.database || databaseReachable;
 
   return Response.json(
-    { status: healthy ? "ok" : "degraded", databaseReachable, configured: checks },
+    { status: healthy ? "ok" : "degraded", databaseReachable, backendReachable, configured: checks },
     {
       status: healthy ? 200 : 503,
       headers: { "Cache-Control": "no-store" },
