@@ -1,0 +1,31 @@
+# Caddy: HTTPS termination and the reverse proxy in front of Next.js.
+#
+# Certificates are issued and renewed automatically (Let's Encrypt) once DNS for
+# SITE_DOMAIN points at this instance's Elastic IP and ports 80/443 are open.
+#
+# X-Forwarded-For: Caddy does not trust an X-Forwarded-For sent by the client;
+# it sets the header to the real peer address. That is what makes the first
+# entry trustworthy for `clientIp()` in src/lib/request.ts, which picks the
+# rate-limit bucket.
+#
+# Security headers are set by the app (next.config.ts) and not repeated here.
+
+{
+	email {$ACME_EMAIL}
+}
+
+www.{$SITE_DOMAIN} {
+	redir https://{$SITE_DOMAIN}{uri} permanent
+}
+
+{$SITE_DOMAIN} {
+	encode zstd gzip
+
+	# Passport scans go browser → S3 directly, so no request through here is
+	# large. This caps what an attacker can make Node buffer.
+	request_body {
+		max_size 2MB
+	}
+
+	reverse_proxy web:3000
+}

@@ -1,0 +1,132 @@
+# LOCAL DEVELOPMENT — the whole backend stack on one machine.
+#
+#   docker compose up --build                  postgres, redis, s3 stand-in, api, worker, beat
+#   docker compose --profile web up --build    …plus the Next.js app in a container
+#
+# Most front-end work is faster with `npm run dev` on the host and this file
+# providing everything behind it. Point the web app at it with, in .env.local:
+#
+#   BACKEND_URL=http://localhost:8000
+#   SERVICE_JWT_SECRET=local-development-service-secret-0123456789
+#   DATABASE_URL=postgres://abizon:abizon@localhost:5432/abizon
+#
+# S3 here is moto, an in-memory stand-in: good for the API and the worker,
+# but its presigned URLs name the `s3` container, which a browser cannot reach.
+# For uploads from a real browser, use a development bucket on AWS.
+#
+# Nothing in this file is a secret, and none of it is used in production —
+# that is deploy/docker-compose.prod.yml.
+
+name: abizon
+
+x-backend: &backend
+  build: ./backend
+  environment: &backend-env
+    ENVIRONMENT: development
+    LOG_LEVEL: INFO
+    ALLOWED_HOSTS: '["api", "localhost", "127.0.0.1"]'
+    DATABASE_URL: postgresql+asyncpg://abizon:abizon@postgres:5432/abizon
+    REDIS_URL: redis://redis:6379/0
+    SERVICE_JWT_SECRET: local-development-service-secret-0123456789
+    AWS_REGION: ap-south-1
+    AWS_ACCESS_KEY_ID: local
+    AWS_SECRET_ACCESS_KEY: local
+    S3_BUCKET: abizon-local-documents
+    S3_ENDPOINT_URL: http://s3:5000
+    WEB_INTERNAL_URL: http://host.docker.internal:3000
+    CRON_SECRET: local-development-cron-secret
+  extra_hosts:
+    - "host.docker.internal:host-gateway"
+  depends_on:
+    postgres:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+    migrate:
+      condition: service_completed_successfully
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: abizon
+      POSTGRES_PASSWORD: abizon
+      POSTGRES_DB: abizon
+    ports: ["5432:5432"]
+    volumes: [postgres-data:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U abizon"]
+      interval: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    ports: ["6379:6379"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      retries: 10
+
+  s3:
+    image: motoserver/moto:5.2.3
+    ports: ["5000:5000"]
+
+  create-bucket:
+    build: ./backend
+    environment: *backend-env
+    depends_on: [s3]
+    restart: "no"
+    command:
+      - python
+      - -c
+      - |
+        import boto3, botocore
+        s3 = boto3.client("s3", endpoint_url="http://s3:5000", region_name="ap-south-1")
+        try:
+            s3.create_bucket(Bucket="abizon-local-documents",
+                             CreateBucketConfiguration={"LocationConstraint": "ap-south-1"})
+        except botocore.exceptions.ClientError as error:
+            if error.response["Error"]["Code"] != "BucketAlreadyOwnedByYou":
+                raise
+
+  migrate:
+    build: ./backend
+    environment: *backend-env
+    command: ["alembic", "upgrade", "head"]
+    restart: "no"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  api:
+    <<: *backend
+    ports: ["8000:8000"]
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+    volumes: ["./backend/app:/srv/app:ro"]
+
+  worker:
+    <<: *backend
+    command: ["celery", "-A", "app.worker.celery_app:celery_app", "worker", "--loglevel", "INFO", "--concurrency", "2"]
+    healthcheck:
+      disable: true
+
+  beat:
+    <<: *backend
+    command: ["celery", "-A", "app.worker.celery_app:celery_app", "beat", "--loglevel", "INFO", "--schedule", "/tmp/celerybeat-schedule"]
+    healthcheck:
+      disable: true
+
+  web:
+    profiles: ["web"]
+    build: .
+    ports: ["3000:3000"]
+    environment:
+      BACKEND_URL: http://api:8000
+      SERVICE_JWT_SECRET: local-development-service-secret-0123456789
+      DATABASE_URL: postgres://abizon:abizon@postgres:5432/abizon
+      CRON_SECRET: local-development-cron-secret
+    depends_on: [api]
+
+volumes:
+  postgres-data:

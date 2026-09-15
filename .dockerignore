@@ -1,0 +1,19 @@
+# The web app image. The backend has its own context and .dockerignore.
+.git
+node_modules
+.next
+backend
+deploy
+infra
+docs
+e2e
+test-results
+playwright-report
+image_video
+video
+*.zip
+*.pdf
+.env*
+!.env.example
+.vercel
+*.tsbuildinfo

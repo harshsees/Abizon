@@ -1,0 +1,115 @@
+# PRODUCTION — one EC2 instance, everything on AWS.
+#
+#   cd /srv/abizon
+#   docker compose -f docker-compose.prod.yml pull
+#   docker compose -f docker-compose.prod.yml --profile ops run --rm migrate-backend
+#   docker compose -f docker-compose.prod.yml --profile ops run --rm migrate-web
+#   docker compose -f docker-compose.prod.yml up -d
+#
+# What runs where (infra/aws/README.md has the full picture):
+#
+#   caddy    :80/:443, automatic HTTPS, proxies to web. The ONLY public port.
+#   web      Next.js. Talks to api over this Docker network.
+#   api      FastAPI. No published port — unreachable from the internet.
+#   worker   Celery worker.
+#   beat     Celery beat. EXACTLY ONE, ever — two would run every scheduled
+#            job twice. Scaling out means more `worker`, never more `beat`.
+#   redis    Celery broker + rate limits. Append-only file on a volume, and
+#            `noeviction`, because an evicted key here is a lost job.
+#
+# Postgres is RDS and documents are S3; neither runs on this host. Credentials
+# for both come from the instance role (S3, Bedrock) and deploy/env/*.env
+# (database passwords, app secrets), written from SSM Parameter Store.
+
+name: abizon
+
+x-logging: &logging
+  driver: awslogs
+  options:
+    awslogs-region: ap-south-1
+    awslogs-group: /abizon/production
+    awslogs-create-group: "true"
+    tag: "{{.Name}}"
+
+x-backend: &backend
+  image: ${BACKEND_IMAGE:?Set BACKEND_IMAGE to the ECR image, e.g. <account>.dkr.ecr.ap-south-1.amazonaws.com/abizon-backend:<git-sha>}
+  env_file: ./env/backend.env
+  restart: unless-stopped
+  logging: *logging
+  depends_on:
+    redis:
+      condition: service_healthy
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      SITE_DOMAIN: ${SITE_DOMAIN:?Set SITE_DOMAIN, e.g. abizon.com}
+      ACME_EMAIL: ${ACME_EMAIL:?Set ACME_EMAIL for certificate expiry notices}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    logging: *logging
+    depends_on: [web]
+
+  web:
+    image: ${WEB_IMAGE:?Set WEB_IMAGE to the ECR image for abizon-web}
+    env_file: ./env/web.env
+    restart: unless-stopped
+    expose: ["3000"]
+    logging: *logging
+    depends_on: [api]
+
+  api:
+    <<: *backend
+    expose: ["8000"]
+
+  worker:
+    <<: *backend
+    command: ["celery", "-A", "app.worker.celery_app:celery_app", "worker", "--loglevel", "INFO", "--concurrency", "2"]
+    healthcheck:
+      disable: true
+
+  beat:
+    <<: *backend
+    command: ["celery", "-A", "app.worker.celery_app:celery_app", "beat", "--loglevel", "INFO", "--schedule", "/tmp/celerybeat-schedule"]
+    healthcheck:
+      disable: true
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory-policy", "noeviction"]
+    volumes: [redis-data:/data]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      retries: 5
+    logging: *logging
+
+  # --- One-off tasks: `--profile ops run --rm <name>` ---------------------------
+
+  migrate-backend:
+    <<: *backend
+    profiles: ["ops"]
+    restart: "no"
+    command: ["alembic", "upgrade", "head"]
+    depends_on: []
+
+  migrate-web:
+    image: ${WEB_MIGRATE_IMAGE:?Set WEB_MIGRATE_IMAGE to the abizon-web image built with --target migrate}
+    profiles: ["ops"]
+    restart: "no"
+    env_file: ./env/web.env
+    logging: *logging
+
+volumes:
+  caddy-data:
+  caddy-config:
+  redis-data:

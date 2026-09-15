@@ -8,6 +8,13 @@ Written 15 August 2026. Companion to `README.md` in this folder.
 > deliberately still outstanding. Read that one first if you are picking the
 > work up.
 
+> **Superseded in part, 15 September 2026.** The client moved hosting to AWS
+> and asked for a Python backend service, so §12's "no Docker, no queue broker,
+> no separate API" no longer holds. Documents are on S3 behind `backend/`
+> (FastAPI, SQLAlchemy, Celery, boto3), the database is RDS, AI calls go to
+> Claude on Bedrock, and Vercel is gone. Read `backend/README.md` and
+> `infra/aws/README.md`. Supabase and Vercel references below are historical.
+
 `README.md` settled five things: Supabase Postgres, our own auth, MSG91 for SMS,
 Razorpay for payments, Vercel for hosting. Those stand and are not re-argued
 here. This document names **everything else the product needs before it can take
