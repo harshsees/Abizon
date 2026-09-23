@@ -251,7 +251,12 @@ const nextConfig: NextConfig = {
   // A self-contained server in `.next/standalone` with only the traced
   // node_modules it needs — what the Docker image runs on EC2. Without it the
   // image would carry the whole dependency tree, dev tooling included.
-  output: "standalone",
+  //
+  // Except on Vercel, which compiles the app into its own build output format
+  // and has no use for a standalone server directory. `VERCEL` is set to "1" in
+  // every build there, and nowhere else — including the Docker build, which is
+  // what keeps the EC2 image identical to what it was.
+  output: process.env.VERCEL ? undefined : "standalone",
 
   // The framework version is not a secret worth keeping, but it is free to stop
   // advertising which release to check advisories against.
