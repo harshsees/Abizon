@@ -147,7 +147,7 @@ export default async function TrackingPage({ params }: Props) {
 
         <div className="mt-8 flex flex-wrap gap-3">
           <a
-            href="mailto:support@abizon.com"
+            href="mailto:support@abizonvisa.com"
             className="inline-flex h-12 items-center rounded-xl border border-border bg-surface px-5 sm:h-11 text-sm font-semibold text-foreground transition-colors hover:bg-surface-sunken"
           >
             Contact support

@@ -1,8 +1,8 @@
 /**
  * PROVISIONING A STAFF ACCOUNT.
  * ---------------------------------------------------------------------------
- *   npx tsx scripts/ops-user.ts create alice@abizon.com "Alice Rao" processor
- *   npx tsx scripts/ops-user.ts disable alice@abizon.com
+ *   npx tsx scripts/ops-user.ts create alice@abizonvisa.com "Alice Rao" processor
+ *   npx tsx scripts/ops-user.ts disable alice@abizonvisa.com
  *   npx tsx scripts/ops-user.ts list
  *
  * ── Why this is a script and not a page in the console ──

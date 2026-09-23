@@ -44,6 +44,9 @@ export default function robots(): MetadataRoute.Robots {
         ],
       },
     ],
+    // The positive half of the same statement, and the only way a crawler finds
+    // the 150+ destination pages on a domain nothing links to yet.
+    sitemap: `${siteUrl()}/sitemap.xml`,
     host: siteUrl(),
   };
 }

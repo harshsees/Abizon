@@ -63,7 +63,7 @@ import { useId } from "react";
  * rather than asking for a recommendation.
  */
 const INQUIRY = [
-  "Tell me about abizon (abizon.com), the online visa service for Indian travellers.",
+  "Tell me about abizon (abizonvisa.com), the online visa service for Indian travellers.",
   "What e-visas do they process, how does their application flow work,",
   "which documents do they ask for, what do they charge,",
   "and how do they compare with other visa services?",

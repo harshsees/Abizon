@@ -2,6 +2,12 @@
 
 Written 15 August 2026. Companion to `IMPLEMENTED.md`, which is what was built.
 
+> **The domain is now `abizonvisa.com`, and it has its own runbook.**
+> `GO-LIVE.md` covers DNS, the TLS certificate, and the dashboard-side domain
+> settings for Resend, Turnstile and Razorpay, in dependency order. Item 2 below
+> is also out of date: Supabase was replaced by RDS Postgres and S3 — see
+> `infra/aws/README.md` for what to create instead.
+
 Everything here needs a human with an account, a document, or a decision. None
 of it is hard. One item takes days and has to start first, and the rest fit
 comfortably into an afternoon.
@@ -187,7 +193,7 @@ the email" then looks identical to "the application vanished".
 ### Steps
 
 1. Create the Resend account at `resend.com`, in the client's name.
-2. Domains → Add Domain → `abizon.com`.
+2. Domains → Add Domain → `abizonvisa.com`.
 3. Resend gives you three DNS records. Add them at whoever runs the DNS
    (Cloudflare, GoDaddy, Route 53):
 
@@ -196,11 +202,11 @@ the email" then looks identical to "the application vanished".
      that name, **merge** it; two SPF records is the same as none.
    - **DKIM** — a `CNAME` (or `TXT`) record Resend generates. Copy it verbatim,
      including any trailing dot your DNS provider requires.
-   - **DMARC** — a `TXT` record at `_dmarc.abizon.com`. Start permissive and
+   - **DMARC** — a `TXT` record at `_dmarc.abizonvisa.com`. Start permissive and
      tighten later:
 
      ```
-     v=DMARC1; p=none; rua=mailto:dmarc@abizon.com
+     v=DMARC1; p=none; rua=mailto:dmarc@abizonvisa.com
      ```
 
      `p=none` monitors without rejecting. After two weeks of clean reports, move
@@ -213,8 +219,8 @@ the email" then looks identical to "the application vanished".
 
 ```
 RESEND_API_KEY=re_...
-EMAIL_FROM=Abizon <applications@abizon.com>
-EMAIL_REPLY_TO=support@abizon.com
+EMAIL_FROM=Abizon <applications@abizonvisa.com>
+EMAIL_REPLY_TO=support@abizonvisa.com
 ```
 
 `EMAIL_FROM` must be on the verified domain. A mismatch is rejected at send.
@@ -237,7 +243,7 @@ Five minutes, free at any volume this site will see.
 1. Sign in at `dash.cloudflare.com` — a free account is enough, and the domain
    does **not** need to be on Cloudflare's DNS.
 2. Turnstile → Add site.
-   - Domains: `abizon.com`, plus `localhost` for development.
+   - Domains: `abizonvisa.com`, plus `localhost` for development.
    - Widget mode: **Managed**. Invisible to almost every real person.
 3. Copy both keys.
 
@@ -311,7 +317,7 @@ places.
 Needs items 2 and 5 done first.
 
 ```bash
-npm run ops:user create ops@abizon.com "Your Name" admin
+npm run ops:user create ops@abizonvisa.com "Your Name" admin
 ```
 
 That prints a QR code, a generated password and the TOTP secret **once**. It
@@ -320,7 +326,7 @@ does not store the password.
 Scan the QR with Google Authenticator, Authy or 1Password, then:
 
 ```bash
-npm run ops:user confirm ops@abizon.com 123456
+npm run ops:user confirm ops@abizonvisa.com 123456
 ```
 
 using the six digits the app shows. **This second step is not optional.** The
@@ -334,7 +340,7 @@ Other commands:
 
 ```bash
 npm run ops:user list                      # who exists, and who has not enrolled
-npm run ops:user disable ops@abizon.com    # disables and signs out everywhere
+npm run ops:user disable ops@abizonvisa.com    # disables and signs out everywhere
 ```
 
 ### Two notes
@@ -479,7 +485,7 @@ UPSTASH_REDIS_REST_TOKEN
 ### Check it from outside
 
 ```
-GET https://abizon.com/api/health
+GET https://abizonvisa.com/api/health
 ```
 
 Returns which capabilities are configured, read from the same flags the code
@@ -511,7 +517,7 @@ ceiling lives in Postgres and does not depend on it. Everything else should read
 - [ ] One document uploaded, opened in the ops console, accepted
 - [ ] One status change, and the email it triggers arriving in an inbox
 - [ ] `/track/<reference>` showing the right status
-- [ ] `curl -i https://abizon.com/api/cron/purge` returns **404** without the
+- [ ] `curl -i https://abizonvisa.com/api/cron/purge` returns **404** without the
       `CRON_SECRET` header
 - [ ] Both storage buckets private
 - [ ] `pricingConfig.ts` reads `"verified"`

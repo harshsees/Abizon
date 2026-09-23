@@ -49,7 +49,7 @@ services:
       - "443:443"
       - "443:443/udp"
     environment:
-      SITE_DOMAIN: ${SITE_DOMAIN:?Set SITE_DOMAIN, e.g. abizon.com}
+      SITE_DOMAIN: ${SITE_DOMAIN:-abizonvisa.com}
       ACME_EMAIL: ${ACME_EMAIL:?Set ACME_EMAIL for certificate expiry notices}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro

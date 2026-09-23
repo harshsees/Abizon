@@ -152,7 +152,7 @@ export default function RefundsPolicyPage() {
           </p>
           <h3>If something is wrong</h3>
           <p>
-            Write to <a href="mailto:refunds@abizon.com">refunds@abizon.com</a> with your
+            Write to <a href="mailto:refunds@abizonvisa.com">refunds@abizonvisa.com</a> with your
             application ID. Refund queries are answered by the team that owns the filing, not
             a separate billing desk that has to go and ask them.
           </p>

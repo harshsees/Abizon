@@ -7,6 +7,7 @@ import {
   Poppins,
 } from "next/font/google";
 import { SmoothScroll } from "@/components/SmoothScroll";
+import { siteUrl } from "@/lib/env";
 import "./globals.css";
 
 /**
@@ -80,7 +81,39 @@ const jetbrainsMono = JetBrains_Mono({
   display: "swap",
 });
 
+/**
+ * `metadataBase` is the site's own address, and every absolute URL in the head
+ * is built from it: `og:image`, `og:url`, and any `alternates.canonical` a page
+ * sets as a relative path.
+ *
+ * Without it, Next.js falls back to `http://localhost:3000` and still builds —
+ * which is the worst available outcome, because the failure is invisible in
+ * development (where localhost is correct) and only shows up in production as a
+ * link preview whose image never loads on anyone else's machine.
+ *
+ * It comes from `siteUrl()` rather than a literal `https://abizonvisa.com` so a
+ * preview deployment describes itself as the preview. `siteUrl()` reads
+ * `process.env.SITE_URL` directly, which is what makes it safe here: this file
+ * is evaluated during `next build`, and the full `env()` check would demand
+ * production secrets from a CI runner that has none. The value is therefore a
+ * build-time input for the web image — see `SITE_URL` in `infra/aws/README.md`.
+ *
+ * THERE IS DELIBERATELY NO `alternates.canonical` HERE. A canonical set in the
+ * root layout is inherited *literally*, not resolved per route: `canonical: "/"`
+ * makes /privacy, /terms and /contact all announce the homepage as their
+ * canonical URL, which is an instruction to drop them from the index. The
+ * country pages set their own (`/visa/[countrySlug]`), and they are the pages
+ * that needed one; every other route emits none and is indexed at the address
+ * it was fetched from. `og:url` is omitted for the same reason.
+ *
+ * What this file does own is the origin those per-route canonicals resolve
+ * against. That is the half of the `www` decision the app holds — Caddy holds
+ * the other half, redirecting `www.abizonvisa.com` to the apex permanently —
+ * and the two have to name the same origin, or search engines are told one
+ * thing and sent somewhere else.
+ */
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl()),
   title: "abizon | Dubai / UAE Visa for Indians",
   // "real-time status tracking" was in this description until Phase 6C.
   // Phase 6B established there is no status service — `lookupApplicationStatus`
@@ -88,6 +121,20 @@ export const metadata: Metadata = {
   // the one place search engines and link previews quote verbatim.
   description:
     "Apply online for a Dubai / UAE visa from India. Document checks against the destination's requirements, transparent government and service fees, and on-time delivery or the abizon fee is waived.",
+  openGraph: {
+    type: "website",
+    siteName: "abizon",
+    locale: "en_IN",
+    title: "abizon | Dubai / UAE Visa for Indians",
+    description:
+      "Apply online for a Dubai / UAE visa from India. Document checks against the destination's requirements, transparent government and service fees, and on-time delivery or the abizon fee is waived.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "abizon | Dubai / UAE Visa for Indians",
+    description:
+      "Apply online for a Dubai / UAE visa from India. Document checks against the destination's requirements, transparent government and service fees, and on-time delivery or the abizon fee is waived.",
+  },
 };
 
 /**

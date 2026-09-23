@@ -103,7 +103,7 @@ const schema = z.object({
 
   /* --- Email ------------------------------------------------------------- */
   RESEND_API_KEY: z.string().optional(),
-  /** e.g. `Abizon <applications@abizon.com>`. Must be a domain verified in
+  /** e.g. `Abizon <applications@abizonvisa.com>`. Must be a domain verified in
    *  Resend with SPF, DKIM and DMARC, or the mail lands in spam. */
   EMAIL_FROM: z.string().optional(),
   /** Where "reply to a human" goes. */

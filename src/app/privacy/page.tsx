@@ -43,7 +43,7 @@ export default function PrivacyPage() {
             abizon operates this website and the visa filing service described on it. For the
             purposes of Indian data protection law and the GDPR, abizon is the data
             controller for the personal data described below. Questions go to{" "}
-            <a href="mailto:privacy@abizon.com">privacy@abizon.com</a>.
+            <a href="mailto:privacy@abizonvisa.com">privacy@abizonvisa.com</a>.
           </p>
 
           <h2>2. What we collect</h2>
@@ -174,7 +174,7 @@ export default function PrivacyPage() {
             </li>
           </ul>
           <p>
-            Write to <a href="mailto:privacy@abizon.com">privacy@abizon.com</a>. We do not
+            Write to <a href="mailto:privacy@abizonvisa.com">privacy@abizonvisa.com</a>. We do not
             charge for exercising any of these.
           </p>
 

@@ -60,7 +60,8 @@ Supabase and Vercel are **no longer needed**.
    - **Versioning: off.** With versioning on, "deleted" passport scans remain as
      noncurrent versions, and the retention and erasure jobs would delete
      nothing. Turning it on is a DPDP decision, not a durability tweak.
-2. Permissions → CORS: paste `s3-cors.json` with your domain in place of `SITE_DOMAIN`.
+2. Permissions → CORS: paste `s3-cors.json` as-is — it already allows `https://abizonvisa.com`,
+   which is the only origin the browser uploads from.
 3. Permissions → Bucket policy: paste `s3-bucket-policy.json` with the bucket name.
 4. Management → Lifecycle: create the rule in `s3-lifecycle.json`, or apply it with
    the CLI: `aws s3api put-bucket-lifecycle-configuration --bucket <name> --lifecycle-configuration file://s3-lifecycle.json`.
@@ -128,7 +129,7 @@ REG=<account>.dkr.ecr.ap-south-1.amazonaws.com
 docker build -t $REG/abizon-backend:$TAG backend
 docker build -t $REG/abizon-web:$TAG \
   --build-arg STORAGE_ORIGIN=https://<bucket>.s3.ap-south-1.amazonaws.com \
-  --build-arg SITE_URL=https://<domain> \
+  --build-arg SITE_URL=https://abizonvisa.com \
   --build-arg NEXT_PUBLIC_TURNSTILE_SITE_KEY=<key> \
   --build-arg NEXT_PUBLIC_RAZORPAY_KEY_ID=<key> .
 docker build -t $REG/abizon-web:$TAG-migrate --target migrate .
@@ -158,8 +159,14 @@ sudo chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
 
 ## 8. DNS
 
-Route 53 → hosted zone for the domain → `A` records for `@` and `www` to the
-Elastic IP. Caddy obtains the certificate on first start once these resolve.
+Route 53 → hosted zone for `abizonvisa.com` → `A` records for `@` (apex) and
+`www` to the Elastic IP. If the domain is registered elsewhere, point the
+registrar's nameservers at the four Route 53 NS records for the zone, or skip
+Route 53 and create the two `A` records at the registrar directly.
+
+Caddy obtains the certificate on first start once both resolve, and serves
+`www.abizonvisa.com` as a permanent redirect to the apex (`deploy/Caddyfile`),
+so the site has exactly one canonical origin: `https://abizonvisa.com`.
 
 ## 9. Secrets → environment files
 
@@ -191,7 +198,7 @@ chmod 600 env/*.env
 ```bash
 cd /srv/abizon
 export BACKEND_IMAGE=$REG/abizon-backend:$TAG WEB_IMAGE=$REG/abizon-web:$TAG \
-       WEB_MIGRATE_IMAGE=$REG/abizon-web:$TAG-migrate SITE_DOMAIN=<domain> ACME_EMAIL=<email>
+       WEB_MIGRATE_IMAGE=$REG/abizon-web:$TAG-migrate SITE_DOMAIN=abizonvisa.com ACME_EMAIL=<email>
 
 docker compose -f docker-compose.prod.yml pull
 docker compose -f docker-compose.prod.yml --profile ops run --rm migrate-web
@@ -199,7 +206,7 @@ docker compose -f docker-compose.prod.yml --profile ops run --rm migrate-backend
 docker compose -f docker-compose.prod.yml up -d
 ```
 
-Check from outside: `curl https://<domain>/api/health` should report
+Check from outside: `curl https://abizonvisa.com/api/health` should report
 `databaseReachable: true` and `backendReachable: true`.
 
 ## 11. After go-live

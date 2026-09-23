@@ -82,11 +82,11 @@ export default function NewsroomPage() {
         actions={
           <>
             <a
-              href="mailto:press@abizon.com"
+              href="mailto:press@abizonvisa.com"
               className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-bold text-on-primary hover:bg-primary-hover"
             >
               <Mail className="h-4 w-4" />
-              press@abizon.com
+              press@abizonvisa.com
             </a>
             <a
               href="/press-kit.zip"

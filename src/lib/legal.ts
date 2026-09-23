@@ -80,7 +80,7 @@ export const LEGAL_ENTITY: LegalEntity = {
 export const GRIEVANCE_OFFICER: GrievanceOfficer = {
   name: "",
   designation: "Grievance Officer",
-  email: "grievance@abizon.com",
+  email: "grievance@abizonvisa.com",
   address: "",
 };
 

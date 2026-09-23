@@ -80,11 +80,11 @@ export default function EmergencyHelplinePage() {
               +91 11 4084 5678
             </a>
             <a
-              href="mailto:emergency@abizon.com"
+              href="mailto:emergency@abizonvisa.com"
               className="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900 px-6 py-3 text-sm font-bold text-white hover:border-slate-600"
             >
               <MessageSquare className="h-4 w-4" />
-              emergency@abizon.com
+              emergency@abizonvisa.com
             </a>
           </>
         }

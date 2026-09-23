@@ -58,7 +58,7 @@ const controls = [
 
 const disclosureSteps = [
   {
-    title: "Send it to security@abizon.com",
+    title: "Send it to security@abizonvisa.com",
     description:
       "Include the affected endpoint, reproduction steps, and what you were able to access. Encrypt with our PGP key if the finding is sensitive.",
   },
@@ -139,7 +139,7 @@ export default function SecurityPage() {
           </p>
           <p>
             You can request earlier deletion at any time by writing to{" "}
-            <a href="mailto:privacy@abizon.com">privacy@abizon.com</a>. If your application
+            <a href="mailto:privacy@abizonvisa.com">privacy@abizonvisa.com</a>. If your application
             is still open, note that deleting documents mid-filing will end it.
           </p>
         </Prose>
