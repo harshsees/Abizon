@@ -51,13 +51,19 @@ type TexEntry = {
 
 const mod = (n: number, m: number) => ((n % m) + m) % m;
 const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
-function bounce(t: number) {
-  const n1 = 7.5625;
-  const d1 = 2.75;
-  if (t < 1 / d1) return n1 * t * t;
-  if (t < 2 / d1) return n1 * (t -= 1.5 / d1) * t + 0.75;
-  if (t < 2.5 / d1) return n1 * (t -= 2.25 / d1) * t + 0.9375;
-  return n1 * (t -= 2.625 / d1) * t + 0.984375;
+/**
+ * The pin's height above the ground, in head radii, over its drop. It falls
+ * under gravity for the first 62%, then makes one small, damped hop and
+ * settles: a pin being set down, not a ball being dropped.
+ */
+function dropHeight(t: number) {
+  const FALL = 0.62;
+  if (t < FALL) {
+    const u = t / FALL;
+    return 7 * (1 - u * u);
+  }
+  const u = (t - FALL) / (1 - FALL);
+  return Math.sin(u * Math.PI) * 0.7 * (1 - u);
 }
 
 export class StageEngine {
@@ -96,8 +102,14 @@ export class StageEngine {
   private yawTarget = 0;
   private tiltTarget = 0;
   private focusDir = new THREE.Vector3(0, 0.5, 0.86);
-  private pinLocal: THREE.Vector3 | null = null;
+  /** Where the active country is; the pin goes there once the hall settles. */
+  private pinTarget: THREE.Vector3 | null = null;
+  /** Where the pin actually stands (or is lifting off from). */
+  private pinShown: THREE.Vector3 | null = null;
+  private pinPending = false;
+  private settleTime = 0;
   private dropStart = -10;
+  private retractStart = Infinity;
 
   /* Layout. */
   private width = 1;
@@ -304,7 +316,7 @@ export class StageEngine {
 
     /* The planet: as wide as the layout allows, its limb at ~70% down. */
     this.earthRadiusPx = this.mobile ? w * 1.05 : Math.max(w * 0.6, h * 0.95);
-    this.earthTopFrac = this.mobile ? 0.64 : 0.625;
+    this.earthTopFrac = this.mobile ? 0.7 : 0.69;
     this.headPx = this.mobile ? 9 : 11;
 
     /* The hall. */
@@ -312,8 +324,8 @@ export class StageEngine {
     const camBack = this.mobile ? 0.4 : 1.0;
     const eye = CARD_H * 0.5;
     const depth = RADIUS + camBack;
-    const cardFrac = this.mobile ? 0.27 : 0.255; // centre card's height, as a share of the stage
-    const waterline = this.mobile ? 0.5 : 0.505; // from the top
+    const cardFrac = this.mobile ? 0.29 : 0.28; // centre card's height, as a share of the stage
+    const waterline = this.mobile ? 0.565 : 0.575; // from the top
     const f = (cardFrac * 2 * depth) / CARD_H;
     const cam = this.ringCam;
     cam.fov = THREE.MathUtils.radToDeg(2 * Math.atan(1 / f));
@@ -415,13 +427,17 @@ export class StageEngine {
     this.active = next;
     this.cb.onActiveChange(next);
     this.retargetGlobe(false);
-    this.dropStart = this.time + 0.12;
+    // Do not chase every card that passes the front: lift the current pin off
+    // and wait for the hall to come to rest before setting the next one down.
+    this.pinPending = true;
+    this.settleTime = 0;
+    if (this.pinShown && this.retractStart === Infinity) this.retractStart = this.time;
   }
 
   private retargetGlobe(snap: boolean) {
     const c = this.active >= 0 ? this.cards[this.active] : undefined;
     if (!c || c.lat == null || c.lng == null) {
-      this.pinLocal = null;
+      this.pinTarget = null;
       return;
     }
     const lat = THREE.MathUtils.degToRad(c.lat);
@@ -432,7 +448,7 @@ export class StageEngine {
     const k = Math.round((this.yawTarget - yaw) / (Math.PI * 2));
     this.yawTarget = yaw + k * Math.PI * 2;
     this.tiltTarget = tilt;
-    this.pinLocal = latLngToVec(c.lat, c.lng, 1);
+    this.pinTarget = latLngToVec(c.lat, c.lng, 1);
     if (snap) {
       this.yaw = this.yawTarget;
       this.tilt = this.tiltTarget;
@@ -645,12 +661,31 @@ export class StageEngine {
 
     this.stepRing(dt);
     this.updateActive();
+    this.trackSettle(dt);
     this.layoutRing(dt);
     this.layoutEarthCamera();
     this.stepGlobe(dt);
 
     this.composer.render(dt);
   };
+
+  /** How long the hall has been at rest; the pin drops after a short pause. */
+  private trackSettle(dt: number) {
+    const atRest =
+      !this.dragging &&
+      this.target != null &&
+      Math.abs(this.target - this.pos) < 0.03 &&
+      Math.abs(this.vel) < 0.08;
+    this.settleTime = atRest ? this.settleTime + dt : 0;
+    const wait = this.reduced ? 0 : 0.45;
+    // The first drop also waits for the planet to have faded in.
+    if (this.pinPending && this.settleTime >= wait && this.pinTarget && this.intro > 1.1) {
+      this.pinPending = false;
+      this.pinShown = this.pinTarget.clone();
+      this.dropStart = this.time;
+      this.retractStart = Infinity;
+    }
+  }
 
   private stepRing(dt: number) {
     if (this.dragging || this.target == null) return;
@@ -696,12 +731,26 @@ export class StageEngine {
       const a = (i - this.pos) * STEP;
       const reveal = THREE.MathUtils.clamp((introT - 0.25 - Math.abs(s - HALF) * 0.09) / 0.7, 0, 1);
       const rise = (1 - easeOutCubic(reveal)) * -0.35;
-      const x = RADIUS * Math.sin(a);
-      const z = -RADIUS * Math.cos(a);
-      slot.card.position.set(x, rise, z);
+
+      // The card that arrives at the front steps out toward the viewer once
+      // the hall slows, and steps back as soon as it starts moving again.
+      const closeness = 1 - THREE.MathUtils.smoothstep(Math.abs(i - this.pos), 0, 0.5);
+      const moving = this.dragging || Math.abs(this.vel) > 0.6;
+      const popTarget = moving ? closeness * 0.25 : closeness;
+      slot.pop += (popTarget - slot.pop) * Math.min(1, dt * (this.reduced ? 30 : 7));
+      const pop = easeOutCubic(slot.pop);
+
+      const r = RADIUS - 0.42 * pop;
+      const lift = 0.03 * pop;
+      const grow = 1 + 0.04 * pop;
+      const x = r * Math.sin(a);
+      const z = -r * Math.cos(a);
+      slot.card.position.set(x, rise + lift, z);
       slot.card.rotation.y = -a;
-      slot.refl.position.set(x, -rise, z);
+      slot.card.scale.setScalar(grow);
+      slot.refl.position.set(x, -(rise + lift), z);
       slot.refl.rotation.y = -a;
+      slot.refl.scale.set(grow, -grow, grow);
 
       const target = s === this.hovered ? 1 : 0;
       slot.hover += (target - slot.hover) * Math.min(1, dt * 7);
@@ -709,7 +758,7 @@ export class StageEngine {
 
       const cu = slot.card.material.uniforms;
       cu.map.value = tex.texture;
-      cu.uDim.value = dim;
+      cu.uDim.value = dim + pop * 0.08;
       cu.uHover.value = slot.hover;
       cu.uReveal.value = reveal;
       const ru = slot.refl.material.uniforms;
@@ -755,11 +804,17 @@ export class StageEngine {
     earth.starMat.uniforms.uDrift.value.set(this.reduced ? 0 : t * 0.002, this.scroll * 0.15);
 
     /* The pin. */
-    const visible = this.pinLocal != null && reveal > 0.5;
+    // Lifting off the previous country: shrink away, then clear it.
+    const retract = THREE.MathUtils.clamp((t - this.retractStart) / 0.22, 0, 1);
+    if (retract >= 1) {
+      this.pinShown = null;
+      this.retractStart = Infinity;
+    }
+    const visible = this.pinShown != null && reveal > 0.5;
     earth.pin.visible = earth.ground.visible = visible;
-    if (!visible || !this.pinLocal) return;
+    if (!visible || !this.pinShown) return;
 
-    const P = this.pinLocal.clone().applyMatrix4(earth.globe.matrixWorld);
+    const P = this.pinShown.clone().applyMatrix4(earth.globe.matrixWorld);
     const normal = P.clone().normalize();
     const camDist = P.distanceTo(this.earthCam.position);
     const worldPerPx = (2 * camDist * Math.tan(THREE.MathUtils.degToRad(EARTH_FOV / 2))) / this.height;
@@ -768,14 +823,15 @@ export class StageEngine {
     // Lean toward screen-up so it reads as a standing 📍, not a dot seen from above.
     const up = normal.clone().multiplyScalar(0.42).add(new THREE.Vector3(0, 0.58, 0)).normalize();
 
-    const dropT = THREE.MathUtils.clamp((t - this.dropStart) / (this.reduced ? 0.01 : 0.85), 0, 1);
-    const b = bounce(dropT);
-    const lift = (1 - b) * 9 * scale;
-    const pop = Math.min(1, dropT * 5);
+    const dropT = THREE.MathUtils.clamp((t - this.dropStart) / (this.reduced ? 0.01 : 0.7), 0, 1);
+    const height = this.reduced ? 0 : dropHeight(dropT);
+    const b = 1 - Math.min(1, height / 7); // 0 high in the air, 1 on the ground
+    const lift = (height + retract * 3) * scale;
+    const pop = Math.min(1, dropT * 4) * (1 - easeOutCubic(retract));
 
     earth.pin.position.copy(P).addScaledVector(up, lift);
     earth.pin.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), up);
-    earth.pin.scale.setScalar(scale * (0.6 + 0.4 * pop));
+    earth.pin.scale.setScalar(scale * Math.max(0.001, 0.55 + 0.45 * pop) * (1 - retract * 0.999));
 
     earth.ground.position.copy(P).addScaledVector(normal, 0.0008);
     earth.ground.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), normal);
@@ -784,7 +840,7 @@ export class StageEngine {
     earth.shadowMat.uniforms.uOpacity.value = 0.5 * b * pop;
 
     // Radar pings once it has landed.
-    const landed = t - (this.dropStart + 0.55);
+    const landed = retract > 0 ? -1 : t - (this.dropStart + 0.5);
     earth.pings.forEach((m, i) => {
       const period = 2.4;
       const ph = landed < 0 || this.reduced ? 1 : ((landed / period + i / 3) % 1);

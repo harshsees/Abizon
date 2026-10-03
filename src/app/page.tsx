@@ -3,113 +3,52 @@
 /**
  * Country discovery.
  *
- * This page used to hold the filter capsule (four copies of the same 50-line
- * block), the grid, the map and a slide-over drawer inline, at ~810 lines. The
- * pieces are components now — `CountryFilters`, `CountryGrid`, `CountryMapView`
- * — and what is left here is what actually belongs to the page: the filter
- * state, the query that applies it, and the list/map switch.
+ * The page is one dark, continuous space now. The destination stage — Mirror
+ * Hall's ring of cards over Ascend's planet — fills the first screen, and the
+ * sections beneath it are set on the same background, so the planet sinks into
+ * the page instead of ending at a seam.
  *
- * The Explore/Events tab pair went with the header rebuild. Events was a panel
- * that said events were coming and offered a button back to this grid, and the
- * `activeTab` state existed only to choose between the two. There is one tab
- * now — Evisa — and being on this page is what makes it active, so the page
- * holds no tab state at all.
+ * What changed, and why:
  *
- * The drawer is gone. `selectedCountry` was only ever set back to `null`, so
- * nothing could open it: ~150 lines of markup no user could reach.
+ * - The site header is gone from this page. A light bar above a full-bleed
+ *   scene cut the page in two; `HomeNav` floats the parts of it a visitor
+ *   needs (home, search, tools, tracking, account) over the stage instead.
+ * - The card grid and the map are gone. The hall is the way to browse
+ *   destinations now; the grid repeated it below in a second visual language.
+ *   The List/Map switch went with them, since there is nothing left to switch.
+ * - The filters stay, in a dark tone, and still drive the hall: the stage is
+ *   handed the same filtered list the grid used to be.
+ *
+ * What is left here is what belongs to the page: the search and filter state,
+ * the query that applies it, and the order of the sections.
  */
 
 import { useState, useMemo, useEffect } from "react";
-import dynamic from "next/dynamic";
-import { useRouter } from "next/navigation";
-import { AnimatePresence, motion } from "framer-motion";
-import { List, Map, Search } from "lucide-react";
+import { RotateCcw, Search } from "lucide-react";
 
-import { countriesData, Country, getCountrySlug } from "@/data/countries";
+import { countriesData } from "@/data/countries";
 import {
   CountryFilters,
   DEFAULT_FILTERS,
   type FilterKey,
   type FilterValues,
 } from "@/components/CountryFilters";
-import { CountryGrid } from "@/components/CountryGrid";
-import { SiteHeader } from "@/components/SiteHeader";
 import { CountryStage } from "@/components/country-stage/CountryStage";
+import { HomeNav } from "@/components/home/HomeNav";
+import { HomeFooter } from "@/components/home/HomeFooter";
+import { Collections, CtaCard, Eyebrow, Faq, Steps, Tools } from "@/components/home/HomeSections";
 
-/**
- * THE MAP IS LOADED WHEN IT IS ASKED FOR, and this is the one import on the
- * page that has to be.
- *
- * `CountryMapView` pulls in `data/worldMap.ts`, which is ~125KB of Natural
- * Earth coastline. The list is the default view and most visitors never press
- * Map, so putting that in the page's first payload would make everybody pay
- * for a view most of them will not open. Split out, it is fetched on the press
- * that reveals it.
- *
- * `ssr: false` because the component measures its own box with a
- * `ResizeObserver` before it can place a single marker: a server render would
- * emit a stage of width 0 with no pins in it, and the client would replace it
- * wholesale on hydration. There is nothing to pre-render here that is worth
- * pre-rendering.
- */
-const CountryMapView = dynamic(
-  () => import("@/components/CountryMapView").then((m) => m.CountryMapView),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="flex min-h-[500px] w-full flex-1 items-center justify-center rounded-[40px] border border-slate-800/80 bg-slate-900 text-xs font-semibold text-slate-400">
-        Loading the map…
-      </div>
-    ),
-  },
-);
-
-/**
- * The discovery container. Deliberately wider than the app's `max-w-7xl`
- * (1280px) default and deliberately local to this page: the reference's grid
- * runs ~1680px, but widening every page to match would stretch prose layouts
- * that are correct as they are.
- *
- * 1728 minus the 24px gutters leaves exactly 1680 of content, which is
- * 5 x 312px cards + 4 x 30px gaps — the reference's grid, to the pixel.
- */
-const DISCOVERY_CONTAINER = "mx-auto w-full max-w-[1728px] px-4 md:px-6";
+const CONTAINER = "mx-auto w-full max-w-[1240px] px-4 md:px-6";
 
 export default function Home() {
-  const router = useRouter();
-
   const [searchQuery, setSearchQuery] = useState("");
-  const [viewMode, setViewMode] = useState<"list" | "map">("list");
   const [filters, setFilters] = useState<FilterValues>(DEFAULT_FILTERS);
 
   /**
-   * The GSAP scroll reveal used to run over `.js-country-card-wrapper` here.
-   * It has been removed, and not for taste: GSAP wrote inline transforms to
-   * the same 154 wrappers that Framer's `layout` animates, the two fought over
-   * the transform property, and Framer's `initial` scale of 0.97 won and stuck
-   * — every card rendered 3% undersized for the life of the page, which read
-   * as 45px gutters where the grid actually specifies 30px.
-   *
-   * One system owns card transforms now, and it is Framer, because `layout` is
-   * what makes filtering re-flow smoothly and GSAP has no equivalent. The
-   * magnetic-hover hook went with it: nothing on this page carries
-   * `.js-magnetic-btn` any more.
-   */
-
-  /**
-   * Seed from the URL once on mount. The homepage owns this state; the header
-   * reads and writes it through props rather than keeping a second copy.
-   *
-   * The lint rule below flags synchronous `setState` in an effect because it
-   * usually means state derived from props, which should be computed during
-   * render instead. This is the other case: the value comes from
-   * `window.location`, which does not exist during the server render.
-   *
-   * Seeding it in a lazy `useState` initialiser — the rule's normal remedy —
-   * would make the server render "" and the first client render the seeded
-   * value, which is a hydration mismatch. An effect after hydration is the
-   * correct shape here, and the extra render is the cost of the URL not being
-   * available to both sides.
+   * Seed from the URL once on mount. The value comes from `window.location`,
+   * which does not exist during the server render, so a lazy `useState`
+   * initialiser would make the two renders disagree; an effect after
+   * hydration is the correct shape, and the extra render is its cost.
    */
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -117,6 +56,20 @@ export default function Home() {
 
     // eslint-disable-next-line react-hooks/set-state-in-effect
     if (searchVal) setSearchQuery(searchVal);
+  }, []);
+
+  /**
+   * The document behind the page is the light canvas every other route uses.
+   * Overscroll and the moment before hydration would flash it at the edges of
+   * this one, so the root takes the space colour while the homepage is mounted.
+   */
+  useEffect(() => {
+    const root = document.documentElement;
+    const previous = root.style.backgroundColor;
+    root.style.backgroundColor = "#04060f";
+    return () => {
+      root.style.backgroundColor = previous;
+    };
   }, []);
 
   const handleFilterChange = (key: FilterKey, value: string) =>
@@ -157,113 +110,81 @@ export default function Home() {
     setSearchQuery("");
   };
 
-  // Map pins navigate imperatively; the cards themselves are real anchors and
-  // route on their own.
-  const handleCountryClick = (country: Country) =>
-    router.push(`/visa/${getCountrySlug(country.name)}`);
+  const backToHall = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+  // A collection's "All N in the hall" sets exactly its filters and returns
+  // to the stage, where the hall now holds only that collection.
+  const showInHall = (next: Partial<FilterValues>) => {
+    setSearchQuery("");
+    setFilters({ ...DEFAULT_FILTERS, ...next });
+    backToHall();
+  };
 
   return (
-    <div
-      className="relative flex min-h-screen flex-col bg-background pb-24 font-sans text-foreground antialiased"
-    >
-      <SiteHeader
-        variant="full"
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
+    <div className="relative flex min-h-screen flex-col bg-space font-sans text-white antialiased">
+      {/* The stars the planet is set among carry on behind the whole page. */}
+      <div aria-hidden className="space-stars pointer-events-none fixed inset-0 -z-0" />
+      <div
+        aria-hidden
+        className="pointer-events-none fixed inset-x-0 top-0 -z-0 h-[70vh] bg-[radial-gradient(60%_50%_at_50%_0%,rgba(70,55,170,0.10),transparent_70%)]"
       />
 
-      <main
-        id="main-content"
-        tabIndex={-1}
-        className={`${DISCOVERY_CONTAINER} flex flex-1 flex-col py-6 md:py-8`}
-      >
-        {/* The destination stage: Mirror Hall's ring of cards over Ascend's
-            planet, fed the same filtered list as the grid below it. */}
-        <CountryStage countries={filteredCountries} totalCount={countriesData.length} />
+      <HomeNav searchQuery={searchQuery} onSearchChange={setSearchQuery} />
 
-        {/* The header's search field is desktop-only; on mobile it lives in a
-            sheet, so discovery keeps its own always-visible field. */}
-        <div className="relative mb-4 w-full md:hidden">
-          <Search
-            aria-hidden
-            className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-          />
-          <input
-            type="search"
-            aria-label="Search countries"
-            placeholder="Search Country"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="h-[var(--control-h-md)] w-full rounded-full border border-border bg-surface pl-11 pr-4 text-sm text-foreground placeholder:text-muted-foreground"
-          />
-        </div>
+      <CountryStage countries={filteredCountries} totalCount={countriesData.length} />
 
-        {/* Search → filters → grid, in that order and with room to breathe
-            between them, so the whole thing reads as one system. */}
-        <div className="mb-8 flex w-full justify-center md:mb-10">
-          <div className="w-full max-w-6xl">
-            <CountryFilters values={filters} onChange={handleFilterChange} />
+      <main id="main-content" tabIndex={-1} className={`${CONTAINER} relative flex flex-1 flex-col`}>
+        {/* Refine the hall. Directly under the stage, so a change is seen
+            landing in the ring above it. */}
+        <section aria-label="Filter destinations" className="relative z-10 -mt-6 flex flex-col items-center md:-mt-10">
+          <Eyebrow>Refine the hall</Eyebrow>
+
+          {/* The nav's search field is desktop-only; mobile keeps its own. */}
+          <div className="relative mt-5 w-full max-w-5xl md:hidden">
+            <Search
+              aria-hidden
+              className="pointer-events-none absolute left-4 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-white/40"
+            />
+            <input
+              type="search"
+              aria-label="Search countries"
+              placeholder="Search country"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="h-12 w-full rounded-full border border-white/10 bg-white/[0.04] pl-11 pr-4 text-sm text-white placeholder:text-white/40 outline-none backdrop-blur-xl focus:border-white/25"
+            />
           </div>
-        </div>
 
-        <div className="flex flex-1 flex-col justify-start">
-          <AnimatePresence mode="wait">
-            {viewMode === "list" ? (
-              <motion.div
-                key="list-view"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.3 }}
-                className="flex flex-col"
+          <div className="mt-4 w-full max-w-5xl md:mt-5">
+            <CountryFilters values={filters} onChange={handleFilterChange} tone="dark" />
+          </div>
+
+          <p className="mt-4 flex items-center gap-3 text-xs text-white/45" aria-live="polite">
+            <span>
+              <span className="font-medium text-white/80">{filteredCountries.length}</span> of{" "}
+              {countriesData.length} destinations in the hall
+            </span>
+            {hasActiveFilters && (
+              <button
+                type="button"
+                onClick={resetFilters}
+                className="inline-flex cursor-pointer items-center gap-1 rounded-full border border-white/10 px-2.5 py-1 text-white/70 transition-colors hover:border-white/25 hover:text-white"
               >
-                <CountryGrid
-                  countries={filteredCountries}
-                  hasActiveFilters={hasActiveFilters}
-                  onResetFilters={resetFilters}
-                />
-              </motion.div>
-            ) : (
-              <CountryMapView
-                countries={filteredCountries}
-                onSelectCountry={handleCountryClick}
-              />
+                <RotateCcw className="h-3 w-3" aria-hidden />
+                Reset
+              </button>
             )}
-          </AnimatePresence>
-        </div>
+          </p>
+        </section>
+
+        <Collections onShowInHall={showInHall} />
+        <Steps />
+        <Tools />
+        <CtaCard onBackToHall={backToHall} />
+        <Faq />
       </main>
 
-      {/* View switch. Kept, but pulled back to a quiet surface control — it was
-          a heavy dark capsule competing with the grid it sits over. */}
-      <div className="fixed bottom-6 left-1/2 z-sticky -translate-x-1/2">
-        <div
-          role="group"
-          aria-label="Result view"
-          className="flex items-center gap-1 rounded-full border border-border bg-surface/90 p-1 shadow-e3 backdrop-blur-md"
-        >
-          {([
-            { mode: "list", label: "List", Icon: List },
-            { mode: "map", label: "Map", Icon: Map },
-          ] as const).map(({ mode, label, Icon }) => (
-            <button
-              key={mode}
-              type="button"
-              onClick={() => setViewMode(mode)}
-              aria-pressed={viewMode === mode}
-              className={[
-                "flex cursor-pointer items-center gap-1.5 rounded-full px-3.5 py-2 text-2xs font-semibold",
-                "transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)]",
-                viewMode === mode
-                  ? "bg-foreground text-surface"
-                  : "text-muted-foreground hover:text-foreground",
-              ].join(" ")}
-            >
-              <Icon aria-hidden className="h-3.5 w-3.5" />
-              <span>{label}</span>
-            </button>
-          ))}
-        </div>
-      </div>
+      <HomeFooter />
     </div>
   );
 }

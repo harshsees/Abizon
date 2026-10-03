@@ -68,7 +68,7 @@ const reflFrag = /* glsl */ `
   uniform float uCardFrac;
   varying vec2 vUv;
   void main() {
-    if (vUv.y > uCardFrac) discard;
+    if (vUv.y > uCardFrac * 0.6) discard;
     // The flipped mesh puts uv.y = 0 at the waterline; k is 1 there, 0 at the card's top.
     float k = 1.0 - vUv.y / uCardFrac;
     vec2 uv = vUv;
@@ -78,7 +78,7 @@ const reflFrag = /* glsl */ `
     uv.x += w * strength;
     uv.y += w * 0.6 * strength;
     vec4 c = texture2D(map, uv, 1.5 + (1.0 - k) * 2.5);
-    float fade = pow(k, 2.4) * 0.5;
+    float fade = pow(smoothstep(0.4, 1.0, k), 1.6) * 0.42;
     vec3 col = c.rgb * vec3(0.78, 0.86, 1.0) * mix(0.45, 1.0, uDim);
     gl_FragColor = vec4(col, c.a * fade * uReveal);
     #include <colorspace_fragment>
@@ -132,7 +132,7 @@ const poolFrag = /* glsl */ `
     col *= 0.55 + caustic * 0.75;
     // Fade the pool toward the viewer so it never reaches the planet.
     float r = length(p);
-    float fade = smoothstep(uRadius * 0.35, uRadius * 0.95, r);
+    float fade = smoothstep(uRadius * 0.35, uRadius * 0.95, r) * (1.0 - smoothstep(uRadius * 1.02, uRadius * 1.25, r));
     gl_FragColor = vec4(col * fade * 0.32 * uReveal, 1.0);
     #include <colorspace_fragment>
   }
@@ -144,6 +144,8 @@ export type Slot = {
   /** Absolute ring index currently dealt to this slot, or null when hidden. */
   index: number | null;
   hover: number;
+  /** 0-1: how far this card has stepped forward out of the ring. */
+  pop: number;
 };
 
 export function createRing(radius: number) {
@@ -196,7 +198,7 @@ export function createRing(radius: number) {
     refl.renderOrder = 1;
     card.userData.slot = i;
     group.add(card, refl);
-    slots.push({ card, refl, index: null, hover: 0 });
+    slots.push({ card, refl, index: null, hover: 0, pop: 0 });
   }
 
   const poolMat = new THREE.ShaderMaterial({

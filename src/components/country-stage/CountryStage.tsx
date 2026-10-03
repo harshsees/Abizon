@@ -164,8 +164,8 @@ export function CountryStage({
       aria-roledescription="carousel"
       aria-label="Destinations"
       onKeyDown={onKeyDown}
-      className="relative isolate mb-8 w-full overflow-hidden rounded-[28px] bg-[#02040c] md:mb-10 md:rounded-[36px]"
-      style={{ height: "clamp(620px, calc(100svh - 120px), 980px)" }}
+      className="relative isolate w-full overflow-hidden bg-space"
+      style={{ height: "clamp(640px, 100svh, 1080px)" }}
     >
       <canvas
         ref={canvasRef}
@@ -177,28 +177,28 @@ export function CountryStage({
         )}
       />
 
-      {/* Mirror Hall's frame: a hairline inset with ticks at two corners. */}
-      <div aria-hidden className="pointer-events-none absolute inset-3 rounded-[20px] border border-white/[0.05] md:inset-4 md:rounded-[26px]" />
-      <span aria-hidden className="pointer-events-none absolute left-3 top-3 h-3 w-3 border-l border-t border-white/30 md:left-4 md:top-4" />
-      <span aria-hidden className="pointer-events-none absolute bottom-3 right-3 h-3 w-3 border-b border-r border-white/30 md:bottom-4 md:right-4" />
+      {/* The planet sinks into the page: the stage's lower edge dissolves into
+          the same space colour everything below it is set on, so the page
+          reads as one continuous background rather than a hero and a page. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-[18%] bg-gradient-to-b from-transparent to-space"
+      />
 
-      {/* Title. */}
-      <div className="pointer-events-none absolute inset-x-0 top-[5.5%] flex flex-col items-center px-6 text-center">
+      {/* Title, set below the floating nav. */}
+      <div className="pointer-events-none absolute inset-x-0 top-[10%] flex flex-col items-center px-6 text-center md:top-[8.5%]">
         <p className="text-[10px] font-medium uppercase tracking-[0.32em] text-white/40">
-          Abizon <span className="mx-1.5 text-white/25">·</span>
-          <span className="text-white/85">{totalCount} destinations</span>
+          {totalCount} destinations <span className="mx-1.5 text-white/25">·</span>
+          <span className="text-white/80">Drag to explore</span>
         </p>
-        <h2 className="mt-3 text-[34px] font-extralight leading-none tracking-[-0.01em] text-white md:text-[52px]">
+        <h1 className="mt-3 text-[32px] font-extralight leading-none tracking-[-0.01em] text-white md:text-[46px]">
           Where to next?
-        </h2>
-        <p className="mt-3 text-[12px] font-light text-white/50 md:text-[13px]">
-          Drag through the hall — the planet turns to meet you.
-        </p>
+        </h1>
       </div>
 
       {/* The active destination, over the planet. */}
       {current ? (
-        <div className="absolute inset-x-0 top-[72%] flex flex-col items-center px-4 text-center md:top-[71%]">
+        <div className="absolute inset-x-0 top-[77%] flex flex-col items-center px-4 text-center md:top-[76.5%]">
           {/* A soft scrim so the type holds against a sunlit planet. */}
           <div
             aria-hidden
@@ -251,7 +251,7 @@ export function CountryStage({
           <Progress index={active} count={count} />
         </div>
       ) : (
-        <div className="absolute inset-x-0 top-[74%] text-center text-sm font-light text-white/60">
+        <div className="absolute inset-x-0 top-[78%] text-center text-sm font-light text-white/60">
           No destinations match these filters.
         </div>
       )}

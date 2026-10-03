@@ -124,9 +124,17 @@ const FACETS: FacetConfig[] = [
 type CountryFiltersProps = {
   values: FilterValues;
   onChange: (key: FilterKey, value: string) => void;
+  /**
+   * `dark` sets the capsule as frosted glass on the homepage's space
+   * background: quiet neutral badges with the facet colour carried by the
+   * glyph alone, so four saturated discs do not shout over the planet.
+   */
+  tone?: "light" | "dark";
 };
 
-export function CountryFilters({ values, onChange }: CountryFiltersProps) {
+export function CountryFilters({ values, onChange, tone = "light" }: CountryFiltersProps) {
+  const dark = tone === "dark";
+  const t = (light: string, onDark: string) => (dark ? onDark : light);
   const [openKey, setOpenKey] = useState<FilterKey | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
 
@@ -164,7 +172,11 @@ export function CountryFilters({ values, onChange }: CountryFiltersProps) {
         // 64px is not arbitrary: it is `--header-h-compact`, so the strip and
         // the condensed header are the same height and the page has one
         // horizontal rhythm instead of two near-misses.
-        "relative grid w-full grid-cols-2 gap-1 rounded-2xl border border-border bg-surface p-2 shadow-e2",
+        "relative grid w-full grid-cols-2 gap-1 rounded-2xl border p-2",
+        t(
+          "border-border bg-surface shadow-e2",
+          "border-white/10 bg-white/[0.035] shadow-[0_24px_80px_rgba(0,0,0,0.5)] backdrop-blur-xl",
+        ),
         "md:flex md:h-16 md:items-stretch md:gap-0 md:rounded-full md:p-0",
       ].join(" ")}
     >
@@ -176,7 +188,7 @@ export function CountryFilters({ values, onChange }: CountryFiltersProps) {
           {index > 0 && (
             <span
               aria-hidden
-              className="hidden w-px flex-shrink-0 bg-border md:my-4 md:block"
+              className={`hidden w-px flex-shrink-0 md:my-4 md:block ${t("bg-border", "bg-white/10")}`}
             />
           )}
 
@@ -192,31 +204,33 @@ export function CountryFilters({ values, onChange }: CountryFiltersProps) {
               aria-expanded={openKey === facet.key}
               className={[
                 "flex w-full min-w-0 cursor-pointer items-center gap-2.5 rounded-xl px-3 py-2.5 text-left",
-                "transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)] hover:bg-surface-sunken",
+                "transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)]",
+                t("hover:bg-surface-sunken", "hover:bg-white/[0.06]"),
                 "md:h-full md:gap-2.5 md:rounded-full md:px-4 md:py-0",
               ].join(" ")}
             >
               <span
                 aria-hidden
                 className={[
-                  "flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full text-white",
+                  "flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full",
                   "md:h-7 md:w-7",
-                  facet.badge,
+                  dark ? `bg-white/[0.07] ring-1 ring-white/10 ${facet.check}` : `text-white ${facet.badge}`,
                 ].join(" ")}
               >
                 <Facet Icon={facet.Icon} />
               </span>
 
               <span className="flex min-w-0 flex-col">
-                <span className="truncate text-2xs font-normal leading-none text-muted-foreground md:text-xs">
+                <span className={`truncate text-2xs font-normal leading-none md:text-xs ${t("text-muted-foreground", "text-white/45")}`}>
                   {facet.label}:
                 </span>
-                <span className="mt-1 flex min-w-0 items-center gap-1.5 text-sm font-bold leading-none text-foreground md:mt-1 md:text-[15px]">
+                <span className={`mt-1 flex min-w-0 items-center gap-1.5 text-sm leading-none md:mt-1 md:text-[15px] ${t("font-bold text-foreground", "font-semibold text-white")}`}>
                   <span className="truncate">{values[facet.key]}</span>
                   <ChevronDown
                     aria-hidden
                     className={[
-                      "h-4 w-4 flex-shrink-0 text-muted-foreground",
+                      "h-4 w-4 flex-shrink-0",
+                      t("text-muted-foreground", "text-white/40"),
                       "transition-transform duration-[var(--duration-fast)] ease-[var(--ease-out)]",
                       openKey === facet.key ? "rotate-180" : "",
                     ].join(" ")}
@@ -235,13 +249,17 @@ export function CountryFilters({ values, onChange }: CountryFiltersProps) {
                   exit={{ opacity: 0, y: 6 }}
                   transition={{ duration: 0.15 }}
                   className={[
-                    "absolute top-[calc(100%+8px)] z-overlay rounded-2xl border border-border bg-surface p-2 shadow-e4",
+                    "absolute top-[calc(100%+8px)] z-overlay rounded-2xl border p-2",
+                    t(
+                      "border-border bg-surface shadow-e4",
+                      "border-white/10 bg-[#0a0d19]/95 shadow-[0_24px_60px_rgba(0,0,0,0.6)] backdrop-blur-xl",
+                    ),
                     facet.align === "right" ? "right-0" : "left-0",
                     facet.width,
                   ].join(" ")}
                 >
                   {facet.heading && (
-                    <p className="px-3 py-1.5 text-2xs font-bold uppercase tracking-wider text-muted-foreground">
+                    <p className={`px-3 py-1.5 text-2xs font-bold uppercase tracking-wider ${t("text-muted-foreground", "text-white/40")}`}>
                       {facet.heading}
                     </p>
                   )}
@@ -258,7 +276,10 @@ export function CountryFilters({ values, onChange }: CountryFiltersProps) {
                           onChange(facet.key, option);
                           setOpenKey(null);
                         }}
-                        className="flex w-full cursor-pointer items-center justify-between gap-2 rounded-xl px-3 py-2 text-left text-xs font-semibold text-subtle-foreground transition-colors hover:bg-surface-sunken hover:text-foreground"
+                        className={`flex w-full cursor-pointer items-center justify-between gap-2 rounded-xl px-3 py-2 text-left text-xs font-semibold transition-colors ${t(
+                          "text-subtle-foreground hover:bg-surface-sunken hover:text-foreground",
+                          "text-white/70 hover:bg-white/[0.06] hover:text-white",
+                        )}`}
                       >
                         <span>{option}</span>
                         {selected && (

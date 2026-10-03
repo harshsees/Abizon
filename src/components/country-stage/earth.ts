@@ -298,14 +298,14 @@ const skyFrag = /* glsl */ `
   void main() {
     vec2 p = vUv;
     // Authored in sRGB, linearised at the end.
-    vec3 top = vec3(0.090, 0.072, 0.270);
-    vec3 mid = vec3(0.028, 0.040, 0.135);
-    vec3 low = vec3(0.008, 0.014, 0.050);
+    vec3 top = vec3(0.058, 0.050, 0.170);
+    vec3 mid = vec3(0.020, 0.027, 0.088);
+    vec3 low = vec3(0.016, 0.024, 0.059); // = --color-space, #04060f
     vec3 col = mix(low, mid, smoothstep(0.0, 0.55, p.y));
     col = mix(col, top, smoothstep(0.55, 1.0, p.y));
     float aspect = uRes.x / uRes.y;
     vec2 q = vec2((p.x - 0.5) * aspect, p.y - 1.08);
-    col += vec3(0.16, 0.10, 0.40) * exp(-dot(q, q) * 2.6) * 0.55;
+    col += vec3(0.13, 0.09, 0.34) * exp(-dot(q, q) * 2.6) * 0.45;
     // The faint scatter rising off the planet's limb.
     vec2 h = vec2((p.x - 0.5) * aspect * 0.55, p.y - 0.30);
     col += vec3(0.06, 0.14, 0.32) * exp(-dot(h, h) * 7.0) * 0.5;
