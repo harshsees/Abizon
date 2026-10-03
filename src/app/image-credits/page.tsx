@@ -182,6 +182,33 @@ export default function ImageCreditsPage() {
           removed, write to us and we will act on it.
         </p>
       </Section>
+
+      <Section
+        title="The planet"
+        description="The Earth on the destination stage is painted with texture maps derived from NASA imagery."
+      >
+        <p className="max-w-3xl text-sm leading-relaxed text-muted-foreground">
+          Day, night-lights, cloud, ocean and relief maps by{" "}
+          <a
+            href="https://www.solarsystemscope.com/textures/"
+            target="_blank"
+            rel="noreferrer noopener"
+            className="text-foreground underline decoration-border-strong underline-offset-4 hover:decoration-current"
+          >
+            Solar System Scope
+          </a>
+          , used under{" "}
+          <a
+            href="https://creativecommons.org/licenses/by/4.0/"
+            target="_blank"
+            rel="noreferrer noopener"
+            className="underline decoration-border-strong underline-offset-4 hover:text-foreground hover:decoration-current"
+          >
+            CC BY 4.0
+          </a>
+          . They have been resized and re-encoded for the web.
+        </p>
+      </Section>
     </PageShell>
   );
 }

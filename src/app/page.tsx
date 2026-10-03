@@ -34,6 +34,7 @@ import {
 } from "@/components/CountryFilters";
 import { CountryGrid } from "@/components/CountryGrid";
 import { SiteHeader } from "@/components/SiteHeader";
+import { CountryStage } from "@/components/country-stage/CountryStage";
 
 /**
  * THE MAP IS LOADED WHEN IT IS ASKED FOR, and this is the one import on the
@@ -176,6 +177,10 @@ export default function Home() {
         tabIndex={-1}
         className={`${DISCOVERY_CONTAINER} flex flex-1 flex-col py-6 md:py-8`}
       >
+        {/* The destination stage: Mirror Hall's ring of cards over Ascend's
+            planet, fed the same filtered list as the grid below it. */}
+        <CountryStage countries={filteredCountries} totalCount={countriesData.length} />
+
         {/* The header's search field is desktop-only; on mobile it lives in a
             sheet, so discovery keeps its own always-visible field. */}
         <div className="relative mb-4 w-full md:hidden">
