@@ -1,7 +1,14 @@
 /**
  * THE EARTH — after Ascend's hero: a photoreal planet sunk into the bottom of
- * the frame, city lights on the night side, drifting cloud shells, a thin
- * blue limb and a starfield behind it.
+ * the frame, drifting cloud shells and a pale blue limb, set in a daylight
+ * sky rather than in space.
+ *
+ * LIGHT, NOT NIGHT. The homepage is a light page, so the planet is seen by
+ * day: the sun stands in front of it, the far side is lifted to a soft
+ * blue-grey instead of black (a black limb against a pale sky reads as a hole
+ * in the page), and every glow that used to be additive — the halo, the radar
+ * dots, the ping — is alpha-blended, because adding light to white adds
+ * nothing. The planet fades in by opacity, not up from black.
  *
  * Texture maps are Solar System Scope's (CC BY 4.0, credited on
  * /image-credits), re-encoded to WebP under /public/textures/earth.
@@ -82,7 +89,8 @@ const earthFrag = /* glsl */ `
     // Oceans read a touch deeper and bluer than the raw map, as they do from orbit.
     dayCol = mix(dayCol, dayCol * vec3(0.62, 0.82, 1.18), ocean * 0.55);
 
-    vec3 col = dayCol * (max(ndl, 0.0) * 0.95 + 0.01) * (1.0 - cloudShadow * 0.42);
+    // Daylight ambient: the far side stays readable against a pale sky.
+    vec3 col = dayCol * (max(ndl, 0.0) * 0.92 + 0.30) * (1.0 - cloudShadow * 0.36);
 
     // Sun glint on water.
     vec3 H = normalize(L + V);
@@ -91,20 +99,21 @@ const earthFrag = /* glsl */ `
 
     // City lights on the night side, warm sodium orange.
     vec3 night = texture2D(nightMap, vUv).rgb;
-    night = pow(night, vec3(1.55)) * vec3(1.0, 0.68, 0.36) * 3.6;
+    night = pow(night, vec3(1.55)) * vec3(1.0, 0.68, 0.36) * 0.9;
     col += night * (1.0 - day) * (1.0 - cloudShadow * 0.65);
 
     // Atmosphere: haze toward the limb and a bright blue rim on the lit edge.
     float fres = pow(1.0 - max(dot(N0, V), 0.0), 2.4);
-    vec3 atm = vec3(0.16, 0.42, 1.0);
+    // By day the limb dissolves into the sky's own pale blue.
+    vec3 atm = vec3(0.62, 0.78, 1.0);
     float lit = smoothstep(-0.35, 0.55, ndl0);
-    col = mix(col, atm * 0.30 * (0.15 + lit), fres * 0.38);
-    col += atm * pow(fres, 2.6) * (0.10 + 0.95 * lit);
+    col = mix(col, atm * (0.55 + 0.45 * lit), fres * 0.62);
+    col += vec3(0.20, 0.32, 0.55) * pow(fres, 2.6) * (0.25 + 0.6 * lit);
 
     // Its own gentle shoulder instead of global tone mapping, so the photos on
     // the cards keep their colour.
     col = 1.0 - exp(-col * 1.08);
-    gl_FragColor = vec4(col * reveal, 1.0);
+    gl_FragColor = vec4(col, reveal);
     #include <colorspace_fragment>
   }
 `;
@@ -138,12 +147,12 @@ const cloudFrag = /* glsl */ `
     float ndl = dot(N, normalize(sunDir));
     float day = smoothstep(-0.15, 0.35, ndl);
     float fres = pow(1.0 - max(dot(N, V), 0.0), 3.0);
-    vec3 col = vec3(0.92, 0.95, 1.0) * (max(ndl, 0.0) * 0.88 + 0.02) + vec3(0.25, 0.5, 1.0) * fres * 0.45 * day;
+    vec3 col = vec3(0.94, 0.96, 1.0) * (max(ndl, 0.0) * 0.70 + 0.32) + vec3(0.25, 0.5, 1.0) * fres * 0.25 * day;
     col = 1.0 - exp(-col * 1.1);
     // The shell sits just above the surface, so at grazing angles it would
     // poke past the limb and draw dark specks over the atmosphere. Fade it out there.
     float edge = smoothstep(0.02, 0.22, dot(N, V));
-    gl_FragColor = vec4(col, a * (0.08 + 0.86 * day) * reveal * edge);
+    gl_FragColor = vec4(col, a * (0.30 + 0.64 * day) * reveal * edge);
     #include <colorspace_fragment>
   }
 `;
@@ -177,9 +186,9 @@ const haloFrag = /* glsl */ `
     if (h < 0.0) discard;
     vec3 dir = normalize(closest - center);
     float lit = 0.25 + 0.75 * smoothstep(-0.6, 0.7, dot(dir, normalize(sunDir)));
-    float g = exp(-h / 0.010) * 0.55 + exp(-h / 0.045) * 0.18 + exp(-h / 0.15) * 0.05;
-    vec3 col = vec3(0.18, 0.45, 1.0) * g * lit;
-    gl_FragColor = vec4(col * reveal, 1.0);
+    float g = exp(-h / 0.012) * 0.60 + exp(-h / 0.05) * 0.30 + exp(-h / 0.18) * 0.16;
+    vec3 col = mix(vec3(0.55, 0.72, 1.0), vec3(0.86, 0.92, 1.0), smoothstep(0.0, 0.12, h));
+    gl_FragColor = vec4(col, clamp(g * lit, 0.0, 1.0) * reveal);
     #include <colorspace_fragment>
   }
 `;
@@ -211,8 +220,8 @@ const markerFrag = /* glsl */ `
     if (d > 1.0) discard;
     float core = smoothstep(0.35, 0.0, d);
     float glow = smoothstep(1.0, 0.0, d) * 0.45;
-    vec3 col = vec3(0.55, 1.0, 0.82) * (core * 1.6 + glow) * vPulse;
-    gl_FragColor = vec4(col, (core + glow) * vFace * reveal);
+    vec3 col = vec3(0.04, 0.42, 0.40);
+    gl_FragColor = vec4(col, clamp(core * 1.2 + glow * 0.5, 0.0, 1.0) * (0.55 + 0.45 * vPulse) * vFace * reveal);
     #include <colorspace_fragment>
   }
 `;
@@ -236,7 +245,7 @@ const pingFrag = /* glsl */ `
     float fill = smoothstep(uT, 0.0, r) * 0.10;
     float a = (ring + fill) * pow(1.0 - uT, 1.6);
     if (a < 0.002) discard;
-    gl_FragColor = vec4(uColor * a * 1.6, a);
+    gl_FragColor = vec4(uColor, clamp(a * 1.6, 0.0, 1.0));
     #include <colorspace_fragment>
   }
 `;
@@ -291,24 +300,29 @@ const skyVert = /* glsl */ `
   }
 `;
 
-/** Mirror Hall's sky: a violet-navy glow at the top, falling to deep navy. */
+/**
+ * The daylight sky: a pale, slightly blue top, a warm wash where the sun
+ * stands (upper left, matching `sunDir`), and a floor that is exactly the
+ * page's paper, so the stage ends without a seam.
+ */
 const skyFrag = /* glsl */ `
   uniform vec2 uRes;
   varying vec2 vUv;
   void main() {
     vec2 p = vUv;
     // Authored in sRGB, linearised at the end.
-    vec3 top = vec3(0.058, 0.050, 0.170);
-    vec3 mid = vec3(0.020, 0.027, 0.088);
-    vec3 low = vec3(0.016, 0.024, 0.059); // = --color-space, #04060f
-    vec3 col = mix(low, mid, smoothstep(0.0, 0.55, p.y));
-    col = mix(col, top, smoothstep(0.55, 1.0, p.y));
+    vec3 top = vec3(0.886, 0.925, 0.976);
+    vec3 mid = vec3(0.949, 0.957, 0.973);
+    vec3 low = vec3(0.976, 0.973, 0.961); // = --color-paper, #f9f8f5
+    vec3 col = mix(low, mid, smoothstep(0.0, 0.5, p.y));
+    col = mix(col, top, smoothstep(0.5, 1.0, p.y));
     float aspect = uRes.x / uRes.y;
-    vec2 q = vec2((p.x - 0.5) * aspect, p.y - 1.08);
-    col += vec3(0.13, 0.09, 0.34) * exp(-dot(q, q) * 2.6) * 0.45;
-    // The faint scatter rising off the planet's limb.
+    // The sun's warmth, off to the upper left.
+    vec2 q = vec2((p.x - 0.18) * aspect, p.y - 0.95);
+    col = mix(col, vec3(1.0, 0.975, 0.935), exp(-dot(q, q) * 2.2) * 0.75);
+    // A pale blue scatter rising off the planet's limb.
     vec2 h = vec2((p.x - 0.5) * aspect * 0.55, p.y - 0.30);
-    col += vec3(0.06, 0.14, 0.32) * exp(-dot(h, h) * 7.0) * 0.5;
+    col = mix(col, vec3(0.86, 0.91, 0.985), exp(-dot(h, h) * 6.0) * 0.55);
     // Dither, so the long gradient does not band on 8-bit panels.
     float n = fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453);
     col += (n - 0.5) / 255.0;
@@ -333,9 +347,9 @@ export type EarthTextures = {
 export function createEarth(textures: EarthTextures, countries: { lat: number; lng: number }[]) {
   const scene = new THREE.Scene();
 
-  // From the upper left, so the terminator and the night side's city lights
-  // show along the planet's right shoulder, as in Ascend.
-  const sunDir = new THREE.Vector3(-0.86, 0.42, 0.42).normalize();
+  // From the upper left and in front: by day most of the visible cap is lit,
+  // with only a soft terminator along the planet's right shoulder.
+  const sunDir = new THREE.Vector3(-0.55, 0.5, 0.75).normalize();
 
   /* Sky. */
   const skyMat = new THREE.ShaderMaterial({
@@ -381,6 +395,8 @@ export function createEarth(textures: EarthTextures, countries: { lat: number; l
   const stars = new THREE.Points(starGeo, starMat);
   stars.frustumCulled = false;
   stars.renderOrder = -5;
+  // Kept in the scene graph (the engine drives its uniforms), but not drawn by day.
+  stars.visible = false;
   scene.add(stars);
 
   /* The globe. Everything that turns with the planet lives under `globe`. */
@@ -400,6 +416,8 @@ export function createEarth(textures: EarthTextures, countries: { lat: number; l
       cloudShift: { value: 0 },
       reveal: { value: 0 },
     },
+    // It fades in by opacity: on a pale sky, fading up from black would flash a dark disc.
+    transparent: true,
   });
   const earth = new THREE.Mesh(new THREE.SphereGeometry(1, 256, 160), earthMat);
   globe.add(earth);
@@ -431,7 +449,7 @@ export function createEarth(textures: EarthTextures, countries: { lat: number; l
     side: THREE.BackSide,
     transparent: true,
     depthWrite: false,
-    blending: THREE.AdditiveBlending,
+    blending: THREE.NormalBlending,
   });
   const halo = new THREE.Mesh(new THREE.SphereGeometry(1.7, 128, 96), haloMat);
   halo.renderOrder = 1;
@@ -454,7 +472,7 @@ export function createEarth(textures: EarthTextures, countries: { lat: number; l
     uniforms: { uTime: { value: 0 }, uPixel: { value: 1 }, reveal: { value: 0 } },
     transparent: true,
     depthWrite: false,
-    blending: THREE.AdditiveBlending,
+    blending: THREE.NormalBlending,
   });
   const markers = new THREE.Points(markerGeo, markerMat);
   markers.renderOrder = 3;
@@ -531,10 +549,10 @@ export function createEarth(textures: EarthTextures, countries: { lat: number; l
     const mat = new THREE.ShaderMaterial({
       vertexShader: pingVert,
       fragmentShader: pingFrag,
-      uniforms: { uT: { value: 1 }, uColor: { value: new THREE.Color(1.0, 0.36, 0.36) } },
+      uniforms: { uT: { value: 1 }, uColor: { value: new THREE.Color(0.86, 0.16, 0.2) } },
       transparent: true,
       depthWrite: false,
-      blending: THREE.AdditiveBlending,
+      blending: THREE.NormalBlending,
     });
     const m = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), mat);
     m.rotation.x = -Math.PI / 2;

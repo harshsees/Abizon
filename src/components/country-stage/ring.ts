@@ -1,8 +1,11 @@
 /**
  * THE HALL — after Mirror Hall: portrait cards standing in a ring around the
- * viewer on a near-black pool, each card mirrored in the water below with a
- * slow ripple running through the reflection, and the light of every card
- * spilling across the surface beneath it.
+ * viewer on a pale, still pool, each card mirrored in the water below with a
+ * slow ripple running through the reflection, and the colour of every card
+ * tinting the surface beneath it.
+ *
+ * By day, cards further round the ring recede by fading toward the sky rather
+ * than by darkening: a darkened card on a light page reads as a dirty one.
  *
  * The camera stands inside the ring. That is what makes the nearer cards at
  * the edges loom larger than the one straight ahead, and why the captions above
@@ -45,11 +48,11 @@ const cardFrag = /* glsl */ `
       // A sheen sweeping across the glass of the hovered card.
       float sweep = smoothstep(0.12, 0.0, abs(vUv.x - vUv.y * 0.35 - (uHover * 1.6 - 0.3)));
       col += sweep * uHover * 0.10;
-      col *= mix(0.42, 1.06, uDim) + uHover * 0.06;
+      col *= mix(0.86, 1.04, uDim) + uHover * 0.05;
     } else {
-      col *= mix(0.55, 1.0, uDim);
+      col *= mix(0.9, 1.0, uDim);
     }
-    gl_FragColor = vec4(col, c.a * uReveal);
+    gl_FragColor = vec4(col, c.a * mix(0.5, 1.0, uDim) * uReveal);
     #include <colorspace_fragment>
   }
 `;
@@ -78,17 +81,18 @@ const reflFrag = /* glsl */ `
     uv.x += w * strength;
     uv.y += w * 0.6 * strength;
     vec4 c = texture2D(map, uv, 1.5 + (1.0 - k) * 2.5);
-    float fade = pow(smoothstep(0.4, 1.0, k), 1.6) * 0.42;
-    vec3 col = c.rgb * vec3(0.78, 0.86, 1.0) * mix(0.45, 1.0, uDim);
+    // Faint: a glossy floor by day, not a dark mirror.
+    float fade = pow(smoothstep(0.55, 1.0, k), 1.8) * 0.18 * mix(0.5, 1.0, uDim);
+    vec3 col = c.rgb * vec3(0.92, 0.95, 1.0);
     gl_FragColor = vec4(col, c.a * fade * uReveal);
     #include <colorspace_fragment>
   }
 `;
 
 /**
- * The pool. Additive, so it can only add light: the coloured pool each card
- * throws on the water, broken up by a moving caustic so it shimmers, and a
- * faint sheen along the waterline. It fades out well before the planet's limb.
+ * The pool: the colour each card throws on the water, broken up by a moving
+ * caustic so it shimmers. Alpha-blended — by day a card tints the water rather
+ * than lighting it. It fades out well before the planet's limb.
  */
 const poolVert = /* glsl */ `
   varying vec3 vPosW;
@@ -118,6 +122,7 @@ const poolFrag = /* glsl */ `
   void main() {
     vec2 p = vPosW.xz;
     vec3 col = vec3(0.0);
+    float w = 0.0;
     float caustic = noise(p * 3.2 + vec2(uTime * 0.25, -uTime * 0.18)) * 0.6 + noise(p * 7.0 - uTime * 0.3) * 0.4;
     for (int i = 0; i < SLOTS; i++) {
       vec4 c = uCards[i];
@@ -128,12 +133,15 @@ const poolFrag = /* glsl */ `
       vec2 l = vec2(d.x * ca + d.y * sa, -d.x * sa + d.y * ca);
       float g = exp(-(l.x * l.x) / 0.30 - (l.y * l.y) / 1.1);
       col += uColors[i] * g * c.w;
+      w += g * c.w;
     }
-    col *= 0.55 + caustic * 0.75;
+    // The weighted mean colour of the cards above this point, and how much of it.
+    col /= max(w, 1e-4);
+    float a = min(w, 1.0) * (0.55 + caustic * 0.75);
     // Fade the pool toward the viewer so it never reaches the planet.
     float r = length(p);
     float fade = smoothstep(uRadius * 0.35, uRadius * 0.95, r) * (1.0 - smoothstep(uRadius * 1.02, uRadius * 1.25, r));
-    gl_FragColor = vec4(col * fade * 0.32 * uReveal, 1.0);
+    gl_FragColor = vec4(col, a * fade * 0.16 * uReveal);
     #include <colorspace_fragment>
   }
 `;
@@ -213,7 +221,6 @@ export function createRing(radius: number) {
     },
     transparent: true,
     depthWrite: false,
-    blending: THREE.AdditiveBlending,
   });
   const pool = new THREE.Mesh(new THREE.CircleGeometry(radius * 1.3, 96), poolMat);
   pool.rotation.x = -Math.PI / 2;

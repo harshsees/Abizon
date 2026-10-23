@@ -6,7 +6,10 @@
  * so the sphere sits sunk into the bottom of the frame; the hall's camera
  * stands inside the ring and is lens-shifted so the waterline lands where the
  * layout wants it. The hall draws over the planet with a cleared depth buffer,
- * then bloom and output run over both.
+ * then the output pass runs over both.
+ *
+ * There is no bloom. The stage is set in daylight now, and bloom over a pale
+ * sky lifts the whole frame toward white instead of making anything glow.
  *
  * Sync is a single number: `pos`, the ring's position in card units. The card
  * nearest the front is the active destination; the planet springs toward
@@ -17,7 +20,6 @@
 import * as THREE from "three";
 import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
-import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 
@@ -69,7 +71,6 @@ function dropHeight(t: number) {
 export class StageEngine {
   private renderer: THREE.WebGLRenderer;
   private composer: EffectComposer;
-  private bloom: UnrealBloomPass | null = null;
   private earthCam = new THREE.PerspectiveCamera(EARTH_FOV, 1, 0.01, 100);
   private ringCam = new THREE.PerspectiveCamera(50, 1, 0.05, 100);
   private earth: Earth | null = null;
@@ -147,7 +148,8 @@ export class StageEngine {
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.toneMapping = THREE.NoToneMapping;
-    this.renderer.setClearColor(0x02040c, 1);
+    // The page's paper, for the frames before the sky is drawn (or if the planet never loads).
+    this.renderer.setClearColor(0xf9f8f5, 1);
 
     this.ring = createRing(RADIUS);
 
@@ -236,12 +238,6 @@ export class StageEngine {
       ringPass.clearDepth = true;
     }
     this.composer.addPass(ringPass);
-    if (!this.mobile) {
-      this.bloom = new UnrealBloomPass(new THREE.Vector2(this.width, this.height), 0.32, 0.55, 0.86);
-      this.composer.addPass(this.bloom);
-    } else {
-      this.bloom = null;
-    }
     this.composer.addPass(new OutputPass());
   }
 
@@ -300,12 +296,9 @@ export class StageEngine {
     if (w < 2 || h < 2) return;
     this.width = w;
     this.height = h;
-    const wasMobile = this.mobile;
     this.mobile = w < 768;
     this.renderer.setSize(w, h, false);
     this.composer.setSize(w, h);
-    this.bloom?.resolution.set(w, h);
-    if (wasMobile !== this.mobile && this.composer.passes.length) this.buildComposer();
 
     const dpr = this.renderer.getPixelRatio();
     if (this.earth) {

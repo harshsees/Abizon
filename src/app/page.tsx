@@ -4,9 +4,10 @@
  * Country discovery.
  *
  * The destination stage — Mirror Hall's ring of cards over Ascend's planet —
- * fills the first screen, and its filters sit beneath it on the same night.
- * Everything after that is a paper sheet that rises over the space: the page
- * stops being a scene and starts explaining what abizon is and does.
+ * fills the first screen, set in a daylight sky whose floor is the page's own
+ * paper. Its filters sit beneath it, and the sections after them carry on on
+ * the same paper: one light, continuous page that stops being a scene and
+ * starts explaining what abizon is and does.
  *
  * What changed, and why:
  *
@@ -16,7 +17,7 @@
  * - The card grid and the map are gone. The hall is the way to browse
  *   destinations now; the grid repeated it below in a second visual language.
  *   The List/Map switch went with them, since there is nothing left to switch.
- * - The filters stay, in a dark tone, and still drive the hall: the stage is
+ * - The filters stay, and still drive the hall: the stage is
  *   handed the same filtered list the grid used to be.
  *
  * What is left here is what belongs to the page: the search and filter state,
@@ -70,14 +71,14 @@ export default function Home() {
   }, []);
 
   /**
-   * The document behind the page is the light canvas every other route uses.
-   * Overscroll and the moment before hydration would flash it at the edges of
-   * this one, so the root takes the space colour while the homepage is mounted.
+   * The document behind the page is the canvas every other route uses, a
+   * cooler grey than this page's paper. Overscroll would show it at the edges,
+   * so the root takes the paper while the homepage is mounted.
    */
   useEffect(() => {
     const root = document.documentElement;
     const previous = root.style.backgroundColor;
-    root.style.backgroundColor = "#04060f";
+    root.style.backgroundColor = "#f9f8f5";
     return () => {
       root.style.backgroundColor = previous;
     };
@@ -132,13 +133,7 @@ export default function Home() {
   };
 
   return (
-    <div className="relative flex min-h-screen flex-col bg-space font-sans text-white antialiased">
-      {/* The stars the planet is set among carry on behind the whole page. */}
-      <div aria-hidden className="space-stars pointer-events-none fixed inset-0 -z-0" />
-      <div
-        aria-hidden
-        className="pointer-events-none fixed inset-x-0 top-0 -z-0 h-[70vh] bg-[radial-gradient(60%_50%_at_50%_0%,rgba(70,55,170,0.10),transparent_70%)]"
-      />
+    <div className="relative flex min-h-screen flex-col bg-paper font-sans text-ink antialiased">
 
       <HomeNav searchQuery={searchQuery} onSearchChange={setSearchQuery} />
 
@@ -157,7 +152,7 @@ export default function Home() {
           <div className="relative mt-5 w-full max-w-5xl md:hidden">
             <Search
               aria-hidden
-              className="pointer-events-none absolute left-4 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-white/40"
+              className="pointer-events-none absolute left-4 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-ink-faint"
             />
             <input
               type="search"
@@ -165,24 +160,24 @@ export default function Home() {
               placeholder="Search country"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-12 w-full rounded-full border border-white/10 bg-white/[0.04] pl-11 pr-4 text-sm text-white placeholder:text-white/40 outline-none backdrop-blur-xl focus:border-white/25"
+              className="h-12 w-full rounded-full border border-rule bg-paper-raised pl-11 pr-4 text-base text-ink placeholder:text-ink-faint outline-none focus:border-ink/40"
             />
           </div>
 
           <div className="mt-4 w-full max-w-5xl md:mt-5">
-            <CountryFilters values={filters} onChange={handleFilterChange} tone="dark" />
+            <CountryFilters values={filters} onChange={handleFilterChange} />
           </div>
 
-          <p className="mt-4 flex items-center gap-3 text-xs text-white/45" aria-live="polite">
+          <p className="mt-4 flex items-center gap-3 text-xs text-ink-faint" aria-live="polite">
             <span>
-              <span className="font-medium text-white/80">{filteredCountries.length}</span> of{" "}
+              <span className="font-medium text-ink">{filteredCountries.length}</span> of{" "}
               {countriesData.length} destinations in the hall
             </span>
             {hasActiveFilters && (
               <button
                 type="button"
                 onClick={resetFilters}
-                className="inline-flex cursor-pointer items-center gap-1 rounded-full border border-white/10 px-2.5 py-1 text-white/70 transition-colors hover:border-white/25 hover:text-white"
+                className="inline-flex cursor-pointer items-center gap-1 rounded-full border border-rule px-2.5 py-1 text-ink-muted transition-colors hover:border-ink/40 hover:text-ink"
               >
                 <RotateCcw className="h-3 w-3" aria-hidden />
                 Reset
@@ -191,9 +186,8 @@ export default function Home() {
           </p>
         </section>
 
-        {/* The rest of the page is paper: a sheet that rises over the space
-            once the hall and its filters are done with. */}
-        <div className="relative z-10 mt-16 overflow-hidden rounded-t-[28px] bg-paper text-ink md:mt-24 md:rounded-t-[44px]">
+        {/* The rest of the page, on the same paper the stage's sky ends in. */}
+        <div className="relative z-10 mt-8 overflow-hidden md:mt-12">
           {/* Passport security print, at the top of the sheet and behind the close. */}
           <Guilloche className="top-0 h-[620px]" />
           <Guilloche className="bottom-0 h-[460px]" />

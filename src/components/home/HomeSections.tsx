@@ -3,8 +3,8 @@
 /**
  * THE HOMEPAGE BELOW THE HALL.
  *
- * The stage above is night; everything after it is a sheet of paper that rises
- * over it. The sections are set like a printed brochure rather than a stack of
+ * The stage above is a daylight sky whose floor is this page's paper, and the
+ * sections carry on on that paper. They are set like a printed brochure rather than a stack of
  * glowing cards: a numbered label in the left margin, a serif headline, hairline
  * rules between rows, and one worked object per section — a proportional bar,
  * a ledger, a mock of the application, a receipt — instead of icon tiles.
@@ -57,10 +57,10 @@ type ShowInHall = (filters: Partial<FilterValues>) => void;
 /* Shared pieces                                                              */
 /* -------------------------------------------------------------------------- */
 
-/** The pill label used on the dark band directly under the stage. */
+/** The pill label used directly under the stage. */
 export function Eyebrow({ children }: { children: ReactNode }) {
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[11px] font-medium text-white/60">
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-rule bg-paper-raised px-2.5 py-1 text-[11px] font-medium text-ink-muted">
       {children}
     </span>
   );

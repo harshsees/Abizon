@@ -1,8 +1,8 @@
 "use client";
 
 /**
- * THE HOMEPAGE'S NAVIGATION — a floating glass pill over the destination
- * stage, in place of the site header.
+ * THE HOMEPAGE'S NAVIGATION — a floating pill of frosted white glass over the
+ * destination stage, in place of the site header.
  *
  * The full header was a light bar sitting above a dark, full-bleed scene; it
  * cut the page in two. This keeps only what a visitor needs from it — the
@@ -42,8 +42,10 @@ export function HomeNav({
   }, []);
 
   const glass = cn(
-    "border border-white/10 backdrop-blur-xl transition-colors duration-500",
-    scrolled ? "bg-[#070a16]/80" : "bg-white/[0.04]",
+    "border border-ink/[0.08] backdrop-blur-xl transition-[background-color,box-shadow] duration-500",
+    scrolled
+      ? "bg-paper-raised/85 shadow-[0_8px_24px_-12px_rgba(22,23,27,0.18)]"
+      : "bg-paper-raised/55",
   );
 
   return (
@@ -54,8 +56,8 @@ export function HomeNav({
           aria-label="abizon home"
           className={cn("pointer-events-auto flex h-11 items-center gap-2 rounded-full px-4", glass)}
         >
-          <BrandMark tone="current" className="size-6 text-white" />
-          <Wordmark className="text-lg !text-white" />
+          <BrandMark tone="current" className="size-6 text-ink" />
+          <Wordmark className="text-lg !text-ink" />
         </Link>
 
         <nav
@@ -64,20 +66,20 @@ export function HomeNav({
         >
           <label className="relative flex h-9 items-center">
             <span className="sr-only">Search countries</span>
-            <Search aria-hidden className="pointer-events-none absolute left-3 h-3.5 w-3.5 text-white/45" />
+            <Search aria-hidden className="pointer-events-none absolute left-3 h-3.5 w-3.5 text-ink-faint" />
             <input
               type="search"
               placeholder="Search countries"
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
-              className="h-9 w-52 rounded-full bg-white/[0.06] pl-8 pr-3 text-xs text-white placeholder:text-white/40 outline-none ring-sky-300/60 transition-[width,box-shadow] focus:w-64 focus:ring-1 lg:w-60"
+              className="h-9 w-52 rounded-full bg-ink/[0.05] pl-8 pr-3 text-xs text-ink placeholder:text-ink-faint outline-none ring-ink/30 transition-[width,box-shadow] focus:w-64 focus:ring-1 lg:w-60"
             />
           </label>
           {LINKS.map((link) => (
             <Link
               key={link.href}
               href={link.href}
-              className="rounded-full px-3.5 py-2 text-xs font-medium text-white/65 transition-colors hover:bg-white/[0.06] hover:text-white"
+              className="rounded-full px-3.5 py-2 text-xs font-medium text-ink-muted transition-colors hover:bg-ink/[0.05] hover:text-ink"
             >
               {link.label}
             </Link>
@@ -89,14 +91,14 @@ export function HomeNav({
             href="/track"
             aria-label="Track an application"
             title="Track an application"
-            className={cn("grid h-11 w-11 place-items-center rounded-full text-white/75 hover:text-white", glass)}
+            className={cn("grid h-11 w-11 place-items-center rounded-full text-ink-muted hover:text-ink", glass)}
           >
             <FileSearch className="h-4.5 w-4.5" aria-hidden />
           </Link>
           <Link
             href="/profile"
             aria-label="Open your profile"
-            className={cn("grid h-11 w-11 place-items-center rounded-full text-white/75 hover:text-white", glass)}
+            className={cn("grid h-11 w-11 place-items-center rounded-full text-ink-muted hover:text-ink", glass)}
           >
             <User className="h-4.5 w-4.5" aria-hidden />
           </Link>

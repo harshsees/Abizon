@@ -164,7 +164,7 @@ export function CountryStage({
       aria-roledescription="carousel"
       aria-label="Destinations"
       onKeyDown={onKeyDown}
-      className="relative isolate w-full overflow-hidden bg-space"
+      className="relative isolate w-full overflow-hidden bg-paper"
       style={{ height: "clamp(640px, 100svh, 1080px)" }}
     >
       <canvas
@@ -178,20 +178,20 @@ export function CountryStage({
       />
 
       {/* The planet sinks into the page: the stage's lower edge dissolves into
-          the same space colour everything below it is set on, so the page
-          reads as one continuous background rather than a hero and a page. */}
+          the same paper everything below it is set on, so the page reads as
+          one continuous background rather than a hero and a page. */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-[18%] bg-gradient-to-b from-transparent to-space"
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-[18%] bg-gradient-to-b from-transparent to-paper"
       />
 
       {/* Title, set below the floating nav. */}
       <div className="pointer-events-none absolute inset-x-0 top-[10%] flex flex-col items-center px-6 text-center md:top-[8.5%]">
-        <p className="text-[10px] font-medium uppercase tracking-[0.32em] text-white/40">
-          {totalCount} destinations <span className="mx-1.5 text-white/25">·</span>
-          <span className="text-white/80">Drag to explore</span>
+        <p className="text-[10px] font-medium uppercase tracking-[0.32em] text-ink-faint">
+          {totalCount} destinations <span className="mx-1.5 text-ink/25">·</span>
+          <span className="text-ink">Drag to explore</span>
         </p>
-        <h1 className="mt-3 text-[32px] font-extralight leading-none tracking-[-0.01em] text-white md:text-[46px]">
+        <h1 className="mt-3 font-serif text-[36px] font-light leading-none tracking-[-0.02em] text-ink md:text-[54px]">
           Where to next?
         </h1>
       </div>
@@ -199,13 +199,13 @@ export function CountryStage({
       {/* The active destination, over the planet. */}
       {current ? (
         <div className="absolute inset-x-0 top-[77%] flex flex-col items-center px-4 text-center md:top-[76.5%]">
-          {/* A soft scrim so the type holds against a sunlit planet. */}
+          {/* A soft wash of paper so ink type holds against a sunlit planet. */}
           <div
             aria-hidden
-            className="pointer-events-none absolute left-1/2 top-1/2 -z-10 h-[220%] w-[min(760px,120%)] -translate-x-1/2 -translate-y-1/2 bg-[radial-gradient(closest-side,rgba(2,4,12,0.82),rgba(2,4,12,0.5)_55%,transparent)]"
+            className="pointer-events-none absolute left-1/2 top-1/2 -z-10 h-[220%] w-[min(760px,120%)] -translate-x-1/2 -translate-y-1/2 bg-[radial-gradient(closest-side,rgb(249_248_245/0.94),rgb(249_248_245/0.82)_60%,transparent)]"
           />
-          <p className="font-mono text-[11px] tracking-[0.2em] text-white/60 [text-shadow:0_1px_8px_rgba(0,0,0,0.8)]">
-            <span className="text-sky-300">{pad(active + 1)}</span> / {pad(count)}
+          <p className="font-mono text-[11px] font-medium tracking-[0.2em] text-ink">
+            <span className="text-primary">{pad(active + 1)}</span> / {pad(count)}
           </p>
 
           <div className="mt-1.5 flex items-center gap-3 md:gap-5">
@@ -213,13 +213,13 @@ export function CountryStage({
               type="button"
               onClick={() => engineRef.current?.step(-1)}
               aria-label="Previous destination"
-              className="grid h-9 w-9 cursor-pointer place-items-center rounded-full border border-white/15 bg-white/[0.04] text-white/70 backdrop-blur-md transition-colors hover:border-white/35 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-sky-300"
+              className="grid h-9 w-9 cursor-pointer place-items-center rounded-full border border-ink/15 bg-paper-raised/70 text-ink-muted backdrop-blur-md transition-colors hover:border-ink/40 hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink"
             >
               <ChevronLeft className="h-4 w-4" aria-hidden />
             </button>
             <h3
               key={current.code}
-              className="animate-stage-title min-w-0 max-w-[60vw] truncate text-[24px] font-light uppercase tracking-[0.14em] text-white md:max-w-none md:text-[34px]"
+              className="animate-stage-title min-w-0 max-w-[60vw] truncate text-[24px] font-light uppercase tracking-[0.14em] text-ink md:max-w-none md:text-[34px]"
             >
               {current.name}
             </h3>
@@ -227,21 +227,21 @@ export function CountryStage({
               type="button"
               onClick={() => engineRef.current?.step(1)}
               aria-label="Next destination"
-              className="grid h-9 w-9 cursor-pointer place-items-center rounded-full border border-white/15 bg-white/[0.04] text-white/70 backdrop-blur-md transition-colors hover:border-white/35 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-sky-300"
+              className="grid h-9 w-9 cursor-pointer place-items-center rounded-full border border-ink/15 bg-paper-raised/70 text-ink-muted backdrop-blur-md transition-colors hover:border-ink/40 hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink"
             >
               <ChevronRight className="h-4 w-4" aria-hidden />
             </button>
           </div>
 
-          <div className="mt-2.5 flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-[11px] font-medium uppercase tracking-[0.12em] text-white/80 [text-shadow:0_1px_8px_rgba(0,0,0,0.8)]">
+          <div className="mt-2.5 flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-ink">
             <span>{current.visaType}</span>
-            <span aria-hidden className="h-1 w-1 rounded-full bg-white/30" />
+            <span aria-hidden className="h-1 w-1 rounded-full bg-ink/25" />
             <span>{current.validity}</span>
-            <span aria-hidden className="h-1 w-1 rounded-full bg-white/30" />
+            <span aria-hidden className="h-1 w-1 rounded-full bg-ink/25" />
             <span>{formatGovernmentFee(current.fees)}</span>
             <Link
               href={`/visa/${slug}`}
-              className="ml-1 inline-flex items-center gap-1.5 rounded-full bg-white px-3.5 py-1.5 text-[11px] font-semibold normal-case tracking-normal text-slate-950 shadow-[0_0_24px_rgba(125,211,252,0.35)] transition-transform hover:-translate-y-px focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-300"
+              className="ml-1 inline-flex items-center gap-1.5 rounded-full bg-ink px-3.5 py-1.5 text-[11px] font-semibold normal-case tracking-normal text-paper shadow-[0_8px_20px_-8px_rgba(22,23,27,0.45)] transition-transform hover:-translate-y-px focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
             >
               View {current.name} visa
               <ArrowRight className="h-3 w-3" aria-hidden />
@@ -251,7 +251,7 @@ export function CountryStage({
           <Progress index={active} count={count} />
         </div>
       ) : (
-        <div className="absolute inset-x-0 top-[78%] text-center text-sm font-light text-white/60">
+        <div className="absolute inset-x-0 top-[78%] text-center text-sm text-ink-muted">
           No destinations match these filters.
         </div>
       )}
@@ -274,7 +274,7 @@ function Progress({ index, count }: { index: number; count: number }) {
             key={i}
             className={cn(
               "h-[3px] rounded-full transition-all duration-500",
-              i === index ? "w-5 bg-sky-300" : "w-[3px] bg-white/30",
+              i === index ? "w-5 bg-primary" : "w-[3px] bg-ink/25",
             )}
           />
         ))}
@@ -283,9 +283,9 @@ function Progress({ index, count }: { index: number; count: number }) {
   }
   const pct = (index / (count - 1)) * 100;
   return (
-    <div aria-hidden className="relative mt-3 h-[3px] w-36 rounded-full bg-white/15">
+    <div aria-hidden className="relative mt-3 h-[3px] w-36 rounded-full bg-ink/10">
       <span
-        className="absolute top-0 h-[3px] w-5 -translate-x-1/2 rounded-full bg-sky-300 shadow-[0_0_10px_rgba(125,211,252,0.8)] transition-[left] duration-500 ease-out"
+        className="absolute top-0 h-[3px] w-5 -translate-x-1/2 rounded-full bg-primary transition-[left] duration-500 ease-out"
         style={{ left: `calc(10px + (100% - 20px) * ${pct / 100})` }}
       />
     </div>

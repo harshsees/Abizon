@@ -282,17 +282,14 @@
 @theme inline {
   --color-background: var(--color-background);
   --color-surface: var(--color-surface);
-  /* The homepage's space: the colour the destination stage's planet sinks
-     into, and that every section beneath it is set on. One value, so the
-     seam between hero and page cannot show. */
-  --color-space: #04060f;
-  /* The homepage below the stage: a warm paper sheet that rises over the
-     space, so the page reads as a document after the hero, not as more night.
-     ink on paper is 15.6:1, ink-muted 6.4:1, ink-faint 4.6:1 — all AA as body
-     text. rule is for hairlines only. */
-  --color-paper: #f4f1ea;
-  --color-paper-raised: #fbfaf7;
-  --color-paper-sunken: #ebe6db;
+  /* The homepage's paper: a warm white the stage's daylight sky ends in and
+     every section below it is set on. Not pure white — a page of pure white
+     under a pale sky reads as unstyled — but close enough to read as light.
+     ink-muted and ink-faint are AA as body text on it (checked below); rule
+     is for hairlines only. */
+  --color-paper: #f9f8f5;
+  --color-paper-raised: #ffffff;
+  --color-paper-sunken: #efece5;
   --color-ink: #16171b;
   --color-ink-muted: #545862;
   --color-ink-faint: #6b6e76;
@@ -2048,33 +2045,6 @@ button {
   .animate-stage-title {
     animation: none;
   }
-}
-
-/* The homepage's starfield, continued behind every section below the stage.
-   Three tiled layers of single-pixel stars at different densities, so the
-   repeat is never visible; the brightest layer twinkles very slowly. */
-.space-stars {
-  background-image:
-    radial-gradient(1px 1px at 12% 18%, rgba(220, 230, 255, 0.55), transparent 60%),
-    radial-gradient(1px 1px at 68% 42%, rgba(220, 230, 255, 0.45), transparent 60%),
-    radial-gradient(1px 1px at 33% 77%, rgba(220, 230, 255, 0.4), transparent 60%),
-    radial-gradient(1px 1px at 87% 86%, rgba(220, 230, 255, 0.5), transparent 60%),
-    radial-gradient(1px 1px at 52% 9%, rgba(220, 230, 255, 0.35), transparent 60%),
-    radial-gradient(1.5px 1.5px at 22% 55%, rgba(235, 240, 255, 0.7), transparent 60%),
-    radial-gradient(1.5px 1.5px at 78% 22%, rgba(235, 240, 255, 0.6), transparent 60%),
-    radial-gradient(1px 1px at 44% 38%, rgba(220, 230, 255, 0.3), transparent 60%),
-    radial-gradient(1px 1px at 91% 61%, rgba(220, 230, 255, 0.3), transparent 60%),
-    radial-gradient(1px 1px at 6% 92%, rgba(220, 230, 255, 0.35), transparent 60%);
-  background-size: 420px 420px, 420px 420px, 420px 420px, 420px 420px, 420px 420px,
-    690px 690px, 690px 690px, 260px 260px, 260px 260px, 260px 260px;
-  animation: space-twinkle 9s ease-in-out infinite alternate;
-}
-@keyframes space-twinkle {
-  from { opacity: 0.75; }
-  to { opacity: 1; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .space-stars { animation: none; }
 }
 
 /* The homepage's passport mock: a soft band sweeping across the MRZ, the way

@@ -149,7 +149,8 @@ export function paintCard(
   /* The caption above the card. */
   ctx.save();
   ctx.font = `400 40px ${sans}`;
-  ctx.fillStyle = "rgba(222, 230, 255, 0.92)";
+  // Ink, to match the page: the caption stands on a pale sky.
+  ctx.fillStyle = "rgba(22, 23, 27, 0.82)";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   if ("letterSpacing" in ctx) (ctx as CanvasRenderingContext2D & { letterSpacing: string }).letterSpacing = "6px";
