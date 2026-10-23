@@ -3,10 +3,10 @@
 /**
  * Country discovery.
  *
- * The page is one dark, continuous space now. The destination stage — Mirror
- * Hall's ring of cards over Ascend's planet — fills the first screen, and the
- * sections beneath it are set on the same background, so the planet sinks into
- * the page instead of ending at a seam.
+ * The destination stage — Mirror Hall's ring of cards over Ascend's planet —
+ * fills the first screen, and its filters sit beneath it on the same night.
+ * Everything after that is a paper sheet that rises over the space: the page
+ * stops being a scene and starts explaining what abizon is and does.
  *
  * What changed, and why:
  *
@@ -36,7 +36,17 @@ import {
 import { CountryStage } from "@/components/country-stage/CountryStage";
 import { HomeNav } from "@/components/home/HomeNav";
 import { HomeFooter } from "@/components/home/HomeFooter";
-import { Collections, CtaCard, Eyebrow, Faq, Steps, Tools } from "@/components/home/HomeSections";
+import {
+  Closing,
+  Collections,
+  Eyebrow,
+  Faq,
+  Guarantee,
+  HowItWorks,
+  Intro,
+  Services,
+  Tools,
+} from "@/components/home/HomeSections";
 
 const CONTAINER = "mx-auto w-full max-w-[1240px] px-4 md:px-6";
 
@@ -133,10 +143,13 @@ export default function Home() {
 
       <CountryStage countries={filteredCountries} totalCount={countriesData.length} />
 
-      <main id="main-content" tabIndex={-1} className={`${CONTAINER} relative flex flex-1 flex-col`}>
+      <main id="main-content" tabIndex={-1} className="relative flex flex-1 flex-col">
         {/* Refine the hall. Directly under the stage, so a change is seen
             landing in the ring above it. */}
-        <section aria-label="Filter destinations" className="relative z-10 -mt-6 flex flex-col items-center md:-mt-10">
+        <section
+          aria-label="Filter destinations"
+          className={`${CONTAINER} relative z-10 -mt-6 flex flex-col items-center md:-mt-10`}
+        >
           <Eyebrow>Refine the hall</Eyebrow>
 
           {/* The nav's search field is desktop-only; mobile keeps its own. */}
@@ -177,11 +190,20 @@ export default function Home() {
           </p>
         </section>
 
-        <Collections onShowInHall={showInHall} />
-        <Steps />
-        <Tools />
-        <CtaCard onBackToHall={backToHall} />
-        <Faq />
+        {/* The rest of the page is paper: a sheet that rises over the space
+            once the hall and its filters are done with. */}
+        <div className="relative z-10 mt-16 rounded-t-[28px] bg-paper text-ink md:mt-24 md:rounded-t-[44px]">
+          <div className={CONTAINER}>
+            <Intro onShowInHall={showInHall} />
+            <Services onShowInHall={showInHall} />
+            <HowItWorks />
+            <Guarantee />
+            <Collections onShowInHall={showInHall} />
+            <Tools />
+            <Faq />
+            <Closing onBackToHall={backToHall} />
+          </div>
+        </div>
       </main>
 
       <HomeFooter />

@@ -286,6 +286,17 @@
      into, and that every section beneath it is set on. One value, so the
      seam between hero and page cannot show. */
   --color-space: #04060f;
+  /* The homepage below the stage: a warm paper sheet that rises over the
+     space, so the page reads as a document after the hero, not as more night.
+     ink on paper is 15.6:1, ink-muted 6.4:1, ink-faint 4.6:1 — all AA as body
+     text. rule is for hairlines only. */
+  --color-paper: #f4f1ea;
+  --color-paper-raised: #fbfaf7;
+  --color-paper-sunken: #ebe6db;
+  --color-ink: #16171b;
+  --color-ink-muted: #545862;
+  --color-ink-faint: #6b6e76;
+  --color-rule: #ddd6c8;
   --color-surface-raised: var(--color-surface-raised);
   --color-surface-sunken: var(--color-surface-sunken);
   --color-overlay: var(--color-overlay);
@@ -2064,4 +2075,19 @@ button {
 }
 @media (prefers-reduced-motion: reduce) {
   .space-stars { animation: none; }
+}
+
+/* The homepage's passport mock: a soft band sweeping across the MRZ, the way
+   the real scan reads it. Decorative only, and still when motion is reduced. */
+.mrz-scan {
+  background: linear-gradient(90deg, transparent, rgb(180 83 9 / 0.2), transparent) no-repeat;
+  background-size: 30% 100%;
+  animation: mrz-scan 2.4s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+@keyframes mrz-scan {
+  from { background-position: -50% 0; }
+  to { background-position: 150% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mrz-scan { animation: none; opacity: 0; }
 }

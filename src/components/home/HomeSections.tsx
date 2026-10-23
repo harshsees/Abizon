@@ -1,48 +1,60 @@
 "use client";
 
 /**
- * THE HOMEPAGE BELOW THE HALL — set in getlayers' language on the same space
- * background as the destination stage: a pill eyebrow over a light display
- * headline, an "All →" link on the right, media rows with a caption line,
- * numbered steps, a list beside a live preview, one large call-to-action card
- * and a two-column FAQ.
+ * THE HOMEPAGE BELOW THE HALL.
  *
- * Every number on this page is computed from `countriesData` and every link
- * goes to a route that exists. Nothing here is copy that could drift from the
- * product: if the dataset changes, the counts change with it.
+ * The stage above is night; everything after it is a sheet of paper that rises
+ * over it. The sections are set like a printed brochure rather than a stack of
+ * glowing cards: a numbered label in the left margin, a serif headline, hairline
+ * rules between rows, and one worked object per section — a proportional bar,
+ * a ledger, a mock of the application, a receipt — instead of icon tiles.
+ *
+ * The order answers what a first-time visitor asks, in the order they ask it:
+ *   01  What is this?                       Intro
+ *   02  What will you actually do for me?   Services
+ *   03  What do I have to do?               HowItWorks
+ *   04  Why should I trust you with it?     Guarantee
+ *   05  Where can I go?                     Collections
+ *   06  What else is here?                  Tools
+ *       Questions, and a way back up.       Faq, Closing
+ *
+ * The rule from the previous version still holds: every number is computed
+ * from `countriesData` and every link goes to a route that exists. There are no
+ * testimonials, ratings or customer counts here, because Abizon has none that
+ * are real yet (see `Reviews.tsx`).
  */
 
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import {
   ArrowRight,
   ArrowUpRight,
   Camera,
-  CalendarDays,
-  ChevronDown,
+  Check,
   ClipboardCheck,
-  CreditCard,
   FileSearch,
   Globe2,
   ListChecks,
-  ScanLine,
-  Users,
+  Plus,
   type LucideIcon,
 } from "lucide-react";
 
 import { CountryImagePlate } from "@/components/CountryImagePlate";
 import type { FilterValues } from "@/components/CountryFilters";
 import { countriesData, getCountrySlug, type Country } from "@/data/countries";
-import { arrivalCardFor } from "@/lib/arrivalCard";
+import { ARRIVAL_CARDS, arrivalCardFor } from "@/lib/arrivalCard";
 import { countryCardImage } from "@/lib/countryImagery";
-import { formatGovernmentFee } from "@/lib/countryVisa";
+import { formatGovernmentFee, formatShortDate } from "@/lib/countryVisa";
 import { cn } from "@/lib/utils";
+
+type ShowInHall = (filters: Partial<FilterValues>) => void;
 
 /* -------------------------------------------------------------------------- */
 /* Shared pieces                                                              */
 /* -------------------------------------------------------------------------- */
 
+/** The pill label used on the dark band directly under the stage. */
 export function Eyebrow({ children }: { children: ReactNode }) {
   return (
     <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[11px] font-medium text-white/60">
@@ -56,47 +68,783 @@ function Reveal({ children, className, delay = 0 }: { children: ReactNode; class
   return (
     <motion.div
       className={className}
-      initial={reduced ? false : { opacity: 0, y: 18 }}
+      initial={reduced ? false : { opacity: 0, y: 14 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-80px" }}
-      transition={{ duration: 0.7, delay, ease: [0.2, 0.7, 0.2, 1] }}
+      viewport={{ once: true, margin: "-60px" }}
+      transition={{ duration: 0.6, delay, ease: [0.16, 1, 0.3, 1] }}
     >
       {children}
     </motion.div>
   );
 }
 
+/** The margin label: section number and name, small caps, faint. */
+function Label({ index, children }: { index: string; children: ReactNode }) {
+  return (
+    <p className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.16em] text-ink-faint">
+      <span className="font-mono tracking-normal text-ink">{index}</span>
+      <span aria-hidden className="h-px w-4 bg-rule" />
+      {children}
+    </p>
+  );
+}
+
+/**
+ * Every section opens the same way: a hairline across the full measure, the
+ * label in the left margin, the headline beside it.
+ */
 function SectionHead({
-  eyebrow,
+  index,
+  label,
   title,
-  action,
+  id,
+  aside,
 }: {
-  eyebrow: string;
+  index: string;
+  label: string;
   title: ReactNode;
-  action?: ReactNode;
+  id: string;
+  aside?: ReactNode;
 }) {
   return (
-    <Reveal className="mb-8 flex flex-wrap items-end justify-between gap-4 md:mb-10">
-      <div>
-        <Eyebrow>{eyebrow}</Eyebrow>
-        <h2 className="mt-4 text-[34px] font-extralight leading-[1.05] tracking-[-0.02em] text-white md:text-[52px]">
+    <Reveal className="grid grid-cols-1 gap-5 border-t border-rule pt-6 md:grid-cols-[200px_1fr] md:gap-8">
+      <Label index={index}>{label}</Label>
+      <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-4">
+        <h2
+          id={id}
+          className="max-w-3xl font-serif text-[34px] font-light leading-[1.06] tracking-[-0.02em] text-ink md:text-[52px]"
+        >
           {title}
         </h2>
+        {aside}
       </div>
-      {action}
     </Reveal>
   );
 }
 
+function TextLink({ children, onClick, href }: { children: ReactNode; onClick?: () => void; href?: string }) {
+  const className =
+    "group inline-flex cursor-pointer items-center gap-1.5 text-sm font-medium text-ink underline decoration-rule decoration-1 underline-offset-[6px] transition-colors hover:decoration-ink";
+  const inner = (
+    <>
+      {children}
+      <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" aria-hidden />
+    </>
+  );
+  if (href) {
+    return (
+      <Link href={href} className={className}>
+        {inner}
+      </Link>
+    );
+  }
+  return (
+    <button type="button" onClick={onClick} className={className}>
+      {inner}
+    </button>
+  );
+}
+
+/** One row per destination: a couple of countries carry two products. */
+function uniqueDestinations(rows: Country[]): Country[] {
+  const seen = new Set<string>();
+  return rows.filter((c) => {
+    const slug = getCountrySlug(c.name);
+    if (seen.has(slug)) return false;
+    seen.add(slug);
+    return true;
+  });
+}
+
+const SECTION = "py-16 md:py-24";
+
 /* -------------------------------------------------------------------------- */
-/* Collections                                                                */
+/* 01 Intro — what abizon is, and what the catalogue asks of a passport        */
+/* -------------------------------------------------------------------------- */
+
+const VISA_KINDS: {
+  type: Country["visaType"];
+  label: string;
+  body: string;
+  /** Tone of the segment: an ink ramp, darkest for the most involved. */
+  tone: string;
+  onTone: string;
+}[] = [
+  {
+    type: "E-Visa",
+    label: "E-visa",
+    body: "Applied for online, delivered by email. This is most of what we file.",
+    tone: "bg-ink",
+    onTone: "text-paper",
+  },
+  {
+    type: "Sticker Visa",
+    label: "Embassy visa",
+    body: "A consulate appointment. We prepare the file and the list to bring.",
+    tone: "bg-ink/65",
+    onTone: "text-paper",
+  },
+  {
+    type: "Visa on Arrival",
+    label: "On arrival",
+    body: "Issued at the border. We tell you what to carry.",
+    tone: "bg-ink/35",
+    onTone: "text-ink",
+  },
+  {
+    type: "Visa Free",
+    label: "Visa free",
+    body: "No visa at all — the passport is enough.",
+    tone: "bg-ink/[0.12]",
+    onTone: "text-ink",
+  },
+];
+
+export function Intro({ onShowInHall }: { onShowInHall: ShowInHall }) {
+  const total = countriesData.length;
+  const counts = useMemo(
+    () =>
+      Object.fromEntries(
+        VISA_KINDS.map((k) => [k.type, countriesData.filter((c) => c.visaType === k.type).length]),
+      ) as Record<Country["visaType"], number>,
+    [],
+  );
+  const [hover, setHover] = useState<Country["visaType"] | null>(null);
+
+  return (
+    <section aria-labelledby="intro-title" className="pb-16 pt-20 md:pb-24 md:pt-28">
+      <div className="grid grid-cols-1 gap-5 md:grid-cols-[200px_1fr] md:gap-8">
+        <Reveal>
+          <Label index="01">About abizon</Label>
+        </Reveal>
+        <Reveal delay={0.05}>
+          <h2
+            id="intro-title"
+            className="max-w-[22ch] font-serif text-[34px] font-light leading-[1.12] tracking-[-0.02em] text-ink md:text-[56px]"
+          >
+            We get visas for Indian passport holders.{" "}
+            <span className="text-ink-faint">
+              Prepared, checked, filed — with the delivery date promised before you pay.
+            </span>
+          </h2>
+          <div className="mt-8 grid max-w-3xl grid-cols-1 gap-6 text-[15px] leading-relaxed text-ink-muted sm:grid-cols-2">
+            <p>
+              Pick a destination, answer four screens and scan your passport. We check every document
+              against that country&rsquo;s rules before anything is submitted, so a missing page is caught
+              by us and not by a consulate.
+            </p>
+            <p>
+              Then we file it and keep you posted until the decision. If the visa is late because of us, our
+              fee is waived — and every fee, including ours, is itemised before you pay.
+            </p>
+          </div>
+        </Reveal>
+      </div>
+
+      {/* What the catalogue asks of an Indian passport, as one bar. */}
+      <Reveal className="mt-16 md:mt-24" delay={0.05}>
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-[200px_1fr] md:gap-8">
+          <p className="text-sm leading-snug text-ink-muted md:pt-1">
+            What {total} destinations ask of an Indian passport
+          </p>
+          <div>
+            <div className="flex h-12 w-full gap-[3px] overflow-hidden rounded-lg md:h-14" role="list">
+              {VISA_KINDS.map((k) => {
+                const n = counts[k.type];
+                if (!n) return null;
+                const active = hover === k.type;
+                return (
+                  <button
+                    key={k.type}
+                    type="button"
+                    role="listitem"
+                    aria-label={`${k.label}: ${n} destinations. Show them in the hall.`}
+                    onClick={() => onShowInHall({ type: k.type })}
+                    onMouseEnter={() => setHover(k.type)}
+                    onMouseLeave={() => setHover(null)}
+                    onFocus={() => setHover(k.type)}
+                    onBlur={() => setHover(null)}
+                    style={{ flexGrow: n, flexBasis: 0 }}
+                    className={cn(
+                      "flex min-w-0 cursor-pointer items-center px-3 font-mono text-xs tabular-nums transition-colors duration-200",
+                      active ? "bg-primary text-on-primary" : cn(k.tone, k.onTone),
+                    )}
+                  >
+                    <span className="truncate">{n}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <dl className="mt-6 grid grid-cols-2 gap-x-6 gap-y-8 lg:grid-cols-4">
+              {VISA_KINDS.map((k) => {
+                const n = counts[k.type];
+                if (!n) return null;
+                const active = hover === k.type;
+                return (
+                  <div
+                    key={k.type}
+                    onMouseEnter={() => setHover(k.type)}
+                    onMouseLeave={() => setHover(null)}
+                    className="border-t border-rule pt-4"
+                  >
+                    <dt className="flex items-center gap-2 text-[13px] font-medium text-ink">
+                      <span
+                        aria-hidden
+                        className={cn(
+                          "h-2.5 w-2.5 rounded-[2px] ring-1 ring-ink/10 transition-colors",
+                          active ? "bg-primary" : k.tone,
+                        )}
+                      />
+                      {k.label}
+                    </dt>
+                    <dd>
+                      <span className="mt-2 block font-serif text-[40px] leading-none tracking-[-0.02em] text-ink tabular-nums">
+                        {n}
+                      </span>
+                      <span className="mt-2 block text-[13px] leading-relaxed text-ink-muted">{k.body}</span>
+                      <button
+                        type="button"
+                        onClick={() => onShowInHall({ type: k.type })}
+                        className="mt-3 inline-flex cursor-pointer items-center gap-1 text-[13px] font-medium text-ink hover:text-primary"
+                      >
+                        See them in the hall
+                        <ArrowUpRight className="h-3.5 w-3.5" aria-hidden />
+                      </button>
+                    </dd>
+                  </div>
+                );
+              })}
+            </dl>
+          </div>
+        </div>
+      </Reveal>
+    </section>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* 02 Services — a ledger of what we handle                                    */
+/* -------------------------------------------------------------------------- */
+
+export function Services({ onShowInHall }: { onShowInHall: ShowInHall }) {
+  const count = (type: Country["visaType"]) => countriesData.filter((c) => c.visaType === type).length;
+  const arrivalCards = useMemo(
+    () =>
+      Object.keys(ARRIVAL_CARDS)
+        .map((slug) => ({ slug, country: countriesData.find((c) => getCountrySlug(c.name) === slug) }))
+        .filter((a): a is { slug: string; country: Country } => Boolean(a.country)),
+    [],
+  );
+
+  const rows: { title: string; body: ReactNode; action: ReactNode }[] = [
+    {
+      title: "E-visas",
+      body: `Applied for online and delivered to your inbox. ${count("E-Visa")} destinations, from the UAE to Vietnam.`,
+      action: <TextLink onClick={() => onShowInHall({ type: "E-Visa" })}>Browse e-visas</TextLink>,
+    },
+    {
+      title: "Embassy visas",
+      body: "The UK, Schengen and other sticker visas that need a consulate visit. We prepare the application and tell you exactly what to bring to the appointment.",
+      action: <TextLink onClick={() => onShowInHall({ type: "Sticker Visa" })}>Browse embassy visas</TextLink>,
+    },
+    {
+      title: "Arrival cards",
+      body: (
+        <>
+          Free. The digital arrival card {arrivalCards.length} countries ask for before you land, filled in for you.
+          <span className="mt-3 flex flex-wrap gap-1.5">
+            {arrivalCards.map(({ slug, country }) => (
+              <Link
+                key={slug}
+                href={`/arrival-card/${slug}`}
+                className="rounded-full border border-rule bg-paper-raised px-2.5 py-1 text-xs text-ink-muted transition-colors hover:border-ink hover:text-ink"
+              >
+                {country.name}
+              </Link>
+            ))}
+          </span>
+        </>
+      ),
+      action: null,
+    },
+    {
+      title: "Visa-free & on arrival",
+      body: "Nothing to file, but still something to get right. Each destination's page lists what the border will ask to see.",
+      action: <TextLink onClick={() => onShowInHall({ type: "Visa Free" })}>Browse visa free</TextLink>,
+    },
+    {
+      title: "Student visas",
+      body: "US F-1, UK Student Route, Canada study permit, Australia subclass 500 and Schengen national D visas — with the financial documents each one expects.",
+      action: <TextLink href="/student-visa">Student visas</TextLink>,
+    },
+    {
+      title: "Refused elsewhere",
+      body: "Send us the refusal. We work out what most likely went wrong, tell you honestly whether a refile will succeed, and if it goes ahead you pay the government fee only.",
+      action: <TextLink href="/rejection-recovery">Rejection recovery</TextLink>,
+    },
+    {
+      title: "Armed forces",
+      body: "Serving and retired Indian armed forces personnel and their families pay no service fee, on any visa, with NOC handling included.",
+      action: <TextLink href="/defense-personnel">The programme</TextLink>,
+    },
+  ];
+
+  return (
+    <section aria-labelledby="services-title" className={SECTION}>
+      <SectionHead
+        index="02"
+        label="What we handle"
+        id="services-title"
+        title="Everything between deciding to go and landing."
+      />
+
+      <ol className="mt-10 border-t border-rule md:mt-14">
+        {rows.map((row, i) => (
+          <li key={row.title}>
+            <Reveal delay={i * 0.03}>
+              <div className="group grid grid-cols-1 gap-3 border-b border-rule py-7 md:grid-cols-[200px_minmax(0,1fr)_minmax(0,1.5fr)_200px] md:gap-8 md:py-8">
+                <span className="font-mono text-xs text-ink-faint">{String(i + 1).padStart(2, "0")}</span>
+                <h3 className="font-serif text-[24px] leading-tight tracking-[-0.01em] text-ink md:text-[28px]">
+                  {row.title}
+                </h3>
+                <div className="max-w-xl text-[15px] leading-relaxed text-ink-muted">{row.body}</div>
+                <div className="md:text-right">{row.action}</div>
+              </div>
+            </Reveal>
+          </li>
+        ))}
+      </ol>
+    </section>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* 03 How it works — the four screens, with a working mock of each             */
+/* -------------------------------------------------------------------------- */
+
+const STEPS: { title: string; body: string }[] = [
+  {
+    title: "Choose your dates",
+    body: "Tell us when you travel. The plans on offer, and the delivery date we promise, are measured from it.",
+  },
+  {
+    title: "Add who's going",
+    body: "Everyone on the trip, and who is paying for it — the question every consulate's form asks.",
+  },
+  {
+    title: "Scan your passport",
+    body: "The details are read from the photo page on your device, so there is no form to retype.",
+  },
+  {
+    title: "Pay, then follow it",
+    body: "Check out, and follow the application on the tracking page until it is decided.",
+  },
+];
+
+export function HowItWorks() {
+  const [step, setStep] = useState(0);
+
+  return (
+    <section aria-labelledby="how-title" className={SECTION}>
+      <SectionHead
+        index="03"
+        label="How it works"
+        id="how-title"
+        title="Four screens. Then it's our job."
+      />
+
+      <div className="mt-10 grid grid-cols-1 gap-8 md:mt-14 md:grid-cols-[200px_1fr] md:gap-8">
+        <div aria-hidden className="hidden md:block" />
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:gap-12">
+          <ol className="flex flex-col" aria-label="Application steps">
+            {STEPS.map((s, i) => {
+              const active = i === step;
+              return (
+                <li key={s.title} className="border-t border-rule last:border-b">
+                  <button
+                    type="button"
+                    aria-expanded={active}
+                    onClick={() => setStep(i)}
+                    onMouseEnter={() => setStep(i)}
+                    className="relative flex w-full cursor-pointer gap-5 py-5 text-left"
+                  >
+                    <span
+                      aria-hidden
+                      className={cn(
+                        "absolute -top-px left-0 h-px bg-ink transition-[width] duration-500 ease-out",
+                        active ? "w-full" : "w-0",
+                      )}
+                    />
+                    <span className={cn("font-mono text-xs transition-colors", active ? "text-ink" : "text-ink-faint")}>
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span
+                        className={cn(
+                          "block font-serif text-[22px] leading-tight tracking-[-0.01em] transition-colors md:text-[24px]",
+                          active ? "text-ink" : "text-ink-faint",
+                        )}
+                      >
+                        {s.title}
+                      </span>
+                      <span
+                        className={cn(
+                          "grid transition-[grid-template-rows,opacity] duration-300 ease-out",
+                          active ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0",
+                        )}
+                      >
+                        <span className="overflow-hidden">
+                          <span className="block pt-2 text-[15px] leading-relaxed text-ink-muted">{s.body}</span>
+                        </span>
+                      </span>
+                    </span>
+                  </button>
+                </li>
+              );
+            })}
+          </ol>
+
+          <Reveal>
+            <div className="relative overflow-hidden rounded-2xl border border-rule bg-paper-raised shadow-[0_1px_0_rgba(22,23,27,0.04),0_24px_48px_-24px_rgba(22,23,27,0.18)]">
+              <div className="flex items-center justify-between border-b border-rule px-5 py-3">
+                <span className="text-[11px] font-medium uppercase tracking-[0.14em] text-ink-faint">
+                  Example application · UAE
+                </span>
+                <span className="font-mono text-[11px] text-ink-faint">Step {step + 1} of 4</span>
+              </div>
+              <div key={step} className="animate-stage-title min-h-[330px] p-5 md:min-h-[360px] md:p-7">
+                {step === 0 && <MockDates />}
+                {step === 1 && <MockTravellers />}
+                {step === 2 && <MockPassport />}
+                {step === 3 && <MockTracking />}
+              </div>
+            </div>
+          </Reveal>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function MockHeading({ children }: { children: ReactNode }) {
+  return <p className="font-serif text-[22px] leading-tight tracking-[-0.01em] text-ink">{children}</p>;
+}
+
+function MockDates() {
+  const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  return (
+    <div>
+      <MockHeading>When do you travel?</MockHeading>
+      <div className="mt-5 grid grid-cols-7 gap-1.5">
+        {days.map((d, i) => (
+          <div
+            key={d}
+            className={cn(
+              "flex flex-col items-center rounded-lg border py-2.5",
+              i === 4 ? "border-ink bg-ink text-paper" : "border-rule text-ink-muted",
+            )}
+          >
+            <span className="text-[10px] uppercase tracking-wider opacity-70">{d}</span>
+            <span className="mt-1 font-mono text-sm tabular-nums">{12 + i}</span>
+          </div>
+        ))}
+      </div>
+      <div className="mt-6 divide-y divide-rule rounded-xl border border-rule">
+        <MockRow label="Departure" value="Friday" />
+        <MockRow label="Visa" value="E-visa · 60 days" />
+        <MockRow label="Delivered by" value="Before you fly" strong />
+      </div>
+    </div>
+  );
+}
+
+function MockTravellers() {
+  return (
+    <div>
+      <MockHeading>Who&rsquo;s going?</MockHeading>
+      <div className="mt-5 space-y-2">
+        {[
+          { n: "Traveller 1", k: "Adult", done: true },
+          { n: "Traveller 2", k: "Adult", done: true },
+          { n: "Traveller 3", k: "Child", done: false },
+        ].map((t) => (
+          <div key={t.n} className="flex items-center justify-between rounded-xl border border-rule px-4 py-3">
+            <span className="flex items-center gap-3">
+              <span className="grid h-8 w-8 place-items-center rounded-full bg-paper-sunken font-mono text-[11px] text-ink-muted">
+                {t.n.slice(-1)}
+              </span>
+              <span>
+                <span className="block text-sm font-medium text-ink">{t.n}</span>
+                <span className="block text-xs text-ink-faint">{t.k}</span>
+              </span>
+            </span>
+            {t.done ? (
+              <span className="inline-flex items-center gap-1 text-xs text-success-subtle-foreground">
+                <Check className="h-3.5 w-3.5" aria-hidden /> Passport read
+              </span>
+            ) : (
+              <span className="text-xs text-ink-faint">Add passport</span>
+            )}
+          </div>
+        ))}
+        <div className="flex items-center gap-2 rounded-xl border border-dashed border-rule px-4 py-3 text-sm text-ink-faint">
+          <Plus className="h-4 w-4" aria-hidden /> Add traveller
+        </div>
+      </div>
+      <div className="mt-4 divide-y divide-rule rounded-xl border border-rule">
+        <MockRow label="Paying for the trip" value="Traveller 1" />
+      </div>
+    </div>
+  );
+}
+
+function MockPassport() {
+  return (
+    <div>
+      <MockHeading>Passport, photo page up</MockHeading>
+      <div className="relative mt-5 overflow-hidden rounded-xl border border-rule bg-paper-sunken/60 p-4">
+        <div className="flex gap-4">
+          <div aria-hidden className="h-24 w-20 flex-shrink-0 rounded-md bg-ink/10" />
+          <dl className="grid flex-1 grid-cols-2 gap-x-4 gap-y-2 text-[11px]">
+            {[
+              ["Surname", "SPECIMEN"],
+              ["Given names", "SAMPLE"],
+              ["Nationality", "INDIAN"],
+              ["Date of birth", "01 JAN 1990"],
+              ["Passport no.", "Z0000000"],
+              ["Expiry", "01 JAN 2030"],
+            ].map(([k, v]) => (
+              <div key={k}>
+                <dt className="uppercase tracking-wider text-ink-faint">{k}</dt>
+                <dd className="font-mono text-ink">{v}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+        <div className="relative mt-4 overflow-hidden rounded-md bg-paper-raised px-3 py-2 font-mono text-[10px] leading-[1.6] tracking-[0.08em] text-ink sm:text-[11px]">
+          <p className="truncate">P&lt;INDSPECIMEN&lt;&lt;SAMPLE&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;</p>
+          <p className="truncate">Z0000000&lt;0IND9001017M3001015&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;04</p>
+          <span aria-hidden className="mrz-scan pointer-events-none absolute inset-0" />
+        </div>
+      </div>
+      <p className="mt-4 flex items-center gap-2 text-xs text-ink-muted">
+        <Check className="h-3.5 w-3.5 text-success-subtle-foreground" aria-hidden />
+        Read on your device and checked against the passport&rsquo;s own check digits.
+      </p>
+    </div>
+  );
+}
+
+function MockTracking() {
+  const stages = [
+    { t: "Payment received", s: "done" },
+    { t: "Documents checked", s: "done" },
+    { t: "Filed with the authority", s: "now" },
+    { t: "Decision", s: "next" },
+  ] as const;
+  return (
+    <div>
+      <div className="flex items-baseline justify-between gap-3">
+        <MockHeading>Your application</MockHeading>
+        <span className="font-mono text-[11px] text-ink-faint">Ref · EXAMPLE</span>
+      </div>
+      <ol className="relative mt-6 space-y-5 pl-7">
+        <span aria-hidden className="absolute bottom-2 left-[7px] top-2 w-px bg-rule" />
+        {stages.map((st) => (
+          <li key={st.t} className="relative">
+            <span
+              aria-hidden
+              className={cn(
+                "absolute -left-7 top-0.5 grid h-[15px] w-[15px] place-items-center rounded-full border",
+                st.s === "done" && "border-ink bg-ink text-paper",
+                st.s === "now" && "border-primary bg-paper-raised",
+                st.s === "next" && "border-rule bg-paper-raised",
+              )}
+            >
+              {st.s === "done" && <Check className="h-2.5 w-2.5" strokeWidth={3} />}
+              {st.s === "now" && <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary" />}
+            </span>
+            <p className={cn("text-sm", st.s === "next" ? "text-ink-faint" : "font-medium text-ink")}>{st.t}</p>
+            {st.s === "now" && <p className="mt-0.5 text-xs text-ink-muted">You&rsquo;ll get an email the moment this changes.</p>}
+          </li>
+        ))}
+      </ol>
+      <div className="mt-7 divide-y divide-rule rounded-xl border border-rule">
+        <MockRow label="Promised by" value="The date on your receipt" strong />
+      </div>
+    </div>
+  );
+}
+
+function MockRow({ label, value, strong }: { label: string; value: string; strong?: boolean }) {
+  return (
+    <div className="flex items-center justify-between px-4 py-3 text-sm">
+      <span className="text-ink-muted">{label}</span>
+      <span className={cn("text-right", strong ? "font-medium text-ink" : "text-ink")}>{value}</span>
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* 04 The promise — a receipt for a real destination                           */
+/* -------------------------------------------------------------------------- */
+
+const RECEIPT_CODES = ["ae", "th", "vn", "sg"];
+
+export function Guarantee() {
+  const options = useMemo(
+    () =>
+      RECEIPT_CODES.map((code) => countriesData.find((c) => c.code === code && c.visaType === "E-Visa")).filter(
+        (c): c is Country => Boolean(c),
+      ),
+    [],
+  );
+  const [code, setCode] = useState(options[0]?.code);
+  const country = options.find((c) => c.code === code) ?? options[0];
+
+  // Today + the delivery promise. Computed after mount: rendered on the server
+  // it would bake the build date into the page (see `GuaranteeBand`).
+  const [deliverBy, setDeliverBy] = useState<string | null>(null);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (country) setDeliverBy(formatShortDate(country.deliveryDays));
+  }, [country]);
+
+  if (!country) return null;
+
+  return (
+    <section aria-labelledby="promise-title" className={SECTION}>
+      <SectionHead index="04" label="The promise" id="promise-title" title="The date comes first. Then the price." />
+
+      <div className="mt-10 grid grid-cols-1 gap-8 md:mt-14 md:grid-cols-[200px_1fr] md:gap-8">
+        <div aria-hidden className="hidden md:block" />
+        <div className="grid grid-cols-1 items-start gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,420px)] lg:gap-16">
+          <Reveal>
+            <p className="max-w-lg text-[17px] leading-relaxed text-ink-muted">
+              Before you pay, you see the day your visa will be delivered. It is measured from a complete
+              application, and it is ours to keep:{" "}
+              <span className="text-ink">if we miss it, the abizon fee is waived.</span>
+            </p>
+            <ul className="mt-8 max-w-lg divide-y divide-rule border-y border-rule">
+              {[
+                ["Every fee itemised", "The government's fee and ours are separate lines. GST applies to our service only."],
+                ["Checked before it's filed", "Documents are checked against the destination's rules, so problems surface with us, not at a consulate."],
+                ["No surprise at the end", "The total on the receipt is the total you are charged."],
+              ].map(([t, b]) => (
+                <li key={t} className="flex gap-4 py-4">
+                  <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-ink" aria-hidden />
+                  <span>
+                    <span className="block text-[15px] font-medium text-ink">{t}</span>
+                    <span className="mt-1 block text-sm leading-relaxed text-ink-muted">{b}</span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+            <div className="mt-6">
+              <TextLink href="/refunds-policy">What the guarantee covers</TextLink>
+            </div>
+          </Reveal>
+
+          <Reveal delay={0.08}>
+            <div role="tablist" aria-label="Example destination" className="mb-3 flex flex-wrap gap-1.5">
+              {options.map((c) => (
+                <button
+                  key={c.code}
+                  type="button"
+                  role="tab"
+                  aria-selected={c.code === country.code}
+                  onClick={() => setCode(c.code)}
+                  className={cn(
+                    "cursor-pointer rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
+                    c.code === country.code
+                      ? "border-ink bg-ink text-paper"
+                      : "border-rule text-ink-muted hover:border-ink hover:text-ink",
+                  )}
+                >
+                  {c.name === "United Arab Emirates" ? "UAE" : c.name}
+                </button>
+              ))}
+            </div>
+
+            {/* The receipt. */}
+            <div className="relative rounded-2xl border border-rule bg-paper-raised shadow-[0_24px_48px_-28px_rgba(22,23,27,0.25)]">
+              <div className="px-6 pb-5 pt-6">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-ink-faint">Before you pay</p>
+                    <p className="mt-1 font-serif text-[26px] leading-tight tracking-[-0.01em] text-ink">{country.name}</p>
+                  </div>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={`https://flagcdn.com/w80/${country.code}.png`}
+                    alt=""
+                    className="mt-1 h-6 w-9 rounded-[3px] object-cover ring-1 ring-ink/10"
+                    loading="lazy"
+                  />
+                </div>
+                <dl className="mt-5 space-y-2.5 text-sm">
+                  <ReceiptLine k="Visa" v={`${country.visaType} · ${country.validity}`} />
+                  <ReceiptLine k="Government fee" v={formatGovernmentFee(country.fees)} mono />
+                  <ReceiptLine k="abizon service fee" v="Itemised at checkout" faint />
+                  <ReceiptLine k="GST" v="On our fee only" faint />
+                </dl>
+              </div>
+
+              {/* Perforation. */}
+              <div aria-hidden className="mx-6 border-t border-dashed border-rule" />
+
+              <div className="px-6 pb-6 pt-5">
+                <div className="flex items-end justify-between gap-4">
+                  <div>
+                    <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-ink-faint">Delivered by</p>
+                    <p className="mt-1 font-serif text-[34px] leading-none tracking-[-0.02em] text-ink tabular-nums" aria-live="polite">
+                      {deliverBy ?? "—"}
+                    </p>
+                    <p className="mt-2 text-xs text-ink-muted">
+                      {country.deliveryDays === 1 ? "Within a day" : `Within ${country.deliveryDays} days`} of a
+                      complete application, if you applied today
+                    </p>
+                  </div>
+                  <span className="-rotate-6 rounded-md border-2 border-primary px-2 py-1 text-center text-[10px] font-semibold uppercase leading-tight tracking-[0.12em] text-primary">
+                    Late?
+                    <br />
+                    Fee waived
+                  </span>
+                </div>
+                <Link
+                  href={`/visa/${getCountrySlug(country.name)}`}
+                  className="mt-6 flex w-full items-center justify-center gap-2 rounded-full bg-ink px-5 py-3 text-sm font-medium text-paper transition-colors hover:bg-ink/85"
+                >
+                  Start a {country.name === "United Arab Emirates" ? "UAE" : country.name} application
+                  <ArrowRight className="h-4 w-4" aria-hidden />
+                </Link>
+              </div>
+            </div>
+          </Reveal>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ReceiptLine({ k, v, mono, faint }: { k: string; v: string; mono?: boolean; faint?: boolean }) {
+  return (
+    <div className="flex items-baseline gap-3">
+      <dt className="text-ink-muted">{k}</dt>
+      <span aria-hidden className="flex-1 translate-y-[-3px] border-b border-dotted border-rule" />
+      <dd className={cn("text-right", mono && "font-mono tabular-nums", faint ? "text-ink-faint" : "text-ink")}>{v}</dd>
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* 05 Collections — destinations, grouped the way people decide                 */
 /* -------------------------------------------------------------------------- */
 
 type Collection = {
   id: string;
   label: string;
-  eyebrow: string;
-  title: string;
   match: (c: Country) => boolean;
   /** The filters that show exactly this collection in the hall. */
   filters: Partial<FilterValues>;
@@ -106,38 +854,30 @@ const COLLECTIONS: Collection[] = [
   {
     id: "free",
     label: "Visa free",
-    eyebrow: "No visa needed",
-    title: "Just take your passport",
     match: (c) => c.visaType === "Visa Free",
     filters: { type: "Visa Free" },
   },
   {
     id: "arrival",
     label: "On arrival",
-    eyebrow: "Granted at the border",
-    title: "Visas on arrival",
     match: (c) => c.visaType === "Visa on Arrival",
     filters: { type: "Visa on Arrival" },
   },
   {
     id: "paperless",
     label: "No documents",
-    eyebrow: "Nothing to upload",
-    title: "No documents required",
     match: (c) => c.documents === "No Documents Required",
     filters: { documents: "No Documents Required" },
   },
   {
     id: "fast",
-    label: "E-visa in 24h",
-    eyebrow: "Delivered within a day",
-    title: "E-visas in 24 hours",
+    label: "E-visa in 24 hours",
     match: (c) => c.visaType === "E-Visa" && c.deliveryDays <= 1,
     filters: { type: "E-Visa", delivery: "Within 24 Hours" },
   },
 ];
 
-export function Collections({ onShowInHall }: { onShowInHall: (filters: Partial<FilterValues>) => void }) {
+export function Collections({ onShowInHall }: { onShowInHall: ShowInHall }) {
   // The count is what the hall will hold once the collection's filters are
   // applied, so it is taken over every product row, like the hall's.
   const lists = useMemo(
@@ -153,290 +893,183 @@ export function Collections({ onShowInHall }: { onShowInHall: (filters: Partial<
   const active = available.find((c) => c.id === activeId) ?? available[0];
   if (!active) return null;
   const rows = lists[active.id];
-  // The tiles show one per destination: a couple of countries carry two
-  // products, and the same photograph twice in a row of four reads as a bug.
-  const seen = new Set<string>();
-  const tiles = rows.filter((c) => {
-    const slug = getCountrySlug(c.name);
-    if (seen.has(slug)) return false;
-    seen.add(slug);
-    return true;
-  });
+  // Destinations with a photograph first: a row of plates reads as missing
+  // images, while one plate among photographs reads as chosen.
+  const tiles = uniqueDestinations(rows)
+    .map((c, i) => ({ c, i, photo: countryCardImage(getCountrySlug(c.name)) }))
+    .sort((a, b) => Number(Boolean(b.photo)) - Number(Boolean(a.photo)) || a.i - b.i)
+    .slice(0, 4);
 
   return (
-    <section aria-labelledby="collections-title" className="py-16 md:py-20">
+    <section aria-labelledby="collections-title" className={SECTION}>
       <SectionHead
-        eyebrow={active.eyebrow}
-        title={<span id="collections-title">{active.title}</span>}
-        action={
-          <button
-            type="button"
-            onClick={() => onShowInHall(active.filters)}
-            className="group inline-flex cursor-pointer items-center gap-1.5 text-xs font-medium text-white/55 transition-colors hover:text-white"
-          >
-            All {rows.length} in the hall
-            <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" aria-hidden />
-          </button>
-        }
+        index="05"
+        label="Destinations"
+        id="collections-title"
+        title="Start where it's easiest."
+        aside={<TextLink onClick={() => onShowInHall(active.filters)}>All {rows.length} in the hall</TextLink>}
       />
 
-      <div role="tablist" aria-label="Collections" className="mb-6 flex flex-wrap gap-1.5">
-        {available.map((col) => (
-          <button
-            key={col.id}
-            type="button"
-            role="tab"
-            aria-selected={col.id === active.id}
-            onClick={() => setActiveId(col.id)}
-            className={cn(
-              "cursor-pointer rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors",
-              col.id === active.id
-                ? "border-white/80 bg-white text-slate-950"
-                : "border-white/10 bg-white/[0.03] text-white/60 hover:border-white/25 hover:text-white",
-            )}
-          >
-            {col.label}
-            <span className={cn("ml-1.5 tabular-nums", col.id === active.id ? "text-slate-500" : "text-white/35")}>
-              {lists[col.id].length}
-            </span>
-          </button>
-        ))}
-      </div>
+      <div className="mt-10 grid grid-cols-1 gap-6 md:mt-14 md:grid-cols-[200px_1fr] md:gap-8">
+        <div role="tablist" aria-label="Collections" className="flex flex-wrap gap-1.5 md:flex-col md:items-start md:gap-0">
+          {available.map((col) => {
+            const on = col.id === active.id;
+            return (
+              <button
+                key={col.id}
+                type="button"
+                role="tab"
+                aria-selected={on}
+                onClick={() => setActiveId(col.id)}
+                className={cn(
+                  "cursor-pointer rounded-full border px-3 py-1.5 text-left text-xs font-medium transition-colors md:w-full md:rounded-none md:border-0 md:border-l-2 md:px-0 md:py-2.5 md:pl-4 md:text-sm",
+                  on
+                    ? "border-ink bg-ink text-paper md:bg-transparent md:text-ink"
+                    : "border-rule text-ink-muted hover:text-ink md:border-transparent",
+                )}
+              >
+                {col.label}
+                <span className={cn("ml-1.5 font-mono tabular-nums", on ? "opacity-60" : "text-ink-faint")}>
+                  {lists[col.id].length}
+                </span>
+              </button>
+            );
+          })}
+        </div>
 
-      <div key={active.id} className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-        {tiles.slice(0, 4).map((country, i) => (
-          <Reveal key={country.code + country.id} delay={i * 0.06}>
-            <Tile country={country} />
-          </Reveal>
-        ))}
+        <div key={active.id} className="grid grid-cols-2 gap-x-4 gap-y-8 lg:grid-cols-4">
+          {tiles.map(({ c, photo }, i) => (
+            <Reveal key={c.code + c.id} delay={i * 0.05}>
+              <Tile country={c} photo={photo} />
+            </Reveal>
+          ))}
+        </div>
       </div>
     </section>
   );
 }
 
-function Tile({ country }: { country: Country }) {
+function Tile({ country, photo }: { country: Country; photo: ReturnType<typeof countryCardImage> }) {
   const slug = getCountrySlug(country.name);
-  const photo = countryCardImage(slug);
   return (
-    <Link href={`/visa/${slug}`} className="group block rounded-2xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-sky-300">
-      <div className="relative aspect-[16/11] overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] transition-[border-color,box-shadow] duration-500 group-hover:border-white/25 group-hover:shadow-[0_0_40px_rgba(125,170,255,0.12)]">
+    <Link
+      href={`/visa/${slug}`}
+      className="group block rounded-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink"
+    >
+      <div className="relative aspect-[4/5] overflow-hidden rounded-xl bg-paper-sunken">
         <CountryImagePlate seed={country.code} />
         {photo && (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={photo.src}
             srcSet={photo.srcSet}
-            sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
+            sizes="(min-width: 1024px) 22vw, 50vw"
             alt=""
             loading="lazy"
             decoding="async"
             onError={(e) => {
               e.currentTarget.style.display = "none";
             }}
-            className="absolute inset-0 h-full w-full object-cover opacity-90 transition-[transform,opacity] duration-700 ease-out group-hover:scale-[1.04] group-hover:opacity-100"
+            className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
           />
         )}
-        <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
-        <span className="absolute right-3 top-3 grid h-7 w-7 place-items-center rounded-full border border-white/15 bg-black/30 text-white opacity-0 backdrop-blur-md transition-opacity duration-300 group-hover:opacity-100">
-          <ArrowUpRight className="h-3.5 w-3.5" aria-hidden />
-        </span>
+        {/* A delivery time only means something where there is a visa to deliver. */}
+        {(country.visaType === "E-Visa" || country.visaType === "Sticker Visa") && (
+          <span className="absolute left-3 top-3 rounded-full bg-paper-raised/90 px-2 py-0.5 font-mono text-[10px] text-ink backdrop-blur">
+            {country.deliveryDays === 1 ? "24h" : `${country.deliveryDays} days`}
+          </span>
+        )}
       </div>
-      <div className="mt-3 flex items-baseline justify-between gap-3 px-0.5">
-        <span className="flex min-w-0 items-center gap-2">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={`https://flagcdn.com/w40/${country.code}.png`} alt="" className="h-3.5 w-5 flex-shrink-0 rounded-[2px] object-cover" loading="lazy" />
-          <span className="truncate text-sm font-medium text-white">{country.name}</span>
-        </span>
-        <span className="hidden flex-shrink-0 font-mono text-[11px] text-white/45 sm:inline">
-          {country.visaType} · {formatGovernmentFee(country.fees)}
-        </span>
+      <div className="mt-3 flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="truncate font-serif text-[19px] leading-tight text-ink">{country.name}</p>
+          <p className="mt-1 text-xs text-ink-muted">
+            {country.visaType} ·{" "}
+            {country.visaType === "Visa Free" ? country.validity : formatGovernmentFee(country.fees)}
+          </p>
+        </div>
+        <ArrowUpRight
+          className="mt-1 h-4 w-4 flex-shrink-0 text-ink-faint transition-[color,transform] group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-ink"
+          aria-hidden
+        />
       </div>
     </Link>
   );
 }
 
 /* -------------------------------------------------------------------------- */
-/* How it works                                                               */
+/* 06 Tools                                                                     */
 /* -------------------------------------------------------------------------- */
 
-const STEPS: { Icon: LucideIcon; title: string; body: string }[] = [
-  {
-    Icon: CalendarDays,
-    title: "Choose your dates",
-    body: "Tell us when you travel. The plans on offer and the delivery promise are measured from that date.",
-  },
-  {
-    Icon: Users,
-    title: "Add who’s going",
-    body: "Everyone on the trip, and who is sponsoring it — the question every consulate’s form asks.",
-  },
-  {
-    Icon: ScanLine,
-    title: "Scan your passport",
-    body: "The passport details are read from the scan, so there is no form to retype. Upload what the destination asks for.",
-  },
-  {
-    Icon: CreditCard,
-    title: "Pay and track",
-    body: "Check out, then follow the application from the tracking page until it is decided.",
-  },
-];
-
-export function Steps() {
-  return (
-    <section aria-labelledby="steps-title" className="py-16 md:py-20">
-      <Reveal className="mx-auto mb-12 max-w-2xl text-center">
-        <div className="mx-auto mb-5 grid h-10 w-10 place-items-center rounded-full border border-white/10 bg-white/[0.04] text-white/70">
-          <Globe2 className="h-4.5 w-4.5" aria-hidden />
-        </div>
-        <h2 id="steps-title" className="text-[34px] font-extralight leading-[1.08] tracking-[-0.02em] text-white md:text-[52px]">
-          From a card in the hall
-          <br className="hidden sm:block" /> to a filed application
-        </h2>
-        <p className="mx-auto mt-4 max-w-md text-sm font-light text-white/50">
-          Four screens, in the order the application asks them.
-        </p>
-      </Reveal>
-
-      <ol className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        {STEPS.map((step, i) => (
-          <li key={step.title}>
-            <Reveal delay={i * 0.08} className="h-full">
-              <div className="group relative h-full overflow-hidden rounded-2xl border border-white/10 bg-white/[0.025] p-5 transition-colors duration-500 hover:border-white/20 hover:bg-white/[0.04]">
-                <div className="flex items-center justify-between">
-                  <span className="grid h-9 w-9 place-items-center rounded-xl border border-white/10 bg-white/[0.05] text-white/80">
-                    <step.Icon className="h-4 w-4" aria-hidden />
-                  </span>
-                  <span className="font-mono text-[11px] text-white/35">{String(i + 1).padStart(2, "0")}</span>
-                </div>
-                <h3 className="mt-6 text-[15px] font-medium text-white">{step.title}</h3>
-                <p className="mt-2 text-[13px] leading-relaxed text-white/50">{step.body}</p>
-                <div aria-hidden className="pointer-events-none absolute -bottom-16 -right-16 h-40 w-40 rounded-full bg-sky-400/10 opacity-0 blur-3xl transition-opacity duration-700 group-hover:opacity-100" />
-              </div>
-            </Reveal>
-          </li>
-        ))}
-      </ol>
-    </section>
-  );
-}
-
-/* -------------------------------------------------------------------------- */
-/* Tools                                                                      */
-/* -------------------------------------------------------------------------- */
-
-const TOOLS: { Icon: LucideIcon; title: string; body: string; href: string; hue: number }[] = [
+const TOOLS: { Icon: LucideIcon; title: string; body: string; href: string }[] = [
   {
     Icon: ListChecks,
     title: "Visa requirements",
-    body: "What each destination asks for — visa type, validity, documents and fees — in one place.",
+    body: "Visa type, validity, documents and fees for each destination, in one place.",
     href: "/tools/visa-requirements",
-    hue: 215,
   },
   {
     Icon: Camera,
     title: "Visa photo creator",
-    body: "Check a photograph against the size and specification a visa application demands.",
+    body: "Check a photograph against the size and specification an application demands.",
     href: "/tools/visa-photo-creator",
-    hue: 265,
   },
   {
     Icon: ClipboardCheck,
-    title: "Schengen appointment checker",
-    body: "Look up appointment availability before you plan a Schengen trip around it.",
+    title: "Schengen appointments",
+    body: "Look up appointment availability before you plan a trip around it.",
     href: "/tools/schengen-appointment-checker",
-    hue: 190,
   },
   {
     Icon: Globe2,
     title: "Passport index",
     body: "How passports rank against each other, and where each one can travel.",
     href: "/passport-index",
-    hue: 240,
   },
   {
     Icon: FileSearch,
     title: "Track an application",
     body: "Follow an application you have filed, from submission to decision.",
     href: "/track",
-    hue: 160,
   },
 ];
 
 export function Tools() {
-  const [index, setIndex] = useState(0);
-  const tool = TOOLS[index];
-
   return (
-    <section aria-labelledby="tools-title" className="py-16 md:py-20">
+    <section aria-labelledby="tools-title" className={SECTION}>
       <SectionHead
-        eyebrow="Free to use"
-        title={<span id="tools-title">Everything around the visa</span>}
-        action={
-          <Link href="/tools" className="group inline-flex items-center gap-1.5 text-xs font-medium text-white/55 hover:text-white">
-            All tools
-            <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" aria-hidden />
-          </Link>
-        }
+        index="06"
+        label="Free tools"
+        id="tools-title"
+        title="Useful before you've decided anything."
+        aside={<TextLink href="/tools">All tools</TextLink>}
       />
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.25fr_1fr]">
-        {/* The preview. */}
-        <Reveal>
-          <div className="relative flex h-full min-h-[320px] flex-col justify-end overflow-hidden rounded-3xl border border-white/10 p-7 md:min-h-[420px] md:p-9">
-            <div
-              aria-hidden
-              className="absolute inset-0 transition-[background] duration-700"
-              style={{
-                background: `radial-gradient(80% 70% at 75% 15%, hsl(${tool.hue} 80% 55% / 0.32), transparent 60%), radial-gradient(60% 60% at 15% 100%, hsl(${tool.hue + 40} 70% 45% / 0.22), transparent 70%), #070a16`,
-              }}
-            />
-            <div aria-hidden className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] bg-[size:44px_44px] [mask-image:radial-gradient(ellipse_at_70%_20%,#000,transparent_70%)]" />
-            <tool.Icon aria-hidden className="absolute right-8 top-8 h-24 w-24 text-white/10 md:h-32 md:w-32" strokeWidth={1} />
-            <div key={tool.href} className="animate-stage-title relative">
-              <span className="font-mono text-[11px] text-white/40">{String(index + 1).padStart(2, "0")} / {String(TOOLS.length).padStart(2, "0")}</span>
-              <h3 className="mt-2 text-3xl font-extralight tracking-[-0.01em] text-white md:text-4xl">{tool.title}</h3>
-              <p className="mt-3 max-w-md text-sm font-light leading-relaxed text-white/60">{tool.body}</p>
-              <Link
-                href={tool.href}
-                className="mt-6 inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-2 text-xs font-semibold text-slate-950 transition-transform hover:-translate-y-px"
-              >
-                Open {tool.title.toLowerCase()}
-                <ArrowUpRight className="h-3.5 w-3.5" aria-hidden />
-              </Link>
-            </div>
-          </div>
-        </Reveal>
-
-        {/* The list. */}
-        <ul className="flex flex-col gap-2">
+      <div className="mt-10 grid grid-cols-1 gap-8 md:mt-14 md:grid-cols-[200px_1fr]">
+        <div aria-hidden className="hidden md:block" />
+        {/* Hairlines from the gap: the list is ruled, and each cell sits on paper. */}
+        <ul className="grid grid-cols-1 gap-px overflow-hidden rounded-2xl border border-rule bg-rule sm:grid-cols-2 lg:grid-cols-3">
           {TOOLS.map((t, i) => (
-            <li key={t.href}>
-              <Reveal delay={i * 0.05}>
-                <Link
-                  href={t.href}
-                  onMouseEnter={() => setIndex(i)}
-                  onFocus={() => setIndex(i)}
-                  className={cn(
-                    "flex items-center gap-4 rounded-2xl border p-3 pr-4 transition-colors duration-300",
-                    i === index ? "border-white/20 bg-white/[0.06]" : "border-white/[0.07] bg-white/[0.02] hover:border-white/15",
-                  )}
-                >
-                  <span
-                    className="grid h-14 w-20 flex-shrink-0 place-items-center rounded-xl border border-white/10"
-                    style={{ background: `radial-gradient(circle at 70% 20%, hsl(${t.hue} 80% 55% / 0.35), #0a0d19 70%)` }}
-                  >
-                    <t.Icon className="h-5 w-5 text-white/85" aria-hidden />
+            <li key={t.href} className="bg-paper">
+              <Reveal delay={i * 0.04} className="h-full">
+                <Link href={t.href} className="group flex h-full flex-col p-6 transition-colors hover:bg-paper-raised">
+                  <span className="flex items-center justify-between">
+                    <t.Icon className="h-5 w-5 text-ink" strokeWidth={1.5} aria-hidden />
+                    <ArrowUpRight className="h-4 w-4 text-ink-faint transition-colors group-hover:text-ink" aria-hidden />
                   </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-sm font-medium text-white">{t.title}</span>
-                    <span className="mt-0.5 block truncate text-xs text-white/45">{t.body}</span>
-                  </span>
-                  <ArrowUpRight className={cn("h-4 w-4 flex-shrink-0 transition-colors", i === index ? "text-white" : "text-white/30")} aria-hidden />
+                  <span className="mt-8 block font-serif text-[21px] leading-tight text-ink">{t.title}</span>
+                  <span className="mt-2 block text-sm leading-relaxed text-ink-muted">{t.body}</span>
                 </Link>
               </Reveal>
             </li>
           ))}
+          <li className="bg-paper">
+            <div className="flex h-full flex-col justify-end bg-paper-sunken/50 p-6">
+              <p className="text-sm leading-relaxed text-ink-muted">
+                None of these need an account or an application.
+              </p>
+            </div>
+          </li>
         </ul>
       </div>
     </section>
@@ -444,60 +1077,12 @@ export function Tools() {
 }
 
 /* -------------------------------------------------------------------------- */
-/* Call to action                                                             */
-/* -------------------------------------------------------------------------- */
-
-export function CtaCard({ onBackToHall }: { onBackToHall: () => void }) {
-  return (
-    <section className="py-12 md:py-20">
-      <Reveal>
-        <div className="relative overflow-hidden rounded-[28px] border border-white/10 px-6 py-16 text-center md:px-10 md:py-24">
-          <div aria-hidden className="absolute inset-0 bg-[radial-gradient(60%_80%_at_50%_0%,rgba(110,90,255,0.32),transparent_70%),radial-gradient(50%_60%_at_50%_120%,rgba(60,140,255,0.24),transparent_70%),#060915]" />
-          <div aria-hidden className="space-stars absolute inset-0 opacity-70" />
-          <div className="relative">
-            <h2 className="text-[38px] font-extralight leading-[1.04] tracking-[-0.02em] text-white md:text-[60px]">
-              Every visa, in one place
-            </h2>
-            <p className="mx-auto mt-4 max-w-md text-sm font-light text-white/55">
-              {countriesData.length} destinations in one hall. Pick a card and the planet takes you there.
-            </p>
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-              <button
-                type="button"
-                onClick={onBackToHall}
-                className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-slate-950 shadow-[0_0_40px_rgba(140,170,255,0.35)] transition-transform hover:-translate-y-px"
-              >
-                Back to the hall
-                <span className="grid h-5 w-5 place-items-center rounded-full bg-slate-950 text-white">
-                  <ArrowUpRight className="h-3 w-3" aria-hidden />
-                </span>
-              </button>
-              <Link
-                href="/track"
-                className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.04] px-5 py-2.5 text-sm font-medium text-white backdrop-blur-md transition-colors hover:border-white/30"
-              >
-                Track an application
-              </Link>
-            </div>
-          </div>
-        </div>
-      </Reveal>
-    </section>
-  );
-}
-
-/* -------------------------------------------------------------------------- */
-/* FAQ                                                                        */
+/* FAQ                                                                          */
 /* -------------------------------------------------------------------------- */
 
 function useFaqs(): { q: string; a: string }[] {
   return useMemo(() => {
-    const unique = new Map<string, Country>();
-    countriesData.forEach((c) => {
-      const slug = getCountrySlug(c.name);
-      if (!unique.has(slug)) unique.set(slug, c);
-    });
-    const all = [...unique.values()];
+    const all = uniqueDestinations(countriesData);
     const names = (list: Country[], n = 3) => list.slice(0, n).map((c) => c.name).join(", ");
 
     const fast = all.filter((c) => c.deliveryDays <= 1);
@@ -508,6 +1093,10 @@ function useFaqs(): { q: string; a: string }[] {
     const arrival = all.filter((c) => arrivalCardFor(getCountrySlug(c.name)));
 
     const faqs = [
+      {
+        q: "What does abizon actually do?",
+        a: "We prepare and file visa applications for Indian passport holders. You choose a destination and answer four screens; we check your documents against that country's rules, submit the application, and follow it to a decision. The delivery date is shown before you pay, and if we miss it our fee is waived.",
+      },
       {
         q: "How many destinations can I apply for?",
         a: `${countriesData.length}. Every one of them is a card in the hall at the top of this page; the filters beneath it narrow the hall to what fits your trip.`,
@@ -534,7 +1123,7 @@ function useFaqs(): { q: string; a: string }[] {
     if (arrival.length) {
       faqs.push({
         q: "Do you help with arrival cards?",
-        a: `Yes, for ${arrival.length} destinations whose free arrival card we have checked: ${names(arrival, 5)}. It appears on the destination's visa page.`,
+        a: `Yes, for free, for ${arrival.length} destinations whose arrival card we have checked: ${names(arrival, 5)}.`,
       });
     }
     return faqs;
@@ -546,40 +1135,84 @@ export function Faq() {
   const [open, setOpen] = useState(0);
 
   return (
-    <section aria-labelledby="faq-title" className="grid grid-cols-1 gap-10 py-16 md:py-20 lg:grid-cols-[1fr_1.4fr]">
-      <Reveal>
-        <h2 id="faq-title" className="text-[34px] font-extralight leading-[1.05] tracking-[-0.02em] text-white md:text-[52px]">
-          Frequently asked
-          <br /> questions
-        </h2>
-      </Reveal>
-      <div className="flex flex-col gap-2">
-        {faqs.map((f, i) => {
-          const isOpen = open === i;
-          return (
-            <Reveal key={f.q} delay={i * 0.04}>
-              <div className={cn("rounded-2xl border transition-colors", isOpen ? "border-white/15 bg-white/[0.04]" : "border-white/[0.07] bg-white/[0.02]")}>
+    <section aria-labelledby="faq-title" className={SECTION}>
+      <SectionHead index="07" label="Questions" id="faq-title" title="Asked before the first application." />
+
+      <div className="mt-10 grid grid-cols-1 gap-8 md:mt-14 md:grid-cols-[200px_1fr]">
+        <div aria-hidden className="hidden md:block" />
+        <div className="max-w-3xl border-t border-rule">
+          {faqs.map((f, i) => {
+            const isOpen = open === i;
+            return (
+              <div key={f.q} className="border-b border-rule">
                 <h3>
                   <button
                     type="button"
                     aria-expanded={isOpen}
                     onClick={() => setOpen(isOpen ? -1 : i)}
-                    className="flex w-full cursor-pointer items-center justify-between gap-4 px-5 py-4 text-left text-sm font-medium text-white"
+                    className="flex w-full cursor-pointer items-center justify-between gap-6 py-5 text-left font-serif text-[19px] leading-snug text-ink md:text-[21px]"
                   >
                     {f.q}
-                    <ChevronDown aria-hidden className={cn("h-4 w-4 flex-shrink-0 text-white/50 transition-transform duration-300", isOpen && "rotate-180")} />
+                    <Plus
+                      aria-hidden
+                      className={cn(
+                        "h-4 w-4 flex-shrink-0 text-ink-muted transition-transform duration-300",
+                        isOpen && "rotate-45",
+                      )}
+                    />
                   </button>
                 </h3>
-                <div className={cn("grid transition-[grid-template-rows] duration-300 ease-out", isOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]")}>
+                <div
+                  className={cn(
+                    "grid transition-[grid-template-rows] duration-300 ease-out",
+                    isOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]",
+                  )}
+                >
                   <div className="overflow-hidden">
-                    <p className="px-5 pb-5 text-[13px] leading-relaxed text-white/55">{f.a}</p>
+                    <p className="max-w-2xl pb-6 text-[15px] leading-relaxed text-ink-muted">{f.a}</p>
                   </div>
                 </div>
               </div>
-            </Reveal>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
+    </section>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* Closing                                                                      */
+/* -------------------------------------------------------------------------- */
+
+export function Closing({ onBackToHall }: { onBackToHall: () => void }) {
+  return (
+    <section className="pb-20 pt-8 md:pb-28">
+      <Reveal>
+        <div className="border-t border-ink pt-10 md:pt-14">
+          <div className="flex flex-col gap-10 md:flex-row md:items-end md:justify-between">
+            <h2 className="max-w-[14ch] font-serif text-[48px] font-light leading-[0.98] tracking-[-0.03em] text-ink md:text-[88px]">
+              Where are you going next?
+            </h2>
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                onClick={onBackToHall}
+                className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-ink px-6 py-3.5 text-sm font-medium text-paper transition-colors hover:bg-ink/85"
+              >
+                Choose a destination
+                <ArrowUpRight className="h-4 w-4" aria-hidden />
+              </button>
+              <Link
+                href="/track"
+                className="inline-flex items-center gap-2 rounded-full border border-ink/20 px-6 py-3.5 text-sm font-medium text-ink transition-colors hover:border-ink"
+              >
+                Track an application
+              </Link>
+            </div>
+          </div>
+        </div>
+      </Reveal>
     </section>
   );
 }
