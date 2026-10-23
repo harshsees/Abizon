@@ -35,6 +35,7 @@ import {
 } from "@/components/CountryFilters";
 import { CountryStage } from "@/components/country-stage/CountryStage";
 import { HomeNav } from "@/components/home/HomeNav";
+import { Guilloche } from "@/components/home/PassportMarks";
 import { HomeFooter } from "@/components/home/HomeFooter";
 import {
   Closing,
@@ -192,8 +193,11 @@ export default function Home() {
 
         {/* The rest of the page is paper: a sheet that rises over the space
             once the hall and its filters are done with. */}
-        <div className="relative z-10 mt-16 rounded-t-[28px] bg-paper text-ink md:mt-24 md:rounded-t-[44px]">
-          <div className={CONTAINER}>
+        <div className="relative z-10 mt-16 overflow-hidden rounded-t-[28px] bg-paper text-ink md:mt-24 md:rounded-t-[44px]">
+          {/* Passport security print, at the top of the sheet and behind the close. */}
+          <Guilloche className="top-0 h-[620px]" />
+          <Guilloche className="bottom-0 h-[460px]" />
+          <div className={`${CONTAINER} relative`}>
             <Intro onShowInHall={showInHall} />
             <Services onShowInHall={showInHall} />
             <HowItWorks />

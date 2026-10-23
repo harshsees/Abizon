@@ -48,6 +48,9 @@ import { countryCardImage } from "@/lib/countryImagery";
 import { formatGovernmentFee, formatShortDate } from "@/lib/countryVisa";
 import { cn } from "@/lib/utils";
 
+import { Stamp } from "./PassportMarks";
+import { RouteMap } from "./RouteMap";
+
 type ShowInHall = (filters: Partial<FilterValues>) => void;
 
 /* -------------------------------------------------------------------------- */
@@ -241,13 +244,18 @@ export function Intro({ onShowInHall }: { onShowInHall: ShowInHall }) {
         </Reveal>
       </div>
 
-      {/* What the catalogue asks of an Indian passport, as one bar. */}
+      {/* The catalogue on the map, from where the reader is standing, and
+          then what it asks of their passport, as one bar. */}
       <Reveal className="mt-16 md:mt-24" delay={0.05}>
         <div className="grid grid-cols-1 gap-5 md:grid-cols-[200px_1fr] md:gap-8">
           <p className="text-sm leading-snug text-ink-muted md:pt-1">
-            What {total} destinations ask of an Indian passport
+            From India to {total} destinations, and what each one asks of an Indian passport.
+            <span className="mt-2 hidden text-ink-faint md:block">Point at a visa type to see where it goes.</span>
           </p>
           <div>
+            <div className="mb-6 md:mb-8">
+              <RouteMap highlight={hover} />
+            </div>
             <div className="flex h-12 w-full gap-[3px] overflow-hidden rounded-lg md:h-14" role="list">
               {VISA_KINDS.map((k) => {
                 const n = counts[k.type];
@@ -455,7 +463,9 @@ export function HowItWorks() {
       />
 
       <div className="mt-10 grid grid-cols-1 gap-8 md:mt-14 md:grid-cols-[200px_1fr] md:gap-8">
-        <div aria-hidden className="hidden md:block" />
+        <div aria-hidden className="hidden md:block">
+          <Stamp code="DXB" line="DUBAI · ARRIVED" word="ADMITTED" tone="amber" rotate={-9} className="mt-24 h-36 w-36" />
+        </div>
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:gap-12">
           <ol className="flex flex-col" aria-label="Application steps">
             {STEPS.map((s, i) => {
@@ -718,7 +728,9 @@ export function Guarantee() {
       <SectionHead index="04" label="The promise" id="promise-title" title="The date comes first. Then the price." />
 
       <div className="mt-10 grid grid-cols-1 gap-8 md:mt-14 md:grid-cols-[200px_1fr] md:gap-8">
-        <div aria-hidden className="hidden md:block" />
+        <div aria-hidden className="hidden md:block">
+          <Stamp code="BKK" line="IMMIGRATION · THAILAND" word="VISA ON FILE" shape="box" rotate={6} className="mt-40 h-36 w-36" />
+        </div>
         <div className="grid grid-cols-1 items-start gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,420px)] lg:gap-16">
           <Reveal>
             <p className="max-w-lg text-[17px] leading-relaxed text-ink-muted">
@@ -1046,7 +1058,9 @@ export function Tools() {
       />
 
       <div className="mt-10 grid grid-cols-1 gap-8 md:mt-14 md:grid-cols-[200px_1fr]">
-        <div aria-hidden className="hidden md:block" />
+        <div aria-hidden className="hidden md:block">
+          <Stamp code="SIN" line="SINGAPORE · ARRIVAL" word="ENTRY" rotate={-4} className="mt-10 h-32 w-32" />
+        </div>
         {/* Hairlines from the gap: the list is ruled, and each cell sits on paper. */}
         <ul className="grid grid-cols-1 gap-px overflow-hidden rounded-2xl border border-rule bg-rule sm:grid-cols-2 lg:grid-cols-3">
           {TOOLS.map((t, i) => (
@@ -1139,7 +1153,9 @@ export function Faq() {
       <SectionHead index="07" label="Questions" id="faq-title" title="Asked before the first application." />
 
       <div className="mt-10 grid grid-cols-1 gap-8 md:mt-14 md:grid-cols-[200px_1fr]">
-        <div aria-hidden className="hidden md:block" />
+        <div aria-hidden className="hidden md:block">
+          <Stamp code="BOM" line="MUMBAI · DEPARTED" word="BON VOYAGE" tone="amber" rotate={8} className="mt-20 h-36 w-36" />
+        </div>
         <div className="max-w-3xl border-t border-rule">
           {faqs.map((f, i) => {
             const isOpen = open === i;
