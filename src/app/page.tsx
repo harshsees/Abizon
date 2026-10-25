@@ -137,7 +137,7 @@ export default function Home() {
 
       <HomeNav searchQuery={searchQuery} onSearchChange={setSearchQuery} />
 
-      <CountryStage countries={filteredCountries} totalCount={countriesData.length} />
+      <CountryStage countries={filteredCountries} />
 
       <main id="main-content" tabIndex={-1} className="relative flex flex-1 flex-col">
         {/* Refine the hall. Directly under the stage, so a change is seen

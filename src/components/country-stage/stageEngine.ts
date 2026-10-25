@@ -25,7 +25,7 @@ import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 
 import { paintCard, loadImage, waitForFonts, TEX_W, TEX_H, type CardFace } from "./cardTexture";
 import { createEarth, latLngToVec, type Earth } from "./earth";
-import { createRing, SLOTS, HALF, CARD_H, type Ring } from "./ring";
+import { createRing, SLOTS, HALF, CARD_H, CARD_W, type Ring } from "./ring";
 
 export type StageCountry = {
   code: string;
@@ -42,6 +42,17 @@ export type StageCallbacks = {
 const RADIUS = 4;
 const STEP = THREE.MathUtils.degToRad(17);
 const EARTH_FOV = 30;
+/** Where the outer edge of the second card from centre lands, as a share of the half-width. */
+const FIVE_EDGE = 0.95;
+/** Cards fade out between these many steps from centre, so desktop shows five. */
+const FADE_FROM = 2.2;
+const FADE_TO = 2.75;
+/**
+ * The tallest a card may be, as a share of the stage, however wide the screen.
+ * The front card steps forward and grows on top of this, and its caption must
+ * still clear "Where to next?" above it; past a third of the stage it does not.
+ */
+const MAX_CARD_FRAC = 0.33;
 const TEX_ROOT = "/textures/earth/";
 
 type TexEntry = {
@@ -317,9 +328,24 @@ export class StageEngine {
     const camBack = this.mobile ? 0.4 : 1.0;
     const eye = CARD_H * 0.5;
     const depth = RADIUS + camBack;
-    const cardFrac = this.mobile ? 0.29 : 0.28; // centre card's height, as a share of the stage
-    const waterline = this.mobile ? 0.565 : 0.575; // from the top
-    const f = (cardFrac * 2 * depth) / CARD_H;
+    const waterline = this.mobile ? 0.565 : 0.6; // from the top
+    let f: number;
+    if (this.mobile) {
+      const cardFrac = 0.29; // centre card's height, as a share of the stage
+      f = (cardFrac * 2 * depth) / CARD_H;
+    } else {
+      // Five cards across on desktop: the zoom is solved from the width so the
+      // second card either side of centre sits wholly inside the frame (its
+      // outer edge at FIVE_EDGE of the half-width). Capped by height, so the
+      // front card's caption clears the title; where the cap binds, the third
+      // card would show at the edges, and the fade in layoutRing removes it.
+      const a2 = STEP * 2;
+      const edgeX = RADIUS * Math.sin(a2) + (CARD_W / 2) * Math.cos(a2);
+      const edgeDepth = RADIUS * Math.cos(a2) - (CARD_W / 2) * Math.sin(a2) + camBack;
+      const fFive = (FIVE_EDGE * aspect * edgeDepth) / edgeX;
+      const fMax = (MAX_CARD_FRAC * 2 * depth) / CARD_H;
+      f = Math.min(fFive, fMax);
+    }
     const cam = this.ringCam;
     cam.fov = THREE.MathUtils.radToDeg(2 * Math.atan(1 / f));
     cam.aspect = aspect;
@@ -722,6 +748,18 @@ export class StageEngine {
       const tex = this.textureFor(country);
 
       const a = (i - this.pos) * STEP;
+      // Five cards on desktop: past the second either side of centre, a card
+      // fades out (and stops taking clicks), so the frame never holds more
+      // than five, however wide the screen and wherever the zoom settles.
+      const edge = this.mobile
+        ? 1
+        : 1 - THREE.MathUtils.smoothstep(Math.abs(a), STEP * FADE_FROM, STEP * FADE_TO);
+      if (edge <= 0.001) {
+        slot.card.visible = slot.refl.visible = false;
+        slot.index = null;
+        uCards[s].set(0, 0, 0, 0);
+        return;
+      }
       const reveal = THREE.MathUtils.clamp((introT - 0.25 - Math.abs(s - HALF) * 0.09) / 0.7, 0, 1);
       const rise = (1 - easeOutCubic(reveal)) * -0.35;
 
@@ -753,15 +791,15 @@ export class StageEngine {
       cu.map.value = tex.texture;
       cu.uDim.value = dim + pop * 0.08;
       cu.uHover.value = slot.hover;
-      cu.uReveal.value = reveal;
+      cu.uReveal.value = reveal * edge;
       const ru = slot.refl.material.uniforms;
       ru.map.value = tex.texture;
       ru.uTime.value = t;
       ru.uDim.value = dim;
-      ru.uReveal.value = reveal;
+      ru.uReveal.value = reveal * edge;
 
       // The pool of light sits just in front of the card, toward the viewer.
-      uCards[s].set(x - Math.sin(a) * 0.55, z + Math.cos(a) * 0.55, a, dim * reveal);
+      uCards[s].set(x - Math.sin(a) * 0.55, z + Math.cos(a) * 0.55, a, dim * reveal * edge);
       uColors[s].copy(tex.color).multiplyScalar(1.6);
     });
   }

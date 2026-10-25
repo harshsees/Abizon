@@ -30,13 +30,7 @@ import type { StageEngine } from "./stageEngine";
 
 type StageModule = typeof import("./stageClient");
 
-export function CountryStage({
-  countries,
-  totalCount,
-}: {
-  countries: Country[];
-  totalCount: number;
-}) {
+export function CountryStage({ countries }: { countries: Country[] }) {
   const router = useRouter();
   const sectionRef = useRef<HTMLElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -187,11 +181,7 @@ export function CountryStage({
 
       {/* Title, set below the floating nav. */}
       <div className="pointer-events-none absolute inset-x-0 top-[10%] flex flex-col items-center px-6 text-center md:top-[8.5%]">
-        <p className="text-[10px] font-medium uppercase tracking-[0.32em] text-ink-faint">
-          {totalCount} destinations <span className="mx-1.5 text-ink/25">·</span>
-          <span className="text-ink">Drag to explore</span>
-        </p>
-        <h1 className="mt-3 font-serif text-[36px] font-light leading-none tracking-[-0.02em] text-ink md:text-[54px]">
+        <h1 className="font-serif text-[36px] font-light leading-none tracking-[-0.02em] text-ink md:text-[54px]">
           Where to next?
         </h1>
       </div>
