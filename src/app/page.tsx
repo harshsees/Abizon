@@ -39,13 +39,13 @@ import { HomeNav } from "@/components/home/HomeNav";
 import { Guilloche } from "@/components/home/PassportMarks";
 import { HomeFooter } from "@/components/home/HomeFooter";
 import {
+  About,
   Closing,
   Collections,
   Eyebrow,
   Faq,
   Guarantee,
   HowItWorks,
-  Intro,
   Services,
   Tools,
 } from "@/components/home/HomeSections";
@@ -192,13 +192,13 @@ export default function Home() {
           <Guilloche className="top-0 h-[620px]" />
           <Guilloche className="bottom-0 h-[460px]" />
           <div className={`${CONTAINER} relative`}>
-            <Intro onShowInHall={showInHall} />
-            <Services onShowInHall={showInHall} />
-            <HowItWorks />
-            <Guarantee />
-            <Collections onShowInHall={showInHall} />
-            <Tools />
-            <Faq />
+            <Collections index="01" onShowInHall={showInHall} />
+            <HowItWorks index="02" />
+            <Guarantee index="03" />
+            <About index="04" onShowInHall={showInHall} />
+            <Services index="05" onShowInHall={showInHall} />
+            <Tools index="06" />
+            <Faq index="07" />
             <Closing onBackToHall={backToHall} />
           </div>
         </div>

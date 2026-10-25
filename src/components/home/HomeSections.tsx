@@ -9,14 +9,17 @@
  * rules between rows, and one worked object per section — a proportional bar,
  * a ledger, a mock of the application, a receipt — instead of icon tiles.
  *
- * The order answers what a first-time visitor asks, in the order they ask it:
- *   01  What is this?                       Intro
- *   02  What will you actually do for me?   Services
- *   03  What do I have to do?               HowItWorks
- *   04  Why should I trust you with it?     Guarantee
- *   05  Where can I go?                     Collections
+ * The order puts something to act on first, then the reassurance, then the
+ * explanation for anyone who wants it:
+ *   01  Where can I go?                     Collections
+ *   02  What do I have to do?               HowItWorks
+ *   03  Why should I trust you with it?     Guarantee
+ *   04  What is abizon?                     About
+ *   05  What will you do for me?            Services
  *   06  What else is here?                  Tools
- *       Questions, and a way back up.       Faq, Closing
+ *   07  Questions, then a way back up.      Faq, Closing
+ * Each section takes its number from the page, so the order lives only in
+ * `app/page.tsx`.
  *
  * The rule from the previous version still holds: every number is computed
  * from `countriesData` and every link goes to a route that exists. There are no
@@ -162,7 +165,7 @@ function uniqueDestinations(rows: Country[]): Country[] {
 const SECTION = "py-16 md:py-24";
 
 /* -------------------------------------------------------------------------- */
-/* 01 Intro — what abizon is, and what the catalogue asks of a passport        */
+/* About — what abizon is, in plain words, and where an Indian passport goes  */
 /* -------------------------------------------------------------------------- */
 
 const VISA_KINDS: {
@@ -176,34 +179,50 @@ const VISA_KINDS: {
   {
     type: "E-Visa",
     label: "E-visa",
-    body: "Applied for online, delivered by email. This is most of what we file.",
+    body: "Apply online. Your visa comes by email.",
     tone: "bg-ink",
     onTone: "text-paper",
   },
   {
     type: "Sticker Visa",
     label: "Embassy visa",
-    body: "A consulate appointment. We prepare the file and the list to bring.",
+    body: "You visit the embassy. We prepare your papers.",
     tone: "bg-ink/65",
     onTone: "text-paper",
   },
   {
     type: "Visa on Arrival",
-    label: "On arrival",
-    body: "Issued at the border. We tell you what to carry.",
+    label: "Visa on arrival",
+    body: "You get the visa when you land.",
     tone: "bg-ink/35",
     onTone: "text-ink",
   },
   {
     type: "Visa Free",
     label: "Visa free",
-    body: "No visa at all — the passport is enough.",
+    body: "No visa needed. Just your passport.",
     tone: "bg-ink/[0.12]",
     onTone: "text-ink",
   },
 ];
 
-export function Intro({ onShowInHall }: { onShowInHall: ShowInHall }) {
+/** Three questions a newcomer has, answered in a sentence each. */
+const ABOUT: { q: string; a: string }[] = [
+  {
+    q: "Who we are",
+    a: "An online visa service for people travelling on an Indian passport.",
+  },
+  {
+    q: "What we do",
+    a: "We check your documents, send your application to the government, and follow it until your visa arrives.",
+  },
+  {
+    q: "What you get",
+    a: "Your visa's delivery date before you pay. If we are late, you don't pay our fee.",
+  },
+];
+
+export function About({ index, onShowInHall }: { index: string; onShowInHall: ShowInHall }) {
   const total = countriesData.length;
   const counts = useMemo(
     () =>
@@ -215,42 +234,36 @@ export function Intro({ onShowInHall }: { onShowInHall: ShowInHall }) {
   const [hover, setHover] = useState<Country["visaType"] | null>(null);
 
   return (
-    <section aria-labelledby="intro-title" className="pb-16 pt-20 md:pb-24 md:pt-28">
-      <div className="grid grid-cols-1 gap-5 md:grid-cols-[200px_1fr] md:gap-8">
-        <Reveal>
-          <Label index="01">About abizon</Label>
-        </Reveal>
-        <Reveal delay={0.05}>
-          <h2
-            id="intro-title"
-            className="max-w-[22ch] font-serif text-[34px] font-light leading-[1.12] tracking-[-0.02em] text-ink md:text-[56px]"
-          >
-            We get visas for Indian passport holders.{" "}
-            <span className="text-ink-faint">
-              Prepared, checked, filed — with the delivery date promised before you pay.
-            </span>
-          </h2>
-          <div className="mt-8 grid max-w-3xl grid-cols-1 gap-6 text-[15px] leading-relaxed text-ink-muted sm:grid-cols-2">
-            <p>
-              Pick a destination, answer four screens and scan your passport. We check every document
-              against that country&rsquo;s rules before anything is submitted, so a missing page is caught
-              by us and not by a consulate.
-            </p>
-            <p>
-              Then we file it and keep you posted until the decision. If the visa is late because of us, our
-              fee is waived — and every fee, including ours, is itemised before you pay.
-            </p>
-          </div>
-        </Reveal>
+    <section aria-labelledby="about-title" className={SECTION}>
+      <SectionHead
+        index={index}
+        label="About abizon"
+        id="about-title"
+        title="We apply for your visa, so you don't have to."
+      />
+
+      <div className="mt-10 grid grid-cols-1 gap-8 md:mt-14 md:grid-cols-[200px_1fr]">
+        <div aria-hidden className="hidden md:block" />
+        <dl className="grid grid-cols-1 gap-8 sm:grid-cols-3 sm:gap-6">
+          {ABOUT.map((item, i) => (
+            <Reveal key={item.q} delay={i * 0.05}>
+              <div className="border-t border-ink pt-4">
+                <dt className="text-[11px] font-medium uppercase tracking-[0.16em] text-ink-faint">{item.q}</dt>
+                <dd className="mt-3 font-serif text-[21px] leading-snug text-ink md:text-[23px]">{item.a}</dd>
+              </div>
+            </Reveal>
+          ))}
+        </dl>
       </div>
 
       {/* The catalogue on the map, from where the reader is standing, and
           then what it asks of their passport, as one bar. */}
-      <Reveal className="mt-16 md:mt-24" delay={0.05}>
+      <Reveal className="mt-16 md:mt-20" delay={0.05}>
         <div className="grid grid-cols-1 gap-5 md:grid-cols-[200px_1fr] md:gap-8">
           <p className="text-sm leading-snug text-ink-muted md:pt-1">
-            From India to {total} destinations, and what each one asks of an Indian passport.
-            <span className="mt-2 hidden text-ink-faint md:block">Point at a visa type to see where it goes.</span>
+            <span className="block font-medium text-ink">Where you can go from India</span>
+            <span className="mt-1 block">{total} countries, split by the kind of visa they ask for.</span>
+            <span className="mt-2 hidden text-ink-faint md:block">Point at a visa type to see where it takes you.</span>
           </p>
           <div>
             <div className="mb-6 md:mb-8">
@@ -266,7 +279,7 @@ export function Intro({ onShowInHall }: { onShowInHall: ShowInHall }) {
                     key={k.type}
                     type="button"
                     role="listitem"
-                    aria-label={`${k.label}: ${n} destinations. Show them in the hall.`}
+                    aria-label={`${k.label}: ${n} countries. Show them at the top of the page.`}
                     onClick={() => onShowInHall({ type: k.type })}
                     onMouseEnter={() => setHover(k.type)}
                     onMouseLeave={() => setHover(null)}
@@ -310,13 +323,13 @@ export function Intro({ onShowInHall }: { onShowInHall: ShowInHall }) {
                       <span className="mt-2 block font-serif text-[40px] leading-none tracking-[-0.02em] text-ink tabular-nums">
                         {n}
                       </span>
-                      <span className="mt-2 block text-[13px] leading-relaxed text-ink-muted">{k.body}</span>
+                      <span className="mt-2 block text-[14px] leading-relaxed text-ink-muted">{k.body}</span>
                       <button
                         type="button"
                         onClick={() => onShowInHall({ type: k.type })}
                         className="mt-3 inline-flex cursor-pointer items-center gap-1 text-[13px] font-medium text-ink hover:text-primary"
                       >
-                        See them in the hall
+                        Show these countries
                         <ArrowUpRight className="h-3.5 w-3.5" aria-hidden />
                       </button>
                     </dd>
@@ -332,10 +345,10 @@ export function Intro({ onShowInHall }: { onShowInHall: ShowInHall }) {
 }
 
 /* -------------------------------------------------------------------------- */
-/* 02 Services — a ledger of what we handle                                    */
+/* What we help with — every kind of help, one plain line each                 */
 /* -------------------------------------------------------------------------- */
 
-export function Services({ onShowInHall }: { onShowInHall: ShowInHall }) {
+export function Services({ index, onShowInHall }: { index: string; onShowInHall: ShowInHall }) {
   const count = (type: Country["visaType"]) => countriesData.filter((c) => c.visaType === type).length;
   const arrivalCards = useMemo(
     () =>
@@ -348,19 +361,19 @@ export function Services({ onShowInHall }: { onShowInHall: ShowInHall }) {
   const rows: { title: string; body: ReactNode; action: ReactNode }[] = [
     {
       title: "E-visas",
-      body: `Applied for online and delivered to your inbox. ${count("E-Visa")} destinations, from the UAE to Vietnam.`,
-      action: <TextLink onClick={() => onShowInHall({ type: "E-Visa" })}>Browse e-visas</TextLink>,
+      body: `Apply online and get your visa by email. Available for ${count("E-Visa")} countries.`,
+      action: <TextLink onClick={() => onShowInHall({ type: "E-Visa" })}>Show e-visa countries</TextLink>,
     },
     {
       title: "Embassy visas",
-      body: "The UK, Schengen and other sticker visas that need a consulate visit. We prepare the application and tell you exactly what to bring to the appointment.",
-      action: <TextLink onClick={() => onShowInHall({ type: "Sticker Visa" })}>Browse embassy visas</TextLink>,
+      body: "For countries like the UK and the Schengen area, where you visit the embassy. We prepare your papers and tell you what to bring.",
+      action: <TextLink onClick={() => onShowInHall({ type: "Sticker Visa" })}>Show embassy visa countries</TextLink>,
     },
     {
       title: "Arrival cards",
       body: (
         <>
-          Free. The digital arrival card {arrivalCards.length} countries ask for before you land, filled in for you.
+          Free. Some countries ask you to fill in a form before you land. We fill it in for you.
           <span className="mt-3 flex flex-wrap gap-1.5">
             {arrivalCards.map(({ slug, country }) => (
               <Link
@@ -377,47 +390,44 @@ export function Services({ onShowInHall }: { onShowInHall: ShowInHall }) {
       action: null,
     },
     {
-      title: "Visa-free & on arrival",
-      body: "Nothing to file, but still something to get right. Each destination's page lists what the border will ask to see.",
-      action: <TextLink onClick={() => onShowInHall({ type: "Visa Free" })}>Browse visa free</TextLink>,
+      title: "No visa needed",
+      body: "Visa free, or a visa you get when you land. We tell you what to show at the airport.",
+      action: <TextLink onClick={() => onShowInHall({ type: "Visa Free" })}>Show visa-free countries</TextLink>,
     },
     {
       title: "Student visas",
-      body: "US F-1, UK Student Route, Canada study permit, Australia subclass 500 and Schengen national D visas — with the financial documents each one expects.",
+      body: "Studying in the US, UK, Canada, Australia or Europe? We help with the visa and the proof of funds each country asks for.",
       action: <TextLink href="/student-visa">Student visas</TextLink>,
     },
     {
-      title: "Refused elsewhere",
-      body: "Send us the refusal. We work out what most likely went wrong, tell you honestly whether a refile will succeed, and if it goes ahead you pay the government fee only.",
-      action: <TextLink href="/rejection-recovery">Rejection recovery</TextLink>,
+      title: "Visa refused?",
+      body: "We find out why, tell you honestly whether trying again will work, and if you do, you pay only the government fee.",
+      action: <TextLink href="/rejection-recovery">Apply again</TextLink>,
     },
     {
       title: "Armed forces",
-      body: "Serving and retired Indian armed forces personnel and their families pay no service fee, on any visa, with NOC handling included.",
-      action: <TextLink href="/defense-personnel">The programme</TextLink>,
+      body: "Serving or retired? You and your family pay no service fee, on any visa.",
+      action: <TextLink href="/defense-personnel">How it works</TextLink>,
     },
   ];
 
   return (
     <section aria-labelledby="services-title" className={SECTION}>
-      <SectionHead
-        index="02"
-        label="What we handle"
-        id="services-title"
-        title="Everything between deciding to go and landing."
-      />
+      <SectionHead index={index} label="Our services" id="services-title" title="What we can help you with." />
 
       <ol className="mt-10 border-t border-rule md:mt-14">
         {rows.map((row, i) => (
           <li key={row.title}>
             <Reveal delay={i * 0.03}>
-              <div className="group grid grid-cols-1 gap-3 border-b border-rule py-7 md:grid-cols-[200px_minmax(0,1fr)_minmax(0,1.5fr)_200px] md:gap-8 md:py-8">
+              <div className="grid grid-cols-1 gap-3 border-b border-rule py-7 md:grid-cols-[200px_minmax(0,0.8fr)_minmax(0,1.6fr)] md:gap-8 md:py-8">
                 <span className="font-mono text-xs text-ink-faint">{String(i + 1).padStart(2, "0")}</span>
                 <h3 className="font-serif text-[24px] leading-tight tracking-[-0.01em] text-ink md:text-[28px]">
                   {row.title}
                 </h3>
-                <div className="max-w-xl text-[15px] leading-relaxed text-ink-muted">{row.body}</div>
-                <div className="md:text-right">{row.action}</div>
+                <div className="max-w-xl">
+                  <div className="text-[16px] leading-relaxed text-ink-muted">{row.body}</div>
+                  {row.action && <div className="mt-3">{row.action}</div>}
+                </div>
               </div>
             </Reveal>
           </li>
@@ -450,13 +460,13 @@ const STEPS: { title: string; body: string }[] = [
   },
 ];
 
-export function HowItWorks() {
+export function HowItWorks({ index }: { index: string }) {
   const [step, setStep] = useState(0);
 
   return (
     <section aria-labelledby="how-title" className={SECTION}>
       <SectionHead
-        index="03"
+        index={index}
         label="How it works"
         id="how-title"
         title="Four screens. Then it's our job."
@@ -702,7 +712,7 @@ function MockRow({ label, value, strong }: { label: string; value: string; stron
 
 const RECEIPT_CODES = ["ae", "th", "vn", "sg"];
 
-export function Guarantee() {
+export function Guarantee({ index }: { index: string }) {
   const options = useMemo(
     () =>
       RECEIPT_CODES.map((code) => countriesData.find((c) => c.code === code && c.visaType === "E-Visa")).filter(
@@ -725,7 +735,7 @@ export function Guarantee() {
 
   return (
     <section aria-labelledby="promise-title" className={SECTION}>
-      <SectionHead index="04" label="The promise" id="promise-title" title="The date comes first. Then the price." />
+      <SectionHead index={index} label="The promise" id="promise-title" title="The date comes first. Then the price." />
 
       <div className="mt-10 grid grid-cols-1 gap-8 md:mt-14 md:grid-cols-[200px_1fr] md:gap-8">
         <div aria-hidden className="hidden md:block">
@@ -889,7 +899,7 @@ const COLLECTIONS: Collection[] = [
   },
 ];
 
-export function Collections({ onShowInHall }: { onShowInHall: ShowInHall }) {
+export function Collections({ index, onShowInHall }: { index: string; onShowInHall: ShowInHall }) {
   // The count is what the hall will hold once the collection's filters are
   // applied, so it is taken over every product row, like the hall's.
   const lists = useMemo(
@@ -915,7 +925,7 @@ export function Collections({ onShowInHall }: { onShowInHall: ShowInHall }) {
   return (
     <section aria-labelledby="collections-title" className={SECTION}>
       <SectionHead
-        index="05"
+        index={index}
         label="Destinations"
         id="collections-title"
         title="Start where it's easiest."
@@ -1046,11 +1056,11 @@ const TOOLS: { Icon: LucideIcon; title: string; body: string; href: string }[] =
   },
 ];
 
-export function Tools() {
+export function Tools({ index }: { index: string }) {
   return (
     <section aria-labelledby="tools-title" className={SECTION}>
       <SectionHead
-        index="06"
+        index={index}
         label="Free tools"
         id="tools-title"
         title="Useful before you've decided anything."
@@ -1144,13 +1154,13 @@ function useFaqs(): { q: string; a: string }[] {
   }, []);
 }
 
-export function Faq() {
+export function Faq({ index }: { index: string }) {
   const faqs = useFaqs();
   const [open, setOpen] = useState(0);
 
   return (
     <section aria-labelledby="faq-title" className={SECTION}>
-      <SectionHead index="07" label="Questions" id="faq-title" title="Asked before the first application." />
+      <SectionHead index={index} label="Questions" id="faq-title" title="Asked before the first application." />
 
       <div className="mt-10 grid grid-cols-1 gap-8 md:mt-14 md:grid-cols-[200px_1fr]">
         <div aria-hidden className="hidden md:block">

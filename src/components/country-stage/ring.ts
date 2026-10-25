@@ -4,8 +4,8 @@
  * slow ripple running through the reflection, and the colour of every card
  * tinting the surface beneath it.
  *
- * By day, cards further round the ring recede by fading toward the sky rather
- * than by darkening: a darkened card on a light page reads as a dirty one.
+ * Every card is drawn fully opaque; cards further round the ring recede only by
+ * a slight dimming, so the hall reads clearly against the light sky.
  *
  * The camera stands inside the ring. That is what makes the nearer cards at
  * the edges loom larger than the one straight ahead, and why the captions above
@@ -48,11 +48,11 @@ const cardFrag = /* glsl */ `
       // A sheen sweeping across the glass of the hovered card.
       float sweep = smoothstep(0.12, 0.0, abs(vUv.x - vUv.y * 0.35 - (uHover * 1.6 - 0.3)));
       col += sweep * uHover * 0.10;
-      col *= mix(0.86, 1.04, uDim) + uHover * 0.05;
+      col *= mix(0.8, 1.04, uDim) + uHover * 0.05;
     } else {
       col *= mix(0.9, 1.0, uDim);
     }
-    gl_FragColor = vec4(col, c.a * mix(0.5, 1.0, uDim) * uReveal);
+    gl_FragColor = vec4(col, c.a * uReveal);
     #include <colorspace_fragment>
   }
 `;

@@ -182,7 +182,7 @@ export function CountryStage({
           one continuous background rather than a hero and a page. */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-[18%] bg-gradient-to-b from-transparent to-paper"
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-[12%] bg-gradient-to-b from-transparent to-paper"
       />
 
       {/* Title, set below the floating nav. */}
@@ -199,12 +199,13 @@ export function CountryStage({
       {/* The active destination, over the planet. */}
       {current ? (
         <div className="absolute inset-x-0 top-[77%] flex flex-col items-center px-4 text-center md:top-[76.5%]">
-          {/* A soft wash of paper so ink type holds against a sunlit planet. */}
+          {/* A small, soft wash of paper close behind the type, so ink holds
+              against a sunlit planet without veiling the rest of it. */}
           <div
             aria-hidden
-            className="pointer-events-none absolute left-1/2 top-1/2 -z-10 h-[220%] w-[min(760px,120%)] -translate-x-1/2 -translate-y-1/2 bg-[radial-gradient(closest-side,rgb(249_248_245/0.94),rgb(249_248_245/0.82)_60%,transparent)]"
+            className="pointer-events-none absolute left-1/2 top-1/2 -z-10 h-[150%] w-[min(560px,105%)] -translate-x-1/2 -translate-y-1/2 bg-[radial-gradient(closest-side,rgb(249_248_245/0.8),rgb(249_248_245/0.45)_55%,transparent)]"
           />
-          <p className="font-mono text-[11px] font-medium tracking-[0.2em] text-ink">
+          <p className="font-mono text-[11px] font-medium tracking-[0.2em] text-ink [text-shadow:0_0_14px_rgb(249_248_245),0_0_3px_rgb(249_248_245)]">
             <span className="text-primary">{pad(active + 1)}</span> / {pad(count)}
           </p>
 
@@ -219,7 +220,7 @@ export function CountryStage({
             </button>
             <h3
               key={current.code}
-              className="animate-stage-title min-w-0 max-w-[60vw] truncate text-[24px] font-light uppercase tracking-[0.14em] text-ink md:max-w-none md:text-[34px]"
+              className="animate-stage-title min-w-0 max-w-[60vw] truncate text-[24px] font-light uppercase tracking-[0.14em] text-ink md:max-w-none md:text-[34px] [text-shadow:0_0_14px_rgb(249_248_245),0_0_3px_rgb(249_248_245)]"
             >
               {current.name}
             </h3>
@@ -233,7 +234,7 @@ export function CountryStage({
             </button>
           </div>
 
-          <div className="mt-2.5 flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-ink">
+          <div className="mt-2.5 flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-ink [text-shadow:0_0_14px_rgb(249_248_245),0_0_3px_rgb(249_248_245)]">
             <span>{current.visaType}</span>
             <span aria-hidden className="h-1 w-1 rounded-full bg-ink/25" />
             <span>{current.validity}</span>

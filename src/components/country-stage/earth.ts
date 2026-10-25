@@ -90,7 +90,7 @@ const earthFrag = /* glsl */ `
     dayCol = mix(dayCol, dayCol * vec3(0.62, 0.82, 1.18), ocean * 0.55);
 
     // Daylight ambient: the far side stays readable against a pale sky.
-    vec3 col = dayCol * (max(ndl, 0.0) * 0.92 + 0.30) * (1.0 - cloudShadow * 0.36);
+    vec3 col = dayCol * (max(ndl, 0.0) * 0.95 + 0.14) * (1.0 - cloudShadow * 0.40);
 
     // Sun glint on water.
     vec3 H = normalize(L + V);
@@ -107,7 +107,7 @@ const earthFrag = /* glsl */ `
     // By day the limb dissolves into the sky's own pale blue.
     vec3 atm = vec3(0.62, 0.78, 1.0);
     float lit = smoothstep(-0.35, 0.55, ndl0);
-    col = mix(col, atm * (0.55 + 0.45 * lit), fres * 0.62);
+    col = mix(col, atm * (0.55 + 0.45 * lit), fres * 0.32);
     col += vec3(0.20, 0.32, 0.55) * pow(fres, 2.6) * (0.25 + 0.6 * lit);
 
     // Its own gentle shoulder instead of global tone mapping, so the photos on
@@ -147,12 +147,12 @@ const cloudFrag = /* glsl */ `
     float ndl = dot(N, normalize(sunDir));
     float day = smoothstep(-0.15, 0.35, ndl);
     float fres = pow(1.0 - max(dot(N, V), 0.0), 3.0);
-    vec3 col = vec3(0.94, 0.96, 1.0) * (max(ndl, 0.0) * 0.70 + 0.32) + vec3(0.25, 0.5, 1.0) * fres * 0.25 * day;
+    vec3 col = vec3(0.94, 0.96, 1.0) * (max(ndl, 0.0) * 0.82 + 0.12) + vec3(0.25, 0.5, 1.0) * fres * 0.25 * day;
     col = 1.0 - exp(-col * 1.1);
     // The shell sits just above the surface, so at grazing angles it would
     // poke past the limb and draw dark specks over the atmosphere. Fade it out there.
     float edge = smoothstep(0.02, 0.22, dot(N, V));
-    gl_FragColor = vec4(col, a * (0.30 + 0.64 * day) * reveal * edge);
+    gl_FragColor = vec4(col, a * (0.15 + 0.79 * day) * reveal * edge);
     #include <colorspace_fragment>
   }
 `;
@@ -186,7 +186,7 @@ const haloFrag = /* glsl */ `
     if (h < 0.0) discard;
     vec3 dir = normalize(closest - center);
     float lit = 0.25 + 0.75 * smoothstep(-0.6, 0.7, dot(dir, normalize(sunDir)));
-    float g = exp(-h / 0.012) * 0.60 + exp(-h / 0.05) * 0.30 + exp(-h / 0.18) * 0.16;
+    float g = exp(-h / 0.012) * 0.60 + exp(-h / 0.05) * 0.20 + exp(-h / 0.18) * 0.06;
     vec3 col = mix(vec3(0.55, 0.72, 1.0), vec3(0.86, 0.92, 1.0), smoothstep(0.0, 0.12, h));
     gl_FragColor = vec4(col, clamp(g * lit, 0.0, 1.0) * reveal);
     #include <colorspace_fragment>
@@ -322,7 +322,7 @@ const skyFrag = /* glsl */ `
     col = mix(col, vec3(1.0, 0.975, 0.935), exp(-dot(q, q) * 2.2) * 0.75);
     // A pale blue scatter rising off the planet's limb.
     vec2 h = vec2((p.x - 0.5) * aspect * 0.55, p.y - 0.30);
-    col = mix(col, vec3(0.86, 0.91, 0.985), exp(-dot(h, h) * 6.0) * 0.55);
+    col = mix(col, vec3(0.86, 0.91, 0.985), exp(-dot(h, h) * 6.0) * 0.25);
     // Dither, so the long gradient does not band on 8-bit panels.
     float n = fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453);
     col += (n - 0.5) / 255.0;
