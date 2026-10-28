@@ -28,6 +28,7 @@
  */
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import {
@@ -244,13 +245,13 @@ export function About({ index, onShowInHall }: { index: string; onShowInHall: Sh
 
       <div className="mt-10 grid grid-cols-1 gap-8 md:mt-14 md:grid-cols-[200px_1fr]">
         <div aria-hidden className="hidden md:block" />
+        {/* A <dl> may hold only one layer of <div> around its pairs, so the
+            Reveal is that layer rather than a wrapper around it. */}
         <dl className="grid grid-cols-1 gap-8 sm:grid-cols-3 sm:gap-6">
           {ABOUT.map((item, i) => (
-            <Reveal key={item.q} delay={i * 0.05}>
-              <div className="border-t border-ink pt-4">
-                <dt className="text-[11px] font-medium uppercase tracking-[0.16em] text-ink-faint">{item.q}</dt>
-                <dd className="mt-3 font-serif text-[21px] leading-snug text-ink md:text-[23px]">{item.a}</dd>
-              </div>
+            <Reveal key={item.q} delay={i * 0.05} className="border-t border-ink pt-4">
+              <dt className="text-[11px] font-medium uppercase tracking-[0.16em] text-ink-faint">{item.q}</dt>
+              <dd className="mt-3 font-serif text-[21px] leading-snug text-ink md:text-[23px]">{item.a}</dd>
             </Reveal>
           ))}
         </dl>
@@ -274,25 +275,26 @@ export function About({ index, onShowInHall }: { index: string; onShowInHall: Sh
                 const n = counts[k.type];
                 if (!n) return null;
                 const active = hover === k.type;
+                // The list item is its own element: a <button> cannot take
+                // role="listitem" without losing its role as a button.
                 return (
-                  <button
-                    key={k.type}
-                    type="button"
-                    role="listitem"
-                    aria-label={`${k.label}: ${n} countries. Show them at the top of the page.`}
-                    onClick={() => onShowInHall({ type: k.type })}
-                    onMouseEnter={() => setHover(k.type)}
-                    onMouseLeave={() => setHover(null)}
-                    onFocus={() => setHover(k.type)}
-                    onBlur={() => setHover(null)}
-                    style={{ flexGrow: n, flexBasis: 0 }}
-                    className={cn(
-                      "flex min-w-0 cursor-pointer items-center px-3 font-mono text-xs tabular-nums transition-colors duration-200",
-                      active ? "bg-primary text-on-primary" : cn(k.tone, k.onTone),
-                    )}
-                  >
-                    <span className="truncate">{n}</span>
-                  </button>
+                  <div key={k.type} role="listitem" className="flex min-w-0" style={{ flexGrow: n, flexBasis: 0 }}>
+                    <button
+                      type="button"
+                      aria-label={`${k.label}: ${n} countries. Show them at the top of the page.`}
+                      onClick={() => onShowInHall({ type: k.type })}
+                      onMouseEnter={() => setHover(k.type)}
+                      onMouseLeave={() => setHover(null)}
+                      onFocus={() => setHover(k.type)}
+                      onBlur={() => setHover(null)}
+                      className={cn(
+                        "flex w-full min-w-0 cursor-pointer items-center px-3 font-mono text-xs tabular-nums transition-colors duration-200",
+                        active ? "bg-primary text-on-primary" : cn(k.tone, k.onTone),
+                      )}
+                    >
+                      <span className="truncate">{n}</span>
+                    </button>
+                  </div>
                 );
               })}
             </div>
@@ -853,8 +855,12 @@ export function Guarantee({ index }: { index: string }) {
 function ReceiptLine({ k, v, mono, faint }: { k: string; v: string; mono?: boolean; faint?: boolean }) {
   return (
     <div className="flex items-baseline gap-3">
-      <dt className="text-ink-muted">{k}</dt>
-      <span aria-hidden className="flex-1 translate-y-[-3px] border-b border-dotted border-rule" />
+      {/* The dotted leader lives inside the <dt>: a <dl>'s row may hold only
+          its <dt> and <dd>. */}
+      <dt className="flex flex-1 items-baseline gap-3 text-ink-muted">
+        {k}
+        <span aria-hidden className="flex-1 translate-y-[-3px] border-b border-dotted border-rule" />
+      </dt>
       <dd className={cn("text-right", mono && "font-mono tabular-nums", faint ? "text-ink-faint" : "text-ink")}>{v}</dd>
     </div>
   );
@@ -981,14 +987,11 @@ function Tile({ country, photo }: { country: Country; photo: ReturnType<typeof c
       <div className="relative aspect-[4/5] overflow-hidden rounded-xl bg-paper-sunken">
         <CountryImagePlate seed={country.code} />
         {photo && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <Image
             src={photo.src}
-            srcSet={photo.srcSet}
+            fill
             sizes="(min-width: 1024px) 22vw, 50vw"
             alt=""
-            loading="lazy"
-            decoding="async"
             onError={(e) => {
               e.currentTarget.style.display = "none";
             }}

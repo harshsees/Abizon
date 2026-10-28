@@ -419,7 +419,7 @@ export function createEarth(textures: EarthTextures, countries: { lat: number; l
     // It fades in by opacity: on a pale sky, fading up from black would flash a dark disc.
     transparent: true,
   });
-  const earth = new THREE.Mesh(new THREE.SphereGeometry(1, 256, 160), earthMat);
+  const earth = new THREE.Mesh(new THREE.SphereGeometry(1, 192, 96), earthMat);
   globe.add(earth);
 
   const cloudMat = new THREE.ShaderMaterial({
@@ -434,7 +434,7 @@ export function createEarth(textures: EarthTextures, countries: { lat: number; l
     transparent: true,
     depthWrite: false,
   });
-  const clouds = new THREE.Mesh(new THREE.SphereGeometry(1.006, 192, 128), cloudMat);
+  const clouds = new THREE.Mesh(new THREE.SphereGeometry(1.006, 160, 80), cloudMat);
   clouds.renderOrder = 2;
   globe.add(clouds);
 
@@ -451,7 +451,7 @@ export function createEarth(textures: EarthTextures, countries: { lat: number; l
     depthWrite: false,
     blending: THREE.NormalBlending,
   });
-  const halo = new THREE.Mesh(new THREE.SphereGeometry(1.7, 128, 96), haloMat);
+  const halo = new THREE.Mesh(new THREE.SphereGeometry(1.7, 96, 48), haloMat);
   halo.renderOrder = 1;
   scene.add(halo);
 
@@ -499,7 +499,11 @@ export function createEarth(textures: EarthTextures, countries: { lat: number; l
   const NEEDLE = 3.1;
   const needle = new THREE.Mesh(
     new THREE.CylinderGeometry(0.13, 0.025, NEEDLE, 20, 1),
-    new THREE.MeshStandardMaterial({ color: 0xd9dee6, metalness: 1, roughness: 0.22 }),
+    // Lit by the scene's lights alone. There is no environment map to
+    // reflect: prefiltering one (PMREM) was a 1–2s shader-compile stall on
+    // Windows for a pin head 11px across. A fully metallic needle with nothing
+    // to reflect renders black, so this one is only partly metallic.
+    new THREE.MeshStandardMaterial({ color: 0xd9dee6, metalness: 0.45, roughness: 0.3 }),
   );
   needle.position.y = NEEDLE / 2;
   pinBody.add(needle);

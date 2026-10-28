@@ -262,6 +262,28 @@ const nextConfig: NextConfig = {
   // advertising which release to check advisories against.
   poweredByHeader: false,
 
+  // The stylesheet arrives inside the HTML instead of as a second, render-
+  // blocking request. Tailwind keeps it small enough that this is the cheaper
+  // side of the trade even for a returning visitor.
+  experimental: {
+    inlineCss: true,
+  },
+
+  /**
+   * Card photographs are our own copies under /photos/cards (see
+   * scripts/cache-card-photos.ts); `next/image` sizes them for the layout and
+   * the result is cached for a month, since a photograph never changes at a
+   * given URL. The remote hosts stay allowed for any destination without a copy.
+   */
+  images: {
+    remotePatterns: [
+      { protocol: "https", hostname: "upload.wikimedia.org", pathname: "/wikipedia/**" },
+      { protocol: "https", hostname: "images.unsplash.com" },
+    ],
+    formats: ["image/webp"],
+    minimumCacheTTL: 60 * 60 * 24 * 31,
+  },
+
   async redirects() {
     return countryRedirects;
   },

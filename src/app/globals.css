@@ -2026,15 +2026,15 @@ button {
 
 /* The destination stage's title: each new country's name resolves out of a
    blur as the hall settles on it. */
+/* Opacity and transform only, so the entrance runs on the compositor; a blur
+   here repainted the name on the main thread every frame. */
 @keyframes stage-title-in {
   from {
     opacity: 0;
-    filter: blur(8px);
     transform: translateY(6px);
   }
   to {
     opacity: 1;
-    filter: blur(0);
     transform: translateY(0);
   }
 }

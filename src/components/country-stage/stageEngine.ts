@@ -21,7 +21,6 @@ import * as THREE from "three";
 import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
-import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 
 import { paintCard, loadImage, waitForFonts, TEX_W, TEX_H, type CardFace } from "./cardTexture";
 import { createEarth, latLngToVec, type Earth } from "./earth";
@@ -86,7 +85,6 @@ export class StageEngine {
   private ringCam = new THREE.PerspectiveCamera(50, 1, 0.05, 100);
   private earth: Earth | null = null;
   private ring: Ring;
-  private envRT: THREE.WebGLRenderTarget | null = null;
 
   private cards: StageCountry[] = [];
   private textures = new Map<string, TexEntry>();
@@ -139,7 +137,14 @@ export class StageEngine {
   private raf = 0;
   private running = false;
   private disposed = false;
+  /** Still motion: the user asked for it, or the device cannot afford motion. */
   private reduced: boolean;
+  /** Software WebGL: draw on demand only, at 1x, with the small maps. */
+  private lowPower: boolean;
+  /** In low-power mode, the frame loop runs until this `performance.now()`. */
+  private awakeUntil = 0;
+  /** The hall's shaders are compiled; until then there is nothing to draw. */
+  private compiled = false;
   private raycaster = new THREE.Raycaster();
   private ndc = new THREE.Vector2();
 
@@ -147,16 +152,23 @@ export class StageEngine {
     private canvas: HTMLCanvasElement,
     private cb: StageCallbacks,
     countriesForMarkers: { lat: number; lng: number }[],
+    /** From `detectLowPower`, which the page runs before it fetches three.js. */
+    lowPower: boolean,
   ) {
-    this.reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    this.lowPower = lowPower;
+    this.reduced = this.lowPower || window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     this.renderer = new THREE.WebGLRenderer({
       canvas,
-      antialias: true,
+      // The composer draws into its own (non-multisampled) target, so MSAA on
+      // the canvas would only ever smooth the final full-screen quad.
+      antialias: false,
       alpha: false,
       powerPreference: "high-performance",
     });
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    // 1.5x is past where the planet or the cards get visibly sharper, and a 2x
+    // phone at 1.5x shades 44% fewer pixels a frame.
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, this.lowPower ? 1 : 1.5));
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.toneMapping = THREE.NoToneMapping;
     // The page's paper, for the frames before the sky is drawn (or if the planet never loads).
@@ -167,6 +179,16 @@ export class StageEngine {
     this.composer = new EffectComposer(this.renderer);
     this.composer.setPixelRatio(this.renderer.getPixelRatio());
 
+    // The hall's shaders compile in the background (KHR_parallel_shader_compile
+    // where there is one) instead of stalling the first frame; nothing is
+    // drawn until they are ready.
+    this.compileInBackground(this.ring.scene, this.ringCam)
+      .catch(() => undefined)
+      .then(() => {
+        this.compiled = true;
+        this.wake();
+      });
+
     this.loadEarth(countriesForMarkers);
     this.bindEvents();
   }
@@ -176,65 +198,130 @@ export class StageEngine {
   /* ---------------------------------------------------------------------- */
 
   private loadEarth(markers: { lat: number; lng: number }[]) {
-    const loader = new THREE.TextureLoader();
     const aniso = this.renderer.capabilities.getMaxAnisotropy();
+    // Decoded off the main thread where that is reliable. A plain <img> is
+    // decoded on the main thread at upload, ~100ms for each 4K map. Safari and
+    // Firefox < 98 mishandle ImageBitmap options, as three's GLTFLoader notes.
+    const ua = navigator.userAgent;
+    const firefox = ua.match(/Firefox\/(\d+)/);
+    const bitmaps =
+      typeof createImageBitmap !== "undefined" &&
+      !/^((?!chrome|android).)*safari/i.test(ua) &&
+      !(firefox && Number(firefox[1]) < 98);
+    const bitmapLoader = new THREE.ImageBitmapLoader().setOptions({ imageOrientation: "flipY" });
+    const imageLoader = new THREE.TextureLoader();
     const load = (name: string, srgb: boolean) =>
       new Promise<THREE.Texture>((resolve, reject) => {
-        loader.load(
-          TEX_ROOT + name,
-          (t) => {
-            t.colorSpace = srgb ? THREE.SRGBColorSpace : THREE.NoColorSpace;
-            t.anisotropy = aniso;
-            resolve(t);
-          },
-          undefined,
-          reject,
-        );
+        const done = (t: THREE.Texture) => {
+          t.colorSpace = srgb ? THREE.SRGBColorSpace : THREE.NoColorSpace;
+          t.anisotropy = aniso;
+          resolve(t);
+        };
+        if (bitmaps) {
+          bitmapLoader.load(
+            TEX_ROOT + name,
+            (bitmap) => {
+              const t = new THREE.Texture(bitmap);
+              t.flipY = false; // flipped during decode
+              t.needsUpdate = true;
+              done(t);
+            },
+            undefined,
+            reject,
+          );
+        } else {
+          imageLoader.load(TEX_ROOT + name, done, undefined, reject);
+        }
       });
 
+    // A phone's planet is ~400 CSS px across, where the 2K maps are already
+    // texel-for-pixel; the 4K set is ~850KB more for nothing it can show.
+    const res = this.lowPower || window.innerWidth < 768 ? "2k" : "4k";
+
     Promise.all([
-      load("day-4k.webp", true),
-      load("night-4k.webp", true),
+      load(`day-${res}.webp`, true),
+      load(`night-${res}.webp`, true),
       load("ocean-2k.webp", false),
-      load("normal-4k.webp", false),
+      load(`normal-${res}.webp`, false),
       load("clouds-2k.webp", false),
     ])
-      .then(([day, night, ocean, normal, clouds]) => {
-        if (this.disposed) {
-          [day, night, ocean, normal, clouds].forEach((t) => t.dispose());
-          return;
-        }
-        this.earth = createEarth({ day, night, ocean, normal, clouds }, markers);
+      .then(async ([day, night, ocean, normal, clouds]) => {
+        const maps = [day, night, ocean, normal, clouds];
+        const earth = createEarth({ day, night, ocean, normal, clouds }, markers);
+        const abandon = () => {
+          maps.forEach((t) => t.dispose());
+          earth.dispose();
+        };
+        if (this.disposed) return abandon();
 
-        const pmrem = new THREE.PMREMGenerator(this.renderer);
-        this.envRT = pmrem.fromScene(new RoomEnvironment(), 0.04);
-        this.earth.scene.environment = this.envRT.texture;
-        pmrem.dispose();
+        // One map per task, then the shaders in the background, so the planet
+        // arrives as several short tasks instead of one long stall.
+        for (const t of maps) {
+          this.renderer.initTexture(t);
+          await new Promise((r) => setTimeout(r, 0));
+          if (this.disposed) return abandon();
+        }
+        await this.compileInBackground(earth.scene, this.earthCam).catch(() => undefined);
+        if (this.disposed) return abandon();
+        this.earth = earth;
 
         this.buildComposer();
         this.resize(this.width, this.height);
-        this.introStart = this.time;
+        this.startIntro();
         this.retargetGlobe(true);
 
-        // The full 8K day map, only where it can be seen and the GPU takes it.
+        // The full 8K day map, only where it can be seen: a large, dense
+        // screen on a GPU that takes it, and only once the page has settled.
         const big =
-          window.innerWidth >= 1100 && this.renderer.capabilities.maxTextureSize >= 8192;
+          !this.lowPower &&
+          window.innerWidth >= 1100 &&
+          window.devicePixelRatio >= 1.5 &&
+          this.renderer.capabilities.maxTextureSize >= 8192;
         if (big) {
-          load("day-8k.webp", true)
-            .then((t) => {
-              if (this.disposed || !this.earth) return t.dispose();
-              const old = this.earth.earthMat.uniforms.dayMap.value as THREE.Texture;
-              this.earth.earthMat.uniforms.dayMap.value = t;
-              old.dispose();
-            })
-            .catch(() => undefined);
+          const swap = () =>
+            load("day-8k.webp", true)
+              .then((t) => {
+                if (this.disposed || !this.earth) return t.dispose();
+                const old = this.earth.earthMat.uniforms.dayMap.value as THREE.Texture;
+                this.earth.earthMat.uniforms.dayMap.value = t;
+                old.dispose();
+              })
+              .catch(() => undefined);
+          if ("requestIdleCallback" in window) {
+            window.requestIdleCallback(swap, { timeout: 8000 });
+          } else {
+            setTimeout(swap, 4000);
+          }
         }
       })
       .catch(() => {
         // No planet: the hall still works on its own.
         this.buildComposer();
-        this.introStart = this.time;
+        this.startIntro();
       });
+  }
+
+  /** The planet rises and the cards come up; a low-power device skips to the end. */
+  private startIntro() {
+    this.introStart = this.lowPower ? this.time - 10 : this.time;
+    this.wake();
+  }
+
+  /**
+   * `compileAsync`, for the target the scene is really drawn into. three keys
+   * each program on its output colour space, and the composer renders into a
+   * linear offscreen buffer, not the canvas: compiled against the canvas, the
+   * programs the first frame needs were not the ones compiled, and it stalled
+   * for seconds linking them (Direct3D's shader compiler is slow).
+   */
+  private compileInBackground(scene: THREE.Scene, camera: THREE.Camera) {
+    const previous = this.renderer.getRenderTarget();
+    this.renderer.setRenderTarget(this.composer.readBuffer);
+    // compileAsync starts every compile synchronously, so the target can be
+    // restored straight away; only the wait for completion is asynchronous.
+    const done = this.renderer.compileAsync(scene, camera);
+    this.renderer.setRenderTarget(previous);
+    return done;
   }
 
   private buildComposer() {
@@ -266,17 +353,31 @@ export class StageEngine {
     this.active = -1;
     this.ring.slots.forEach((s) => (s.index = null));
     this.updateActive();
+    this.wake();
   }
 
-  step(delta: number) {
+  /** Snap straight to a destination, without the hall turning to reach it. */
+  jumpTo(index: number) {
+    const n = this.cards.length;
+    if (!n) return;
+    this.pos = this.target = THREE.MathUtils.clamp(index, 0, n - 1);
+    this.vel = 0;
+    this.updateActive();
+    this.retargetGlobe(true);
+    this.wake();
+  }
+
+    step(delta: number) {
     if (!this.cards.length) return;
     const base = this.target ?? Math.round(this.pos);
     this.target = this.clampTarget(base + delta);
+    this.wake();
   }
 
   goTo(index: number) {
     const n = this.cards.length;
     if (!n) return;
+    this.wake();
     if (!this.wraps()) {
       this.target = THREE.MathUtils.clamp(index, 0, n - 1);
       return;
@@ -291,20 +392,25 @@ export class StageEngine {
     if (on === this.running || this.disposed) return;
     this.running = on;
     if (on) {
-      this.timer.reset();
-      this.raf = requestAnimationFrame(this.tick);
+      this.wake();
+      this.schedule();
     } else {
       cancelAnimationFrame(this.raf);
+      this.raf = 0;
     }
   }
 
   /** 0 while the stage fills the viewport, rising to 1 as it scrolls away. */
   setScroll(progress: number) {
-    this.scroll = THREE.MathUtils.clamp(progress, 0, 1);
+    const next = THREE.MathUtils.clamp(progress, 0, 1);
+    if (next === this.scroll) return;
+    this.scroll = next;
+    this.wake(250);
   }
 
   resize(w: number, h: number) {
     if (w < 2 || h < 2) return;
+    this.wake(250);
     this.width = w;
     this.height = h;
     this.mobile = w < 768;
@@ -379,7 +485,6 @@ export class StageEngine {
       );
       this.earth.dispose();
     }
-    this.envRT?.dispose();
     this.ring.dispose();
     this.composer.passes.forEach((p) => p.dispose?.());
     this.composer.dispose();
@@ -506,6 +611,7 @@ export class StageEngine {
       const m = paintCard(canvas, c.face, photo, flag);
       entry.color.set(...m);
       entry.texture.needsUpdate = true;
+      this.wake(0);
     });
 
     this.pruneTextures();
@@ -556,6 +662,7 @@ export class StageEngine {
 
   private onDown = (e: PointerEvent) => {
     if (e.button !== 0 || !this.cards.length) return;
+    this.wake();
     this.dragging = true;
     this.pointerId = e.pointerId;
     this.lastX = e.clientX;
@@ -592,6 +699,7 @@ export class StageEngine {
 
   private onUp = (e: PointerEvent) => {
     if (!this.dragging || e.pointerId !== this.pointerId) return;
+    this.wake();
     this.dragging = false;
     this.pointerId = null;
     if (this.canvas.hasPointerCapture(e.pointerId)) this.canvas.releasePointerCapture(e.pointerId);
@@ -624,6 +732,7 @@ export class StageEngine {
     // Only sideways scrolling turns the hall; vertical wheel still scrolls the page.
     if (Math.abs(e.deltaX) <= Math.abs(e.deltaY) || !this.cards.length) return;
     e.preventDefault();
+    this.wake();
     this.target = null;
     this.vel = 0;
     this.pos += (e.deltaX / this.pxPerCard) * 0.6;
@@ -646,6 +755,7 @@ export class StageEngine {
 
   private hoverAt(e: PointerEvent) {
     const s = this.pick(e);
+    if (s !== this.hovered) this.wake(600);
     this.hovered = s;
     this.canvas.style.cursor = s >= 0 ? "pointer" : "grab";
   }
@@ -667,9 +777,31 @@ export class StageEngine {
   /* Frame                                                                  */
   /* ---------------------------------------------------------------------- */
 
-  private tick = (now: number) => {
-    if (!this.running) return;
+  /**
+   * Keep drawing for at least `ms` more. A no-op off low-power devices, where
+   * the loop never stops while the stage is on screen; on them it restarts a
+   * loop that has gone to sleep. `wake(0)` draws exactly one more frame.
+   */
+  private wake(ms = 1500) {
+    if (!this.lowPower) return;
+    this.awakeUntil = Math.max(this.awakeUntil, performance.now() + ms);
+    this.schedule();
+  }
+
+  private schedule() {
+    if (!this.running || this.disposed || this.raf) return;
+    this.timer.reset();
     this.raf = requestAnimationFrame(this.tick);
+  }
+
+  private tick = (now: number) => {
+    this.raf = 0;
+    if (!this.running) return;
+    // Low power: sleep once nothing has moved for a while. Still motion is on
+    // there, so nothing changes on screen between wakes.
+    if (!this.lowPower || this.dragging || performance.now() < this.awakeUntil) {
+      this.raf = requestAnimationFrame(this.tick);
+    }
     this.timer.update(now);
     // rAF's timestamp is the frame's start, which can precede the reset that
     // resumed the loop, so the first delta may come out negative.
@@ -685,7 +817,7 @@ export class StageEngine {
     this.layoutEarthCamera();
     this.stepGlobe(dt);
 
-    this.composer.render(dt);
+    if (this.compiled) this.composer.render(dt);
   };
 
   /** How long the hall has been at rest; the pin drops after a short pause. */
@@ -744,9 +876,6 @@ export class StageEngine {
         return;
       }
       slot.index = i;
-      const country = this.cards[mod(i, n)];
-      const tex = this.textureFor(country);
-
       const a = (i - this.pos) * STEP;
       // Five cards on desktop: past the second either side of centre, a card
       // fades out (and stops taking clicks), so the frame never holds more
@@ -760,7 +889,9 @@ export class StageEngine {
         uCards[s].set(0, 0, 0, 0);
         return;
       }
-      const reveal = THREE.MathUtils.clamp((introT - 0.25 - Math.abs(s - HALF) * 0.09) / 0.7, 0, 1);
+      // Only now: a card faded out at the edge never fetches its photograph.
+      const tex = this.textureFor(this.cards[mod(i, n)]);
+      const reveal =THREE.MathUtils.clamp((introT - 0.25 - Math.abs(s - HALF) * 0.09) / 0.7, 0, 1);
       const rise = (1 - easeOutCubic(reveal)) * -0.35;
 
       // The card that arrives at the front steps out toward the viewer once

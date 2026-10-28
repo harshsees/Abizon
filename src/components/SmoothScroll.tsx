@@ -1,48 +1,16 @@
 "use client";
 
-import { ReactLenis, useLenis } from "lenis/react";
-import { ReactNode, useEffect, useMemo } from "react";
+import { ReactLenis } from "lenis/react";
+import { ReactNode, useMemo } from "react";
 import { MotionConfig, useReducedMotion } from "framer-motion";
-import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-
-gsap.registerPlugin(ScrollTrigger);
 
 interface SmoothScrollProps {
   children: ReactNode;
 }
 
-/**
- * Keeps GSAP's ScrollTrigger in step with Lenis, which drives scroll from rAF
- * rather than the native scroll event ScrollTrigger normally listens to.
- *
- * The callback runs on every Lenis frame, on every page, and until now it
- * called into GSAP on all of them. Only the country pages register triggers
- * (`usePremiumMotion`); the homepage — the page with 154 cards on it, and the
- * one that felt heaviest to scroll — has none, and was paying for a GSAP
- * update sixty times a second that had nothing to update. The count is a plain
- * array length read, which is as close to free as a per-frame check gets.
- */
-function ScrollTriggerSync() {
-  useLenis(() => {
-    if (ScrollTrigger.getAll().length === 0) return;
-    ScrollTrigger.update();
-  });
-
-  useEffect(() => {
-    // Trigger positions are measured from layout, so they're wrong until
-    // webfonts have swapped in and reflowed the page.
-    const refresh = () => ScrollTrigger.refresh();
-
-    refresh();
-    document.fonts?.ready.then(refresh);
-
-    window.addEventListener("load", refresh);
-    return () => window.removeEventListener("load", refresh);
-  }, []);
-
-  return null;
-}
+// GSAP's ScrollTrigger is kept in step with Lenis by `useScrollTriggerSync`
+// (hooks/usePremiumMotion), on the pages that have triggers — not here, where
+// it would ship GSAP to every page and re-measure pages that never use it.
 
 export function SmoothScroll({ children }: SmoothScrollProps) {
   const reduced = useReducedMotion();
@@ -83,7 +51,6 @@ export function SmoothScroll({ children }: SmoothScrollProps) {
      */
     <MotionConfig reducedMotion="user">
       <ReactLenis root options={options}>
-        <ScrollTriggerSync />
         {children}
       </ReactLenis>
     </MotionConfig>

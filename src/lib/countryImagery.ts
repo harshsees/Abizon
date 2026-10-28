@@ -49,6 +49,7 @@
  */
 
 import { countriesData, getCountrySlug, type Country } from "@/data/countries";
+import { CACHED_CARD_PHOTOS } from "@/lib/cachedCardPhotos";
 import { GENERATED_COUNTRY_PHOTOS } from "@/lib/countryPhotoManifest";
 
 /* -------------------------------------------------------------------------- */
@@ -246,6 +247,12 @@ export function countryCardImage(slug: string): ImageSources | undefined {
 
   if (photo.origin === "local") {
     return { src: photo.ref, alt };
+  }
+
+  // Our own 512×640 WebP copy (scripts/cache-card-photos.ts): a third of the
+  // remote JPEG's weight, cached by the CDN, and never rate-limited.
+  if (CACHED_CARD_PHOTOS.has(slug)) {
+    return { src: `/photos/cards/${slug}.webp`, alt };
   }
 
   if (photo.origin === "wikimedia") return wikimediaSources(photo);

@@ -15,6 +15,7 @@
  */
 
 import { useEffect } from "react";
+import { useLenis } from "lenis/react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import SplitType from "split-type";
@@ -24,6 +25,35 @@ import { DURATION, FINE_POINTER_QUERY, TRAVEL } from "@/lib/motion";
 gsap.registerPlugin(ScrollTrigger);
 
 const NO_PREFERENCE = "(prefers-reduced-motion: no-preference)";
+
+/**
+ * Keeps ScrollTrigger in step with Lenis, which drives scroll from rAF rather
+ * than the native scroll event ScrollTrigger normally listens to. Call it once
+ * on any page that uses the hooks below.
+ *
+ * It lived in the root layout's SmoothScroll until the homepage was measured:
+ * there it shipped GSAP to a page with no triggers, and the refreshes on load
+ * and on font swap forced a full layout of the whole page for nothing — two of
+ * the longest tasks in its load. It belongs with the triggers it serves.
+ */
+export function useScrollTriggerSync() {
+  useLenis(() => {
+    if (ScrollTrigger.getAll().length === 0) return;
+    ScrollTrigger.update();
+  });
+
+  useEffect(() => {
+    // Trigger positions are measured from layout, so they're wrong until
+    // webfonts have swapped in and reflowed the page.
+    const refresh = () => ScrollTrigger.refresh();
+
+    refresh();
+    document.fonts?.ready.then(refresh);
+
+    window.addEventListener("load", refresh);
+    return () => window.removeEventListener("load", refresh);
+  }, []);
+}
 
 /** GSAP's string form of the shared `EASE.out` curve. */
 const EASE_OUT = "power3.out";

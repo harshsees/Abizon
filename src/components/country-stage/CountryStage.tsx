@@ -26,6 +26,7 @@ import { getCountrySlug, type Country } from "@/data/countries";
 import { formatGovernmentFee } from "@/lib/countryVisa";
 import { cn } from "@/lib/utils";
 
+import { detectLowPower } from "./lowPower";
 import type { StageEngine } from "./stageEngine";
 
 type StageModule = typeof import("./stageClient");
@@ -40,15 +41,25 @@ export function CountryStage({ countries }: { countries: Country[] }) {
   // Held in a ref so a new router identity never tears the engine down: the
   // canvas outlives the effect, and a second engine on it would draw nothing.
   const routerRef = useRef(router);
+  const activeRef = useRef(0);
+  /** Starts the engine; idempotent. Set once the device has been checked. */
+  const startRef = useRef<(() => void) | null>(null);
 
   const [active, setActive] = useState(0);
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
+  // The first destination is the page's largest text, so it is painted at once
+  // rather than faded in: an entrance animation on it would hold back LCP.
+  // Only a change of destination animates the name.
+  const [titleMoved, setTitleMoved] = useState(false);
+  // No usable GPU: the scene waits for the visitor, over a drawn sky.
+  const [lowPower, setLowPower] = useState(false);
 
   useEffect(() => {
     countriesRef.current = countries;
     routerRef.current = router;
-  }, [countries, router]);
+    activeRef.current = active;
+  }, [countries, router, active]);
 
   /* Mount the engine once. */
   useEffect(() => {
@@ -63,58 +74,92 @@ export function CountryStage({ countries }: { countries: Country[] }) {
     let onScroll: (() => void) | null = null;
     let onVisibility: (() => void) | null = null;
 
-    import("./stageClient")
-      .then((mod) => {
-        if (cancelled) return;
-        moduleRef.current = mod;
-        try {
-          engine = new mod.StageEngine(
-            canvas,
-            {
-              onActiveChange: (i) => setActive(Math.max(0, i)),
-              onOpen: (i) => {
-                const c = countriesRef.current[i];
-                if (c) routerRef.current.push(`/visa/${getCountrySlug(c.name)}`);
+    let firstActive = true;
+
+    // three.js and the engine are the heaviest script on the page; let the
+    // page's own text paint and hydrate before they are fetched and compiled.
+    const idle = new Promise<void>((resolve) => {
+      if ("requestIdleCallback" in window) window.requestIdleCallback(() => resolve(), { timeout: 1500 });
+      else setTimeout(resolve, 200);
+    });
+
+    let started = false;
+    let low: boolean | null = null;
+    const isLow = () => (low ??= detectLowPower());
+
+    const start = () => {
+      if (started || cancelled) return;
+      started = true;
+      import("./stageClient")
+        .then((mod) => {
+          if (cancelled) return;
+          moduleRef.current = mod;
+          try {
+            engine = new mod.StageEngine(
+              canvas,
+              {
+                onActiveChange: (i) => {
+                  setActive(Math.max(0, i));
+                  if (!firstActive) setTitleMoved(true);
+                  firstActive = false;
+                },
+                onOpen: (i) => {
+                  const c = countriesRef.current[i];
+                  if (c) routerRef.current.push(`/visa/${getCountrySlug(c.name)}`);
+                },
               },
-            },
-            mod.markerPoints(),
-          );
-        } catch {
-          setFailed(true);
-          return;
-        }
-        engineRef.current = engine;
-        const rect = canvas.getBoundingClientRect();
-        engine.resize(rect.width, rect.height);
-        engine.setCards(mod.toStageCountries(countriesRef.current));
+              mod.markerPoints(),
+              isLow(),
+            );
+          } catch {
+            setFailed(true);
+            return;
+          }
+          engineRef.current = engine;
+          const rect = canvas.getBoundingClientRect();
+          engine.resize(rect.width, rect.height);
+          engine.setCards(mod.toStageCountries(countriesRef.current));
+          // Arrows pressed before the engine existed moved the title already.
+          if (activeRef.current > 0) engine.jumpTo(activeRef.current);
 
-        ro = new ResizeObserver(([entry]) => {
-          const { width, height } = entry.contentRect;
-          engine?.resize(width, height);
-        });
-        ro.observe(canvas);
+          ro = new ResizeObserver(([entry]) => {
+            const { width, height } = entry.contentRect;
+            engine?.resize(width, height);
+          });
+          ro.observe(canvas);
 
-        let inView = true;
-        const sync = () => engine?.setRunning(inView && !document.hidden);
-        io = new IntersectionObserver(([entry]) => {
-          inView = entry.isIntersecting;
+          let inView = true;
+          const sync = () => engine?.setRunning(inView && !document.hidden);
+          io = new IntersectionObserver(([entry]) => {
+            inView = entry.isIntersecting;
+            sync();
+          });
+          io.observe(section);
+          onVisibility = sync;
+          document.addEventListener("visibilitychange", onVisibility);
+
+          onScroll = () => {
+            const r = section.getBoundingClientRect();
+            engine?.setScroll(-r.top / Math.max(1, r.height));
+          };
+          window.addEventListener("scroll", onScroll, { passive: true });
+          onScroll();
+
           sync();
-        });
-        io.observe(section);
-        onVisibility = sync;
-        document.addEventListener("visibilitychange", onVisibility);
+          setReady(true);
+        })
+        .catch(() => setFailed(true));
+    };
+    startRef.current = start;
 
-        onScroll = () => {
-          const r = section.getBoundingClientRect();
-          engine?.setScroll(-r.top / Math.max(1, r.height));
-        };
-        window.addEventListener("scroll", onScroll, { passive: true });
-        onScroll();
-
-        sync();
-        setReady(true);
-      })
-      .catch(() => setFailed(true));
+    // On a CPU rasteriser the engine's start alone is seconds of frozen page;
+    // there it waits for the visitor to reach for the hall (see the handlers
+    // on the section). Everywhere else it starts as soon as the page is idle.
+    idle.then(() => {
+      if (cancelled) return;
+      if (isLow()) setLowPower(true);
+      else start();
+    });
 
     return () => {
       cancelled = true;
@@ -135,20 +180,35 @@ export function CountryStage({ countries }: { countries: Country[] }) {
     engine.setCards(mod.toStageCountries(countries));
   }, [countries, ready]);
 
-  if (failed) return null;
+  // Without the drawn sky to fall back on, a failed scene leaves nothing worth showing.
+  if (failed && !lowPower) return null;
 
   const count = countries.length;
   const current = count ? countries[Math.min(active, count - 1)] : undefined;
   const slug = current ? getCountrySlug(current.name) : "";
   const pad = (n: number) => String(n).padStart(2, "0");
 
+  const wake = () => startRef.current?.();
+
+  /** Through the hall when it is running; before then, the title moves alone. */
+  const stepBy = (delta: number) => {
+    const engine = engineRef.current;
+    if (engine) return engine.step(delta);
+    if (!count) return;
+    // The same rule as the hall: a long list wraps, a short one stops at its ends.
+    const wraps = count >= 13;
+    setActive((a) => (wraps ? (a + delta + count) % count : Math.min(Math.max(a + delta, 0), count - 1)));
+    setTitleMoved(true);
+    wake();
+  };
+
   const onKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "ArrowRight") {
       e.preventDefault();
-      engineRef.current?.step(1);
+      stepBy(1);
     } else if (e.key === "ArrowLeft") {
       e.preventDefault();
-      engineRef.current?.step(-1);
+      stepBy(-1);
     }
   };
 
@@ -158,9 +218,14 @@ export function CountryStage({ countries }: { countries: Country[] }) {
       aria-roledescription="carousel"
       aria-label="Destinations"
       onKeyDown={onKeyDown}
+      onPointerEnter={wake}
+      onPointerDown={wake}
+      onFocus={wake}
+      onWheel={wake}
       className="relative isolate w-full overflow-hidden bg-paper"
       style={{ height: "clamp(640px, 100svh, 1080px)" }}
     >
+      {lowPower && <DrawnSky />}
       <canvas
         ref={canvasRef}
         aria-hidden
@@ -202,21 +267,24 @@ export function CountryStage({ countries }: { countries: Country[] }) {
           <div className="mt-1.5 flex items-center gap-3 md:gap-5">
             <button
               type="button"
-              onClick={() => engineRef.current?.step(-1)}
+              onClick={() => stepBy(-1)}
               aria-label="Previous destination"
               className="grid h-9 w-9 cursor-pointer place-items-center rounded-full border border-ink/15 bg-paper-raised/70 text-ink-muted backdrop-blur-md transition-colors hover:border-ink/40 hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink"
             >
               <ChevronLeft className="h-4 w-4" aria-hidden />
             </button>
-            <h3
+            <h2
               key={current.code}
-              className="animate-stage-title min-w-0 max-w-[60vw] truncate text-[24px] font-light uppercase tracking-[0.14em] text-ink md:max-w-none md:text-[34px] [text-shadow:0_0_14px_rgb(249_248_245),0_0_3px_rgb(249_248_245)]"
+              className={cn(
+                titleMoved && "animate-stage-title",
+                "min-w-0 max-w-[60vw] truncate text-[24px] font-light uppercase tracking-[0.14em] text-ink md:max-w-none md:text-[34px] [text-shadow:0_0_14px_rgb(249_248_245),0_0_3px_rgb(249_248_245)]",
+              )}
             >
               {current.name}
-            </h3>
+            </h2>
             <button
               type="button"
-              onClick={() => engineRef.current?.step(1)}
+              onClick={() => stepBy(1)}
               aria-label="Next destination"
               className="grid h-9 w-9 cursor-pointer place-items-center rounded-full border border-ink/15 bg-paper-raised/70 text-ink-muted backdrop-blur-md transition-colors hover:border-ink/40 hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink"
             >
@@ -254,6 +322,39 @@ export function CountryStage({ countries }: { countries: Country[] }) {
   );
 }
 
+/**
+ * The stage before its scene, on a device without a GPU: the daylight sky and
+ * the planet's horizon, drawn in CSS so it costs nothing to paint. The planet
+ * sits where the engine puts it — limb at 70% (69% from md), as wide as
+ * `StageEngine.resize` makes it — so the scene lands on top of it in place.
+ */
+function DrawnSky() {
+  const planet: React.CSSProperties = {
+    background:
+      "radial-gradient(circle at 40% 6%, #8db5de 0%, #4f83bb 10%, #2f629a 26%, #1f4675 48%, #16365c 100%)",
+    boxShadow: "0 0 0 1.5px rgb(170 204 248 / 0.55), 0 -6px 48px 6px rgb(160 196 245 / 0.5)",
+  };
+  return (
+    <div
+      aria-hidden
+      className="pointer-events-none absolute inset-0"
+      style={{
+        background:
+          "radial-gradient(55% 45% at 18% 4%, rgb(255 249 238 / 0.8), transparent 70%), linear-gradient(to top, #f9f8f5 0%, #f2f4f8 50%, #e2ecf9 100%)",
+      }}
+    >
+      <div
+        className="absolute left-1/2 top-[70%] aspect-square w-[210vw] -translate-x-1/2 rounded-full md:hidden"
+        style={planet}
+      />
+      <div
+        className="absolute left-1/2 top-[69%] hidden aspect-square -translate-x-1/2 rounded-full md:block"
+        style={{ ...planet, width: "max(120vw, calc(1.9 * clamp(640px, 100svh, 1080px)))" }}
+      />
+    </div>
+  );
+}
+
 /** Dots for a short hall, as Mirror Hall has; a scrubbed track for a long one. */
 function Progress({ index, count }: { index: number; count: number }) {
   if (count <= 1) return null;
@@ -272,12 +373,14 @@ function Progress({ index, count }: { index: number; count: number }) {
       </div>
     );
   }
-  const pct = (index / (count - 1)) * 100;
+  // Moved by transform, not `left`, so the slide runs on the compositor. The
+  // track is 144px (w-36) and the thumb 20px, so it travels 124px.
+  const travel = (index / (count - 1)) * 124;
   return (
     <div aria-hidden className="relative mt-3 h-[3px] w-36 rounded-full bg-ink/10">
       <span
-        className="absolute top-0 h-[3px] w-5 -translate-x-1/2 rounded-full bg-primary transition-[left] duration-500 ease-out"
-        style={{ left: `calc(10px + (100% - 20px) * ${pct / 100})` }}
+        className="absolute left-0 top-0 h-[3px] w-5 rounded-full bg-primary transition-transform duration-500 ease-out"
+        style={{ transform: `translateX(${travel}px)` }}
       />
     </div>
   );

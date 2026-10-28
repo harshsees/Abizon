@@ -93,7 +93,7 @@ import { VisaProcess } from "@/components/VisaProcess";
 import { VisaRequirements } from "@/components/VisaRequirements";
 import { Country } from "@/data/countries";
 import { resolveCountryVisaConfig, type CountryVisaConfig } from "@/lib/countryVisa";
-import { useHeadingReveal, useSectionReveal } from "@/hooks/usePremiumMotion";
+import { useHeadingReveal, useScrollTriggerSync, useSectionReveal } from "@/hooks/usePremiumMotion";
 
 const APPLICATION_ANCHOR = "application";
 
@@ -140,6 +140,7 @@ export function CountryVisaPage({ country }: { country: Country }) {
 
   const pageContainerRef = useRef<HTMLDivElement>(null);
 
+  useScrollTriggerSync();
   useHeadingReveal(pageContainerRef, ".js-reveal-heading");
   useSectionReveal(
     pageContainerRef,

@@ -1,5 +1,4 @@
 import * as Sentry from "@sentry/nextjs";
-import posthog from "posthog-js";
 
 import { publicEnv } from "@/lib/env.public";
 
@@ -54,7 +53,20 @@ if (publicEnv.sentryDsn) {
   });
 }
 
+/**
+ * PostHog is the largest script any page loads that is not the page itself, and
+ * nothing it does is needed for the first paint. It is fetched once the browser
+ * is idle, so it stays out of the first bundle and off the main thread while
+ * the page is hydrating. The first pageview is captured when it arrives.
+ */
 if (publicEnv.posthogKey) {
+  const load = () => import("posthog-js").then(({ default: posthog }) => startPosthog(posthog));
+  if ("requestIdleCallback" in window) window.requestIdleCallback(load, { timeout: 4000 });
+  else setTimeout(load, 2000);
+}
+
+function startPosthog(posthog: (typeof import("posthog-js"))["default"]) {
+  if (!publicEnv.posthogKey) return;
   posthog.init(publicEnv.posthogKey, {
     api_host: publicEnv.posthogHost,
 
