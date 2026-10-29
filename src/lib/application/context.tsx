@@ -332,7 +332,9 @@ export function ApplicationProvider({ children }: { children: ReactNode }) {
       {
         slug: slugParam,
         travellers: readIntParam(searchParams.get("travellers"), 1, 10),
-        plan: readIntParam(searchParams.get("plan"), 0, 1),
+        // The visa option's position for this destination; `quoteVisa` falls
+        // back to the first option for an index the destination does not have.
+        plan: readIntParam(searchParams.get("plan"), 0, 9),
         travelDate: readDateParam(searchParams.get("date")),
         travelWindow:
           windowParam === "soon" || windowParam === "later" ? windowParam : undefined,

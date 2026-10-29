@@ -4,11 +4,7 @@ import { z } from "zod";
 
 import { getApplication } from "@/lib/applications/repository";
 import { audit } from "@/lib/audit";
-import {
-  computeTotals,
-  countryFromSlug,
-  resolveCountryVisaConfig,
-} from "@/lib/countryVisa";
+import { countryFromSlug } from "@/lib/countryVisa";
 import { capabilities } from "@/lib/env";
 import {
   advanceStatus,
@@ -24,6 +20,7 @@ import {
 } from "@/lib/payments/razorpay";
 import { checkLimit } from "@/lib/rateLimit";
 import { authedAction, userError } from "@/lib/safeAction";
+import { quoteVisa, type PricedTraveller } from "@/lib/visaPricing";
 
 /**
  * THE PAYMENT ACTIONS
@@ -40,7 +37,7 @@ import { authedAction, userError } from "@/lib/safeAction";
  * ever shipped: a Server Action is a POST endpoint reachable by anything that
  * can make a request, so an `amount` in its input is an amount the payer
  * chooses. `orderAmountPaise` below re-derives it from the destination, the
- * plan and the party size — the same `computeTotals` the screen used, called
+ * chosen visa option and the travellers — the same `quoteVisa` the screen used, called
  * again on a machine the payer does not control.
  *
  * ── Why confirmation asks Razorpay rather than believing the browser ──
@@ -74,41 +71,35 @@ function requirePayments(): void {
 /**
  * What this application costs, in paise, from the application itself.
  *
- * ── Why paise, and why `Math.round` ──
+ * Priced from the travellers the server holds — their dates of birth decide who
+ * is a child where a destination prices children differently — and from the
+ * option the application records as its `plan`, against the price list in
+ * `data/visaOptions.ts`. Prices there are whole rupees, so `× 100` is exact.
  *
- * Razorpay is denominated in the smallest currency unit and so is the column.
- * `computeTotals` has already rounded every component to whole rupees — see its
- * note about a card and a breakdown disagreeing by a rupee — so this
- * multiplication is exact and the round is belt and braces against a future
- * fee that is not a whole number.
- *
- * ── Why a null total is refused rather than defaulted ──
- *
- * `serviceFee` is `null` while Abizon's charge is unpublished, and
- * `pricingConfig.ts` exists to stop that null becoming a zero. A checkout that
- * charged the government fee alone because our own fee was undecided would be
- * undercharging silently, which is worse than refusing.
+ * A party the option cannot price (the New Zealand couple visa with anything
+ * but two travellers) is refused rather than charged at a guess.
  */
 function orderAmountPaise(input: {
   countrySlug: string;
   plan: number | null;
+  travellers: PricedTraveller[];
   travellerCount: number;
 }): number {
   const country = countryFromSlug(input.countrySlug);
   if (!country) userError("We could not price that destination.");
 
-  const config = resolveCountryVisaConfig(country);
+  // The rows, when the applicant has added them; the count alone otherwise.
+  const party = input.travellers.length ? input.travellers : input.travellerCount;
+  const quote = quoteVisa(country.code, input.plan, party);
 
-  const totals = computeTotals(config.pricing, { express: input.plan === 1 });
-
-  if (totals.perTraveller === null) {
-    userError(
-      "The fee for this destination has not been published yet, so we cannot take a payment for it.",
-    );
+  if (!quote) {
+    userError("That destination is not sold online. Ask us for a callback instead.");
+  }
+  if (quote.total === null) {
+    userError(quote.problem ?? "We could not price this application.");
   }
 
-  const rupees = totals.perTraveller * Math.max(1, input.travellerCount);
-  return Math.round(rupees * 100);
+  return Math.round(quote.total * 100);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -142,7 +133,7 @@ export const createPaymentOrderAction = authedAction
     const found = await getApplication(ctx.user.id, parsedInput.applicationId);
     if (!found) userError("We could not find that application.");
 
-    const { application } = found;
+    const { application, travellers } = found;
 
     if (application.status !== "draft" && application.status !== "ready") {
       // Not an error worth alarming anybody with — it usually means a second
@@ -153,6 +144,7 @@ export const createPaymentOrderAction = authedAction
     const amountPaise = orderAmountPaise({
       countrySlug: application.countrySlug,
       plan: application.plan,
+      travellers,
       travellerCount: application.travellerCount,
     });
 

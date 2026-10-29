@@ -349,12 +349,17 @@ export function parseGovernmentFee(fees: string): number {
  * still returns 0 and every total is unaffected. This is presentation only.
  */
 export function formatGovernmentFee(fees: string): string {
-  return parseGovernmentFee(fees) === 0 ? "Free" : fees;
+  return isGovernmentFeeFree(fees) ? "Free" : fees;
 }
 
-/** True where the destination's authority charges nothing, however authored. */
+/**
+ * True where the destination's authority charges nothing, however authored.
+ * A label with no figure in it ("On request", for a sticker visa) is not a
+ * price of zero; it is no price, and prints as itself.
+ */
 export function isGovernmentFeeFree(fees: string): boolean {
-  return parseGovernmentFee(fees) === 0;
+  if (/free/i.test(fees)) return true;
+  return /\d/.test(fees) && parseGovernmentFee(fees) === 0;
 }
 
 /* -------------------------------------------------------------------------- */

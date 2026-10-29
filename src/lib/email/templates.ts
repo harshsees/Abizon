@@ -255,3 +255,48 @@ export function erasureAcknowledged(input: {
     ]),
   };
 }
+
+/** For text typed by an anonymous visitor, which must not become markup. */
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+/**
+ * To the team, not to the visitor: somebody asked to be called back about a
+ * sticker visa. Everything in it was typed on a public form, so all of it is
+ * escaped before it goes into the HTML.
+ */
+export function callbackRequested(input: {
+  country: string;
+  name: string;
+  phone: string;
+  email?: string;
+  travelPlan?: string;
+  message?: string;
+}): Email {
+  const rows: [string, string | undefined][] = [
+    ["Destination", input.country],
+    ["Name", input.name],
+    ["Phone", input.phone],
+    ["Email", input.email],
+    ["Travelling", input.travelPlan],
+    ["Message", input.message],
+  ];
+  const present = rows.filter((row): row is [string, string] => Boolean(row[1]));
+
+  return {
+    subject: `Callback request — ${input.country} — ${input.name}`,
+    html: layout({
+      preheader: `${escapeHtml(input.name)} asked to be called about a ${escapeHtml(input.country)} visa.`,
+      heading: `Call back: ${escapeHtml(input.country)} visa`,
+      body: present.map(([label, value]) => `<strong>${label}:</strong> ${escapeHtml(value)}`),
+      footnote: "Also listed in the ops console under Callbacks.",
+    }),
+    text: plain(present.map(([label, value]) => `${label}: ${value}`)),
+  };
+}

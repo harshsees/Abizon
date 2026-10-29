@@ -646,5 +646,9 @@ export const COUNTRY_LATLNG: Readonly<Record<string, readonly [number, number]>>
   "sv": [
     13.83,
     -88.92
+  ],
+  "ru": [
+    60,
+    100
   ]
 };

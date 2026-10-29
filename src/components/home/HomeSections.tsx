@@ -48,6 +48,7 @@ import { CountryImagePlate } from "@/components/CountryImagePlate";
 import type { FilterValues } from "@/components/CountryFilters";
 import { countriesData, getCountrySlug, type Country } from "@/data/countries";
 import { ARRIVAL_CARDS, arrivalCardFor } from "@/lib/arrivalCard";
+import { visaOptionsFor } from "@/data/visaOptions";
 import { countryCardImage } from "@/lib/countryImagery";
 import { formatGovernmentFee, formatShortDate } from "@/lib/countryVisa";
 import { cn } from "@/lib/utils";
@@ -712,7 +713,8 @@ function MockRow({ label, value, strong }: { label: string; value: string; stron
 /* 04 The promise — a receipt for a real destination                           */
 /* -------------------------------------------------------------------------- */
 
-const RECEIPT_CODES = ["ae", "th", "vn", "sg"];
+// Gulf priorities first, then a quick e-visa, as on the price list.
+const RECEIPT_CODES = ["ae", "om", "bh", "vn"];
 
 export function Guarantee({ index }: { index: string }) {
   const options = useMemo(
@@ -752,7 +754,7 @@ export function Guarantee({ index }: { index: string }) {
             </p>
             <ul className="mt-8 max-w-lg divide-y divide-rule border-y border-rule">
               {[
-                ["Every fee itemised", "The government's fee and ours are separate lines. GST applies to our service only."],
+                ["One price, everything in it", "The price you see includes the government's fee, our service and taxes. Nothing is added at checkout."],
                 ["Checked before it's filed", "Documents are checked against the destination's rules, so problems surface with us, not at a consulate."],
                 ["No surprise at the end", "The total on the receipt is the total you are charged."],
               ].map(([t, b]) => (
@@ -808,10 +810,10 @@ export function Guarantee({ index }: { index: string }) {
                   />
                 </div>
                 <dl className="mt-5 space-y-2.5 text-sm">
-                  <ReceiptLine k="Visa" v={`${country.visaType} · ${country.validity}`} />
-                  <ReceiptLine k="Government fee" v={formatGovernmentFee(country.fees)} mono />
-                  <ReceiptLine k="abizon service fee" v="Itemised at checkout" faint />
-                  <ReceiptLine k="GST" v="On our fee only" faint />
+                  <ReceiptLine k="Visa" v={visaOptionsFor(country.code)[0]?.title ?? country.visaType} />
+                  <ReceiptLine k="Price from" v={formatGovernmentFee(country.fees)} mono />
+                  <ReceiptLine k="Government fee" v="Included" faint />
+                  <ReceiptLine k="Service and taxes" v="Included" faint />
                 </dl>
               </div>
 

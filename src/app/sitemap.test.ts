@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import robots from "./robots";
 import sitemap from "./sitemap";
+import { countriesData, getCountrySlug } from "@/data/countries";
 
 /**
  * The two files are one statement in two halves — `robots.ts` says what must
@@ -49,6 +50,9 @@ describe("sitemap and robots agree", () => {
 
   it("includes the destination pages, which are the point of the file", () => {
     expect(paths).toContain("/visa/dubai");
-    expect(paths.filter((path) => path.startsWith("/visa/")).length).toBeGreaterThan(100);
+    // Every destination the price list sells, and nothing it does not.
+    const listed = new Set(countriesData.map((country) => getCountrySlug(country.name)));
+    expect(paths.filter((path) => path.startsWith("/visa/")).length).toBe(listed.size);
+    expect(paths).not.toContain("/visa/japan");
   });
 });

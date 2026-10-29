@@ -1,3 +1,11 @@
+import {
+  CALLBACK_FEE_LABEL,
+  catalogueEntry,
+  catalogueRank,
+  isCallbackDestination,
+  visaOptionsFor,
+} from "./visaOptions";
+
 export interface Country {
   id: number;
   name: string;
@@ -220,13 +228,52 @@ const rawCountries: Country[] = [
   { id: 152, name: "Belize", code: "bz", visaType: "Sticker Visa", validity: "30 Days", fees: "₹4,500", deliveryDays: 7, documents: "Photo + Passport", imageUrl: "" },
   { id: 153, name: "Honduras", code: "hn", visaType: "Visa Free", validity: "90 Days", fees: "Free", deliveryDays: 1, documents: "No Documents Required", imageUrl: "" },
   { id: 154, name: "Nicaragua", code: "ni", visaType: "Visa on Arrival", validity: "30 Days", fees: "₹850", deliveryDays: 1, documents: "Passport Only", imageUrl: "" },
-  { id: 155, name: "El Salvador", code: "sv", visaType: "Visa Free", validity: "90 Days", fees: "Free", deliveryDays: 1, documents: "No Documents Required", imageUrl: "" }
+  { id: 155, name: "El Salvador", code: "sv", visaType: "Visa Free", validity: "90 Days", fees: "Free", deliveryDays: 1, documents: "No Documents Required", imageUrl: "" },
+  { id: 156, name: "Russia", code: "ru", visaType: "E-Visa", validity: "90 Days", fees: "₹7,550", deliveryDays: 7, documents: "Photo + Passport", imageUrl: "" }
 ];
 
-export const countriesData: Country[] = rawCountries.map((country, idx) => ({
+/**
+ * Every destination the dataset knows, listed or not. Only for the places that
+ * must recognise a URL the site used to publish — redirects, mostly.
+ */
+export const allCountriesData: Country[] = rawCountries.map((country, idx) => ({
   ...country,
   imageUrl: getUnsplashUrl(country.code, idx)
 }));
+
+const inr = (value: number) => `₹${value.toLocaleString("en-IN")}`;
+const titleCase = (value: string) => value.replace(/\b\w/g, (c) => c.toUpperCase());
+
+/**
+ * The destinations abizon sells, in catalogue order (the Gulf priorities first),
+ * each summarised from its visa options so a card, a filter and the country page
+ * agree with the price list: the cheapest option's price, the first option's
+ * stay and processing time.
+ *
+ * Destinations the catalogue does not list are left out entirely, so they
+ * appear nowhere on the site. Sticker-visa destinations stay listed with no
+ * price, because the visitor asks for a callback instead of applying.
+ */
+export const countriesData: Country[] = allCountriesData
+  .filter((country) => catalogueEntry(country.code))
+  .filter((country, index, list) => list.findIndex((c) => c.code === country.code) === index)
+  .sort((a, b) => catalogueRank(a.code) - catalogueRank(b.code))
+  .map((country) => {
+    if (isCallbackDestination(country.code)) {
+      return { ...country, visaType: "Sticker Visa" as const, fees: CALLBACK_FEE_LABEL };
+    }
+    const list = visaOptionsFor(country.code);
+    const first = list[0];
+    const cheapest = Math.min(...list.map((o) => (o.partySize ? o.price / o.partySize : o.price)));
+    return {
+      ...country,
+      // Sold online now, whatever the dataset said about them before.
+      visaType: country.visaType === "Visa Free" ? ("E-Visa" as const) : country.visaType,
+      fees: inr(Math.round(cheapest)),
+      validity: first.stay && /\d/.test(first.stay) ? titleCase(first.stay) : country.validity,
+      deliveryDays: first.processingDays ?? country.deliveryDays,
+    };
+  });
 
 export const getCountrySlug = (countryName: string): string => {
   if (countryName === "United Arab Emirates") return "dubai";

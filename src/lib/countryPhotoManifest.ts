@@ -85,6 +85,20 @@ export const GENERATED_COUNTRY_PHOTOS: Record<string, CountryPhoto> = {
     source: "https://en.wikipedia.org/wiki/Burj_Khalifa",
     reviewedOn: REVIEWED,
   },
+  // Added 29 Oct 2026, when Russia joined the price list. Same method as the
+  // rest: the lead image of a named landmark's own article.
+  russia: {
+    origin: "wikimedia",
+    ref: "commons/1/18/Saint_Basil%27s_Cathedral_in_Moscow.jpg",
+    widths: [500, 960, 1280, 1920],
+    aspect: 0.902,
+    subject: "Saint Basil's Cathedral on Red Square in Moscow",
+    verdict: "depicts-country",
+    license: "CC BY-SA 4.0",
+    credit: "Tsy1980",
+    source: "https://en.wikipedia.org/wiki/Saint_Basil%27s_Cathedral",
+    reviewedOn: "2026-10-29",
+  },
   "sri-lanka": {
     origin: "wikimedia",
     ref: "commons/e/e6/Sigiriya_%28141688197%29.jpeg",

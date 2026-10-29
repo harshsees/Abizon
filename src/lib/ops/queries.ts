@@ -8,6 +8,7 @@ import { requireDb } from "@/lib/db/client";
 import {
   applicationEvents,
   applications,
+  callbackRequests,
   documents,
   travellers,
   users,
@@ -298,4 +299,40 @@ export async function statusCounts(): Promise<Record<string, number>> {
     .groupBy(applications.status);
 
   return Object.fromEntries(rows.map((row) => [row.status, row.total]));
+}
+
+export type CallbackRow = {
+  id: string;
+  countrySlug: string;
+  name: string;
+  phone: string;
+  email: string | null;
+  travelPlan: string | null;
+  message: string | null;
+  status: string;
+  createdAt: number;
+};
+
+/**
+ * Sticker-visa callback requests, newest first: unlike the application queue,
+ * the job is to call while the visitor still remembers asking.
+ */
+export async function callbackQueue(limit = 200): Promise<CallbackRow[]> {
+  const db = requireDb();
+  const rows = await db
+    .select()
+    .from(callbackRequests)
+    .orderBy(desc(callbackRequests.createdAt))
+    .limit(limit);
+  return rows.map((row) => ({
+    id: row.id,
+    countrySlug: row.countrySlug,
+    name: row.name,
+    phone: row.phone,
+    email: row.email,
+    travelPlan: row.travelPlan,
+    message: row.message,
+    status: row.status,
+    createdAt: row.createdAt.getTime(),
+  }));
 }

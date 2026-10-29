@@ -21,8 +21,8 @@
  *
  * WHAT IS DELIBERATELY NOT HERE
  *
- *   - Prices. Every figure comes from `computeTotals` at read time via
- *     `buildSummary`. There is no fee in this module and no second GST.
+ *   - Prices. Every figure comes from `quoteVisa` at read time via
+ *     `buildSummary`. There is no price in this module.
  *   - Submission. There is no API, so there is no `submitting`, no
  *     `applicationId`, and no success state. The terminal step is `"ready"`,
  *     which means exactly what it says.
@@ -32,12 +32,9 @@
  */
 
 import type { Country } from "@/data/countries";
-import {
-  computeTotals,
-  resolveCountryVisaConfig,
-  type CountryVisaConfig,
-} from "@/lib/countryVisa";
+import { resolveCountryVisaConfig } from "@/lib/countryVisa";
 import { paymentEnabled } from "@/lib/paymentConfig";
+import { quoteVisa, resolveOption, type QuoteLine } from "@/lib/visaPricing";
 
 import { requiredDocuments, type DocumentKind, type DocumentRequirement } from "./documents";
 
@@ -985,7 +982,7 @@ export function progressPercent(
  * One object describing the whole application, for anything that needs to show
  * it: the review step, the sticky aside, and whatever Phase 5B renders. Built
  * on demand from state + country, so it cannot go stale, and every figure in it
- * comes from `computeTotals`.
+ * comes from `quoteVisa`.
  */
 export type ApplicationSummary = {
   country: {
@@ -1001,8 +998,8 @@ export type ApplicationSummary = {
   travellers: { count: number; names: string[] };
   plan: {
     index: number;
+    /** The chosen visa option's title, e.g. "30 days single entry". */
     label: string;
-    /** Express is only faster where the destination leaves room for it. */
     deliveryDays: number;
     isExpress: boolean;
   };
@@ -1017,19 +1014,16 @@ export type ApplicationSummary = {
   /** Passport data entry, distinct from the passport image. */
   passport: { completeCount: number; total: number };
   /**
-   * Every figure the price summary shows, already multiplied by party size.
-   *
-   * `expressSurcharge` and `baseServiceFee` are split out here rather than in
-   * the UI: `computeTotals` folds the surcharge into `serviceFee`, and a
-   * component that subtracted one from the other to draw a line item would be
-   * doing pricing arithmetic — which is exactly what Phase 5B §16 forbids.
+   * The price, from `quoteVisa` — the same function the country page and the
+   * server's payment order use, so the three cannot disagree. Priced from the
+   * travellers' dates of birth, which decide who is a child where that matters.
    */
-  fees: ReturnType<typeof computeTotals> & {
+  fees: {
     travellers: number;
-    /** `null` while any Abizon fee component is undecided. See pricingConfig. */
+    lines: QuoteLine[];
+    /** `null` when the party cannot be priced as chosen; `problem` says why. */
     total: number | null;
-    baseServiceFee: number | null;
-    expressSurcharge: number;
+    problem?: string;
   };
   progress: {
     stepId: ApplicationStepId;
@@ -1044,12 +1038,17 @@ export type ApplicationSummary = {
   readiness: "incomplete" | "ready-for-submission";
 };
 
-export function planLabel(index: number): string {
-  return index === 1 ? "Express" : "Standard";
+/** The chosen visa option, or the destination's first. */
+function chosenOption(country: Country, index: number) {
+  return resolveOption(country.code, index)?.option;
 }
 
-export function planDeliveryDays(config: CountryVisaConfig, index: number): number {
-  return index === 1 ? Math.max(1, config.deliveryDays - 1) : config.deliveryDays;
+export function planLabel(country: Country, index: number): string {
+  return chosenOption(country, index)?.title ?? "Standard";
+}
+
+export function planDeliveryDays(country: Country, index: number): number {
+  return chosenOption(country, index)?.processingDays ?? country.deliveryDays;
 }
 
 export function buildSummary(
@@ -1059,10 +1058,14 @@ export function buildSummary(
   const config = resolveCountryVisaConfig(country);
   const sequence = stepSequence(country);
 
-  const totals = computeTotals(config.pricing, { express: state.plan === 1 });
   const travellerCount = Math.max(1, state.travellers.length);
-  const expressSurcharge =
-    state.plan === 1 ? (config.pricing.expressSurcharge ?? 0) : 0;
+  const quote = quoteVisa(
+    country.code,
+    state.plan,
+    state.travellers.length
+      ? state.travellers.map((t) => ({ dateOfBirth: state.details[t.id]?.dateOfBirth }))
+      : travellerCount,
+  );
 
   const perTraveller = state.travellers.map((traveller) =>
     travellerDocumentState(state, country, traveller),
@@ -1088,10 +1091,10 @@ export function buildSummary(
       names: state.travellers.map((t) => t.firstName).filter(Boolean),
     },
     plan: {
-      index: state.plan,
-      label: planLabel(state.plan),
-      deliveryDays: planDeliveryDays(config, state.plan),
-      isExpress: state.plan === 1,
+      index: quote?.index ?? 0,
+      label: planLabel(country, state.plan),
+      deliveryDays: planDeliveryDays(country, state.plan),
+      isExpress: Boolean(chosenOption(country, state.plan)?.express),
     },
     travelDate: state.travelDate,
     travelWindow: resolveTravelWindow(state),
@@ -1107,14 +1110,10 @@ export function buildSummary(
       total: state.travellers.length,
     },
     fees: {
-      ...totals,
       travellers: travellerCount,
-      // PHASE 8C: null propagates. An undecided Abizon fee makes the party
-      // total undecided too, rather than quietly becoming the government fee.
-      total: totals.perTraveller === null ? null : totals.perTraveller * travellerCount,
-      expressSurcharge,
-      baseServiceFee:
-        totals.serviceFee === null ? null : totals.serviceFee - expressSurcharge,
+      lines: quote?.lines ?? [],
+      total: quote?.total ?? null,
+      problem: quote ? quote.problem : "This destination is not sold online.",
     },
     progress: {
       stepId: state.step,

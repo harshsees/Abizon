@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-import { countriesData, getCountrySlug } from "./src/data/countries";
+import { allCountriesData, countriesData, getCountrySlug } from "./src/data/countries";
 
 /**
  * Country pages used to sit at the root (`/thailand`, plus a hand-written
@@ -22,6 +22,23 @@ const countryRedirects = [
   destination: `/visa/${slug}`,
   permanent: true, // 308 — these URLs are never coming back
 }));
+
+/**
+ * Destinations the site no longer lists (29 Oct 2026: only the price list's
+ * destinations are sold). Their pages are gone, so both their old root URL and
+ * their /visa URL go to the homepage. Temporary (307), not permanent: a
+ * destination that comes back should get its URL back without fighting a
+ * cached 308 in every browser that ever saw it.
+ */
+const listedSlugs = new Set(countriesData.map((country) => getCountrySlug(country.name)));
+const unlistedRedirects = [
+  ...new Set(allCountriesData.map((country) => getCountrySlug(country.name))),
+]
+  .filter((slug) => !listedSlugs.has(slug))
+  .flatMap((slug) => [
+    { source: `/${slug}`, destination: "/", permanent: false },
+    { source: `/visa/${slug}`, destination: "/", permanent: false },
+  ]);
 
 /* -------------------------------------------------------------------------- */
 /* Security headers                                                           */
@@ -285,7 +302,7 @@ const nextConfig: NextConfig = {
   },
 
   async redirects() {
-    return countryRedirects;
+    return [...countryRedirects, ...unlistedRedirects];
   },
 
   async headers() {

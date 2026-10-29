@@ -214,7 +214,7 @@ export function VisaRequirementsTool() {
                 { icon: CalendarClock, label: "Validity", value: selected.validity },
                 {
                   icon: Wallet,
-                  label: "Government fee",
+                  label: "Price from",
                   value: selected.fees,
                 },
                 {

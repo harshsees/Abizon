@@ -108,6 +108,9 @@ const schema = z.object({
   EMAIL_FROM: z.string().optional(),
   /** Where "reply to a human" goes. */
   EMAIL_REPLY_TO: z.string().optional(),
+  /** The team inbox sticker-visa callback requests are sent to. Unset, they are
+   *  still saved and listed in the ops console; nothing is emailed. */
+  CALLBACK_EMAIL_TO: z.string().email().optional(),
 
   /* --- Scheduled work ---------------------------------------------------- */
   /** Shared secret on cron route handlers. Without it the purge and deletion

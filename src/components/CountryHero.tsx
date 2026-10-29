@@ -32,6 +32,7 @@ import Link from "next/link";
 import React from "react";
 
 import { CountryImagePlate } from "@/components/CountryImagePlate";
+import { visaOptionsFor } from "@/data/visaOptions";
 import type { CountryVisaConfig } from "@/lib/countryVisa";
 
 /**
@@ -68,12 +69,12 @@ function heroFacts(config: CountryVisaConfig): Array<{ label: string; value: str
   if (config.validity) facts.push({ label: "Valid", value: config.validity });
   facts.push({ label: "Type", value: config.visaType });
 
-  const fee = config.pricing.governmentFee;
-  if (typeof fee === "number") {
-    facts.push({
-      label: fee === 0 ? "Govt. fee" : "Govt. fee",
-      value: fee === 0 ? "Free" : `₹${fee.toLocaleString("en-IN")}`,
-    });
+  // The cheapest option's all-inclusive price; a sticker visa has none to show.
+  const cheapest = visaOptionsFor(config.code)
+    .map((o) => (o.partySize ? o.price / o.partySize : o.price))
+    .sort((a, b) => a - b)[0];
+  if (cheapest !== undefined) {
+    facts.push({ label: "From", value: `₹${Math.round(cheapest).toLocaleString("en-IN")}` });
   }
 
   return facts;

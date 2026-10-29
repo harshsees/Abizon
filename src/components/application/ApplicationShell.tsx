@@ -62,6 +62,7 @@ import { useLenis } from "lenis/react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { getCountrySlug } from "@/data/countries";
+import { isCallbackDestination } from "@/data/visaOptions";
 import { useApplication } from "@/lib/application/context";
 
 import { ApplicationBoot } from "./ApplicationBoot";
@@ -164,6 +165,25 @@ export function ApplicationShell() {
   }
 
   const countryHref = `/visa/${getCountrySlug(country.name)}`;
+
+  // Sticker visas are not applied for online; the country page takes a
+  // callback request instead.
+  if (isCallbackDestination(country.code)) {
+    return (
+      <Notice
+        title={`${config.displayName} visas start with a call`}
+        body="This is a sticker visa, applied for in person. Leave your details on the destination page and our representative will call you back."
+        action={
+          <Link
+            href={`${countryHref}#application`}
+            className="inline-flex h-12 items-center rounded-xl bg-primary px-6 text-sm font-bold text-on-primary transition-colors hover:bg-primary-hover"
+          >
+            Request a callback
+          </Link>
+        }
+      />
+    );
+  }
 
   if (config.flow === "visa-free") {
     return (

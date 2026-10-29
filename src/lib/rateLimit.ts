@@ -75,6 +75,10 @@ export const LIMITS = {
    * pattern a payment provider's fraud review looks for.
    */
   paymentOrderPerUser: { limit: 20, windowSeconds: 3600 },
+
+  /** Callback requests from one address. A family asking about three
+   *  destinations is fine; a script filling the team's queue is not. */
+  callbackRequestPerIp: { limit: 5, windowSeconds: 3600 },
 } as const satisfies Record<string, Window>;
 
 export type LimitName = keyof typeof LIMITS;

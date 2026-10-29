@@ -26,8 +26,7 @@
  * about the old explanation has stopped being true.
  *
  * WHAT IS STILL NOT CLAIMED. Nothing is charged. Abizon cannot take a payment
- * online — that is genuinely not built — and `pricingConfig.ts` still marks the
- * service fee provisional. Submitting means the application reaches Abizon's
+ * online — that is genuinely not built. Submitting means the application reaches Abizon's
  * queue, not that it reaches a consulate, and the copy says which.
  */
 
@@ -45,7 +44,6 @@ export function ApplicationComplete() {
   if (!summary || !country) return null;
 
   const ready = summary.readiness === "ready-for-submission";
-  const per = summary.fees.travellers;
 
   /* ---------------------------------------------------------------------- */
   /* Submitted                                                              */
@@ -196,22 +194,11 @@ export function ApplicationComplete() {
             </p>
           )}
           <p>
-            When filing opens,{" "}
-            {summary.fees.payNow === 0
-              ? `${summary.country.displayName} charges no government fee`
-              : `${inr(summary.fees.payNow * per)} government fee is payable up front`}
-            {summary.fees.payOnApproval === null || summary.fees.total === null ? (
-              // The government fee is real and stays. The Abizon side is not,
-              // so the sentence stops rather than completing itself with a
-              // number nobody has agreed.
-              <>. The abizon fee is not yet published.</>
-            ) : (
-              <>
-                {" "}
-                and {inr(summary.fees.payOnApproval * per)} to abizon once the
-                visa is granted — {inr(summary.fees.total)} in total.
-              </>
-            )}
+            {summary.fees.total === null
+              ? summary.fees.problem ?? "The price for this visa is not available."
+              : `Your visa (${summary.plan.label}) costs ${inr(
+                  summary.fees.total,
+                )} in total, with nothing added on top.`}
           </p>
         </div>
       </div>
@@ -221,7 +208,7 @@ export function ApplicationComplete() {
           cannot disagree with the review step or the sticky aside. */}
       <dl className="divide-y divide-border rounded-xl border border-border bg-surface-sunken px-4">
         <FinalRow label="Destination" value={summary.country.displayName} />
-        <FinalRow label="Visa" value={summary.country.visaType} />
+        <FinalRow label="Visa" value={summary.plan.label} />
         <FinalRow
           label="Travellers"
           value={
@@ -232,7 +219,7 @@ export function ApplicationComplete() {
         />
         <FinalRow
           label="Processing"
-          value={`${summary.plan.label} · ${summary.plan.deliveryDays} ${
+          value={`${summary.plan.deliveryDays} ${
             summary.plan.deliveryDays === 1 ? "day" : "days"
           }`}
         />

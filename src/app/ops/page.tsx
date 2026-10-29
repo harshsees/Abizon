@@ -49,7 +49,10 @@ export default async function OpsQueuePage({
             Application queue
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {staff.name} · {staff.role}
+            {staff.name} · {staff.role} ·{" "}
+            <Link href="/ops/callbacks" className="font-bold text-primary underline-offset-2 hover:underline">
+              Callback requests
+            </Link>
           </p>
         </div>
 

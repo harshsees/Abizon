@@ -13,8 +13,7 @@
  *                       the page ground
  *   a plate + card      a pale plate with a white card inset in it, holding
  *                       the choices, the one price, and the CTA
- *   the ledger          pay now / pay on approval / total, with a rule running
- *                       between the first two icons so they read as a sequence
+ *   the ledger          what is being paid for, and the total
  *
  * and hangs a support line beneath the card rather than inside it.
  *
@@ -25,53 +24,47 @@
  * brand is amber, so the same role is played by `primary-subtle`. Reproducing
  * the literal lavender would put a second brand hue on the page.
  *
- * WHAT IS DIFFERENT FROM THE REFERENCE, and why. Three of its elements are
+ * WHAT IS DIFFERENT FROM THE REFERENCE, and why. Two of its elements are
  * claims Abizon cannot make, so they are not reproduced:
  *
  *   "only platform with visa protection"  a superlative about a market nobody
  *                                         here has surveyed. The ribbon states
  *                                         what the guarantee covers instead.
- *   "3 days faster"                       a delta against an unnamed baseline.
- *                                         The speed chip appears only when
- *                                         express is selected, and then states
- *                                         the difference against this page's
- *                                         own standard SLA — a real comparison.
  *   a clock time on the guarantee         `VisaGuarantee` has printed a date
  *                                         and no hour since Phase 4, for want
  *                                         of a delivery-time source. Unchanged.
  *
- * The risk banner itself IS reproduced, because the promise behind it is real
- * and stated in three other places in this codebase: the government fee is
- * refunded on a refusal (`VisaProcess`, /terms, /refunds-policy).
+ * THE CHOICES (29 Oct 2026). The first row used to be a Standard / Express
+ * select over one invented price. It is now the destination's own visa options
+ * from the price list (`data/visaOptions.ts`), each with its entry type, stay,
+ * validity and processing time, and the price is the option's, all-inclusive.
+ * Where an option prices children differently, the party is counted as adults
+ * and children, so the estimate here is the one the application charges once
+ * dates of birth are entered.
  *
- * Every figure comes from `computeTotals`, and the fee drawer is handed the
- * same object, so the card, its breakdown and the checkout cannot quote three
- * different prices for one visa.
+ * Every figure comes from `quoteVisa`, the same function the application and
+ * the server's payment order use, so the card and the checkout cannot quote
+ * two different prices for one visa.
  */
 
 import { useState, useSyncExternalStore } from "react";
 import {
+  Baby,
   CalendarDays,
   Check,
-  ChevronDown,
   ChevronRight,
-  Clock3,
-  Landmark,
   Minus,
   Plus,
   ReceiptText,
   ShieldCheck,
   User,
+  Users,
   Zap,
 } from "lucide-react";
 
-import { GovFeeBreakdown } from "@/components/FeeBreakdown";
-import {
-  computeTotals,
-  type CountryVisaConfig,
-  formatShortDate,
-} from "@/lib/countryVisa";
-import { FEE_NOT_PUBLISHED } from "@/lib/pricingConfig";
+import { CHILD_UNDER, visaOptionsFor, type VisaOption } from "@/data/visaOptions";
+import { type CountryVisaConfig, formatShortDate } from "@/lib/countryVisa";
+import { describeOptionPrice, quoteVisa } from "@/lib/visaPricing";
 import {
   describeAge,
   getDraftsSnapshot,
@@ -82,8 +75,18 @@ import {
 } from "@/lib/applicationDraft";
 
 const inr = (value: number) => `₹${Math.round(value).toLocaleString("en-IN")}`;
-const inrOrUnset = (value: number | null) =>
-  value === null ? FEE_NOT_PUBLISHED : inr(value);
+
+/**
+ * A stand-in date of birth for a child counted on this card, so `quoteVisa`
+ * prices them as one. The application replaces it with the real date.
+ */
+const CHILD_STAND_IN = (() => {
+  const d = new Date();
+  d.setFullYear(d.getFullYear() - 5);
+  return d.toISOString().split("T")[0];
+})();
+
+const MAX_TRAVELLERS = 10;
 
 /** Abizon's support line, as published on /emergency-helpline. */
 const SUPPORT_TEL = "+911140845678";
@@ -115,6 +118,8 @@ type CountryApplicationPanelProps = {
    * yet"). Phase 6A added it: the panel had always collected it and then
    * dropped it at the handoff, so a user who answered the question here was
    * asked it again on the application's first screen.
+   *
+   * `plan` is the chosen visa option's position in the destination's list.
    */
   onStart: (details: {
     travellers: number;
@@ -129,8 +134,11 @@ export function CountryApplicationPanel({
   travelDate,
   onStart,
 }: CountryApplicationPanelProps) {
-  const [travellers, setTravellers] = useState(1);
+  const options = visaOptionsFor(config.code);
   const [plan, setPlan] = useState(0);
+  const option: VisaOption | undefined = options[plan] ?? options[0];
+  const [adults, setAdults] = useState(1);
+  const [children, setChildren] = useState(0);
   const [chosenTravelWindow, setChosenTravelWindow] =
     useState<TravelChoice | null>(null);
 
@@ -153,16 +161,28 @@ export function CountryApplicationPanel({
     ? "exact"
     : chosenTravelWindow;
 
-  const totals = computeTotals(config.pricing, { express: plan === 1 });
-  const perTraveller = totals.perTraveller;
-  const total = perTraveller === null ? null : perTraveller * travellers;
-  const payNow = totals.payNow * travellers;
-  const payOnApproval =
-    totals.payOnApproval === null ? null : totals.payOnApproval * travellers;
+  // Children are only counted apart where the option prices them apart.
+  const countsChildren = Boolean(option?.child);
+  const childCount = countsChildren ? children : 0;
+  const travellers = adults + childCount;
 
-  const deliveryDays =
-    plan === 1 ? Math.max(1, config.deliveryDays - 1) : config.deliveryDays;
-  const expressIsFaster = config.deliveryDays > 1;
+  const quote = quoteVisa(config.code, plan, [
+    ...Array.from({ length: adults }, () => ({})),
+    ...Array.from({ length: childCount }, () => ({ dateOfBirth: CHILD_STAND_IN })),
+  ]);
+  const total = quote?.total ?? null;
+
+  const deliveryDays = option?.processingDays ?? config.deliveryDays;
+
+  const choose = (index: number) => {
+    setPlan(index);
+    // A fixed-party option starts at its party, so its price is a price.
+    const partySize = options[index]?.partySize;
+    if (partySize) {
+      setAdults(partySize);
+      setChildren(0);
+    }
+  };
 
   const handleStart = () => {
     // "exact" is derived from the date, so only the loose answers travel as a
@@ -225,10 +245,10 @@ export function CountryApplicationPanel({
           <ShieldCheck aria-hidden className="h-4 w-4" strokeWidth={1.9} />
           Guaranteed by {formatShortDate(deliveryDays)}
         </p>
-        {plan === 1 && expressIsFaster && (
+        {option?.express && (
           <p className="inline-flex items-center gap-1.5 self-center text-xs font-semibold text-foreground">
-            <Zap aria-hidden className="h-3.5 w-3.5" strokeWidth={2} />1 day
-            sooner
+            <Zap aria-hidden className="h-3.5 w-3.5" strokeWidth={2} />
+            Express
           </p>
         )}
       </div>
@@ -253,79 +273,43 @@ export function CountryApplicationPanel({
           )}
 
           <div className="p-4 md:p-5">
-            {/* 1 — the choices, as the reference's stacked rows.
-                The reference's first row is a "Visa Type" dropdown of travel
-                purposes. abizon records one visa type per destination and no
-                purpose at all, so the row that IS a real choice takes its
-                place: how fast it is processed. */}
-            <div className="divide-y divide-border">
-              <label className="block pb-3.5">
-                <span className="text-xs text-muted-foreground">
-                  {config.visaType} · Processing
-                </span>
-                <span className="relative mt-1 block">
-                  <select
-                    value={plan}
-                    onChange={(event) => setPlan(Number(event.target.value))}
-                    className="w-full cursor-pointer appearance-none bg-transparent pr-8 text-base font-semibold tracking-tight text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-                  >
-                    <option value={0}>
-                      Standard · {config.deliveryDays}{" "}
-                      {config.deliveryDays === 1 ? "day" : "days"}
-                    </option>
-                    <option value={1}>
-                      {expressIsFaster
-                        ? `Express · ${config.deliveryDays - 1} ${
-                            config.deliveryDays - 1 === 1 ? "day" : "days"
-                          }`
-                        : "Express · priority handling"}
-                    </option>
-                  </select>
-                  <ChevronDown
-                    aria-hidden
-                    className="pointer-events-none absolute right-0 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground"
-                    strokeWidth={1.8}
+            {/* 1 — the choices. First the visa itself, from the price list;
+                then who is travelling, and when. */}
+            <div role="radiogroup" aria-label="Choose your visa">
+              <p className="text-xs text-muted-foreground">Choose your visa</p>
+              <div className="mt-2 space-y-2">
+                {options.map((o, index) => (
+                  <OptionCard
+                    key={o.id}
+                    option={o}
+                    selected={index === plan}
+                    onSelect={() => choose(index)}
                   />
-                </span>
-              </label>
-
-              <div className="flex items-center justify-between gap-3 py-3.5">
-                <span className="flex items-center gap-2.5 text-base font-semibold tracking-tight text-foreground">
-                  <User
-                    aria-hidden
-                    className="h-5 w-5 text-muted-foreground"
-                    strokeWidth={1.8}
-                  />
-                  <label htmlFor="panel-travellers">Travellers</label>
-                </span>
-                <div className="flex items-center gap-2.5">
-                  <button
-                    type="button"
-                    onClick={() => setTravellers((t) => Math.max(1, t - 1))}
-                    disabled={travellers <= 1}
-                    aria-label="One traveller fewer"
-                    className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-border text-subtle-foreground transition-colors duration-[--duration-fast] hover:border-border-strong hover:bg-surface-sunken disabled:pointer-events-none disabled:opacity-40"
-                  >
-                    <Minus aria-hidden className="h-3.5 w-3.5" />
-                  </button>
-                  <output
-                    id="panel-travellers"
-                    data-numeric
-                    className="min-w-6 text-center text-base font-semibold text-foreground"
-                  >
-                    {travellers}
-                  </output>
-                  <button
-                    type="button"
-                    onClick={() => setTravellers((t) => Math.min(10, t + 1))}
-                    disabled={travellers >= 10}
-                    aria-label="One traveller more"
-                    className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-border text-subtle-foreground transition-colors duration-[--duration-fast] hover:border-border-strong hover:bg-surface-sunken disabled:pointer-events-none disabled:opacity-40"
-                  >
-                    <Plus aria-hidden className="h-3.5 w-3.5" />
-                  </button>
-                </div>
+                ))}
               </div>
+            </div>
+
+            <div className="mt-3 divide-y divide-border border-t border-border">
+              <Stepper
+                id="panel-adults"
+                icon={countsChildren ? User : Users}
+                label={countsChildren ? "Adults" : "Travellers"}
+                value={adults}
+                min={1}
+                max={MAX_TRAVELLERS - childCount}
+                onChange={setAdults}
+              />
+              {countsChildren && (
+                <Stepper
+                  id="panel-children"
+                  icon={Baby}
+                  label={`Children (under ${CHILD_UNDER})`}
+                  value={children}
+                  min={0}
+                  max={MAX_TRAVELLERS - adults}
+                  onChange={setChildren}
+                />
+              )}
 
               {/* Not in the reference card, kept because it is real function:
                   the answer travels to the application so the first screen
@@ -362,13 +346,13 @@ export function CountryApplicationPanel({
                       { key: "soon", label: "Within 30 days" },
                       { key: "later", label: "Not decided yet" },
                     ] as const
-                  ).map((option) => {
-                    const active = travelChoice === option.key;
+                  ).map((choice) => {
+                    const active = travelChoice === choice.key;
                     return (
                       <button
-                        key={option.key}
+                        key={choice.key}
                         type="button"
-                        onClick={() => setChosenTravelWindow(option.key)}
+                        onClick={() => setChosenTravelWindow(choice.key)}
                         aria-pressed={active}
                         className={[
                           "cursor-pointer rounded-xl border px-3 py-2.5 text-xs font-medium transition-colors duration-[--duration-fast]",
@@ -377,7 +361,7 @@ export function CountryApplicationPanel({
                             : "border-border bg-surface text-subtle-foreground hover:border-border-strong hover:bg-surface-sunken",
                         ].join(" ")}
                       >
-                        {option.label}
+                        {choice.label}
                       </button>
                     );
                   })}
@@ -385,82 +369,56 @@ export function CountryApplicationPanel({
               )}
             </div>
 
-            {/* 2 — the price. One number, centred, with the rest of the money
-                deferred to the ledger below the button.
-
-                48px, down from 60px. At the larger size the figure was taller
-                than the section heading two columns to its left, which made the
-                page read as though the price were its subject rather than the
-                visa. It is still by some distance the largest thing in the
-                card, which is the hierarchy that matters. */}
+            {/* 2 — the price. One number, centred, and everything is in it. */}
             <div className="pt-6 text-center">
               <p
                 data-numeric
                 className="text-4xl font-bold tracking-[-0.03em] text-foreground"
               >
-                {totals.payNow === 0 ? "Free" : inr(payNow)}
+                {total === null ? "—" : inr(total)}
               </p>
               <p className="mt-2 text-2xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                To be paid now
+                Total · all fees and taxes included
               </p>
+              {quote?.problem && (
+                <p role="status" className="mt-2 text-xs text-muted-foreground">
+                  {quote.problem}
+                </p>
+              )}
             </div>
 
             <button
               type="button"
               onClick={handleStart}
-              className="mt-4 flex w-full cursor-pointer items-center justify-center rounded-full bg-primary px-5 py-3.5 text-sm font-semibold tracking-tight text-on-primary shadow-e2 transition-[background-color,transform,box-shadow] duration-[--duration-fast] ease-[--ease-out] hover:bg-primary-hover hover:shadow-e3 active:scale-[0.99] active:bg-primary-active motion-reduce:transform-none"
+              disabled={total === null}
+              className="mt-4 flex w-full cursor-pointer items-center justify-center rounded-full bg-primary px-5 py-3.5 text-sm font-semibold tracking-tight text-on-primary shadow-e2 transition-[background-color,transform,box-shadow] duration-[--duration-fast] ease-[--ease-out] hover:bg-primary-hover hover:shadow-e3 active:scale-[0.99] active:bg-primary-active disabled:pointer-events-none disabled:opacity-50 motion-reduce:transform-none"
             >
               {draft ? "Resume Application" : "Start Application"}
             </button>
 
-            {/* 3 — the ledger. The reference's three rows exactly: what is due
-                now, what is due on approval, and the sum. The rule between the
-                first two icons is the reference's, and it is doing work — it
-                is what says these are two moments in one transaction rather
-                than two separate charges. */}
-            <dl className="mt-6">
-              <div className="relative">
-                <span
-                  aria-hidden
-                  className="absolute left-[9px] top-7 h-[calc(100%-3rem)] w-px bg-border"
-                />
-                <LedgerRow
-                  icon={Landmark}
-                  label="Pay now"
-                  sub="Government fee"
-                  value={totals.payNow === 0 ? "Free" : inr(payNow)}
-                />
-                <div className="mt-4">
+            {/* 3 — the ledger: who is being paid for, and the sum. */}
+            {quote && quote.total !== null && (
+              <dl className="mt-6">
+                {quote.lines.map((line) => (
+                  <div key={line.label} className="mt-3 first:mt-0">
+                    <LedgerRow
+                      icon={line.label.toLowerCase().includes("child") ? Baby : User}
+                      label={line.count > 1 ? `${line.label} × ${line.count}` : line.label}
+                      sub={line.count > 1 ? `${inr(line.unit)} each` : undefined}
+                      value={inr(line.amount)}
+                    />
+                  </div>
+                ))}
+                <div className="mt-4 border-t border-border pt-4">
                   <LedgerRow
-                    icon={Clock3}
-                    label="Pay on approval"
-                    sub={
-                      totals.provisional
-                        ? "abizon fee · provisional"
-                        : "abizon fee"
-                    }
-                    value={inrOrUnset(payOnApproval)}
+                    icon={ReceiptText}
+                    label="Total amount"
+                    value={inr(quote.total)}
+                    strong
                   />
                 </div>
-              </div>
-
-              <div className="mt-4 border-t border-border pt-4">
-                <LedgerRow
-                  icon={ReceiptText}
-                  label="Total amount"
-                  value={inrOrUnset(total)}
-                  strong
-                />
-              </div>
-            </dl>
-
-            {/* 4 — the itemisation, closed. It used to be a permanent section
-                in the column beside this card, restating these same figures. */}
-            <GovFeeBreakdown
-              countryName={config.displayName}
-              travellers={travellers}
-              totals={totals}
-            />
+              </dl>
+            )}
           </div>
         </div>
       </div>
@@ -484,11 +442,132 @@ export function CountryApplicationPanel({
       </div>
 
       <p className="mt-3 px-1 text-2xs leading-relaxed text-muted-foreground">
-        Nothing is charged until you reach checkout. Your {config.displayName}{" "}
-        visa is guaranteed by {formatShortDate(deliveryDays)} or the abizon fee
-        is waived.
+        Nothing is charged until you reach checkout. The price includes the
+        government fee, our service and taxes; nothing is added later.
       </p>
     </aside>
+  );
+}
+
+/** One of the destination's visa options, as a selectable card. */
+function OptionCard({
+  option,
+  selected,
+  onSelect,
+}: {
+  option: VisaOption;
+  selected: boolean;
+  onSelect: () => void;
+}) {
+  const facts = [
+    option.stay && { label: "Stay", value: option.stay },
+    option.validity && { label: "Validity", value: option.validity },
+    option.processing && { label: "Processing", value: option.processing },
+  ].filter(Boolean) as { label: string; value: string }[];
+
+  return (
+    <button
+      type="button"
+      role="radio"
+      aria-checked={selected}
+      onClick={onSelect}
+      className={[
+        "block w-full cursor-pointer rounded-2xl border px-4 py-3.5 text-left transition-colors duration-[--duration-fast]",
+        selected
+          ? "border-foreground bg-surface shadow-e1"
+          : "border-border bg-surface hover:border-border-strong hover:bg-surface-sunken",
+      ].join(" ")}
+    >
+      <span className="flex items-start justify-between gap-3">
+        <span className="min-w-0">
+          <span className="block text-sm font-semibold tracking-tight text-foreground">
+            {option.title}
+          </span>
+          <span className="mt-0.5 block text-2xs font-medium uppercase tracking-[0.12em] text-muted-foreground">
+            {option.entry} entry{option.express ? " · Express" : ""}
+          </span>
+        </span>
+        <span
+          aria-hidden
+          className={[
+            "mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border",
+            selected ? "border-foreground bg-foreground text-surface" : "border-border-strong",
+          ].join(" ")}
+        >
+          {selected && <Check className="h-3 w-3" strokeWidth={3} />}
+        </span>
+      </span>
+
+      {facts.length > 0 && (
+        <span className="mt-3 grid grid-cols-3 gap-2">
+          {facts.map((fact) => (
+            <span key={fact.label} className="min-w-0">
+              <span className="block text-2xs text-muted-foreground">{fact.label}</span>
+              <span className="block text-xs font-semibold text-foreground">{fact.value}</span>
+            </span>
+          ))}
+        </span>
+      )}
+
+      <span data-numeric className="mt-3 block text-xs font-semibold text-foreground">
+        {describeOptionPrice(option)}
+      </span>
+    </button>
+  );
+}
+
+/** A labelled − n + counter. */
+function Stepper({
+  id,
+  icon: Icon,
+  label,
+  value,
+  min,
+  max,
+  onChange,
+}: {
+  id: string;
+  icon: typeof User;
+  label: string;
+  value: number;
+  min: number;
+  max: number;
+  onChange: (value: number) => void;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-3 py-3.5">
+      <span className="flex items-center gap-2.5 text-base font-semibold tracking-tight text-foreground">
+        <Icon aria-hidden className="h-5 w-5 text-muted-foreground" strokeWidth={1.8} />
+        <label htmlFor={id}>{label}</label>
+      </span>
+      <div className="flex items-center gap-2.5">
+        <button
+          type="button"
+          onClick={() => onChange(Math.max(min, value - 1))}
+          disabled={value <= min}
+          aria-label={`${label}: one fewer`}
+          className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-border text-subtle-foreground transition-colors duration-[--duration-fast] hover:border-border-strong hover:bg-surface-sunken disabled:pointer-events-none disabled:opacity-40"
+        >
+          <Minus aria-hidden className="h-3.5 w-3.5" />
+        </button>
+        <output
+          id={id}
+          data-numeric
+          className="min-w-6 text-center text-base font-semibold text-foreground"
+        >
+          {value}
+        </output>
+        <button
+          type="button"
+          onClick={() => onChange(Math.min(max, value + 1))}
+          disabled={value >= max}
+          aria-label={`${label}: one more`}
+          className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-border text-subtle-foreground transition-colors duration-[--duration-fast] hover:border-border-strong hover:bg-surface-sunken disabled:pointer-events-none disabled:opacity-40"
+        >
+          <Plus aria-hidden className="h-3.5 w-3.5" />
+        </button>
+      </div>
+    </div>
   );
 }
 
@@ -496,9 +575,7 @@ export function CountryApplicationPanel({
  * One row of the money ledger.
  *
  * The sub-label carries the reference's underline. It is decoration, not a
- * link: it names which fee the figure is, and the drawer below the ledger is
- * where the detail actually lives, so an `<a>` here would promise a
- * destination that does not exist.
+ * link: it names what the figure is per person.
  */
 function LedgerRow({
   icon: Icon,
@@ -507,7 +584,7 @@ function LedgerRow({
   value,
   strong = false,
 }: {
-  icon: typeof Landmark;
+  icon: typeof User;
   label: string;
   sub?: string;
   value: string;

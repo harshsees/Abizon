@@ -66,6 +66,7 @@ import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 
 import { AppointmentRequirements } from "@/components/AppointmentRequirements";
+import { CallbackRequestPanel } from "@/components/CallbackRequestPanel";
 import { CountryApplicationPanel } from "@/components/CountryApplicationPanel";
 import { CountryHero } from "@/components/CountryHero";
 import {
@@ -92,6 +93,7 @@ import { VisaOverview } from "@/components/VisaOverview";
 import { VisaProcess } from "@/components/VisaProcess";
 import { VisaRequirements } from "@/components/VisaRequirements";
 import { Country } from "@/data/countries";
+import { isCallbackDestination } from "@/data/visaOptions";
 import { resolveCountryVisaConfig, type CountryVisaConfig } from "@/lib/countryVisa";
 import { useHeadingReveal, useScrollTriggerSync, useSectionReveal } from "@/hooks/usePremiumMotion";
 
@@ -227,7 +229,12 @@ export function CountryVisaPage({ country }: { country: Country }) {
    * Both are now gated on the flow. `VisaFreeNotice` states the entry rules
    * that ARE known and offers nothing to purchase.
    */
-  const applicable = config.flow !== "visa-free";
+  /**
+   * Sticker visas (Schengen, USA, Canada) are not applied for online: the
+   * page takes a callback request instead, and every "start" control goes.
+   */
+  const callback = isCallbackDestination(country.code);
+  const applicable = config.flow !== "visa-free" && !callback;
 
   /**
    * The date the entry dialog's two travel buttons are phrased around.
@@ -317,7 +324,13 @@ export function CountryVisaPage({ country }: { country: Country }) {
                   desktop — so a phone reaches it without scrolling past the
                   whole information column first. */}
               <div id={APPLICATION_ANCHOR} className="scroll-mt-24 md:order-2">
-                {applicable ? applicationPanel : <VisaFreeNotice config={config} />}
+                {callback ? (
+                  <CallbackRequestPanel config={config} />
+                ) : applicable ? (
+                  applicationPanel
+                ) : (
+                  <VisaFreeNotice config={config} />
+                )}
               </div>
 
               {/* Everything the reader needs to judge the visa itself.
@@ -418,6 +431,17 @@ export function CountryVisaPage({ country }: { country: Country }) {
           a notched phone. `ApplicationShell` already accounts for this; the
           country page's bar did not. `main` carries pb-24, which clears the
           bar's own height at the end of the document. */}
+      {callback && (
+        <div className="fixed inset-x-0 bottom-0 z-nav border-t border-border bg-surface/95 p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur-md md:hidden">
+          <a
+            href={`#${APPLICATION_ANCHOR}`}
+            className="block w-full cursor-pointer rounded-xl bg-primary px-4 py-3.5 text-center text-sm font-bold text-on-primary hover:bg-primary-hover"
+          >
+            Request a callback
+          </a>
+        </div>
+      )}
+
       {applicable && (
       <div className="fixed inset-x-0 bottom-0 z-nav border-t border-border bg-surface/95 p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur-md md:hidden">
         <button

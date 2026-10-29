@@ -706,8 +706,39 @@ export const emailLog = pgTable(
   ],
 );
 
+/**
+ * Callback requests for sticker visas (Schengen, USA, Canada).
+ *
+ * Nothing about these visas is priced or applied for online: the visitor
+ * leaves their details and the team calls them back. This is that queue,
+ * worked through from the ops console.
+ *
+ * Unencrypted, like `travellers.full_name`: it is contact details and a
+ * destination, which the team has to read and sort by, and nothing here is a
+ * passport number or a date of birth.
+ */
+export const callbackRequests = pgTable(
+  "callback_requests",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    /** The destination's slug, as on its country page. */
+    countrySlug: text("country_slug").notNull(),
+    name: text("name").notNull(),
+    phone: text("phone").notNull(),
+    email: text("email"),
+    /** Free text: when they plan to travel, as they put it. */
+    travelPlan: text("travel_plan"),
+    message: text("message"),
+    /** "new" until a staff member has called, then "contacted" or "closed". */
+    status: text("status").notNull().default("new"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index("callback_requests_status_idx").on(table.status, table.createdAt)],
+);
+
 /* -------------------------------------------------------------------------- */
 
+export type CallbackRequestRow = typeof callbackRequests.$inferSelect;
 export type UserRow = typeof users.$inferSelect;
 export type ApplicationRow = typeof applications.$inferSelect;
 export type TravellerRow = typeof travellers.$inferSelect;
